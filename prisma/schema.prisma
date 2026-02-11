@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== AUTENTICAÇÃO =====
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  image         String?
+  role          UserRole  @default(CLIENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  giftLists     GiftList[]
+  recipient     Recipient?
+
+  @@map("users")
+}
+
+enum UserRole {
+  CLIENT
+  ADMIN
+}
+
+// ===== LISTA DE PRESENTES =====
+
+model GiftList {
+  id                String    @id @default(cuid())
+  userId            String
+  slug              String    @unique
+  title             String
+  description       String?
+  eventDate         DateTime?
+  isPublished       Boolean   @default(false)
+  templateId        String?
+  feeMode           FeeMode   @default(PASS_TO_GUEST) // PASS_TO_GUEST ou ABSORB
+  allowMessages     Boolean   @default(true)
+  allowPhotoUpload  Boolean   @default(true)
+  showGuestNames    Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template          Template? @relation(fields: [templateId], references: [id])
+  pageLayout        PageLayout?
+  gifts             GiftItem[]
+  orders            Order[]
+  messages          Message[]
+
+  @@index([userId])
+  @@index([slug])
+  @@map("gift_lists")
+}
+
+enum FeeMode {
+  PASS_TO_GUEST   // Convidado paga a taxa
+  ABSORB          // Cliente assume a taxa
+}
+
+// ===== LAYOUT DA PÁGINA =====
+
+model PageLayout {
+  id            String    @id @default(cuid())
+  giftListId    String    @unique
+  blocks        Json      // Array de blocos configuráveis
+  theme         Json      // Configurações de tema (cores, fontes, etc)
+  customCss     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  giftList      GiftList  @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+
+  @@map("page_layouts")
+}
+
+// ===== PRESENTES =====
+
+model GiftItem {
+  id              String    @id @default(cuid())
+  giftListId      String
+  name            String
+  description     String?
+  imageUrl        String?
+  basePrice       Decimal   @db.Decimal(10, 2)
+  totalQuantity   Int       @default(1)
+  availableQty    Int       @default(1)
+  isActive        Boolean   @default(true)
+  order           Int       @default(0) // Para ordenação
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  giftList        GiftList  @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  orders          Order[]
+
+  @@index([giftListId])
+  @@index([isActive])
+  @@map("gift_items")
+}
+
+// ===== PEDIDOS/TRANSAÇÕES =====
+
+model Order {
+  id                String        @id @default(cuid())
+  giftListId        String
+  giftItemId        String
+  guestName         String
+  guestEmail        String?
+  quantity          Int           @default(1)
+  baseAmount        Decimal       @db.Decimal(10, 2)
+  feeAmount         Decimal       @db.Decimal(10, 2)
+  totalAmount       Decimal       @db.Decimal(10, 2)
+  status            OrderStatus   @default(PENDING)
+  paymentMethod     String?       // card, pix
+  pagarmeOrderId    String?       @unique
+  pagarmeChargeId   String?
+  paidAt            DateTime?
+  refundedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  giftList          GiftList      @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  giftItem          GiftItem      @relation(fields: [giftItemId], references: [id])
+  message           Message?
+  webhookEvents     WebhookEvent[]
+
+  @@index([giftListId])
+  @@index([status])
+  @@index([pagarmeOrderId])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  AUTHORIZED
+  REFUSED
+  REFUNDED
+  CHARGEBACK
+}
+
+// ===== RECADOS =====
+
+model Message {
+  id              String    @id @default(cuid())
+  orderId         String    @unique
+  giftListId      String
+  guestName       String
+  content         String    @db.Text
+  signature       String?
+  photoUrls       Json?     // Array de URLs de fotos
+  isPublic        Boolean   @default(true)
+  isFavorite      Boolean   @default(false)
+  isRead          Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  giftList        GiftList  @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+
+  @@index([giftListId])
+  @@index([isPublic])
+  @@map("messages")
+}
+
+// ===== PAGAR.ME =====
+
+model Recipient {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  pagarmeRecipientId  String    @unique
+  bankAccount         Json      // Dados da conta bancária
+  status              String    @default("pending")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("recipients")
+}
+
+model WebhookEvent {
+  id              String    @id @default(cuid())
+  orderId         String?
+  eventType       String
+  payload         Json
+  processed       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+
+  order           Order?    @relation(fields: [orderId], references: [id])
+
+  @@index([eventType])
+  @@index([processed])
+  @@map("webhook_events")
+}
+
+// ===== TEMPLATES =====
+
+model Template {
+  id              String      @id @default(cuid())
+  name            String
+  slug            String      @unique
+  description     String?
+  category        String      // casamento, chá, aniversário, etc
+  thumbnail       String?
+  defaultBlocks   Json        // Layout padrão de blocos
+  defaultTheme    Json        // Tema padrão
+  isActive        Boolean     @default(true)
+  order           Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  giftLists       GiftList[]
+
+  @@map("templates")
+}

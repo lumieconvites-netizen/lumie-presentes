@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Google Fonts Import - Fontes de Título */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Cormorant+Garamond:wght@400;600;700&family=Libre+Baskerville:wght@400;700&family=Merriweather:wght@400;700&family=Lora:wght@400;600;700&family=EB+Garamond:wght@400;600;700&family=Crimson+Text:wght@400;600;700&display=swap');
+
+/* Google Fonts Import - Fontes Cursivas */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Great+Vibes&family=Pacifico&family=Satisfy&family=Allura&display=swap');
+
+/* Google Fonts Import - Fontes de Corpo */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lato:wght@400;700&family=Open+Sans:wght@400;600;700&family=Roboto:wght@400;500;700&family=Poppins:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Nunito:wght@400;600;700&family=Work+Sans:wght@400;600;700&family=Raleway:wght@400;600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* Cores baseadas no design fornecido */
+    --background: 30 20% 97%;
+    --foreground: 24 8% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 24 8% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 8% 20%;
+    
+    /* Terracota principal - #C86E52 aproximadamente */
+    --primary: 14 55% 55%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Terracota mais escuro */
+    --secondary: 14 50% 45%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Cinza/bege claro para fundos */
+    --muted: 30 15% 95%;
+    --muted-foreground: 24 5% 45%;
+    
+    /* Bege/creme para acentos */
+    --accent: 30 25% 92%;
+    --accent-foreground: 24 8% 20%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Bordas suaves */
+    --border: 30 12% 88%;
+    --input: 30 12% 90%;
+    --ring: 14 55% 55%;
+    
+    /* Bordas mais arredondadas */
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 20 14% 10%;
+    --foreground: 40 20% 96%;
+    --card: 20 14% 12%;
+    --card-foreground: 40 20% 96%;
+    --popover: 20 14% 12%;
+    --popover-foreground: 40 20% 96%;
+    --primary: 16 58% 50%;
+    --primary-foreground: 40 20% 98%;
+    --secondary: 16 54% 36%;
+    --secondary-foreground: 40 20% 98%;
+    --muted: 20 14% 16%;
+    --muted-foreground: 40 15% 65%;
+    --accent: 20 14% 18%;
+    --accent-foreground: 40 20% 96%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 40 20% 96%;
+    --border: 20 14% 20%;
+    --input: 20 14% 20%;
+    --ring: 16 58% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Fontes customizadas */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --font-playfair: 'Playfair Display', serif;
+  --font-inter: 'Inter', sans-serif;
+}
+
+/* Scrollbar customizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Animações customizadas */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted) / 0.5) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 1000px 100%;
+}
+
+/* Utilitários adicionais */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-gradient-gold {
+  @apply bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 bg-clip-text text-transparent;
+}
+
+.text-gradient-terracota {
+  @apply bg-gradient-to-r from-terracota-500 via-terracota-600 to-terracota-700 bg-clip-text text-transparent;
+}
+
+.glass-effect {
+  @apply backdrop-blur-md bg-white/80 dark:bg-gray-900/80;
+}
+
+/* Estilos específicos do design LUMIÊ */
+.sidebar-active {
+  @apply bg-primary text-white;
+}
+
+.badge-success {
+  @apply bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.badge-pending {
+  @apply bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.badge-new {
+  @apply bg-primary text-white px-2 py-1 rounded text-xs font-medium;
+}
+
+.stat-card {
+  @apply bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow;
+}
+
+.icon-badge {
+  @apply w-12 h-12 rounded-xl flex items-center justify-center;
+}
+
+.icon-badge-green {
+  @apply icon-badge bg-green-50;
+}
+
+.icon-badge-yellow {
+  @apply icon-badge bg-yellow-50;
+}
+
+.icon-badge-red {
+  @apply icon-badge bg-red-50;
+}
+
+.icon-badge-blue {
+  @apply icon-badge bg-blue-50;
+}
+/* ===== Font scope para páginas de lista/preview ===== */
+.list-font-scope {
+  font-family: var(--list-font-body, 'Inter'), sans-serif;
+}
+
+.list-font-scope .font-display,
+.list-font-scope h1,
+.list-font-scope h2,
+.list-font-scope h3,
+.list-font-scope .list-title {
+  font-family: var(--list-font-title, 'Playfair Display'), serif !important;
+}
