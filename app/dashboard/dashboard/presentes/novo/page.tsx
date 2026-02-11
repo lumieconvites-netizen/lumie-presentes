@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,13 +9,18 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function NewGiftPage() {
   const router = useRouter();
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingList, setIsLoadingList] = useState(true);
   const [giftListId, setGiftListId] = useState<string | null>(null);
+
   const [imagePreview, setImagePreview] = useState<string>('');
   const [formData, setFormData] = useState({
     name: '',
@@ -26,57 +31,98 @@ export default function NewGiftPage() {
   });
 
   useEffect(() => {
-    fetchGiftList();
+    const ac = new AbortController();
+
+    (async () => {
+      setIsLoadingList(true);
+      try {
+        const res = await fetch('/api/gift-lists/my-list', {
+          signal: ac.signal,
+          cache: 'no-store',
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data?.error || 'Erro ao carregar lista');
+        }
+
+        if (!data?.id) {
+          throw new Error('Lista não encontrada');
+        }
+
+        setGiftListId(data.id);
+      } catch (error: any) {
+        if (error?.name === 'AbortError') return;
+        toast.error(error?.message || 'Erro ao carregar lista');
+      } finally {
+        setIsLoadingList(false);
+      }
+    })();
+
+    return () => ac.abort();
   }, []);
 
-  const fetchGiftList = async () => {
-    try {
-      const res = await fetch('/api/gift-lists/my-list');
-      const data = await res.json();
-      setGiftListId(data.id);
-    } catch (error) {
-      toast.error('Erro ao carregar lista');
+  const clearImage = () => {
+    setImagePreview('');
+    setFormData((prev) => ({ ...prev, imageUrl: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Imagem deve ter no máximo 5MB');
-        return;
-      }
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-        setFormData({ ...formData, imageUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Imagem deve ter no máximo 5MB');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
+
+    // opcional: valida tipo
+    if (!file.type.startsWith('image/')) {
+      toast.error('Arquivo inválido. Envie uma imagem.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setImagePreview(base64);
+      setFormData((prev) => ({ ...prev, imageUrl: base64 }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (isLoadingList) {
+      toast.error('Aguarde carregar sua lista...');
+      return;
+    }
+
     if (!giftListId) {
       toast.error('Lista não encontrada');
       return;
     }
 
-    if (!formData.name || !formData.basePrice) {
+    if (!formData.name.trim() || !formData.basePrice) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    const basePrice = parseFloat(formData.basePrice);
-    if (isNaN(basePrice) || basePrice <= 0) {
+    const basePrice = Number(String(formData.basePrice).replace(',', '.'));
+    if (!Number.isFinite(basePrice) || basePrice <= 0) {
       toast.error('Preço inválido');
       return;
     }
 
-    const totalQuantity = parseInt(formData.totalQuantity);
-    if (isNaN(totalQuantity) || totalQuantity < 1) {
+    const totalQuantity = parseInt(formData.totalQuantity, 10);
+    if (!Number.isFinite(totalQuantity) || totalQuantity < 1) {
       toast.error('Quantidade inválida');
       return;
     }
@@ -89,27 +135,30 @@ export default function NewGiftPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           giftListId,
-          name: formData.name,
-          description: formData.description || undefined,
+          name: formData.name.trim(),
+          description: formData.description?.trim() ? formData.description.trim() : undefined,
           imageUrl: formData.imageUrl || undefined,
           basePrice,
           totalQuantity,
         }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error);
+        throw new Error(data?.error || 'Erro ao cadastrar presente');
       }
 
       toast.success('Presente cadastrado com sucesso!');
       router.push('/dashboard/presentes');
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao cadastrar presente');
+      toast.error(error?.message || 'Erro ao cadastrar presente');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const disabled = isLoading || isLoadingList;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
@@ -126,29 +175,23 @@ export default function NewGiftPage() {
             Novo Presente
           </CardTitle>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Upload de imagem */}
             <div className="space-y-2">
               <Label>Foto do presente</Label>
+
               <div className="flex items-start gap-4">
                 <div className="relative w-32 h-32 bg-gradient-to-br from-terracota-100 to-gold-100 rounded-lg overflow-hidden flex-shrink-0">
                   {imagePreview ? (
                     <>
-                      <Image
-                        src={imagePreview}
-                        alt="Preview"
-                        fill
-                        className="object-cover"
-                      />
+                      <Image src={imagePreview} alt="Preview" fill className="object-cover" />
                       <button
                         type="button"
-                        onClick={() => {
-                          setImagePreview('');
-                          setFormData({ ...formData, imageUrl: '' });
-                        }}
+                        onClick={clearImage}
                         className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        aria-label="Remover imagem"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -159,17 +202,21 @@ export default function NewGiftPage() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex-1">
                   <Input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
-                    disabled={isLoading}
+                    disabled={disabled}
                     className="cursor-pointer"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Formatos aceitos: JPG, PNG, GIF. Máximo 5MB.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    (Por enquanto a imagem está sendo salva como base64. Depois vamos trocar para upload no storage.)
                   </p>
                 </div>
               </div>
@@ -184,9 +231,9 @@ export default function NewGiftPage() {
                 id="name"
                 placeholder="Ex: Jogo de panelas"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                 required
-                disabled={isLoading}
+                disabled={disabled}
               />
             </div>
 
@@ -197,8 +244,8 @@ export default function NewGiftPage() {
                 id="description"
                 placeholder="Descreva o presente..."
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isLoading}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                disabled={disabled}
                 rows={3}
               />
             </div>
@@ -215,12 +262,12 @@ export default function NewGiftPage() {
                 min="0.01"
                 placeholder="0,00"
                 value={formData.basePrice}
-                onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, basePrice: e.target.value }))}
                 required
-                disabled={isLoading}
+                disabled={disabled}
               />
               <p className="text-xs text-muted-foreground">
-                Este é o valor que você receberá por cada unidade presenteada (sem a taxa de 7,99%)
+                Este é o valor do presente (a taxa de 7,99% será tratada no checkout).
               </p>
             </div>
 
@@ -235,9 +282,9 @@ export default function NewGiftPage() {
                 min="1"
                 placeholder="1"
                 value={formData.totalQuantity}
-                onChange={(e) => setFormData({ ...formData, totalQuantity: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, totalQuantity: e.target.value }))}
                 required
-                disabled={isLoading}
+                disabled={disabled}
               />
               <p className="text-xs text-muted-foreground">
                 Quantas vezes este presente pode ser comprado
@@ -250,17 +297,18 @@ export default function NewGiftPage() {
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
-                disabled={isLoading}
+                disabled={disabled}
                 className="flex-1"
               >
                 Cancelar
               </Button>
+
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={disabled}
                 className="flex-1 bg-terracota-500 hover:bg-terracota-600"
               >
-                {isLoading ? 'Salvando...' : 'Cadastrar presente'}
+                {isLoading ? 'Salvando...' : isLoadingList ? 'Carregando lista...' : 'Cadastrar presente'}
               </Button>
             </div>
           </form>

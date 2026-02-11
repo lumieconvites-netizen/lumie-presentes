@@ -10,18 +10,19 @@ import {
 import "./globals.css";
 import { Providers } from "@/components/providers/providers";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
-  variable: '--font-inter',
-  display: 'swap',
+  variable: "--font-inter",
+  display: "swap",
 });
 
-const playfair = Playfair_Display({ 
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: '--font-playfair',
-  display: 'swap',
-  weight: ['400', '500', '600', '700', '800'],
+  variable: "--font-playfair",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
 });
+
 const workSans = Work_Sans({
   subsets: ["latin"],
   variable: "--font-work-sans",
@@ -41,24 +42,35 @@ const cormorant = Cormorant_Garamond({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
+  // ✅ resolve o warning do Next sobre OG/Twitter
+  metadataBase: new URL(appUrl),
+
   title: "LUMIÊ - Transforme seus presentes em realizações",
-  description: "Crie sua lista de presentes inteligente. Seus convidados escolhem presentes, você recebe em dinheiro para realizar seus sonhos.",
-  keywords: "lista de presentes, casamento, chá de casa nova, presente em dinheiro, lista online",
+  description:
+    "Crie sua lista de presentes inteligente. Seus convidados escolhem presentes, você recebe em dinheiro para realizar seus sonhos.",
+  keywords:
+    "lista de presentes, casamento, chá de casa nova, presente em dinheiro, lista online",
   authors: [{ name: "LUMIÊ" }],
+
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: process.env.NEXT_PUBLIC_APP_URL,
+    url: new URL(appUrl),
     siteName: "LUMIÊ",
     title: "LUMIÊ - Transforme seus presentes em realizações",
-    description: "Crie sua lista de presentes inteligente. Seus convidados escolhem presentes, você recebe em dinheiro para realizar seus sonhos.",
+    description:
+      "Crie sua lista de presentes inteligente. Seus convidados escolhem presentes, você recebe em dinheiro para realizar seus sonhos.",
   },
+
   twitter: {
     card: "summary_large_image",
     title: "LUMIÊ - Transforme seus presentes em realizações",
     description: "Crie sua lista de presentes inteligente.",
   },
+
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon-16x16.png",

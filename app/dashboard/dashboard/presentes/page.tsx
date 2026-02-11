@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -23,35 +22,93 @@ interface Gift {
 }
 
 export default function GiftsPage() {
-  const { data: session } = useSession();
-  const router = useRouter();
+  const { data: session, status } = useSession();
+
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [giftListId, setGiftListId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchGiftListAndGifts();
-  }, []);
+    // espera o next-auth resolver o status
+    if (status === 'loading') return;
 
-  const fetchGiftListAndGifts = async () => {
+    // se não estiver logado, manda pro login
+    if (status === 'unauthenticated') {
+      window.location.href = '/login';
+      return;
+    }
+
+    const ac = new AbortController();
+
+    (async () => {
+      setIsLoading(true);
+      try {
+        // Buscar gift list do usuário
+        const listRes = await fetch('/api/gift-lists/my-list', {
+          signal: ac.signal,
+          cache: 'no-store',
+        });
+
+        if (!listRes.ok) {
+          const data = await listRes.json().catch(() => ({}));
+          throw new Error(data?.error || 'Erro ao buscar lista');
+        }
+
+        const listData = await listRes.json();
+
+        if (!listData?.id) {
+          throw new Error('Lista não encontrada');
+        }
+
+        setGiftListId(listData.id);
+
+        // Buscar presentes
+        const giftsRes = await fetch(`/api/gifts?giftListId=${listData.id}`, {
+          signal: ac.signal,
+          cache: 'no-store',
+        });
+
+        if (!giftsRes.ok) {
+          const data = await giftsRes.json().catch(() => ({}));
+          throw new Error(data?.error || 'Erro ao buscar presentes');
+        }
+
+        const giftsData = await giftsRes.json();
+        setGifts(Array.isArray(giftsData) ? giftsData : []);
+      } catch (error: any) {
+        if (error?.name === 'AbortError') return;
+        toast.error(error?.message || 'Erro ao carregar presentes');
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+
+    return () => ac.abort();
+  }, [status]);
+
+  const refetch = async () => {
+    // só reaproveita o mesmo fluxo
+    setIsLoading(true);
     try {
-      // Buscar gift list do usuário
-      const listRes = await fetch('/api/gift-lists/my-list');
+      const listRes = await fetch('/api/gift-lists/my-list', { cache: 'no-store' });
       const listData = await listRes.json();
-      
-      if (!listData.id) {
-        toast.error('Lista não encontrada');
-        return;
+
+      if (!listRes.ok || !listData?.id) {
+        throw new Error(listData?.error || 'Lista não encontrada');
       }
 
       setGiftListId(listData.id);
 
-      // Buscar presentes
-      const giftsRes = await fetch(`/api/gifts?giftListId=${listData.id}`);
+      const giftsRes = await fetch(`/api/gifts?giftListId=${listData.id}`, { cache: 'no-store' });
       const giftsData = await giftsRes.json();
-      setGifts(giftsData);
-    } catch (error) {
-      toast.error('Erro ao carregar presentes');
+
+      if (!giftsRes.ok) {
+        throw new Error(giftsData?.error || 'Erro ao buscar presentes');
+      }
+
+      setGifts(Array.isArray(giftsData) ? giftsData : []);
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao carregar presentes');
     } finally {
       setIsLoading(false);
     }
@@ -63,41 +120,41 @@ export default function GiftsPage() {
         method: 'POST',
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error);
+        throw new Error(data?.error || 'Erro ao duplicar presente');
       }
 
       toast.success('Presente duplicado!');
-      fetchGiftListAndGifts();
+      refetch();
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao duplicar presente');
+      toast.error(error?.message || 'Erro ao duplicar presente');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja deletar este presente?')) {
-      return;
-    }
+    if (!confirm('Tem certeza que deseja deletar este presente?')) return;
 
     try {
       const res = await fetch(`/api/gifts/${id}`, {
         method: 'DELETE',
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error);
+        throw new Error(data?.error || 'Erro ao deletar presente');
       }
 
       toast.success('Presente deletado!');
-      setGifts(gifts.filter((g) => g.id !== id));
+      setGifts((prev) => prev.filter((g) => g.id !== id));
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao deletar presente');
+      toast.error(error?.message || 'Erro ao deletar presente');
     }
   };
 
-  if (isLoading) {
+  if (status === 'loading' || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <p>Carregando...</p>
@@ -123,7 +180,7 @@ export default function GiftsPage() {
             {gifts.length} de 100 presentes cadastrados
           </p>
         </div>
-        
+
         <Button
           asChild
           className="bg-terracota-500 hover:bg-terracota-600"
@@ -179,12 +236,12 @@ export default function GiftsPage() {
                 <h3 className="font-display text-xl font-bold text-terracota-700 mb-1">
                   {gift.name}
                 </h3>
-                
-                {gift.description && (
+
+                {gift.description ? (
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                     {gift.description}
                   </p>
-                )}
+                ) : null}
 
                 <div className="flex items-baseline gap-2 mb-3">
                   <span className="text-2xl font-bold text-terracota-600">
@@ -203,18 +260,13 @@ export default function GiftsPage() {
 
                 {/* Ações */}
                 <div className="flex gap-2">
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                  >
+                  <Button asChild size="sm" variant="outline" className="flex-1">
                     <Link href={`/dashboard/presentes/${gift.id}/editar`}>
                       <Edit className="w-3 h-3 mr-1" />
                       Editar
                     </Link>
                   </Button>
-                  
+
                   <Button
                     size="sm"
                     variant="outline"
@@ -223,7 +275,7 @@ export default function GiftsPage() {
                   >
                     <Copy className="w-3 h-3" />
                   </Button>
-                  
+
                   <Button
                     size="sm"
                     variant="outline"
