@@ -20,18 +20,10 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
-        if (!user || !user.password) {
-          throw new Error('Email ou senha inválidos');
-        }
+        if (!user || !user.password) throw new Error('Email ou senha inválidos');
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          throw new Error('Email ou senha inválidos');
-        }
+        const ok = await bcrypt.compare(credentials.password, user.password);
+        if (!ok) throw new Error('Email ou senha inválidos');
 
         return {
           id: user.id,
@@ -39,40 +31,59 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           image: user.image,
-        };
+        } as any;
       },
     }),
   ],
+
+  // se você usa /auth/login no app router, deixe assim:
   pages: {
-    signIn: '/login',
-    error: '/login',
+    signIn: '/auth/login',
+    error: '/auth/login',
   },
+
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
-callbacks: {
-  async jwt({ token, user }) {
-    // quando faz login
-    if (user) {
-      token.id = (user as any).id;
-      token.role = (user as any).role;
-      token.name = (user as any).name;
-      token.picture = (user as any).image;
-      token.email = (user as any).email;
-    }
-    return token;
+
+  callbacks: {
+    async jwt({ token, user }) {
+      // login inicial
+      if (user) {
+        token.id = (user as any).id;
+        token.role = (user as any).role;
+      }
+
+      // mantém nome/foto sempre alinhados com o banco
+      if (token?.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { name: true, email: true, image: true, role: true },
+        });
+
+        if (dbUser) {
+          token.name = dbUser.name ?? token.name;
+          token.email = dbUser.email ?? token.email;
+          token.picture = dbUser.image ?? (token.picture as any);
+          token.role = dbUser.role ?? token.role;
+        }
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user) {
+        (session.user as any).id = token.id as string;
+        (session.user as any).role = token.role as string;
+        session.user.name = (token.name as string) ?? session.user.name;
+        session.user.email = (token.email as string) ?? session.user.email;
+        session.user.image = (token.picture as string) ?? session.user.image;
+      }
+      return session;
+    },
   },
-  async session({ session, token }) {
-    if (session.user) {
-      session.user.id = token.id as string;
-      session.user.role = token.role as string;
-      session.user.name = (token.name as string) ?? session.user.name;
-      session.user.email = (token.email as string) ?? session.user.email;
-      (session.user as any).image = (token.picture as string) ?? (session.user as any).image;
-    }
-    return session;
-  },
-},
+
   secret: process.env.NEXTAUTH_SECRET,
 };
