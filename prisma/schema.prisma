@@ -42,7 +42,7 @@ model GiftList {
   eventDate         DateTime?
   isPublished       Boolean   @default(false)
   templateId        String?
-  feeMode           FeeMode   @default(PASS_TO_GUEST) // PASS_TO_GUEST ou ABSORB
+  feeMode           FeeMode   @default(PASS_TO_GUEST)
   allowMessages     Boolean   @default(true)
   allowPhotoUpload  Boolean   @default(true)
   showGuestNames    Boolean   @default(true)
@@ -62,8 +62,8 @@ model GiftList {
 }
 
 enum FeeMode {
-  PASS_TO_GUEST   // Convidado paga a taxa
-  ABSORB          // Cliente assume a taxa
+  PASS_TO_GUEST
+  ABSORB
 }
 
 // ===== LAYOUT DA PÁGINA =====
@@ -71,8 +71,8 @@ enum FeeMode {
 model PageLayout {
   id            String    @id @default(cuid())
   giftListId    String    @unique
-  blocks        Json      // Array de blocos configuráveis
-  theme         Json      // Configurações de tema (cores, fontes, etc)
+  blocks        Json
+  theme         Json
   customCss     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -94,7 +94,7 @@ model GiftItem {
   totalQuantity   Int       @default(1)
   availableQty    Int       @default(1)
   isActive        Boolean   @default(true)
-  order           Int       @default(0) // Para ordenação
+  order           Int       @default(0)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -109,28 +109,31 @@ model GiftItem {
 // ===== PEDIDOS/TRANSAÇÕES =====
 
 model Order {
-  id                String        @id @default(cuid())
-  giftListId        String
-  giftItemId        String
-  guestName         String
-  guestEmail        String?
-  quantity          Int           @default(1)
-  baseAmount        Decimal       @db.Decimal(10, 2)
-  feeAmount         Decimal       @db.Decimal(10, 2)
-  totalAmount       Decimal       @db.Decimal(10, 2)
-  status            OrderStatus   @default(PENDING)
-  paymentMethod     String?       // card, pix
-  pagarmeOrderId    String?       @unique
-  pagarmeChargeId   String?
-  paidAt            DateTime?
-  refundedAt        DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id              String      @id @default(cuid())
+  giftListId      String
+  giftItemId      String
+  guestName       String
+  guestEmail      String?
+  quantity        Int         @default(1)
+  baseAmount      Decimal     @db.Decimal(10, 2)
+  feeAmount       Decimal     @db.Decimal(10, 2)
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  status          OrderStatus @default(PENDING)
+  paymentMethod   String?
+  pagarmeOrderId  String?     @unique
+  pagarmeChargeId String?
+  paidAt          DateTime?
+  refundedAt      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  giftList          GiftList      @relation(fields: [giftListId], references: [id], onDelete: Cascade)
-  giftItem          GiftItem      @relation(fields: [giftItemId], references: [id])
-  message           Message?
-  webhookEvents     WebhookEvent[]
+  giftList        GiftList    @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  giftItem        GiftItem    @relation(fields: [giftItemId], references: [id])
+
+  // ✅ deixa explícito para evitar ambiguidade
+  message         Message?    @relation("OrderToMessage")
+
+  webhookEvents   WebhookEvent[]
 
   @@index([giftListId])
   @@index([status])
@@ -150,21 +153,22 @@ enum OrderStatus {
 // ===== RECADOS =====
 
 model Message {
-  id              String    @id @default(cuid())
-  orderId         String    @unique
-  giftListId      String
-  guestName       String
-  content         String    @db.Text
-  signature       String?
-  photoUrls       Json?     // Array de URLs de fotos
-  isPublic        Boolean   @default(true)
-  isFavorite      Boolean   @default(false)
-  isRead          Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  giftListId String
+  guestName  String
+  content    String   @db.Text
+  signature  String?
+  photoUrls  Json?
+  isPublic   Boolean  @default(true)
+  isFavorite Boolean  @default(false)
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  giftList        GiftList  @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  // ✅ mesmo nome da relation do Order
+  order      Order    @relation("OrderToMessage", fields: [orderId], references: [id], onDelete: Cascade)
+  giftList   GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
 
   @@index([giftListId])
   @@index([isPublic])
@@ -174,28 +178,28 @@ model Message {
 // ===== PAGAR.ME =====
 
 model Recipient {
-  id                  String    @id @default(cuid())
-  userId              String    @unique
-  pagarmeRecipientId  String    @unique
-  bankAccount         Json      // Dados da conta bancária
-  status              String    @default("pending")
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  pagarmeRecipientId String   @unique
+  bankAccount        Json
+  status             String   @default("pending")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("recipients")
 }
 
 model WebhookEvent {
-  id              String    @id @default(cuid())
-  orderId         String?
-  eventType       String
-  payload         Json
-  processed       Boolean   @default(false)
-  createdAt       DateTime  @default(now())
+  id        String   @id @default(cuid())
+  orderId   String?
+  eventType String
+  payload   Json
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now())
 
-  order           Order?    @relation(fields: [orderId], references: [id])
+  order     Order?   @relation(fields: [orderId], references: [id])
 
   @@index([eventType])
   @@index([processed])
@@ -205,20 +209,20 @@ model WebhookEvent {
 // ===== TEMPLATES =====
 
 model Template {
-  id              String      @id @default(cuid())
-  name            String
-  slug            String      @unique
-  description     String?
-  category        String      // casamento, chá, aniversário, etc
-  thumbnail       String?
-  defaultBlocks   Json        // Layout padrão de blocos
-  defaultTheme    Json        // Tema padrão
-  isActive        Boolean     @default(true)
-  order           Int         @default(0)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  description   String?
+  category      String
+  thumbnail     String?
+  defaultBlocks Json
+  defaultTheme  Json
+  isActive      Boolean   @default(true)
+  order         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  giftLists       GiftList[]
+  giftLists     GiftList[]
 
   @@map("templates")
 }

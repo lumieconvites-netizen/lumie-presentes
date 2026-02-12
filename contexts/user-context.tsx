@@ -1,14 +1,15 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  username: string;
-  photo?: string;
-  createdAt: Date;
+  username?: string;
+  photo?: string; // vamos mapear para session.user.image
+  createdAt?: Date;
 }
 
 export interface GiftItem {
@@ -76,7 +77,7 @@ interface UserContextType {
   pageBlocks: PageBlock[];
   settings: UserSettings;
 
-  updateUser: (user: Partial<UserProfile>) => void;
+  updateUser: (user: Partial<UserProfile>) => Promise<void>;
 
   addGift: (gift: Omit<GiftItem, 'id'>) => void;
   updateGift: (id: string, gift: Partial<GiftItem>) => void;
@@ -100,8 +101,7 @@ const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
   try {
     const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : defaultValue;
-  } catch (error) {
-    console.error(`Error loading ${key} from localStorage:`, error);
+  } catch {
     return defaultValue;
   }
 };
@@ -114,79 +114,13 @@ function safeBroadcast(type: string, payload?: any) {
   } catch {}
 }
 
+/**
+ * ⚠️ Defaults abaixo são OK para modo “preview/editor”.
+ * Mas para o dashboard real (dados do cliente), ideal é puxar do banco via API.
+ */
 const defaultGifts: GiftItem[] = [
-  {
-    id: '1',
-    title: 'Liquidificador',
-    description: 'Liquidificador potente 1000W',
-    value: 250.0,
-    quantity: 1,
-    quantityAvailable: 1,
-    status: 'active',
-  },
-  {
-    id: '2',
-    title: 'Jogo de Panelas',
-    description: 'Jogo com 5 peças antiaderente',
-    value: 450.0,
-    quantity: 1,
-    quantityAvailable: 1,
-    status: 'active',
-  },
-  {
-    id: '3',
-    title: 'Cafeteira Elétrica',
-    description: 'Cafeteira com timer programável',
-    value: 180.0,
-    quantity: 1,
-    quantityAvailable: 1,
-    status: 'active',
-  },
-  {
-    id: '4',
-    title: 'Air Fryer',
-    description: 'Fritadeira sem óleo 5L',
-    value: 380.0,
-    quantity: 1,
-    quantityAvailable: 1,
-    status: 'active',
-  },
-  {
-    id: '5',
-    title: 'Micro-ondas',
-    description: 'Micro-ondas 30L branco',
-    value: 520.0,
-    quantity: 1,
-    quantityAvailable: 1,
-    status: 'active',
-  },
-  {
-    id: '6',
-    title: 'Aspirador de Pó',
-    description: 'Aspirador vertical sem fio',
-    value: 680.0,
-    quantity: 1,
-    quantityAvailable: 1,
-    status: 'active',
-  },
-  {
-    id: '7',
-    title: 'Ferro de Passar',
-    description: 'Ferro a vapor com base antiaderente',
-    value: 150.0,
-    quantity: 1,
-    quantityAvailable: 1,
-    status: 'active',
-  },
-  {
-    id: '8',
-    title: 'Edredom Casal',
-    description: 'Edredom 100% algodão',
-    value: 280.0,
-    quantity: 1,
-    quantityAvailable: 1,
-    status: 'active',
-  },
+  { id: '1', title: 'Liquidificador', description: 'Liquidificador potente 1000W', value: 250.0, quantity: 1, quantityAvailable: 1, status: 'active' },
+  { id: '2', title: 'Jogo de Panelas', description: 'Jogo com 5 peças antiaderente', value: 450.0, quantity: 1, quantityAvailable: 1, status: 'active' },
 ];
 
 const defaultMessages: Message[] = [
@@ -224,70 +158,10 @@ const defaultPageBlocks: PageBlock[] = [
     order: 1,
     enabled: true,
     config: {
-      title: '15 anos da Isa Nauana',
+      title: '15 anos da Isa',
       subtitle: '10 de março de 2026',
       label: 'Convite Especial',
       buttonText: 'Ver Lista de Presentes',
-    },
-  },
-  {
-    id: '2',
-    type: 'message',
-    order: 2,
-    enabled: true,
-    config: {
-      title: 'Nossa História',
-      message:
-        'Você é meu convidado especial e sua presença é o que mais importa. Mas se desejar nos presentear, criamos esta lista com carinho.',
-      signature: '— Com amor, Isa e Rayan',
-    },
-  },
-  {
-    id: '3',
-    type: 'countdown',
-    order: 3,
-    enabled: true,
-    config: {
-      eventDate: '2026-03-10',
-      title: 'Contagem Regressiva',
-    },
-  },
-  {
-    id: '4',
-    type: 'gifts',
-    order: 4,
-    enabled: true,
-    config: {
-      title: 'Lista de Presentes',
-      showPrices: true,
-    },
-  },
-  {
-    id: '5',
-    type: 'messages',
-    order: 5,
-    enabled: true,
-    config: {
-      title: 'Mural de Recados',
-      showMessages: true,
-    },
-  },
-  {
-    id: '6',
-    type: 'gallery',
-    order: 6,
-    enabled: false,
-    config: { title: 'Galeria de Fotos', photos: [] },
-  },
-  {
-    id: '7',
-    type: 'event-info',
-    order: 7,
-    enabled: false,
-    config: {
-      locationName: 'Salão de Festas Bela Vista',
-      address: 'Rua das Flores, 123 - Centro',
-      datetime: '10 de março de 2026, 19h',
     },
   },
 ];
@@ -306,23 +180,14 @@ const defaultSettings: UserSettings = {
 };
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(() =>
-    loadFromStorage('lumie_user', {
-      id: '1',
-      name: 'Rayan',
-      email: 'rayan@example.com',
-      username: 'rayan',
-      photo: undefined,
-      createdAt: new Date(),
-    })
-  );
+  const { data: session, status, update } = useSession();
+
+  // ✅ Agora user começa NULL e vem do NextAuth (nada de "Rayan" fixo)
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   const [gifts, setGifts] = useState<GiftItem[]>(() => loadFromStorage('lumie_gifts', defaultGifts));
   const [messages, setMessages] = useState<Message[]>(() => loadFromStorage('lumie_messages', defaultMessages));
-
-  // ✅ payments agora persiste + sync
   const [payments, setPayments] = useState<Payment[]>(() => loadFromStorage('lumie_payments', defaultPayments));
-
   const [pageBlocks, setPageBlocks] = useState<PageBlock[]>(() => loadFromStorage('lumie_pageBlocks', defaultPageBlocks));
   const [settings, setSettings] = useState<UserSettings>(() => loadFromStorage('lumie_settings', defaultSettings));
 
@@ -339,10 +204,58 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { messagesRef.current = messages; }, [messages]);
   useEffect(() => { paymentsRef.current = payments; }, [payments]);
 
-  const updateUser = (updates: Partial<UserProfile>) => {
-    setUser((prev) => (prev ? { ...prev, ...updates } : null));
+  // ✅ Sincroniza o contexto com a sessão
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (status !== 'authenticated' || !session?.user) {
+      setUser(null);
+      return;
+    }
+
+    const u: UserProfile = {
+      id: (session.user as any).id ?? 'unknown',
+      name: session.user.name ?? '',
+      email: session.user.email ?? '',
+      photo: session.user.image ?? undefined,
+    };
+
+    setUser(u);
+  }, [status, session]);
+
+  // ✅ Atualiza usuário: salva no backend e atualiza session para persistir no refresh
+  const updateUser = async (updates: Partial<UserProfile>) => {
+    // Atualiza estado local imediatamente (UX)
+    setUser((prev) => (prev ? { ...prev, ...updates } : prev));
+
+    // Se não estiver logado, para aqui
+    if (!session?.user) return;
+
+    // 1) salva no banco (se você tiver /api/me)
+    // Se ainda não tiver, me fala que eu te mando o endpoint pronto.
+    try {
+      await fetch('/api/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: updates.name,
+          image: updates.photo,
+        }),
+      });
+    } catch {
+      // se falhar, ainda assim tentamos atualizar a sessão pra não “sumir” no refresh
+    }
+
+    // 2) atualiza a session do NextAuth (isso é o que faz persistir após refresh)
+    try {
+      await update({
+        name: updates.name ?? session.user.name,
+        image: updates.photo ?? session.user.image,
+      });
+    } catch {}
   };
 
+  // CRUD de gifts/messages/payments continuam em localStorage (preview)
   const addGift = (gift: Omit<GiftItem, 'id'>) => {
     const newGift: GiftItem = { ...gift, id: Date.now().toString() };
     setGifts((prev) => {
@@ -393,7 +306,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // ✅ addPayment: cria pagamento e sincroniza com dashboard/site
   const addPayment = (payment: Omit<Payment, 'id'>) => {
     const newPayment: Payment = { ...payment, id: Date.now().toString() };
     setPayments((prev) => {
@@ -447,7 +359,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     ch.addEventListener('message', onMessage);
 
-    // opcional: pede sync ao montar
     try { ch.postMessage({ type: 'REQUEST_SYNC' }); } catch {}
 
     return () => {
@@ -456,7 +367,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Persistência local
+  // Persistência local (NÃO persiste user fake)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('lumie_pageBlocks', JSON.stringify(pageBlocks));
@@ -465,11 +376,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('lumie_messages', JSON.stringify(messages));
     localStorage.setItem('lumie_payments', JSON.stringify(payments));
   }, [pageBlocks, settings, gifts, messages, payments]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('lumie_user', JSON.stringify(user));
-  }, [user]);
 
   return (
     <UserContext.Provider
