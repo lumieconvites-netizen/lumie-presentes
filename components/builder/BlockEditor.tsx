@@ -29,26 +29,69 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
     onUpdate({ [key]: value });
   };
 
+  // ===============================
+  // Upload real (Supabase via /api/upload)
+  // ===============================
+  const uploadToServer = async (file: File, folder: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('folder', folder);
+
+    const res = await fetch('/api/upload/avatar', {
+      method: 'POST',
+      body: form,
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error ?? 'Falha no upload');
+
+    return data.url as string;
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     setUploading(true);
-    // Simular upload - em produção, usar API real
-    const url = URL.createObjectURL(file);
-    handleChange(key, url);
-    setUploading(false);
+    try {
+      // pastas organizadas no bucket
+      const folder =
+        key === 'logo' ? 'logo' : key === 'backgroundImage' ? 'background' : 'uploads';
+
+      const url = await uploadToServer(file, folder);
+      handleChange(key, url);
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.message ?? 'Erro ao enviar imagem');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   const handleMultipleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    
+
     setUploading(true);
-    const urls = files.map(file => URL.createObjectURL(file));
-    const currentImages = config.images || [];
-    handleChange('images', [...currentImages, ...urls]);
-    setUploading(false);
+    try {
+      const uploaded: string[] = [];
+
+      // faz upload 1 a 1 (mais seguro e simples)
+      for (const file of files) {
+        const url = await uploadToServer(file, 'gallery');
+        uploaded.push(url);
+      }
+
+      const currentImages = config.images || [];
+      handleChange('images', [...currentImages, ...uploaded]);
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.message ?? 'Erro ao enviar imagens');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   const removeImage = (index: number) => {
@@ -71,6 +114,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
           <div>
             <Label className="text-sm font-medium">Título</Label>
             <Input
@@ -80,6 +124,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
           <div>
             <Label className="text-sm font-medium">Subtítulo</Label>
             <Input
@@ -89,6 +134,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
           <div>
             <Label className="text-sm font-medium">Texto do Botão</Label>
             <Input
@@ -97,15 +143,16 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
-          
+
           {/* Logo Upload */}
           <div>
             <Label className="text-sm font-medium">Logo (opcional)</Label>
+
             {config.logo ? (
               <div className="mt-2 relative">
-                <img 
-                  src={config.logo} 
-                  alt="Logo" 
+                <img
+                  src={config.logo}
+                  alt="Logo"
                   className="w-full h-24 object-contain bg-gray-100 rounded-lg p-2"
                 />
                 <Button
@@ -113,6 +160,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
                   size="icon"
                   className="absolute top-2 right-2"
                   onClick={() => handleChange('logo', '')}
+                  disabled={uploading}
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -120,7 +168,9 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
             ) : (
               <label className="mt-2 flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
                 <Upload className="w-6 h-6 text-gray-400 mb-1" />
-                <span className="text-xs text-gray-500">Enviar logo</span>
+                <span className="text-xs text-gray-500">
+                  {uploading ? 'Enviando...' : 'Enviar logo'}
+                </span>
                 <input
                   type="file"
                   accept="image/*"
@@ -131,15 +181,16 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               </label>
             )}
           </div>
-          
+
           {/* Background Image */}
           <div>
             <Label className="text-sm font-medium">Imagem de Fundo</Label>
+
             {config.backgroundImage ? (
               <div className="mt-2 relative">
-                <img 
-                  src={config.backgroundImage} 
-                  alt="Background" 
+                <img
+                  src={config.backgroundImage}
+                  alt="Background"
                   className="w-full h-32 object-cover rounded-lg"
                 />
                 <Button
@@ -147,6 +198,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
                   size="icon"
                   className="absolute top-2 right-2"
                   onClick={() => handleChange('backgroundImage', '')}
+                  disabled={uploading}
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -154,7 +206,9 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
             ) : (
               <label className="mt-2 flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
                 <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-500">Enviar imagem</span>
+                <span className="text-sm text-gray-500">
+                  {uploading ? 'Enviando...' : 'Enviar imagem'}
+                </span>
                 <input
                   type="file"
                   accept="image/*"
@@ -231,13 +285,15 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
           <div>
             <Label className="text-sm font-medium">Fotos</Label>
+
             <div className="mt-2 grid grid-cols-3 gap-2">
               {(config.images || []).map((img: string, index: number) => (
                 <div key={index} className="relative group">
-                  <img 
-                    src={img} 
+                  <img
+                    src={img}
                     alt={`Foto ${index + 1}`}
                     className="w-full h-24 object-cover rounded-lg"
                   />
@@ -246,14 +302,18 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
                     size="icon"
                     className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
                     onClick={() => removeImage(index)}
+                    disabled={uploading}
                   >
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
               ))}
+
               <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
                 <Plus className="w-6 h-6 text-gray-400" />
-                <span className="text-xs text-gray-500 mt-1">Adicionar</span>
+                <span className="text-xs text-gray-500 mt-1">
+                  {uploading ? 'Enviando...' : 'Adicionar'}
+                </span>
                 <input
                   type="file"
                   accept="image/*"
@@ -265,6 +325,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               </label>
             </div>
           </div>
+
           <div>
             <Label className="text-sm font-medium">Layout</Label>
             <div className="mt-2 grid grid-cols-2 gap-2">
@@ -298,11 +359,13 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
           <DateTimePicker
             label="Data e Hora"
             value={config.datetime || ''}
             onChange={(value) => handleChange('datetime', value)}
           />
+
           <div>
             <Label className="text-sm font-medium">Local</Label>
             <Input
@@ -312,6 +375,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
           <div>
             <Label className="text-sm font-medium">Endereço</Label>
             <Input
@@ -321,6 +385,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
           <div>
             <Label className="text-sm font-medium">Link do Mapa</Label>
             <Input
@@ -344,6 +409,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
           <div className="flex items-center justify-between py-2">
             <div>
               <Label className="text-sm font-medium">Exibir Publicamente</Label>
@@ -368,6 +434,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
           <div>
             <Label className="text-sm font-medium">Layout</Label>
             <div className="mt-2 grid grid-cols-2 gap-2">
@@ -392,11 +459,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
 
       {/* Delete Button */}
       <div className="pt-4 border-t">
-        <Button
-          variant="destructive"
-          className="w-full"
-          onClick={onDelete}
-        >
+        <Button variant="destructive" className="w-full" onClick={onDelete} disabled={uploading}>
           <Trash2 className="w-4 h-4 mr-2" />
           Remover Bloco
         </Button>

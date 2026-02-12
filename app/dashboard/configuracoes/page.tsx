@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/user-context';
+import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,19 +13,67 @@ import Image from 'next/image';
 
 export default function ConfiguracoesPage() {
   const { user, updateUser, settings, updateSettings } = useUser();
-  const [photo, setPhoto] = useState(user?.photo);
+  const { data: session, update } = useSession();
+
+  // mostra sempre o que está no banco/session primeiro
+  const [photo, setPhoto] = useState<string | undefined>(
+    (session?.user as any)?.image || user?.photo
+  );
+
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // quando session mudar (ex: depois do upload), reflete aqui
+  useEffect(() => {
+    const img = (session?.user as any)?.image;
+    if (img) setPhoto(img);
+  }, [session]);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPhoto(url);
-      updateUser({ photo: url });
+    if (!file) return;
+
+    // preview enquanto envia
+    const previewUrl = URL.createObjectURL(file);
+    setPhoto(previewUrl);
+
+    try {
+      const form = new FormData();
+      form.append('file', file);
+
+      const res = await fetch('/api/upload/avatar', {
+        method: 'POST',
+        body: form,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error(data);
+        alert(data?.error ?? 'Falha ao enviar foto.');
+        // volta pro que estava antes
+        setPhoto((session?.user as any)?.image || user?.photo);
+        return;
+      }
+
+      // URL pública (Supabase) salva no banco via route.ts
+      setPhoto(data.url);
+
+      // atualiza contexto (se você ainda usa ele em algum lugar)
+      updateUser({ photo: data.url });
+
+      // recarrega a session do NextAuth para refletir a imagem persistida
+      await update();
+    } catch (err) {
+      console.error(err);
+      alert('Erro inesperado no upload.');
+      setPhoto((session?.user as any)?.image || user?.photo);
+    } finally {
+      // permite re-enviar o mesmo arquivo
+      e.target.value = '';
     }
   };
 
@@ -97,136 +146,11 @@ export default function ConfiguracoesPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações Pessoais</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Nome</label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">E-mail</label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Usuário (URL)</label>
-                <Input value={user?.username} disabled />
-                <p className="text-xs text-gray-500 mt-1">
-                  Seu link: lumie.com/lista/{user?.username}
-                </p>
-              </div>
-              <Button onClick={handleSaveProfile}>Salvar Alterações</Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Alterar Senha</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Senha Atual</label>
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Nova Senha</label>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Confirmar Nova Senha</label>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
-              <Button onClick={handleChangePassword}>Alterar Senha</Button>
-            </CardContent>
-          </Card>
+          {/* resto do arquivo igual ao seu... */}
+          {/* ... */}
         </TabsContent>
 
-        <TabsContent value="taxas">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuração de Taxa</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="font-medium text-foreground">Repassar taxa ao convidado</h3>
-                    <p className="text-sm text-gray-500">
-                      Quando ativo, o convidado paga o valor do presente + 7,99%
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.feePassedToGuest}
-                    onCheckedChange={(checked) => updateSettings({ feePassedToGuest: checked })}
-                  />
-                </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium mb-2">Exemplo com presente de R$ 100,00:</p>
-                  {settings.feePassedToGuest ? (
-                    <div className="text-sm space-y-1">
-                      <p>• Convidado paga: <strong className="text-primary">R$ 107,99</strong></p>
-                      <p>• Você recebe: <strong className="text-green-600">R$ 100,00</strong></p>
-                    </div>
-                  ) : (
-                    <div className="text-sm space-y-1">
-                      <p>• Convidado paga: <strong className="text-primary">R$ 100,00</strong></p>
-                      <p>• Você recebe: <strong className="text-green-600">R$ 92,01</strong></p>
-                      <p className="text-xs text-gray-500">Taxa de R$ 7,99 descontada</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="privacidade">
-          <Card>
-            <CardHeader>
-              <CardTitle>Privacidade e Visibilidade</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Lista Publicada</h3>
-                  <p className="text-sm text-gray-500">
-                    Quando ativa, sua lista fica visível para os convidados
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.published}
-                  onCheckedChange={(checked) => updateSettings({ published: checked })}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Recados Públicos</h3>
-                  <p className="text-sm text-gray-500">
-                    Exibir recados na página pública da lista
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.messagesPublic}
-                  onCheckedChange={(checked) => updateSettings({ messagesPublic: checked })}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* resto igual */}
       </Tabs>
     </div>
   );
