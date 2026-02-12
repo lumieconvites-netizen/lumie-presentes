@@ -1,103 +1,47 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useUser } from '@/contexts/user-context';
-import { useSession } from 'next-auth/react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Camera, User, DollarSign, Shield } from 'lucide-react';
-import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 
 export default function ConfiguracoesPage() {
-  const { user, updateUser, settings, updateSettings } = useUser();
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
 
-  // mostra sempre o que está no banco/session primeiro
-  const [photo, setPhoto] = useState<string | undefined>(
-    (session?.user as any)?.image || user?.photo
-  );
-
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const [name, setName] = useState(session?.user?.name || '');
+  const [email, setEmail] = useState(session?.user?.email || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // quando session mudar (ex: depois do upload), reflete aqui
-  useEffect(() => {
-    const img = (session?.user as any)?.image;
-    if (img) setPhoto(img);
-  }, [session]);
+  const handleSaveProfile = async () => {
+    await fetch('/api/me', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // preview enquanto envia
-    const previewUrl = URL.createObjectURL(file);
-    setPhoto(previewUrl);
-
-    try {
-      const form = new FormData();
-      form.append('file', file);
-
-      const res = await fetch('/api/upload/avatar', {
-        method: 'POST',
-        body: form,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        console.error(data);
-        alert(data?.error ?? 'Falha ao enviar foto.');
-        // volta pro que estava antes
-        setPhoto((session?.user as any)?.image || user?.photo);
-        return;
-      }
-
-      // URL pública (Supabase) salva no banco via route.ts
-      setPhoto(data.url);
-
-      // atualiza contexto (se você ainda usa ele em algum lugar)
-      updateUser({ photo: data.url });
-
-      // recarrega a session do NextAuth para refletir a imagem persistida
-      await update();
-    } catch (err) {
-      console.error(err);
-      alert('Erro inesperado no upload.');
-      setPhoto((session?.user as any)?.image || user?.photo);
-    } finally {
-      // permite re-enviar o mesmo arquivo
-      e.target.value = '';
-    }
-  };
-
-  const handleSaveProfile = () => {
-    updateUser({ name, email });
-    alert('Perfil atualizado com sucesso!');
+    alert('Perfil atualizado!');
   };
 
   const handleChangePassword = () => {
     if (newPassword !== confirmPassword) {
-      alert('As senhas não coincidem!');
+      alert('As senhas não coincidem');
       return;
     }
-    alert('Senha alterada com sucesso!');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+
+    alert('Senha alterada (implementar backend depois)');
   };
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-display text-foreground mb-2">Configurações</h1>
-        <p className="text-gray-500">Gerencie suas preferências e dados da conta</p>
+        <h1 className="text-3xl font-display mb-2">Configurações</h1>
+        <p className="text-gray-500">Gerencie sua conta</p>
       </div>
 
       <Tabs defaultValue="perfil" className="space-y-6">
@@ -116,41 +60,89 @@ export default function ConfiguracoesPage() {
           </TabsTrigger>
         </TabsList>
 
+        {/* PERFIL */}
         <TabsContent value="perfil" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Foto de Perfil</CardTitle>
+              <CardTitle>Informações Pessoais</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-6">
-                <div className="relative">
-                  {photo ? (
-                    <div className="relative w-24 h-24 rounded-full overflow-hidden">
-                      <Image src={photo} alt="Foto de perfil" fill className="object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-display">
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90">
-                    <Camera className="w-4 h-4 text-white" />
-                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                  </label>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">Alterar foto</p>
-                  <p className="text-sm text-gray-500">JPG, PNG ou GIF. Máx 5MB.</p>
-                </div>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium block mb-2">Nome</label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} />
               </div>
+
+              <div>
+                <label className="text-sm font-medium block mb-2">E-mail</label>
+                <Input value={email} disabled />
+              </div>
+
+              <Button onClick={handleSaveProfile}>
+                Salvar Alterações
+              </Button>
             </CardContent>
           </Card>
 
-          {/* resto do arquivo igual ao seu... */}
-          {/* ... */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Alterar Senha</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                type="password"
+                placeholder="Senha atual"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+              <Input
+                type="password"
+                placeholder="Nova senha"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+              <Input
+                type="password"
+                placeholder="Confirmar nova senha"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+
+              <Button onClick={handleChangePassword}>
+                Alterar Senha
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* resto igual */}
+        {/* TAXAS */}
+        <TabsContent value="taxas">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuração de Taxa</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span>Repassar taxa ao convidado</span>
+                <Switch />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* PRIVACIDADE */}
+        <TabsContent value="privacidade">
+          <Card>
+            <CardHeader>
+              <CardTitle>Privacidade</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span>Lista publicada</span>
+                <Switch />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
