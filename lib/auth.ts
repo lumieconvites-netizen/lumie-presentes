@@ -25,7 +25,9 @@ export const authOptions: NextAuthOptions = {
         }
 
         const ok = await bcrypt.compare(credentials.password, user.password);
-        if (!ok) throw new Error("Email ou senha inválidos");
+        if (!ok) {
+          throw new Error("Email ou senha inválidos");
+        }
 
         return {
           id: user.id,
@@ -39,9 +41,8 @@ export const authOptions: NextAuthOptions = {
   ],
 
   pages: {
-    // ⚠️ no seu app, login está em /auth/login
-    signIn: "/auth/login",
-    error: "/auth/login",
+    signIn: "/login",
+    error: "/login",
   },
 
   session: {
@@ -50,39 +51,30 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger }) {
       // 1) no login inicial
       if (user) {
         token.id = (user as any).id;
-        token.role = (user as any).role;
-        token.name = (user as any).name;
-        token.email = (user as any).email;
-        token.picture = (user as any).image ?? null;
-        return token;
       }
 
-      // 2) quando alguém chamar session.update()
-      if (trigger === "update" && session?.user) {
-        token.name = session.user.name ?? token.name;
-        token.email = session.user.email ?? token.email;
-        // @ts-ignore
-        token.picture = (session.user as any).image ?? token.picture;
-        return token;
-      }
-
-      // 3) em refresh/requests: sincroniza com o banco (persistência real)
-      if (token?.id) {
+      // 2) sempre que tiver token.id, reidrata do banco (inclui image atualizada)
+      if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { name: true, email: true, image: true, role: true },
+          select: { id: true, name: true, email: true, role: true, image: true },
         });
 
         if (dbUser) {
           token.name = dbUser.name ?? token.name;
           token.email = dbUser.email ?? token.email;
-          token.picture = dbUser.image ?? token.picture;
-          token.role = dbUser.role ?? token.role;
+          token.role = dbUser.role;
+          token.picture = dbUser.image ?? null;
         }
+      }
+
+      // quando chamar update(), força refresh do banco também
+      if (trigger === "update" && token.id) {
+        // já caiu no bloco acima, então ok
       }
 
       return token;
@@ -94,8 +86,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).role = token.role as string;
         session.user.name = (token.name as string) ?? session.user.name;
         session.user.email = (token.email as string) ?? session.user.email;
-        // padrão do next-auth é session.user.image
-        session.user.image = (token.picture as string) ?? session.user.image;
+        (session.user as any).image = (token.picture as string) ?? null;
       }
       return session;
     },
