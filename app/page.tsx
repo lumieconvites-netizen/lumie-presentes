@@ -2,13 +2,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
 import { Heart, Star } from "lucide-react";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#F7F5F2]">
-      <Navbar currentPage="home" />
+      {/* ✅ Navbar sem props */}
+      <Navbar />
 
       {/* Hero Section - Split Layout */}
       <section className="relative">
@@ -32,15 +32,15 @@ export default function HomePage() {
                 </h1>
 
                 <p className="text-lg text-muted-foreground max-w-lg">
-                  Crie sua lista de presentes online e receba o valor diretamente na sua conta. 
+                  Crie sua lista de presentes online e receba o valor diretamente na sua conta.
                   Simples, elegante e sem complicações.
                 </p>
               </div>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  asChild 
+                <Button
+                  asChild
                   size="lg"
                   className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 py-6 text-base"
                 >
@@ -49,16 +49,14 @@ export default function HomePage() {
                     <span className="ml-2">→</span>
                   </Link>
                 </Button>
-                
-                <Button 
-                  asChild 
+
+                <Button
+                  asChild
                   variant="outline"
                   size="lg"
                   className="rounded-full px-8 py-6 text-base border-2 hover:border-primary"
                 >
-                  <Link href="/como-funciona">
-                    Como Funciona
-                  </Link>
+                  <Link href="/como-funciona">Como Funciona</Link>
                 </Button>
               </div>
 
@@ -81,7 +79,7 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="flex items-center gap-1 mb-1">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -120,14 +118,7 @@ export default function HomePage() {
 
               {/* Imagem Principal */}
               <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl">
-                <Image
-                  src="/hero-image.jpg"
-                  alt="Celebração"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                {/* Overlay sutil */}
+                <Image src="/hero-image.jpg" alt="Celebração" fill className="object-cover" priority />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
               </div>
             </div>
@@ -152,12 +143,9 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <span className="text-3xl">💰</span>
               </div>
-              <h3 className="font-display text-2xl font-bold text-foreground mb-3">
-                Receba em dinheiro
-              </h3>
+              <h3 className="font-display text-2xl font-bold text-foreground mb-3">Receba em dinheiro</h3>
               <p className="text-muted-foreground">
-                Seus convidados presenteiam e você recebe o valor direto na conta. 
-                Use como preferir!
+                Seus convidados presenteiam e você recebe o valor direto na conta. Use como preferir!
               </p>
             </div>
 
@@ -165,9 +153,7 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <span className="text-3xl">🎨</span>
               </div>
-              <h3 className="font-display text-2xl font-bold text-foreground mb-3">
-                Totalmente personalizável
-              </h3>
+              <h3 className="font-display text-2xl font-bold text-foreground mb-3">Totalmente personalizável</h3>
               <p className="text-muted-foreground">
                 Editor visual completo. Escolha cores, fotos, textos e organize como quiser.
               </p>
@@ -177,9 +163,7 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <span className="text-3xl">🔒</span>
               </div>
-              <h3 className="font-display text-2xl font-bold text-foreground mb-3">
-                Seguro e confiável
-              </h3>
+              <h3 className="font-display text-2xl font-bold text-foreground mb-3">Seguro e confiável</h3>
               <p className="text-muted-foreground">
                 Pagamentos processados com segurança via Pagar.me. Seus dados protegidos.
               </p>
@@ -195,67 +179,26 @@ export default function HomePage() {
             <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
               Como funciona?
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Simples em apenas 4 passos
-            </p>
+            <p className="text-lg text-muted-foreground">Simples em apenas 4 passos</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto">
-            <div className="relative">
-              <div className="bg-white rounded-2xl p-8 shadow-sm">
-                <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xl mb-6">
-                  1
+            {[
+              { n: 1, title: "Crie sua conta", desc: "Cadastre-se gratuitamente em menos de 2 minutos" },
+              { n: 2, title: "Monte sua lista", desc: "Adicione presentes com fotos e valores" },
+              { n: 3, title: "Compartilhe", desc: "Envie o link para seus convidados" },
+              { n: 4, title: "Receba!", desc: "O dinheiro cai direto na sua conta" },
+            ].map((step) => (
+              <div key={step.n} className="relative">
+                <div className="bg-white rounded-2xl p-8 shadow-sm">
+                  <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xl mb-6">
+                    {step.n}
+                  </div>
+                  <h3 className="font-display text-xl font-bold text-foreground mb-3">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground">{step.desc}</p>
                 </div>
-                <h3 className="font-display text-xl font-bold text-foreground mb-3">
-                  Crie sua conta
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Cadastre-se gratuitamente em menos de 2 minutos
-                </p>
               </div>
-            </div>
-
-            <div className="relative">
-              <div className="bg-white rounded-2xl p-8 shadow-sm">
-                <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xl mb-6">
-                  2
-                </div>
-                <h3 className="font-display text-xl font-bold text-foreground mb-3">
-                  Monte sua lista
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Adicione presentes com fotos e valores
-                </p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="bg-white rounded-2xl p-8 shadow-sm">
-                <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xl mb-6">
-                  3
-                </div>
-                <h3 className="font-display text-xl font-bold text-foreground mb-3">
-                  Compartilhe
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Envie o link para seus convidados
-                </p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="bg-white rounded-2xl p-8 shadow-sm">
-                <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xl mb-6">
-                  4
-                </div>
-                <h3 className="font-display text-xl font-bold text-foreground mb-3">
-                  Receba!
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  O dinheiro cai direto na sua conta
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -268,45 +211,26 @@ export default function HomePage() {
           </h2>
 
           <div className="max-w-lg mx-auto bg-gradient-to-br from-primary/10 to-primary/5 rounded-3xl p-12 shadow-lg">
-            <div className="text-6xl font-display font-bold text-primary mb-4">
-              7,99%
-            </div>
-            <p className="text-xl text-foreground mb-8">
-              Taxa única por presente recebido
-            </p>
-            
+            <div className="text-6xl font-display font-bold text-primary mb-4">7,99%</div>
+            <p className="text-xl text-foreground mb-8">Taxa única por presente recebido</p>
+
             <div className="space-y-3 text-left mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 text-sm">✓</span>
+              {[
+                "Sem mensalidade",
+                "Sem taxa de cadastro",
+                "Você escolhe quem paga a taxa",
+                "Até 100 presentes por lista",
+              ].map((text) => (
+                <div key={text} className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-green-600 text-sm">✓</span>
+                  </div>
+                  <span className="text-foreground">{text}</span>
                 </div>
-                <span className="text-foreground">Sem mensalidade</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 text-sm">✓</span>
-                </div>
-                <span className="text-foreground">Sem taxa de cadastro</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 text-sm">✓</span>
-                </div>
-                <span className="text-foreground">Você escolhe quem paga a taxa</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 text-sm">✓</span>
-                </div>
-                <span className="text-foreground">Até 100 presentes por lista</span>
-              </div>
+              ))}
             </div>
 
-            <Button 
-              asChild 
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-white rounded-full px-8"
-            >
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-8">
               <Link href="/cadastro">Começar agora</Link>
             </Button>
           </div>
@@ -322,8 +246,8 @@ export default function HomePage() {
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Junte-se a milhares de pessoas que já transformaram seus presentes em realizações
           </p>
-          <Button 
-            asChild 
+          <Button
+            asChild
             size="lg"
             className="bg-primary hover:bg-primary/90 text-white rounded-full px-12 py-6 text-lg"
           >
@@ -341,19 +265,13 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
             <div className="col-span-1 md:col-span-2">
               <div className="relative w-24 h-12 mb-4 brightness-0 invert">
-                <Image
-                  src="/logo.png"
-                  alt="LUMIÊ"
-                  fill
-                  className="object-contain"
-                />
+                <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" />
               </div>
               <p className="text-gray-400 text-sm max-w-sm">
-                Transforme seus presentes em sonhos realizados. 
-                A forma mais elegante de celebrar momentos especiais.
+                Transforme seus presentes em sonhos realizados. A forma mais elegante de celebrar momentos especiais.
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-display text-lg mb-4">Links</h4>
               <ul className="space-y-2">
@@ -379,7 +297,7 @@ export default function HomePage() {
                 </li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-display text-lg mb-4">Legal</h4>
               <ul className="space-y-2">
@@ -401,11 +319,9 @@ export default function HomePage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="mt-12 pt-8 border-t border-gray-800 text-center">
-            <p className="text-sm text-gray-500">
-              © 2024 LUMIÊ. Todos os direitos reservados.
-            </p>
+            <p className="text-sm text-gray-500">© 2024 LUMIÊ. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
