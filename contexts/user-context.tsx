@@ -1,15 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  username?: string;
-  photo?: string; // vamos mapear para session.user.image
-  createdAt?: Date;
+  username: string;
+  photo?: string;
+  createdAt: Date;
 }
 
 export interface GiftItem {
@@ -77,7 +77,7 @@ interface UserContextType {
   pageBlocks: PageBlock[];
   settings: UserSettings;
 
-  updateUser: (user: Partial<UserProfile>) => Promise<void>;
+  updateUser: (user: Partial<UserProfile>) => void;
 
   addGift: (gift: Omit<GiftItem, 'id'>) => void;
   updateGift: (id: string, gift: Partial<GiftItem>) => void;
@@ -95,75 +95,34 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Helpers
-const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
-  if (typeof window === 'undefined') return defaultValue;
-  try {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : defaultValue;
-  } catch {
-    return defaultValue;
-  }
-};
-
-function safeBroadcast(type: string, payload?: any) {
-  try {
-    const ch = new BroadcastChannel('lumie_preview');
-    ch.postMessage({ type, payload });
-    ch.close();
-  } catch {}
-}
-
-/**
- * ⚠️ Defaults abaixo são OK para modo “preview/editor”.
- * Mas para o dashboard real (dados do cliente), ideal é puxar do banco via API.
- */
+// ========== DEFAULTS (os seus) ==========
 const defaultGifts: GiftItem[] = [
   { id: '1', title: 'Liquidificador', description: 'Liquidificador potente 1000W', value: 250.0, quantity: 1, quantityAvailable: 1, status: 'active' },
   { id: '2', title: 'Jogo de Panelas', description: 'Jogo com 5 peças antiaderente', value: 450.0, quantity: 1, quantityAvailable: 1, status: 'active' },
+  { id: '3', title: 'Cafeteira Elétrica', description: 'Cafeteira com timer programável', value: 180.0, quantity: 1, quantityAvailable: 1, status: 'active' },
+  { id: '4', title: 'Air Fryer', description: 'Fritadeira sem óleo 5L', value: 380.0, quantity: 1, quantityAvailable: 1, status: 'active' },
+  { id: '5', title: 'Micro-ondas', description: 'Micro-ondas 30L branco', value: 520.0, quantity: 1, quantityAvailable: 1, status: 'active' },
+  { id: '6', title: 'Aspirador de Pó', description: 'Aspirador vertical sem fio', value: 680.0, quantity: 1, quantityAvailable: 1, status: 'active' },
+  { id: '7', title: 'Ferro de Passar', description: 'Ferro a vapor com base antiaderente', value: 150.0, quantity: 1, quantityAvailable: 1, status: 'active' },
+  { id: '8', title: 'Edredom Casal', description: 'Edredom 100% algodão', value: 280.0, quantity: 1, quantityAvailable: 1, status: 'active' },
 ];
 
 const defaultMessages: Message[] = [
-  {
-    id: '1',
-    guestName: 'Maria Silva',
-    message: 'Parabéns pelo evento! Desejo muita felicidade!',
-    giftTitle: 'Liquidificador',
-    amount: 250.0,
-    date: new Date('2024-02-09'),
-    isPublic: true,
-    isFavorite: false,
-  },
+  { id: '1', guestName: 'Maria Silva', message: 'Parabéns pelo evento! Desejo muita felicidade!', giftTitle: 'Liquidificador', amount: 250.0, date: new Date('2024-02-09'), isPublic: true, isFavorite: false },
 ];
 
 const defaultPayments: Payment[] = [
-  {
-    id: '1',
-    guestName: 'Maria Silva',
-    guestEmail: 'maria@example.com',
-    giftTitle: 'Liquidificador',
-    amount: 250.0,
-    fee: 19.98,
-    netAmount: 230.02,
-    status: 'paid',
-    date: new Date('2024-02-09'),
-    message: 'Parabéns pelo evento! Desejo muita felicidade!',
-  },
+  { id: '1', guestName: 'Maria Silva', guestEmail: 'maria@example.com', giftTitle: 'Liquidificador', amount: 250.0, fee: 19.98, netAmount: 230.02, status: 'paid', date: new Date('2024-02-09'), message: 'Parabéns pelo evento! Desejo muita felicidade!' },
 ];
 
 const defaultPageBlocks: PageBlock[] = [
-  {
-    id: '1',
-    type: 'hero',
-    order: 1,
-    enabled: true,
-    config: {
-      title: '15 anos da Isa',
-      subtitle: '10 de março de 2026',
-      label: 'Convite Especial',
-      buttonText: 'Ver Lista de Presentes',
-    },
-  },
+  { id: '1', type: 'hero', order: 1, enabled: true, config: { title: '15 anos da Isa Nauana', subtitle: '10 de março de 2026', label: 'Convite Especial', buttonText: 'Ver Lista de Presentes' } },
+  { id: '2', type: 'message', order: 2, enabled: true, config: { title: 'Nossa História', message: 'Você é meu convidado especial e sua presença é o que mais importa. Mas se desejar nos presentear, criamos esta lista com carinho.', signature: '— Com amor, Isa e Rayan' } },
+  { id: '3', type: 'countdown', order: 3, enabled: true, config: { eventDate: '2026-03-10', title: 'Contagem Regressiva' } },
+  { id: '4', type: 'gifts', order: 4, enabled: true, config: { title: 'Lista de Presentes', showPrices: true } },
+  { id: '5', type: 'messages', order: 5, enabled: true, config: { title: 'Mural de Recados', showMessages: true } },
+  { id: '6', type: 'gallery', order: 6, enabled: false, config: { title: 'Galeria de Fotos', photos: [] } },
+  { id: '7', type: 'event-info', order: 7, enabled: false, config: { locationName: 'Salão de Festas Bela Vista', address: 'Rua das Flores, 123 - Centro', datetime: '10 de março de 2026, 19h' } },
 ];
 
 const defaultSettings: UserSettings = {
@@ -179,19 +138,33 @@ const defaultSettings: UserSettings = {
   },
 };
 
+// ========== helpers ==========
+const safeJsonParse = <T,>(value: string | null, fallback: T): T => {
+  try {
+    return value ? (JSON.parse(value) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status, update } = useSession();
+  const { data: session, status } = useSession();
+  const userId = (session?.user as any)?.id as string | undefined;
 
-  // ✅ Agora user começa NULL e vem do NextAuth (nada de "Rayan" fixo)
+  // prefix por userId (quando não tem, usa "guest")
+  const storagePrefix = useMemo(() => `lumie:${userId ?? 'guest'}:`, [userId]);
+  const channelName = useMemo(() => `lumie_preview:${userId ?? 'guest'}`, [userId]);
+
+  const key = (k: string) => `${storagePrefix}${k}`;
+
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [gifts, setGifts] = useState<GiftItem[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [pageBlocks, setPageBlocks] = useState<PageBlock[]>([]);
+  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
 
-  const [gifts, setGifts] = useState<GiftItem[]>(() => loadFromStorage('lumie_gifts', defaultGifts));
-  const [messages, setMessages] = useState<Message[]>(() => loadFromStorage('lumie_messages', defaultMessages));
-  const [payments, setPayments] = useState<Payment[]>(() => loadFromStorage('lumie_payments', defaultPayments));
-  const [pageBlocks, setPageBlocks] = useState<PageBlock[]>(() => loadFromStorage('lumie_pageBlocks', defaultPageBlocks));
-  const [settings, setSettings] = useState<UserSettings>(() => loadFromStorage('lumie_settings', defaultSettings));
-
-  // refs para REQUEST_SYNC sempre devolver o estado mais novo
+  // Refs para sync
   const settingsRef = useRef(settings);
   const pageBlocksRef = useRef(pageBlocks);
   const giftsRef = useRef(gifts);
@@ -204,58 +177,62 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { messagesRef.current = messages; }, [messages]);
   useEffect(() => { paymentsRef.current = payments; }, [payments]);
 
-  // ✅ Sincroniza o contexto com a sessão
+  // ✅ Carrega estado quando troca o usuário (ou no primeiro load)
   useEffect(() => {
-    if (status === 'loading') return;
+    if (typeof window === 'undefined') return;
 
-    if (status !== 'authenticated' || !session?.user) {
+    // se deslogou, zera tudo pra não “vazar”
+    if (status === 'unauthenticated') {
       setUser(null);
+      setGifts([]);
+      setMessages([]);
+      setPayments([]);
+      setPageBlocks([]);
+      setSettings(defaultSettings);
       return;
     }
 
-    const u: UserProfile = {
-      id: (session.user as any).id ?? 'unknown',
-      name: session.user.name ?? '',
-      email: session.user.email ?? '',
-      photo: session.user.image ?? undefined,
-    };
+    // enquanto carregando, não faz nada
+    if (status === 'loading') return;
 
-    setUser(u);
-  }, [status, session]);
+    const dbUser = session?.user as any;
 
-  // ✅ Atualiza usuário: salva no backend e atualiza session para persistir no refresh
-  const updateUser = async (updates: Partial<UserProfile>) => {
-    // Atualiza estado local imediatamente (UX)
-    setUser((prev) => (prev ? { ...prev, ...updates } : prev));
+    // user vem da session (fonte de verdade)
+    setUser({
+      id: dbUser?.id ?? 'guest',
+      name: dbUser?.name ?? '',
+      email: dbUser?.email ?? '',
+      username: dbUser?.username ?? '',
+      photo: dbUser?.image ?? undefined,
+      createdAt: new Date(),
+    });
 
-    // Se não estiver logado, para aqui
-    if (!session?.user) return;
+    // dados por-user no localStorage
+    const loadedGifts = safeJsonParse(localStorage.getItem(key('gifts')), defaultGifts);
+    const loadedMessages = safeJsonParse(localStorage.getItem(key('messages')), defaultMessages);
+    const loadedPayments = safeJsonParse(localStorage.getItem(key('payments')), defaultPayments);
+    const loadedBlocks = safeJsonParse(localStorage.getItem(key('pageBlocks')), defaultPageBlocks);
+    const loadedSettings = safeJsonParse(localStorage.getItem(key('settings')), defaultSettings);
 
-    // 1) salva no banco (se você tiver /api/me)
-    // Se ainda não tiver, me fala que eu te mando o endpoint pronto.
+    setGifts(loadedGifts);
+    setMessages(loadedMessages);
+    setPayments(loadedPayments);
+    setPageBlocks(loadedBlocks);
+    setSettings(loadedSettings);
+  }, [key, session, status]);
+
+  function safeBroadcast(type: string, payload?: any) {
     try {
-      await fetch('/api/me', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: updates.name,
-          image: updates.photo,
-        }),
-      });
-    } catch {
-      // se falhar, ainda assim tentamos atualizar a sessão pra não “sumir” no refresh
-    }
-
-    // 2) atualiza a session do NextAuth (isso é o que faz persistir após refresh)
-    try {
-      await update({
-        name: updates.name ?? session.user.name,
-        image: updates.photo ?? session.user.image,
-      });
+      const ch = new BroadcastChannel(channelName);
+      ch.postMessage({ type, payload });
+      ch.close();
     } catch {}
+  }
+
+  const updateUser = (updates: Partial<UserProfile>) => {
+    setUser((prev) => (prev ? { ...prev, ...updates } : null));
   };
 
-  // CRUD de gifts/messages/payments continuam em localStorage (preview)
   const addGift = (gift: Omit<GiftItem, 'id'>) => {
     const newGift: GiftItem = { ...gift, id: Date.now().toString() };
     setGifts((prev) => {
@@ -332,11 +309,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Listener único
+  // ✅ listener isolado por usuário
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const ch = new BroadcastChannel('lumie_preview');
+    const ch = new BroadcastChannel(channelName);
 
     function onMessage(ev: MessageEvent) {
       const msg = ev.data;
@@ -365,17 +342,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       ch.removeEventListener('message', onMessage);
       ch.close();
     };
-  }, []);
+  }, [channelName]);
 
-  // Persistência local (NÃO persiste user fake)
+  // ✅ persistência por usuário
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('lumie_pageBlocks', JSON.stringify(pageBlocks));
-    localStorage.setItem('lumie_settings', JSON.stringify(settings));
-    localStorage.setItem('lumie_gifts', JSON.stringify(gifts));
-    localStorage.setItem('lumie_messages', JSON.stringify(messages));
-    localStorage.setItem('lumie_payments', JSON.stringify(payments));
-  }, [pageBlocks, settings, gifts, messages, payments]);
+
+    localStorage.setItem(key('pageBlocks'), JSON.stringify(pageBlocks));
+    localStorage.setItem(key('settings'), JSON.stringify(settings));
+    localStorage.setItem(key('gifts'), JSON.stringify(gifts));
+    localStorage.setItem(key('messages'), JSON.stringify(messages));
+    localStorage.setItem(key('payments'), JSON.stringify(payments));
+  }, [key, pageBlocks, settings, gifts, messages, payments]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(key('user'), JSON.stringify(user));
+  }, [key, user]);
 
   return (
     <UserContext.Provider

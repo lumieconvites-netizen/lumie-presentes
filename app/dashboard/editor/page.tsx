@@ -1,33 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useUser } from '@/contexts/user-context';
 import type { PageBlock } from '@/contexts/user-context';
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Eye,
-  Plus,
-  GripVertical,
-  Sparkles,
-  ChevronRight,
-  Globe,
-  Type,
-  Image as ImageIcon,
-  Layout,
-} from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+import { Eye, GripVertical, Sparkles, ChevronRight, Globe, Type, Image as ImageIcon, Layout } from 'lucide-react';
 import { Reorder } from 'framer-motion';
+
 import BlockEditor from '@/components/builder/BlockEditor';
 import BlockPreview from '@/components/builder/BlockPreview';
 
@@ -43,17 +29,112 @@ const BLOCK_TYPES: Array<{ id: BlockTypeId; name: string; icon: any }> = [
   { id: 'event-info', name: 'Informações do Evento', icon: Globe },
 ];
 
+type Theme = {
+  primary_color?: string;
+  secondary_color?: string;
+  background_color?: string;
+  font_title?: string;
+  font_body?: string;
+};
+
 export default function PageBuilder() {
-  const { pageBlocks, updatePageBlocks, settings, updateSettings, gifts } = useUser();
+  // ✅ dados reais do usuário (giftList + layout vindo do banco)
+  const [giftList, setGiftList] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const [pageBlocks, setPageBlocks] = useState<PageBlock[]>([]);
+  const [theme, setTheme] = useState<Theme>({
+    primary_color: '#C86E52',
+    secondary_color: '#8E3D2C',
+    background_color: '#FAF4EF',
+    font_title: 'Cormorant Garamond',
+    font_body: 'Inter',
+  });
 
   const [selectedBlock, setSelectedBlock] = useState<PageBlock | null>(null);
   const [themeVersion, setThemeVersion] = useState<number>(0);
 
-  // Force re-render when theme changes
+  // debounce p/ não salvar no banco a cada tecla (fica lisinho)
+  const saveTimer = useRef<any>(null);
+
+  const siteHref = useMemo(() => {
+    if (!giftList?.slug) return "/site";
+    return `/site/${encodeURIComponent(giftList.slug)}`;
+  }, [giftList?.slug]);
+
+  // 1) Carrega giftList do user + layout do banco
   useEffect(() => {
-    console.log('Editor - Theme changed, forcing re-render', settings.theme);
+    let cancelled = false;
+
+    async function boot() {
+      try {
+        setLoading(true);
+
+        const glRes = await fetch('/api/gift-lists/my-list', { cache: 'no-store' });
+        const gl = await glRes.json();
+        if (!glRes.ok) throw new Error(gl?.error ?? 'Falha ao carregar giftList');
+
+        if (cancelled) return;
+        setGiftList(gl);
+
+        const layoutRes = await fetch(`/api/gift-lists/${gl.id}/layout`, { cache: 'no-store' });
+        const layout = await layoutRes.json();
+        if (!layoutRes.ok) throw new Error(layout?.error ?? 'Falha ao carregar layout');
+
+        if (cancelled) return;
+
+        setPageBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
+        setTheme((layout?.theme ?? {}) as Theme);
+
+        // status publish vem de giftList.isPublished
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    boot();
+    return () => { cancelled = true; };
+  }, []);
+
+  // força preview re-render quando tema muda
+  useEffect(() => {
     setThemeVersion((prev) => prev + 1);
-  }, [settings.theme]);
+  }, [theme]);
+
+  // 2) Salva layout no banco (debounced)
+  function scheduleSave(nextBlocks: PageBlock[], nextTheme: Theme) {
+    if (!giftList?.id) return;
+
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/gift-lists/${giftList.id}/layout`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ blocks: nextBlocks, theme: nextTheme }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          console.error('Falha ao salvar layout:', data);
+        }
+      } catch (err) {
+        console.error('Erro salvando layout:', err);
+      }
+    }, 500);
+  }
+
+  // wrappers “tipo updatePageBlocks/updateSettings”, só que no banco
+  const updatePageBlocks = (next: PageBlock[]) => {
+    setPageBlocks(next);
+    scheduleSave(next, theme);
+  };
+
+  const updateTheme = (nextTheme: Theme) => {
+    setTheme(nextTheme);
+    scheduleSave(pageBlocks, nextTheme);
+  };
 
   const handleReorderBlocks = (newBlocks: PageBlock[]) => {
     const updated: PageBlock[] = newBlocks.map((block, index) => ({
@@ -72,7 +153,7 @@ export default function PageBuilder() {
 
   const addBlock = (type: BlockTypeId) => {
     const newBlock: PageBlock = {
-      id: Date.now().toString(),
+      id: crypto?.randomUUID?.() ?? Date.now().toString(),
       type,
       order: pageBlocks.length + 1,
       enabled: true,
@@ -85,40 +166,57 @@ export default function PageBuilder() {
     const updated = pageBlocks.filter((b) => b.id !== blockId);
     updatePageBlocks(updated);
 
-    if (selectedBlock?.id === blockId) {
-      setSelectedBlock(null);
-    }
+    if (selectedBlock?.id === blockId) setSelectedBlock(null);
   };
 
   const updateBlockSettings = (blockId: string, config: Record<string, any>) => {
-    console.log('Editor - updateBlockSettings called:', blockId, config);
-
     const updated: PageBlock[] = pageBlocks.map((block) =>
-      block.id === blockId
-        ? { ...block, config: { ...block.config, ...config } }
-        : block
+      block.id === blockId ? { ...block, config: { ...block.config, ...config } } : block
     );
 
-    console.log('Editor - Updated blocks:', updated);
     updatePageBlocks(updated);
 
-    // Update selected block to reflect changes
     if (selectedBlock?.id === blockId) {
       const updatedBlock = updated.find((b) => b.id === blockId) ?? null;
-      if (updatedBlock) {
-        console.log('Editor - Updating selected block:', updatedBlock);
-        setSelectedBlock(updatedBlock);
-      }
+      setSelectedBlock(updatedBlock);
     }
   };
 
-  const publishList = () => {
-    updateSettings({ published: true });
+  const publishList = async () => {
+    try {
+      const res = await fetch('/api/gift-lists/my-list', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublished: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? 'Falha ao publicar');
+      setGiftList(data);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const unpublishList = () => {
-    updateSettings({ published: false });
+  const unpublishList = async () => {
+    try {
+      const res = await fetch('/api/gift-lists/my-list', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublished: false }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? 'Falha ao despublicar');
+      setGiftList(data);
+    } catch (e) {
+      console.error(e);
+    }
   };
+
+  if (loading) {
+    return <div className="p-6">Carregando editor...</div>;
+  }
+
+  const published = Boolean(giftList?.isPublished);
 
   return (
     <div className="h-full">
@@ -126,17 +224,13 @@ export default function PageBuilder() {
       <div className="sticky top-0 z-40 bg-white border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="font-display text-2xl text-foreground">
-              Editor de Página
-            </h1>
+            <h1 className="font-display text-2xl text-foreground">Editor de Página</h1>
             <span
               className={`px-3 py-1 rounded-full text-xs font-medium ${
-                settings.published
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-yellow-100 text-yellow-700'
+                published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
               }`}
             >
-              {settings.published ? 'Publicada' : 'Rascunho'}
+              {published ? 'Publicada' : 'Rascunho'}
             </span>
           </div>
 
@@ -149,25 +243,18 @@ export default function PageBuilder() {
             </Button>
 
             <Button variant="outline" asChild>
-              <Link href="/site" target="_blank">
+              <Link href={siteHref} target="_blank">
                 <Globe className="w-4 h-4 mr-2" />
                 Ver Site
               </Link>
             </Button>
 
-            {settings.published ? (
-              <Button
-                variant="outline"
-                onClick={unpublishList}
-                className="border-yellow-500 text-yellow-700"
-              >
+            {published ? (
+              <Button variant="outline" onClick={unpublishList} className="border-yellow-500 text-yellow-700">
                 Despublicar
               </Button>
             ) : (
-              <Button
-                onClick={publishList}
-                className="bg-primary hover:bg-primary/90 text-white"
-              >
+              <Button onClick={publishList} className="bg-primary hover:bg-primary/90 text-white">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Publicar
               </Button>
@@ -186,18 +273,10 @@ export default function PageBuilder() {
             </TabsList>
 
             <TabsContent value="blocks" className="space-y-4">
-              {/* Existing Blocks */}
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">
-                  Blocos da Página
-                </h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Blocos da Página</h3>
 
-                <Reorder.Group
-                  axis="y"
-                  values={pageBlocks}
-                  onReorder={handleReorderBlocks}
-                  className="space-y-2"
-                >
+                <Reorder.Group axis="y" values={pageBlocks} onReorder={handleReorderBlocks} className="space-y-2">
                   {pageBlocks.map((block) => {
                     const blockType = BLOCK_TYPES.find((t) => t.id === block.type);
                     const Icon = blockType?.icon || Layout;
@@ -229,26 +308,24 @@ export default function PageBuilder() {
                 </Reorder.Group>
               </div>
 
-              {/* Add Block */}
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">
-                  Adicionar Bloco
-                </h3>
-
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Adicionar Bloco</h3>
                 <div className="grid grid-cols-2 gap-2">
-                  {BLOCK_TYPES.filter((type) => !pageBlocks.some((b) => b.type === type.id)).map((type) => {
-                    const Icon = type.icon;
-                    return (
-                      <button
-                        key={type.id}
-                        onClick={() => addBlock(type.id)}
-                        className="p-3 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all text-center"
-                      >
-                        <Icon className="w-5 h-5 mx-auto mb-1 text-gray-600" />
-                        <span className="text-xs text-foreground">{type.name}</span>
-                      </button>
-                    );
-                  })}
+                  {BLOCK_TYPES
+                    .filter((type) => !pageBlocks.some((b) => b.type === type.id))
+                    .map((type) => {
+                      const Icon = type.icon;
+                      return (
+                        <button
+                          key={type.id}
+                          onClick={() => addBlock(type.id)}
+                          className="p-3 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all text-center"
+                        >
+                          <Icon className="w-5 h-5 mx-auto mb-1 text-gray-600" />
+                          <span className="text-xs text-foreground">{type.name}</span>
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
             </TabsContent>
@@ -259,21 +336,13 @@ export default function PageBuilder() {
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={settings.theme?.primary_color || '#C86E52'}
-                    onChange={(e) =>
-                      updateSettings({
-                        theme: { ...(settings.theme || {}), primary_color: e.target.value },
-                      })
-                    }
+                    value={theme.primary_color || '#C86E52'}
+                    onChange={(e) => updateTheme({ ...theme, primary_color: e.target.value })}
                     className="w-12 h-12 rounded-lg cursor-pointer border-2"
                   />
                   <Input
-                    value={settings.theme?.primary_color || '#C86E52'}
-                    onChange={(e) =>
-                      updateSettings({
-                        theme: { ...(settings.theme || {}), primary_color: e.target.value },
-                      })
-                    }
+                    value={theme.primary_color || '#C86E52'}
+                    onChange={(e) => updateTheme({ ...theme, primary_color: e.target.value })}
                     className="flex-1"
                   />
                 </div>
@@ -284,21 +353,13 @@ export default function PageBuilder() {
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={settings.theme?.secondary_color || '#8E3D2C'}
-                    onChange={(e) =>
-                      updateSettings({
-                        theme: { ...(settings.theme || {}), secondary_color: e.target.value },
-                      })
-                    }
+                    value={theme.secondary_color || '#8E3D2C'}
+                    onChange={(e) => updateTheme({ ...theme, secondary_color: e.target.value })}
                     className="w-12 h-12 rounded-lg cursor-pointer border-2"
                   />
                   <Input
-                    value={settings.theme?.secondary_color || '#8E3D2C'}
-                    onChange={(e) =>
-                      updateSettings({
-                        theme: { ...(settings.theme || {}), secondary_color: e.target.value },
-                      })
-                    }
+                    value={theme.secondary_color || '#8E3D2C'}
+                    onChange={(e) => updateTheme({ ...theme, secondary_color: e.target.value })}
                     className="flex-1"
                   />
                 </div>
@@ -309,21 +370,13 @@ export default function PageBuilder() {
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={settings.theme?.background_color || '#FAF4EF'}
-                    onChange={(e) =>
-                      updateSettings({
-                        theme: { ...(settings.theme || {}), background_color: e.target.value },
-                      })
-                    }
+                    value={theme.background_color || '#FAF4EF'}
+                    onChange={(e) => updateTheme({ ...theme, background_color: e.target.value })}
                     className="w-12 h-12 rounded-lg cursor-pointer border-2"
                   />
                   <Input
-                    value={settings.theme?.background_color || '#FAF4EF'}
-                    onChange={(e) =>
-                      updateSettings({
-                        theme: { ...(settings.theme || {}), background_color: e.target.value },
-                      })
-                    }
+                    value={theme.background_color || '#FAF4EF'}
+                    onChange={(e) => updateTheme({ ...theme, background_color: e.target.value })}
                     className="flex-1"
                   />
                 </div>
@@ -332,14 +385,10 @@ export default function PageBuilder() {
               <div>
                 <Label className="text-sm font-medium mb-2 block">Fonte do Título</Label>
                 <Select
-                  value={settings.theme?.font_title || 'Cormorant Garamond'}
-                  onValueChange={(value) =>
-                    updateSettings({ theme: { ...(settings.theme || {}), font_title: value } })
-                  }
+                  value={theme.font_title || 'Cormorant Garamond'}
+                  onValueChange={(value) => updateTheme({ ...theme, font_title: value })}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent className="max-h-80">
                     <SelectItem value="Playfair Display" style={{ fontFamily: 'Playfair Display' }}>Playfair Display</SelectItem>
                     <SelectItem value="Cormorant Garamond" style={{ fontFamily: 'Cormorant Garamond' }}>Cormorant Garamond</SelectItem>
@@ -348,11 +397,11 @@ export default function PageBuilder() {
                     <SelectItem value="Lora" style={{ fontFamily: 'Lora' }}>Lora</SelectItem>
                     <SelectItem value="EB Garamond" style={{ fontFamily: 'EB Garamond' }}>EB Garamond</SelectItem>
                     <SelectItem value="Crimson Text" style={{ fontFamily: 'Crimson Text' }}>Crimson Text</SelectItem>
-                    <SelectItem value="Dancing Script" style={{ fontFamily: 'Dancing Script' }}>Dancing Script (Cursiva)</SelectItem>
-                    <SelectItem value="Great Vibes" style={{ fontFamily: 'Great Vibes' }}>Great Vibes (Cursiva)</SelectItem>
-                    <SelectItem value="Pacifico" style={{ fontFamily: 'Pacifico' }}>Pacifico (Cursiva)</SelectItem>
-                    <SelectItem value="Satisfy" style={{ fontFamily: 'Satisfy' }}>Satisfy (Cursiva)</SelectItem>
-                    <SelectItem value="Allura" style={{ fontFamily: 'Allura' }}>Allura (Cursiva)</SelectItem>
+                    <SelectItem value="Dancing Script" style={{ fontFamily: 'Dancing Script' }}>Dancing Script</SelectItem>
+                    <SelectItem value="Great Vibes" style={{ fontFamily: 'Great Vibes' }}>Great Vibes</SelectItem>
+                    <SelectItem value="Pacifico" style={{ fontFamily: 'Pacifico' }}>Pacifico</SelectItem>
+                    <SelectItem value="Satisfy" style={{ fontFamily: 'Satisfy' }}>Satisfy</SelectItem>
+                    <SelectItem value="Allura" style={{ fontFamily: 'Allura' }}>Allura</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -360,14 +409,10 @@ export default function PageBuilder() {
               <div>
                 <Label className="text-sm font-medium mb-2 block">Fonte do Corpo</Label>
                 <Select
-                  value={settings.theme?.font_body || 'Inter'}
-                  onValueChange={(value) =>
-                    updateSettings({ theme: { ...(settings.theme || {}), font_body: value } })
-                  }
+                  value={theme.font_body || 'Inter'}
+                  onValueChange={(value) => updateTheme({ ...theme, font_body: value })}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent className="max-h-80">
                     <SelectItem value="Inter" style={{ fontFamily: 'Inter' }}>Inter</SelectItem>
                     <SelectItem value="Lato" style={{ fontFamily: 'Lato' }}>Lato</SelectItem>
@@ -391,11 +436,11 @@ export default function PageBuilder() {
           <div className="max-w-5xl mx-auto">
             <BlockPreview
               key={themeVersion}
-              list={{ theme: settings.theme || {} }}
+              list={{ theme }}
               blocks={pageBlocks}
               selectedBlock={selectedBlock}
               onSelectBlock={setSelectedBlock}
-              gifts={gifts}
+              gifts={[]} // depois a gente liga isso no banco também
             />
           </div>
         </div>
@@ -405,12 +450,7 @@ export default function PageBuilder() {
           <div className="w-80 bg-white border-l border-border p-4 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-medium text-foreground">Configurações</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSelectedBlock(null)}
-                className="h-8 w-8"
-              >
+              <Button variant="ghost" size="icon" onClick={() => setSelectedBlock(null)} className="h-8 w-8">
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -419,7 +459,7 @@ export default function PageBuilder() {
               block={selectedBlock}
               onUpdate={(config) => updateBlockSettings(selectedBlock.id, config)}
               onDelete={() => removeBlock(selectedBlock.id)}
-              list={{ theme: {} }}
+              list={{ theme }}
             />
           </div>
         )}
