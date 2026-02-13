@@ -53,13 +53,13 @@ export default function LoginPage() {
         return;
       }
 
-      if (result.ok) {
-        toast.success('Login realizado com sucesso!');
-        // ✅ vai pra URL que o NextAuth devolveu (ou fallback)
-        router.replace(result.url || callbackUrl);
-        router.refresh();
-        return;
-      }
+ if (result.ok) {
+  toast.success('Login realizado com sucesso!');
+  // ✅ hard redirect: garante que cookie foi aplicado e o server “vê” a sessão
+  window.location.assign(result.url || callbackUrl);
+  return;
+}
+
 
       toast.error('Não foi possível entrar. Verifique seus dados.');
     } catch (err) {
