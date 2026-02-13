@@ -1,7 +1,7 @@
 // app/site/[slug]/page.tsx
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import SiteRenderer from "@/components/site/SiteRenderer";
+import SiteRenderer from "../../../components/site/SiteRenderer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +26,15 @@ export default async function SiteBySlugPage({
   // se não existe ou não está publicada, 404
   if (!list || !list.isPublished) return notFound();
 
+  const rawBlocks = list.pageLayout?.blocks;
+  const rawTheme = list.pageLayout?.theme;
+
+  const blocks = Array.isArray(rawBlocks) ? (rawBlocks as any[]) : [];
+  const theme =
+    rawTheme && typeof rawTheme === "object" && !Array.isArray(rawTheme)
+      ? (rawTheme as any)
+      : null;
+
   return (
     <SiteRenderer
       list={{
@@ -37,13 +46,8 @@ export default async function SiteBySlugPage({
         hostName: list.user?.name ?? "",
         hostImage: list.user?.image ?? null,
       }}
-blocks={
-  Array.isArray(list.pageLayout?.blocks)
-    ? (list.pageLayout?.blocks as any[])
-    : []
-}
-theme={(list.pageLayout?.theme as any) ?? null}
-
+      blocks={blocks}
+      theme={theme}
       gifts={list.gifts}
       messages={list.messages}
     />
