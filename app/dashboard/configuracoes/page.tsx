@@ -325,21 +325,7 @@ export default function ConfiguracoesPage() {
               <CardTitle>Privacidade e Visibilidade</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Lista Publicada</h3>
-                  <p className="text-sm text-gray-500">
-                    Quando ativa, sua lista fica visível para os convidados
-                  </p>
-                </div>
-
-                <Switch
-                  checked={settings.published}
-                  onCheckedChange={(checked) => updateSettings({ published: checked })}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
+<div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-medium text-foreground">Recados Públicos</h3>
                   <p className="text-sm text-gray-500">

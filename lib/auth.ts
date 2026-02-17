@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth";
+﻿import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -13,7 +13,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email e senha são obrigatórios");
+          throw new Error("Email e senha sao obrigatorios");
         }
 
         const user = await prisma.user.findUnique({
@@ -21,12 +21,20 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
-          throw new Error("Email ou senha inválidos");
+          throw new Error("Email ou senha invalidos");
+        }
+
+        if (user.isBlocked) {
+          throw new Error("Conta bloqueada. Fale com o suporte");
+        }
+
+        if (!user.emailVerified) {
+          throw new Error("Confirme seu email com o codigo enviado antes de entrar");
         }
 
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) {
-          throw new Error("Email ou senha inválidos");
+          throw new Error("Email ou senha invalidos");
         }
 
         return {
@@ -52,16 +60,22 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user, trigger }) {
-      // 1) no login inicial
       if (user) {
         token.id = (user as any).id;
       }
 
-      // 2) sempre que tiver token.id, reidrata do banco (inclui image atualizada)
+      if (!token.id && token.email) {
+        const dbUserByEmail = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: { id: true },
+        });
+        if (dbUserByEmail) token.id = dbUserByEmail.id;
+      }
+
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { id: true, name: true, email: true, role: true, image: true },
+          select: { id: true, name: true, email: true, role: true, image: true, isBlocked: true },
         });
 
         if (dbUser) {
@@ -72,9 +86,8 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // quando chamar update(), força refresh do banco também
       if (trigger === "update" && token.id) {
-        // já caiu no bloco acima, então ok
+        // no-op
       }
 
       return token;

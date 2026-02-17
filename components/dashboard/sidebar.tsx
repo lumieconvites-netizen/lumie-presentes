@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import {
   LayoutDashboard,
@@ -10,7 +11,10 @@ import {
   CreditCard,
   Settings,
   Palette,
-  ExternalLink
+  Landmark,
+  CalendarCheck,
+  Menu,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,61 +22,77 @@ const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/presentes', label: 'Presentes', icon: Gift },
   { href: '/dashboard/editor', label: 'Editor de Página', icon: Palette },
+  { href: '/dashboard/rsvp', label: 'RSVP (Confirmar Presença)', icon: CalendarCheck },
   { href: '/dashboard/recados', label: 'Recados', icon: MessageSquare },
   { href: '/dashboard/pagamentos', label: 'Pagamentos', icon: CreditCard },
+  { href: '/dashboard/banco', label: 'Conta Bancária', icon: Landmark },
   { href: '/dashboard/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
+function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  return (
+    <nav className="flex-1 p-4 space-y-1">
+      {menuItems.map((item) => {
+        const isActive = pathname === item.href;
+        const Icon = item.icon;
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              'flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors',
+              isActive ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'
+            )}
+          >
+            <Icon className="w-5 h-5" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
-    <aside className="w-64 bg-white border-r border-border flex flex-col">
-      <div className="p-6 border-b border-border">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="relative w-20 h-10">
-            <Image
-              src="/logo.png"
-              alt="LUMIÊ"
-              fill
-              className="object-contain"
-            />
-          </div>
-        </Link>
-      </div>
+    <>
+      <button
+        type="button"
+        className="md:hidden fixed left-3 top-3 z-50 h-10 w-10 rounded-lg border border-[#e7d8cb] bg-white shadow-sm flex items-center justify-center"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Abrir menu"
+      >
+        {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
 
-      <nav className="flex-1 p-4 space-y-1">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
-          
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors',
-                isActive
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              )}
-            >
-              <Icon className="w-5 h-5" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+      {open && <div className="md:hidden fixed inset-0 bg-black/35 z-40" onClick={() => setOpen(false)} />}
 
-      <div className="p-4 border-t border-border">
-        <Link
-          href="/dashboard/preview"
-          className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
-        >
-          <ExternalLink className="w-4 h-4" />
-          Ver Minha Lista
-        </Link>
-      </div>
-    </aside>
+      <aside
+        className={cn(
+          'bg-white border-r border-border flex flex-col z-50',
+          'fixed inset-y-0 left-0 w-72 transition-transform md:static md:w-64 md:translate-x-0',
+          open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        )}
+      >
+        <div className="p-6 border-b border-border">
+          <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+            <div className="relative w-20 h-10">
+              <Image src="/logo.png" alt="LUMIE" fill className="object-contain" />
+            </div>
+          </Link>
+        </div>
+
+        <SidebarNav pathname={pathname} onNavigate={() => setOpen(false)} />
+      </aside>
+    </>
   );
 }

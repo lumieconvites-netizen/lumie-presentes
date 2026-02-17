@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,16 +16,11 @@ interface BlockEditorProps {
   list: any;
 }
 
-export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEditorProps) {
+export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorProps) {
   const config = block.config || {};
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    console.log('BlockEditor - Current config:', config);
-  }, [config]);
-
   const handleChange = (key: string, value: any) => {
-    console.log('BlockEditor - Updating:', key, value);
     onUpdate({ [key]: value });
   };
 
@@ -42,11 +37,25 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
       body: form,
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data: any = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
     if (!res.ok) throw new Error(data?.error ?? 'Falha no upload');
 
     return data.url as string;
   };
+
+  const fileToDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+      reader.readAsDataURL(file);
+    });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
     const file = e.target.files?.[0];
@@ -61,8 +70,9 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
       const url = await uploadToServer(file, folder);
       handleChange(key, url);
     } catch (err: any) {
-      console.error(err);
-      alert(err?.message ?? 'Erro ao enviar imagem');
+      // fallback local sem storage externo
+      const dataUrl = await fileToDataUrl(file);
+      handleChange(key, dataUrl);
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -79,8 +89,13 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
 
       // faz upload 1 a 1 (mais seguro e simples)
       for (const file of files) {
-        const url = await uploadToServer(file, 'gallery');
-        uploaded.push(url);
+        try {
+          const url = await uploadToServer(file, 'gallery');
+          uploaded.push(url);
+        } catch {
+          const dataUrl = await fileToDataUrl(file);
+          uploaded.push(dataUrl);
+        }
       }
 
       const currentImages = config.images || [];
@@ -116,7 +131,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Título</Label>
+            <Label className="text-sm font-medium">TÃ­tulo</Label>
             <Input
               value={config.title || ''}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -126,17 +141,17 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Subtítulo</Label>
+            <Label className="text-sm font-medium">SubtÃ­tulo</Label>
             <Input
               value={config.subtitle || ''}
               onChange={(e) => handleChange('subtitle', e.target.value)}
-              placeholder="Ex: 10 de março de 2026"
+              placeholder="Ex: 10 de marÃ§o de 2026"
               className="mt-2"
             />
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Texto do Botão</Label>
+            <Label className="text-sm font-medium">Texto do BotÃ£o</Label>
             <Input
               value={config.buttonText || 'Ver Lista de Presentes'}
               onChange={(e) => handleChange('buttonText', e.target.value)}
@@ -226,9 +241,9 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
       {block.type === 'message' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Título</Label>
+            <Label className="text-sm font-medium">TÃ­tulo</Label>
             <Input
-              value={config.title || 'Nossa História'}
+              value={config.title || 'Nossa HistÃ³ria'}
               onChange={(e) => handleChange('title', e.target.value)}
               className="mt-2"
             />
@@ -248,7 +263,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
             <Input
               value={config.signature || ''}
               onChange={(e) => handleChange('signature', e.target.value)}
-              placeholder="Ex: — Com amor, Maria e João"
+              placeholder="Ex: â€” Com amor, Maria e JoÃ£o"
               className="mt-2"
             />
           </div>
@@ -259,7 +274,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
       {block.type === 'countdown' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Título</Label>
+            <Label className="text-sm font-medium">TÃ­tulo</Label>
             <Input
               value={config.title || 'Falta Pouco!'}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -278,7 +293,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
       {block.type === 'gallery' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Título</Label>
+            <Label className="text-sm font-medium">TÃ­tulo</Label>
             <Input
               value={config.title || 'Galeria de Fotos'}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -352,9 +367,9 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
       {block.type === 'event-info' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Título</Label>
+            <Label className="text-sm font-medium">TÃ­tulo</Label>
             <Input
-              value={config.title || 'Informações do Evento'}
+              value={config.title || 'InformaÃ§Ãµes do Evento'}
               onChange={(e) => handleChange('title', e.target.value)}
               className="mt-2"
             />
@@ -371,13 +386,13 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
             <Input
               value={config.location || ''}
               onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="Ex: Espaço Villa Bella"
+              placeholder="Ex: EspaÃ§o Villa Bella"
               className="mt-2"
             />
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Endereço</Label>
+            <Label className="text-sm font-medium">EndereÃ§o</Label>
             <Input
               value={config.address || ''}
               onChange={(e) => handleChange('address', e.target.value)}
@@ -395,6 +410,139 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
               className="mt-2"
             />
           </div>
+
+          <div>
+            <Label className="text-sm font-medium">Texto do Botao de mapa</Label>
+            <Input
+              value={config.mapButtonText || 'Abrir no mapa'}
+              onChange={(e) => handleChange('mapButtonText', e.target.value)}
+              className="mt-2"
+            />
+          </div>
+        </>
+      )}
+
+      {/* Map Block */}
+      {block.type === 'map' && (
+        <>
+          <div>
+            <Label className="text-sm font-medium">Titulo</Label>
+            <Input
+              value={config.title || 'Como chegar'}
+              onChange={(e) => handleChange('title', e.target.value)}
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Subtitulo</Label>
+            <Input
+              value={config.subtitle || ''}
+              onChange={(e) => handleChange('subtitle', e.target.value)}
+              placeholder="Ex: Estacionamento no local"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Endereco</Label>
+            <Input
+              value={config.address || ''}
+              onChange={(e) => handleChange('address', e.target.value)}
+              placeholder="Rua, numero, bairro, cidade"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium">URL embed do mapa</Label>
+            <Input
+              value={config.embedUrl || ''}
+              onChange={(e) => handleChange('embedUrl', e.target.value)}
+              placeholder="https://www.google.com/maps/embed?..."
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Link externo (Maps/Waze)</Label>
+            <Input
+              value={config.externalMapUrl || ''}
+              onChange={(e) => handleChange('externalMapUrl', e.target.value)}
+              placeholder="https://maps.app.goo.gl/..."
+              className="mt-2"
+            />
+          </div>
+        </>
+      )}
+
+      {/* Music Block */}
+      {block.type === 'music' && (
+        <>
+          <div>
+            <Label className="text-sm font-medium">Titulo</Label>
+            <Input
+              value={config.title || 'Nossa trilha sonora'}
+              onChange={(e) => handleChange('title', e.target.value)}
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Descricao</Label>
+            <Textarea
+              value={config.description || ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              rows={3}
+              className="mt-2"
+              placeholder="Uma musica especial para esse momento"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Link Spotify (playlist/faixa)</Label>
+            <Input
+              value={config.spotifyUrl || ''}
+              onChange={(e) => handleChange('spotifyUrl', e.target.value)}
+              placeholder="https://open.spotify.com/playlist/..."
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Link YouTube (opcional)</Label>
+            <Input
+              value={config.youtubeUrl || ''}
+              onChange={(e) => handleChange('youtubeUrl', e.target.value)}
+              placeholder="https://youtube.com/watch?v=..."
+              className="mt-2"
+            />
+          </div>
+        </>
+      )}
+
+      {/* Video Block */}
+      {block.type === 'video' && (
+        <>
+          <div>
+            <Label className="text-sm font-medium">Titulo</Label>
+            <Input
+              value={config.title || 'Nosso video'}
+              onChange={(e) => handleChange('title', e.target.value)}
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Descricao</Label>
+            <Textarea
+              value={config.description || ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              rows={3}
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium">URL do video</Label>
+            <Input
+              value={config.videoUrl || ''}
+              onChange={(e) => handleChange('videoUrl', e.target.value)}
+              placeholder="YouTube, Vimeo ou embed"
+              className="mt-2"
+            />
+          </div>
         </>
       )}
 
@@ -402,7 +550,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
       {block.type === 'messages' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Título</Label>
+            <Label className="text-sm font-medium">TÃ­tulo</Label>
             <Input
               value={config.title || 'Recados Especiais'}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -413,7 +561,7 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
           <div className="flex items-center justify-between py-2">
             <div>
               <Label className="text-sm font-medium">Exibir Publicamente</Label>
-              <p className="text-xs text-gray-500">Mostrar recados na página</p>
+              <p className="text-xs text-gray-500">Mostrar recados na pÃ¡gina</p>
             </div>
             <Switch
               checked={config.showPublicly !== false}
@@ -423,37 +571,120 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
         </>
       )}
 
-      {/* Gifts Block */}
+            {/* Gifts Block */}
       {block.type === 'gifts' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Título</Label>
+            <Label className="text-sm font-medium">Titulo</Label>
             <Input
-              value={config.title || 'Escolha um Presente'}
+              value={config.title || 'Lista de Presentes'}
               onChange={(e) => handleChange('title', e.target.value)}
               className="mt-2"
             />
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Layout</Label>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <Button
-                variant={config.layout === 'grid' ? 'default' : 'outline'}
-                onClick={() => handleChange('layout', 'grid')}
-                className="w-full"
-              >
-                Grade
-              </Button>
-              <Button
-                variant={config.layout === 'list' ? 'default' : 'outline'}
-                onClick={() => handleChange('layout', 'list')}
-                className="w-full"
-              >
-                Lista
-              </Button>
+            <Label className="text-sm font-medium">Texto da secao</Label>
+            <Textarea
+              value={config.description || ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              rows={4}
+              className="mt-2"
+              placeholder="Escreva um convite para os convidados acessarem a lista"
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Imagem da lista (capa)</Label>
+            {config.coverImage ? (
+              <div className="mt-2 relative">
+                <img src={config.coverImage} alt="Capa da lista" className="w-full h-40 object-cover rounded-lg" />
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={() => handleChange('coverImage', '')}
+                  disabled={uploading}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <label className="mt-2 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                <span className="text-sm text-gray-500">{uploading ? 'Enviando...' : 'Enviar imagem'}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, 'coverImage')}
+                  className="hidden"
+                  disabled={uploading}
+                />
+              </label>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Texto do botao</Label>
+            <Input
+              value={config.buttonText || 'Presentear'}
+              onChange={(e) => handleChange('buttonText', e.target.value)}
+              className="mt-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Cor do titulo</Label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="color"
+                value={config.titleColor || '#FFFFFF'}
+                onChange={(e) => handleChange('titleColor', e.target.value)}
+                className="w-10 h-10 rounded border"
+              />
+              <Input value={config.titleColor || '#FFFFFF'} onChange={(e) => handleChange('titleColor', e.target.value)} />
             </div>
           </div>
+
+          <div>
+            <Label className="text-sm font-medium">Cor do texto</Label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="color"
+                value={config.descriptionColor || '#F5F5F5'}
+                onChange={(e) => handleChange('descriptionColor', e.target.value)}
+                className="w-10 h-10 rounded border"
+              />
+              <Input value={config.descriptionColor || '#F5F5F5'} onChange={(e) => handleChange('descriptionColor', e.target.value)} />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Cor do botao</Label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="color"
+                value={config.buttonBgColor || '#C86E52'}
+                onChange={(e) => handleChange('buttonBgColor', e.target.value)}
+                className="w-10 h-10 rounded border"
+              />
+              <Input value={config.buttonBgColor || '#C86E52'} onChange={(e) => handleChange('buttonBgColor', e.target.value)} />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Cor do texto do botao</Label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="color"
+                value={config.buttonTextColor || '#FFFFFF'}
+                onChange={(e) => handleChange('buttonTextColor', e.target.value)}
+                className="w-10 h-10 rounded border"
+              />
+              <Input value={config.buttonTextColor || '#FFFFFF'} onChange={(e) => handleChange('buttonTextColor', e.target.value)} />
+            </div>
+          </div>
+
         </>
       )}
 
@@ -467,3 +698,5 @@ export default function BlockEditor({ block, onUpdate, onDelete, list }: BlockEd
     </div>
   );
 }
+
+

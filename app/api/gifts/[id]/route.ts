@@ -7,7 +7,7 @@ import { z } from 'zod';
 const giftSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').optional(),
   description: z.string().optional(),
-  imageUrl: z.string().url().optional().or(z.literal('')),
+  imageUrl: z.string().trim().optional().or(z.literal('')),
   basePrice: z.number().positive('Preço deve ser maior que zero').optional(),
   totalQuantity: z.number().int().positive().optional(),
   isActive: z.boolean().optional(),

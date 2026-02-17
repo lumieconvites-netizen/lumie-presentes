@@ -1,4 +1,3 @@
-// app/api/gift-lists/my-list/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -11,7 +10,9 @@ export const revalidate = 0;
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    }
 
     let giftList = await prisma.giftList.findFirst({
       where: { userId: session.user.id },
@@ -38,26 +39,38 @@ export async function GET() {
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    }
 
-    const body = await req.json().catch(() => ({}));
-    const isPublished = Boolean(body?.isPublished);
+    const body = await req.json().catch(() => ({} as any));
 
     const giftList = await prisma.giftList.findFirst({
       where: { userId: session.user.id },
       select: { id: true },
     });
 
-    if (!giftList) return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
+    if (!giftList) {
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+    }
+
+    const data: any = {};
+    if (typeof body?.isPublished === "boolean") data.isPublished = body.isPublished;
+    if (typeof body?.title === "string") data.title = body.title.trim() || "Minha Lista de Presentes";
+    if (typeof body?.description === "string") data.description = body.description.trim() || null;
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: "Nenhum campo valido para atualizar" }, { status: 400 });
+    }
 
     const updated = await prisma.giftList.update({
       where: { id: giftList.id },
-      data: { isPublished },
+      data,
     });
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Erro ao atualizar publicação:", error);
-    return NextResponse.json({ error: "Erro ao atualizar publicação" }, { status: 500 });
+    console.error("Erro ao atualizar lista:", error);
+    return NextResponse.json({ error: "Erro ao atualizar lista" }, { status: 500 });
   }
 }

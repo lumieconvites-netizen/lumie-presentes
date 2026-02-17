@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useUser } from '@/contexts/user-context';
 import { Button } from '@/components/ui/button';
@@ -9,59 +9,51 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { User, LogOut, Settings, LayoutDashboard, Globe } from 'lucide-react';
+} from '@/components/ui/dropdown-menu';
+import { LogOut, Settings, LayoutDashboard, Globe, Shield, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function DashboardHeader() {
   const { user } = useUser();
+  const { data: session } = useSession();
   const router = useRouter();
 
   const getUserInitials = (name: string) => {
     return name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
   };
 
+  const firstName = (user?.name || 'Usuário').split(' ')[0];
+  const role = (session?.user as any)?.role;
+
   return (
-    <header className="bg-white border-b border-border px-6 py-4">
+    <header className="bg-white border-b border-border px-4 md:px-6 py-4">
       <div className="flex items-center justify-between">
-        <div>
-<h1 className="text-xl font-display text-foreground flex items-center gap-2">
-  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary/20">
-    👋
-  </span>
-  <span>Bem-vindo, {user?.name}</span>
-</h1>
-          <p className="text-sm text-gray-500">
-            Gerencie sua lista de presentes
-          </p>
+        <div className="pl-16 md:pl-0">
+          <h1 className="text-2xl font-display text-foreground flex items-center gap-2">
+            <span>Olá, {firstName}!</span>
+            <Sparkles className="h-4 w-4 text-[#c65a3a]" />
+          </h1>
+          <p className="text-sm text-gray-500">Veja como está indo sua lista de presentes</p>
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-  variant="ghost"
-  className="h-10 w-10 rounded-full p-0 overflow-hidden ring-1 ring-border"
->
-{user?.photo ? (
-  <Image
-    src={user.photo}
-    alt={user.name}
-    width={40}
-    height={40}
-    className="h-10 w-10 rounded-full object-cover"
-  />
-) : (
-  <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-medium">
-    {user ? getUserInitials(user.name) : 'U'}
-  </div>
-)}
+            <Button variant="ghost" className="h-10 w-10 rounded-full p-0 overflow-hidden ring-1 ring-border">
+              {user?.photo ? (
+                <Image src={user.photo} alt={user.name} width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-medium">
+                  {user ? getUserInitials(user.name) : 'U'}
+                </div>
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">
@@ -84,6 +76,14 @@ export default function DashboardHeader() {
                 Ver Site
               </Link>
             </DropdownMenuItem>
+            {role === 'ADMIN' ? (
+              <DropdownMenuItem asChild>
+                <Link href="/admin" className="cursor-pointer">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Painel Admin
+                </Link>
+              </DropdownMenuItem>
+            ) : null}
             <DropdownMenuItem asChild>
               <Link href="/dashboard/configuracoes" className="cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" />
@@ -91,7 +91,14 @@ export default function DashboardHeader() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/')} className="text-red-600 focus:text-red-600 cursor-pointer">
+            <DropdownMenuItem
+              onClick={async () => {
+                await signOut({ redirect: false });
+                router.push('/login');
+                router.refresh();
+              }}
+              className="text-red-600 focus:text-red-600 cursor-pointer"
+            >
               <LogOut className="w-4 h-4 mr-2" />
               Sair
             </DropdownMenuItem>

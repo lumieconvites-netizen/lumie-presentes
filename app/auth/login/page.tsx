@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
@@ -8,13 +8,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -22,10 +16,9 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
+
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,8 +27,6 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
@@ -53,16 +44,11 @@ export default function LoginPage() {
         return;
       }
 
- if (result.ok) {
-  toast.success('Login realizado com sucesso!');
-  // ✅ hard redirect: garante que cookie foi aplicado e o server “vê” a sessão
-  window.location.assign(result.url || callbackUrl);
-  return;
-}
-
-
-      toast.error('Não foi possível entrar. Verifique seus dados.');
-    } catch (err) {
+      if (result.ok) {
+        toast.success('Login realizado com sucesso.');
+        window.location.assign(result.url || callbackUrl);
+      }
+    } catch {
       toast.error('Erro ao fazer login');
     } finally {
       setIsLoading(false);
@@ -75,17 +61,12 @@ export default function LoginPage() {
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
             <div className="relative w-48 h-24">
-              <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" priority />
+              <Image src="/logo.png" alt="LUMIE" fill className="object-contain" priority />
             </div>
           </div>
 
-          <CardTitle className="text-center font-display text-3xl text-terracota-700">
-            Entrar na LUMIÊ
-          </CardTitle>
-
-          <CardDescription className="text-center">
-            Acesse sua conta para gerenciar suas listas
-          </CardDescription>
+          <CardTitle className="text-center font-display text-3xl text-terracota-700">Entrar na LUMIE</CardTitle>
+          <CardDescription className="text-center">Acesse sua conta para gerenciar suas listas</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -107,12 +88,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Senha</Label>
-
-                {/* ✅ evita 404; crie a rota depois, mas por agora não quebra */}
-                <Link
-                  href="/recuperar-senha"
-                  className="text-sm text-terracota-600 hover:text-terracota-700"
-                >
+                <Link href="/recuperar-senha" className="text-sm text-terracota-600 hover:text-terracota-700">
                   Esqueceu?
                 </Link>
               </div>
@@ -129,28 +105,21 @@ export default function LoginPage() {
               />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-terracota-500 hover:bg-terracota-600"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full bg-terracota-500 hover:bg-terracota-600" disabled={isLoading}>
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Não tem uma conta? </span>
-            <Link
-              href="/cadastro"
-              className="text-terracota-600 hover:text-terracota-700 font-medium"
-            >
+            <span className="text-muted-foreground">Nao tem uma conta? </span>
+            <Link href="/cadastro" className="text-terracota-600 hover:text-terracota-700 font-medium">
               Cadastre-se gratuitamente
             </Link>
           </div>
 
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-              ← Voltar para o início
+              Voltar para o inicio
             </Link>
           </div>
         </CardContent>

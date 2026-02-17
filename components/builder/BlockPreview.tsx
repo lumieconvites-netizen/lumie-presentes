@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Gift, MessageSquare, Calendar, MapPin, Image as ImageIcon, Globe, Clock, Layout } from 'lucide-react';
+import { Calendar, MapPin, Image as ImageIcon, Globe, Layout, Music2, Video } from 'lucide-react';
+import Link from 'next/link';
 
 interface BlockPreviewProps {
   list: any;
@@ -20,13 +21,45 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
   const backgroundColor = theme.background_color || '#FAF4EF';
   const fontTitle = theme.font_title || 'Cormorant Garamond';
   const fontBody = theme.font_body || 'Inter';
+  const header = theme.header || {};
+  const listSlug = list?.slug ? String(list.slug) : '';
+  const presentsHref = listSlug ? `/site/${encodeURIComponent(listSlug)}/presentes` : '/site/presentes';
+  const rsvpHref = listSlug ? `/site/${encodeURIComponent(listSlug)}/confirmar-presenca` : '#';
 
-  // Debug
-  useEffect(() => {
-    console.log('BlockPreview - Theme changed:', theme);
-    console.log('BlockPreview - fontTitle:', fontTitle);
-    console.log('BlockPreview - fontBody:', fontBody);
-  }, [theme, fontTitle, fontBody]);
+  const toMapUrl = (value: string) => {
+    const url = (value || '').trim();
+    if (!url) return '';
+    if (/^https?:\/\//i.test(url)) return url;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(url)}`;
+  };
+
+  const menuMeuSite = String(header.menuMeuSite || 'Meu Site').toUpperCase();
+  const menuGifts = String(header.menuGifts || 'Lista de Presentes').toUpperCase();
+  const menuRsvp = String(header.menuRsvp || 'Confirmar Presença').toUpperCase();
+  const menuMap = String(header.menuMap || 'Como Chegar').toUpperCase();
+
+  const toYoutubeEmbedUrl = (url: string) => {
+    if (!url) return '';
+    if (url.includes('youtube.com/embed/')) return url;
+    const short = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+    if (short?.[1]) return `https://www.youtube.com/embed/${short[1]}`;
+    const long = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+    if (long?.[1]) return `https://www.youtube.com/embed/${long[1]}`;
+    return url;
+  };
+
+  const toSpotifyEmbedUrl = (url: string) => {
+    if (!url) return '';
+    if (url.includes('open.spotify.com/embed/')) return url;
+    return url.replace('open.spotify.com/', 'open.spotify.com/embed/');
+  };
+
+  const toGoogleMapsEmbed = (url: string) => {
+    if (!url) return '';
+    if (url.includes('/maps/embed')) return url;
+    const place = encodeURIComponent(url);
+    return `https://www.google.com/maps?q=${place}&output=embed`;
+  };
 
   // Countdown state
   const [countdown, setCountdown] = useState({ days: 30, hours: 12, minutes: 45, seconds: 20 });
@@ -97,7 +130,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
   return (
   <div
-    className="space-y-1 w-full list-font-scope"
+    className="space-y-1 w-full list-font-scope pb-10"
     style={
       {
         ["--list-font-title" as any]: `"${fontTitle}"`,
@@ -105,6 +138,47 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
       } as React.CSSProperties
     }
   >
+
+      {header.enabled !== false && (
+        <header
+          className="sticky top-4 z-[60] border-b rounded-xl overflow-hidden shadow-sm"
+          style={{ backgroundColor: header.backgroundColor || '#0B0B0B', color: header.textColor || '#FFFFFF' }}
+        >
+          <div className="px-5 py-4 flex items-center justify-between">
+            <div className="font-semibold text-2xl" style={{ fontFamily: fontTitle }}>
+              {header.brandText || 'LUMIE'}
+            </div>
+            <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-wide">
+              {header.showMeuSite !== false && (
+                <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:opacity-80">
+                  {menuMeuSite}
+                </button>
+              )}
+              {header.showGifts !== false && (
+                <Link href={presentsHref} className="hover:opacity-80">
+                  {menuGifts}
+                </Link>
+              )}
+              {header.showRsvp !== false && (
+                <Link href={rsvpHref} className="hover:opacity-80">
+                  {menuRsvp}
+                </Link>
+              )}
+              {header.showMap !== false && (
+                toMapUrl(header.menuMapUrl || '') ? (
+                  <a href={toMapUrl(header.menuMapUrl || '')} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">
+                    {menuMap}
+                  </a>
+                ) : (
+                  <button type="button" className="hover:opacity-80">
+                    {menuMap}
+                  </button>
+                )
+              )}
+            </nav>
+          </div>
+        </header>
+      )}
 
       {enabledBlocks.map((block) => {
         const isSelected = selectedBlock?.id === block.id;
@@ -216,64 +290,31 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Gifts Block */}
             {block.type === 'gifts' && (
-              <div className="p-12 md:p-16 bg-white">
-                <div className="text-center mb-12">
-                  <h2 
-                    className="text-3xl md:text-4xl mb-4" 
-                    style={{ color: primaryColor, fontFamily: fontTitle }}
-                  >
-                    {config.title || 'Escolha um Presente'}
-                  </h2>
-                  <p className="text-gray-600 max-w-2xl mx-auto">
-                    Selecione um dos presentes abaixo e contribua para realizar nossos sonhos
-                  </p>
-                </div>
-                
-                {/* Gifts Grid - Fixed 2 rows x 3 columns */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-8">
-                  {gifts.slice(0, 6).map((gift) => (
-                    <Card key={gift.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                      {gift.photo ? (
-                        <img src={gift.photo} alt={gift.title} className="w-full h-48 object-cover" />
-                      ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <Gift className="w-16 h-16 text-gray-300" />
-                        </div>
-                      )}
-                      <div className="p-5">
-                        <h4 className="font-semibold text-lg mb-2 truncate">{gift.title}</h4>
-                        {gift.description && (
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{gift.description}</p>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <p className="text-2xl font-bold" style={{ color: primaryColor }}>
-                            R$ {gift.value?.toFixed(2)}
-                          </p>
-                          <Button size="sm" style={{ backgroundColor: primaryColor }} className="text-white">
-                            Presentear
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-                
-                {/* See More Button */}
-                {gifts.length > 6 && (
-                  <div className="text-center">
-                    <Button 
-                      size="lg"
-                      variant="outline"
-                      style={{ borderColor: primaryColor, color: primaryColor }}
-                      className="hover:bg-gray-50"
-                      asChild
-                    >
-                      <a href="/dashboard/presentes">
-                        Ver Todos os {gifts.length} Presentes
-                      </a>
-                    </Button>
+              <div className="p-12 md:p-16 bg-white" id="lista-presentes-section">
+                <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden border border-gray-200">
+                  <div className="relative h-[320px] md:h-[420px]">
+                    {config.coverImage ? (
+                      <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-700" />
+                    )}
+                    <div className="absolute inset-0 bg-black/35" />
+                    <div className="absolute left-8 right-8 bottom-8">
+                      <h2 className="text-3xl md:text-4xl mb-3" style={{ fontFamily: fontTitle, color: config.titleColor || '#FFFFFF' }}>
+                        {config.title || 'Lista de Presentes'}
+                      </h2>
+                      <p className="max-w-2xl mb-5" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
+                        {config.description || 'Criamos esta lista com carinho para quem desejar nos presentear.'}
+                      </p>
+                      <Button
+                        size="lg"
+                        style={{ backgroundColor: config.buttonBgColor || primaryColor, color: config.buttonTextColor || '#FFFFFF' }}
+                      >
+                        {config.buttonText || 'Presentear'}
+                      </Button>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             )}
 
@@ -394,6 +435,98 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       )}
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {block.type === 'map' && (
+              <div className="p-10 md:p-14 bg-white">
+                <div className="max-w-5xl mx-auto">
+                  <h2 className="text-3xl md:text-4xl mb-2" style={{ color: primaryColor, fontFamily: fontTitle }}>
+                    {config.title || 'Como chegar'}
+                  </h2>
+                  {config.subtitle && <p className="text-gray-600 mb-6">{config.subtitle}</p>}
+                  {config.address && (
+                    <p className="text-gray-700 mb-4 flex items-center gap-2">
+                      <MapPin className="w-4 h-4" /> {config.address}
+                    </p>
+                  )}
+                  <div className="rounded-2xl overflow-hidden border border-gray-200">
+                    {config.embedUrl || config.externalMapUrl ? (
+                      <iframe
+                        src={toGoogleMapsEmbed(config.embedUrl || config.externalMapUrl)}
+                        width="100%"
+                        height="380"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    ) : (
+                      <div className="h-[280px] bg-gray-100 flex items-center justify-center text-gray-500">
+                        Adicione a URL do mapa para exibir aqui
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {block.type === 'music' && (
+              <div className="p-10 md:p-14" style={{ background: backgroundColor }}>
+                <div className="max-w-4xl mx-auto">
+                  <h2 className="text-3xl md:text-4xl mb-2" style={{ color: primaryColor, fontFamily: fontTitle }}>
+                    {config.title || 'Nossa trilha sonora'}
+                  </h2>
+                  {config.description && <p className="text-gray-600 mb-6">{config.description}</p>}
+                  {config.spotifyUrl ? (
+                    <iframe
+                      src={toSpotifyEmbedUrl(config.spotifyUrl)}
+                      width="100%"
+                      height="152"
+                      loading="lazy"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                      className="rounded-2xl"
+                    />
+                  ) : config.youtubeUrl ? (
+                    <iframe
+                      src={toYoutubeEmbedUrl(config.youtubeUrl)}
+                      width="100%"
+                      height="360"
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="rounded-2xl"
+                    />
+                  ) : (
+                    <div className="h-36 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-gray-500 gap-2">
+                      <Music2 className="w-4 h-4" /> Adicione Spotify ou YouTube
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {block.type === 'video' && (
+              <div className="p-10 md:p-14 bg-white">
+                <div className="max-w-5xl mx-auto">
+                  <h2 className="text-3xl md:text-4xl mb-2" style={{ color: primaryColor, fontFamily: fontTitle }}>
+                    {config.title || 'Nosso video'}
+                  </h2>
+                  {config.description && <p className="text-gray-600 mb-6">{config.description}</p>}
+                  {config.videoUrl ? (
+                    <iframe
+                      src={toYoutubeEmbedUrl(config.videoUrl)}
+                      width="100%"
+                      height="460"
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="rounded-2xl border border-gray-200"
+                    />
+                  ) : (
+                    <div className="h-[280px] rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 gap-2">
+                      <Video className="w-4 h-4" /> Adicione URL do video
+                    </div>
+                  )}
                 </div>
               </div>
             )}

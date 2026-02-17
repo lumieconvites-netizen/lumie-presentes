@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
 export interface UserProfile {
@@ -50,7 +50,17 @@ export interface Payment {
 
 export interface PageBlock {
   id: string;
-  type: 'hero' | 'message' | 'countdown' | 'gifts' | 'messages' | 'gallery' | 'event-info';
+  type:
+    | 'hero'
+    | 'message'
+    | 'countdown'
+    | 'gifts'
+    | 'messages'
+    | 'gallery'
+    | 'event-info'
+    | 'map'
+    | 'music'
+    | 'video';
   order: number;
   enabled: boolean;
   config: any;
@@ -96,24 +106,11 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // ========== DEFAULTS (os seus) ==========
-const defaultGifts: GiftItem[] = [
-  { id: '1', title: 'Liquidificador', description: 'Liquidificador potente 1000W', value: 250.0, quantity: 1, quantityAvailable: 1, status: 'active' },
-  { id: '2', title: 'Jogo de Panelas', description: 'Jogo com 5 peças antiaderente', value: 450.0, quantity: 1, quantityAvailable: 1, status: 'active' },
-  { id: '3', title: 'Cafeteira Elétrica', description: 'Cafeteira com timer programável', value: 180.0, quantity: 1, quantityAvailable: 1, status: 'active' },
-  { id: '4', title: 'Air Fryer', description: 'Fritadeira sem óleo 5L', value: 380.0, quantity: 1, quantityAvailable: 1, status: 'active' },
-  { id: '5', title: 'Micro-ondas', description: 'Micro-ondas 30L branco', value: 520.0, quantity: 1, quantityAvailable: 1, status: 'active' },
-  { id: '6', title: 'Aspirador de Pó', description: 'Aspirador vertical sem fio', value: 680.0, quantity: 1, quantityAvailable: 1, status: 'active' },
-  { id: '7', title: 'Ferro de Passar', description: 'Ferro a vapor com base antiaderente', value: 150.0, quantity: 1, quantityAvailable: 1, status: 'active' },
-  { id: '8', title: 'Edredom Casal', description: 'Edredom 100% algodão', value: 280.0, quantity: 1, quantityAvailable: 1, status: 'active' },
-];
+const defaultGifts: GiftItem[] = [];
 
-const defaultMessages: Message[] = [
-  { id: '1', guestName: 'Maria Silva', message: 'Parabéns pelo evento! Desejo muita felicidade!', giftTitle: 'Liquidificador', amount: 250.0, date: new Date('2024-02-09'), isPublic: true, isFavorite: false },
-];
+const defaultMessages: Message[] = [];
 
-const defaultPayments: Payment[] = [
-  { id: '1', guestName: 'Maria Silva', guestEmail: 'maria@example.com', giftTitle: 'Liquidificador', amount: 250.0, fee: 19.98, netAmount: 230.02, status: 'paid', date: new Date('2024-02-09'), message: 'Parabéns pelo evento! Desejo muita felicidade!' },
-];
+const defaultPayments: Payment[] = [];
 
 const defaultPageBlocks: PageBlock[] = [
   { id: '1', type: 'hero', order: 1, enabled: true, config: { title: '15 anos da Isa Nauana', subtitle: '10 de março de 2026', label: 'Convite Especial', buttonText: 'Ver Lista de Presentes' } },
@@ -128,7 +125,7 @@ const defaultPageBlocks: PageBlock[] = [
 const defaultSettings: UserSettings = {
   feePassedToGuest: true,
   messagesPublic: true,
-  published: true,
+  published: false,
   theme: {
     primary_color: '#C86E52',
     secondary_color: '#8E3D2C',
@@ -154,8 +151,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // prefix por userId (quando não tem, usa "guest")
   const storagePrefix = useMemo(() => `lumie:${userId ?? 'guest'}:`, [userId]);
   const channelName = useMemo(() => `lumie_preview:${userId ?? 'guest'}`, [userId]);
+  const dataVersion = '2';
 
-  const key = (k: string) => `${storagePrefix}${k}`;
+  const key = useCallback((k: string) => `${storagePrefix}${k}`, [storagePrefix]);
 
   const [user, setUser] = useState<UserProfile | null>(null);
   const [gifts, setGifts] = useState<GiftItem[]>([]);
@@ -207,6 +205,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date(),
     });
 
+    // limpa dados mock antigos (versao anterior)
+    const currentVersion = localStorage.getItem(key('dataVersion'));
+    if (currentVersion !== dataVersion) {
+      localStorage.removeItem(key('gifts'));
+      localStorage.removeItem(key('messages'));
+      localStorage.removeItem(key('payments'));
+      localStorage.removeItem(key('pageBlocks'));
+      localStorage.removeItem(key('settings'));
+      localStorage.setItem(key('dataVersion'), dataVersion);
+    }
+
     // dados por-user no localStorage
     const loadedGifts = safeJsonParse(localStorage.getItem(key('gifts')), defaultGifts);
     const loadedMessages = safeJsonParse(localStorage.getItem(key('messages')), defaultMessages);
@@ -219,7 +228,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setPayments(loadedPayments);
     setPageBlocks(loadedBlocks);
     setSettings(loadedSettings);
-  }, [key, session, status]);
+  }, [dataVersion, key, session, status]);
 
   function safeBroadcast(type: string, payload?: any) {
     try {

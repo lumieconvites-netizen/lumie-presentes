@@ -16,6 +16,13 @@ function getFileExt(filename?: string) {
 
 export async function POST(req: Request) {
   try {
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: "Upload externo nao configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY." },
+        { status: 503 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id as string | undefined;
     if (!userId) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -27,8 +34,8 @@ export async function POST(req: Request) {
     if (!file) return NextResponse.json({ error: "Arquivo não enviado. Use o campo 'file'." }, { status: 400 });
     if (!file.type?.startsWith("image/")) return NextResponse.json({ error: "Envie uma imagem (image/*)." }, { status: 400 });
 
-    const MAX = 5 * 1024 * 1024;
-    if (file.size > MAX) return NextResponse.json({ error: "Imagem muito grande (máx 5MB)." }, { status: 400 });
+    const MAX = 4 * 1024 * 1024;
+    if (file.size > MAX) return NextResponse.json({ error: "Imagem muito grande (máx 4MB)." }, { status: 400 });
 
     const ext = getFileExt(file.name);
     const path = `${userId}/${folder}/${Date.now()}.${ext}`;

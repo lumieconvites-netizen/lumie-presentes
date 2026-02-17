@@ -1,0 +1,130 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function extractTokenOrCode(raw: string) {
+  const value = raw.trim();
+  if (!value) return { token: "", code: "" };
+
+  try {
+    const parsed = new URL(value);
+    const token = parsed.searchParams.get("token") || "";
+    if (token) {
+      return { token: decodeURIComponent(token), code: "" };
+    }
+  } catch {
+    // not an URL; continue with text parsing
+  }
+
+  const tokenMatch = value.match(/[?&]token=([^&]+)/i);
+  if (tokenMatch?.[1]) {
+    return { token: decodeURIComponent(tokenMatch[1]), code: "" };
+  }
+
+  return { token: "", code: value.toUpperCase() };
+}
+
+async function getGiftListId(userId: string) {
+  const giftList = await prisma.giftList.findFirst({
+    where: { userId },
+    select: { id: true },
+  });
+  return giftList?.id || null;
+}
+
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    }
+
+    const giftListId = await getGiftListId(session.user.id);
+    if (!giftListId) {
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const value = String(body?.value || "");
+    if (!value.trim()) {
+      return NextResponse.json({ error: "Codigo/QR invalido" }, { status: 400 });
+    }
+
+    const { token, code } = extractTokenOrCode(value);
+
+    const guest = await prisma.rsvpGuest.findFirst({
+      where: {
+        giftListId,
+        OR: [
+          ...(token ? [{ qrToken: token }] : []),
+          ...(code ? [{ checkInCode: code }] : []),
+        ],
+      },
+      select: {
+        id: true,
+        fullName: true,
+        status: true,
+        checkedInAt: true,
+        confirmedAdults: true,
+        confirmedChildren: true,
+      },
+    });
+
+    if (!guest) {
+      return NextResponse.json({ error: "Convidado nao encontrado para este QR/codigo" }, { status: 404 });
+    }
+
+    if (guest.checkedInAt) {
+      return NextResponse.json({
+        ok: true,
+        alreadyCheckedIn: true,
+        guest: {
+          id: guest.id,
+          fullName: guest.fullName,
+          status: guest.status,
+          checkedInAt: guest.checkedInAt,
+          confirmedAdults: guest.confirmedAdults ?? 0,
+          confirmedChildren: guest.confirmedChildren ?? 0,
+        },
+      });
+    }
+
+    const updated = await prisma.rsvpGuest.update({
+      where: { id: guest.id },
+      data: {
+        checkedInAt: new Date(),
+        status: guest.status === "PENDING" ? "CONFIRMED" : undefined,
+        confirmedAt: guest.status === "PENDING" ? new Date() : undefined,
+      },
+      select: {
+        id: true,
+        fullName: true,
+        status: true,
+        checkedInAt: true,
+        confirmedAdults: true,
+        confirmedChildren: true,
+      },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      alreadyCheckedIn: false,
+      guest: {
+        id: updated.id,
+        fullName: updated.fullName,
+        status: updated.status,
+        checkedInAt: updated.checkedInAt,
+        confirmedAdults: updated.confirmedAdults ?? 0,
+        confirmedChildren: updated.confirmedChildren ?? 0,
+      },
+    });
+  } catch (error) {
+    console.error("Erro no scanner de check-in RSVP:", error);
+    return NextResponse.json({ error: "Erro ao processar check-in" }, { status: 500 });
+  }
+}
+

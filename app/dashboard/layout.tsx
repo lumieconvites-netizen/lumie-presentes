@@ -1,25 +1,27 @@
-'use client';
-
-import { UserProvider } from '@/contexts/user-context';
+﻿import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import { authOptions } from '@/lib/auth';
 import DashboardSidebar from '@/components/dashboard/sidebar';
 import DashboardHeader from '@/components/dashboard/header';
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    redirect('/login');
+  }
+
   return (
-    <UserProvider>
-      <div className="min-h-screen bg-background flex">
-        <DashboardSidebar />
-        <div className="flex-1 flex flex-col">
-          <DashboardHeader />
-          <main className="flex-1 overflow-auto">
-            {children}
-          </main>
-        </div>
+    <div className="min-h-screen bg-background flex">
+      <DashboardSidebar />
+      <div className="flex-1 flex flex-col">
+        <DashboardHeader />
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
-    </UserProvider>
+    </div>
   );
 }

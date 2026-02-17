@@ -1,8 +1,6 @@
-// components/site/SiteRenderer.tsx
+﻿'use client';
 
-'use client';
-
-import React from 'react';
+import PublicPageView from '@/components/public/PublicPageView';
 
 interface SiteRendererProps {
   list: {
@@ -20,60 +18,38 @@ interface SiteRendererProps {
   messages: any[];
 }
 
-export default function SiteRenderer({
-  list,
-  blocks,
-  theme,
-  gifts,
-  messages,
-}: SiteRendererProps) {
+function mapGift(g: any) {
+  return {
+    id: g.id,
+    title: g.name,
+    description: g.description,
+    value: Number(g.basePrice ?? 0),
+    photo: g.imageUrl,
+    quantity: g.totalQuantity,
+    quantityAvailable: g.availableQty,
+    status: g.isActive ? 'active' : 'inactive',
+  };
+}
 
+function mapMessage(m: any) {
+  return {
+    id: m.id,
+    guestName: m.guestName,
+    message: m.content,
+    date: m.createdAt,
+    isPublic: m.isPublic,
+    isFavorite: m.isFavorite,
+  };
+}
+
+export default function SiteRenderer({ list, blocks, theme, gifts, messages }: SiteRendererProps) {
   return (
-    <div className="min-h-screen bg-background">
-
-      {/* HERO */}
-      <section className="text-center py-16">
-        <h1 className="text-4xl font-bold">{list.title}</h1>
-        {list.description && (
-          <p className="mt-4 text-gray-500">{list.description}</p>
-        )}
-      </section>
-
-      {/* GIFTS */}
-      <section className="container mx-auto py-12">
-        <h2 className="text-2xl font-semibold mb-6">Lista de Presentes</h2>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {gifts.map((gift) => (
-            <div key={gift.id} className="border rounded-lg p-4">
-              {gift.imageUrl && (
-                <img
-                  src={gift.imageUrl}
-                  alt={gift.name}
-                  className="w-full h-40 object-cover rounded-md mb-4"
-                />
-              )}
-              <h3 className="font-medium">{gift.name}</h3>
-              <p className="text-sm text-gray-500">{gift.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* MESSAGES */}
-      <section className="container mx-auto py-12">
-        <h2 className="text-2xl font-semibold mb-6">Mural de Recados</h2>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          {messages.map((msg) => (
-            <div key={msg.id} className="border rounded-lg p-4">
-              <p className="font-medium">{msg.guestName}</p>
-              <p className="text-sm mt-2">{msg.content}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-    </div>
+    <PublicPageView
+      blocks={Array.isArray(blocks) ? blocks : []}
+      gifts={(gifts ?? []).map(mapGift)}
+      messages={(messages ?? []).map(mapMessage)}
+      settings={{ slug: list?.slug }}
+      theme={theme ?? {}}
+    />
   );
 }

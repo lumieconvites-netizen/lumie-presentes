@@ -14,9 +14,10 @@ model User {
   name          String?
   email         String    @unique
   emailVerified DateTime?
-  password      String
+  password      String?
   image         String?
   role          UserRole  @default(CLIENT)
+  isBlocked     Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -24,6 +25,28 @@ model User {
   recipient     Recipient?
 
   @@map("users")
+}
+
+model EmailVerificationCode {
+  id           String               @id @default(cuid())
+  email        String
+  code         String
+  purpose      VerificationPurpose
+  name         String?
+  passwordHash String?
+  templateSlug String?
+  expiresAt    DateTime
+  usedAt       DateTime?
+  attempts     Int                  @default(0)
+  createdAt    DateTime             @default(now())
+
+  @@index([email, purpose])
+  @@index([expiresAt])
+  @@map("email_verification_codes")
+}
+
+enum VerificationPurpose {
+  REGISTER
 }
 
 enum UserRole {
@@ -55,6 +78,8 @@ model GiftList {
   gifts             GiftItem[]
   orders            Order[]
   messages          Message[]
+  rsvpSettings      RsvpSettings?
+  rsvpGuests        RsvpGuest[]
 
   @@index([userId])
   @@index([slug])
@@ -225,4 +250,60 @@ model Template {
   giftLists     GiftList[]
 
   @@map("templates")
+}
+
+// ===== RSVP =====
+
+model RsvpSettings {
+  id                String   @id @default(cuid())
+  giftListId        String   @unique
+  enabled           Boolean  @default(false)
+  notificationEmail String?
+  eventTitle        String?
+  eventDateLabel    String?
+  eventLocation     String?
+  coverImageUrl     String?
+  publicTitle       String?
+  publicDescription String?
+  searchPlaceholder String?
+  checkInEnabled    Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  giftList          GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+
+  @@map("rsvp_settings")
+}
+
+model RsvpGuest {
+  id            String      @id @default(cuid())
+  giftListId    String
+  fullName      String
+  email         String?
+  phone         String?
+  notes         String?
+  adultLimit    Int         @default(0)
+  childLimit    Int         @default(0)
+  confirmedAdults Int?
+  confirmedChildren Int?
+  status        RsvpStatus  @default(PENDING)
+  qrToken       String      @unique
+  confirmedAt   DateTime?
+  checkedInAt   DateTime?
+  checkInCode   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  giftList      GiftList    @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+
+  @@index([giftListId])
+  @@index([status])
+  @@index([fullName])
+  @@map("rsvp_guests")
+}
+
+enum RsvpStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
 }

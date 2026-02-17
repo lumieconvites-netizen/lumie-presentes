@@ -1,184 +1,386 @@
 'use client';
 
-import { useUser } from '@/contexts/user-context';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Copy,
   DollarSign,
   Gift,
   MessageSquare,
-  Users,
-  TrendingUp,
-  Calendar
+  Calendar,
+  ExternalLink,
+  Clock3,
+  Wallet,
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
 
+type Gift = { id: string; availableQty: number };
+type Message = {
+  id: string;
+  guestName: string;
+  content: string;
+  signature?: string | null;
+  isPublic: boolean;
+  createdAt: string;
+  order?: {
+    totalAmount: number | string;
+    giftItem?: { id: string; name: string } | null;
+  } | null;
+};
+type Order = {
+  id: string;
+  guestName: string;
+  totalAmount: number | string;
+  feeAmount: number | string;
+  status: 'PENDING' | 'PAID' | 'AUTHORIZED' | 'REFUSED' | 'REFUNDED' | 'CHARGEBACK';
+  createdAt: string;
+  giftItem?: { name?: string } | null;
+};
+
+type FullList = {
+  slug: string;
+  isPublished: boolean;
+  title: string;
+  description: string | null;
+  gifts: Gift[];
+  messages: Message[];
+  orders: Order[];
+};
+
+function toNumber(v: number | string) {
+  return typeof v === 'number' ? v : Number(v ?? 0);
+}
+
+const WITHDRAW_FEE_CENTS = 367;
+
 export default function DashboardPage() {
-  const { gifts, messages, payments, settings } = useUser();
+  const [data, setData] = useState<FullList | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [copying, setCopying] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/gift-lists/my-list/full', { cache: 'no-store' });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error ?? 'Falha ao carregar dashboard');
+        if (!cancelled) setData(json);
+      } catch (error: any) {
+        if (!cancelled) alert(error?.message ?? 'Erro ao carregar dashboard');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const gifts = data?.gifts ?? [];
+  const messages = data?.messages ?? [];
+  const orders = data?.orders ?? [];
 
   const totalGifts = gifts.length;
-  const activeGifts = gifts.filter(g => g.quantityAvailable > 0).length;
-  const totalMessages = messages.length;
-  const totalPaid = payments
-    .filter(p => p.status === 'paid')
-    .reduce((sum, p) => sum + p.netAmount, 0);
+  const activeGifts = gifts.filter((g) => g.availableQty > 0).length;
+  const paidOrders = orders.filter((o) => o.status === 'PAID' || o.status === 'AUTHORIZED');
+  const pendingOrders = orders.filter((o) => o.status === 'PENDING');
+  const totalPaid = paidOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
+  const totalPending = pendingOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
+  const recentPayments = paidOrders.slice(0, 6);
+  const recentMessages = messages.slice(0, 5);
 
-  const recentPayments = payments.slice(0, 5);
+  const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
+  const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);
+
+  const copyPublicLink = async () => {
+    if (!data?.slug || copying) return;
+
+    try {
+      setCopying(true);
+      const url = `${window.location.origin}/site/${data.slug}`;
+      await navigator.clipboard.writeText(url);
+      alert('Link copiado com sucesso.');
+    } catch {
+      alert('Não foi possível copiar o link agora.');
+    } finally {
+      setCopying(false);
+    }
+  };
+
+  const requestWithdraw = async () => {
+    if (withdrawing) return;
+
+    try {
+      setWithdrawing(true);
+      const res = await fetch('/api/recipient/withdraw', {
+        method: 'POST',
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error ?? 'Nao foi possivel solicitar o saque.');
+      alert(json?.message ?? 'Saque solicitado com sucesso.');
+      setWithdrawOpen(false);
+    } catch (error: any) {
+      alert(error?.message ?? 'Erro ao solicitar saque.');
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
+  if (loading) return <div className="p-6">Carregando dashboard...</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-display text-foreground mb-2">Dashboard</h1>
-        <p className="text-gray-500">
-          Visão geral da sua lista de presentes
-        </p>
+    <div className="p-6 space-y-6 bg-[#fbf8f5]">
+      <div className="rounded-2xl border border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-display text-foreground mb-1">Dashboard</h1>
+            <p className="text-gray-600">Visão geral da sua lista de presentes</p>
+            <p className="text-sm text-gray-500 mt-1">
+              {data?.title || 'Sua Lista'}
+              {data?.description ? ` - ${data.description}` : ''}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white"
+              onClick={() => setWithdrawOpen(true)}
+            >
+              <Wallet className="h-4 w-4 mr-2" />
+              Efetuar Saque
+            </Button>
+
+            <Button
+              variant="outline"
+              className="border-[#e0c6b4] bg-white hover:bg-[#fff6ef]"
+              onClick={copyPublicLink}
+              disabled={!data?.slug || copying}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              {copying ? 'Copiando...' : 'Copiar Link'}
+            </Button>
+
+          </div>
+        </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Total Arrecadado
-            </CardTitle>
-            <DollarSign className="w-5 h-5 text-green-600" />
+        <Card className="border-[#d7e8db] bg-gradient-to-br from-[#f3fff6] to-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 gap-3">
+            <CardTitle className="text-sm font-medium text-gray-700">Total Arrecadado</CardTitle>
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#dbf7e2] text-[#1e8a43]">
+              <DollarSign className="w-5 h-5" />
+            </span>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
               {totalPaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {payments.filter(p => p.status === 'paid').length} pagamentos aprovados
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{paidOrders.length} pagamentos aprovados</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Presentes
-            </CardTitle>
-            <Gift className="w-5 h-5 text-primary" />
+        <Card className="border-[#f0e2cb] bg-gradient-to-br from-[#fffaf1] to-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 gap-3">
+            <CardTitle className="text-sm font-medium text-gray-700">Pendente</CardTitle>
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#fff0cb] text-[#b8860b]">
+              <Clock3 className="w-5 h-5" />
+            </span>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {activeGifts}/{totalGifts}
+              {totalPending.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Disponíveis / Total
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{pendingOrders.length} pagamentos pendentes</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Recados
-            </CardTitle>
-            <MessageSquare className="w-5 h-5 text-blue-600" />
+        <Card className="border-[#efd8cc] bg-gradient-to-br from-[#fff7f3] to-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 gap-3">
+            <CardTitle className="text-sm font-medium text-gray-700">Presentes</CardTitle>
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#ffe5d9] text-[#c65a3a]">
+              <Gift className="w-5 h-5" />
+            </span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {totalMessages}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {messages.filter(m => m.isPublic).length} públicos
-            </p>
+            <div className="text-2xl font-bold text-foreground">{activeGifts}/{totalGifts}</div>
+            <p className="text-xs text-gray-500 mt-1">Disponíveis / Total</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Status
-            </CardTitle>
-            <TrendingUp className="w-5 h-5 text-orange-600" />
+        <Card className="border-[#dae6ff] bg-gradient-to-br from-[#f5f9ff] to-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 gap-3">
+            <CardTitle className="text-sm font-medium text-gray-700">Status</CardTitle>
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#e5efff] text-[#2f67cc]">
+              <MessageSquare className="w-5 h-5" />
+            </span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {settings.published ? 'Publicada' : 'Rascunho'}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {settings.published ? 'Visível para convidados' : 'Não visível'}
-            </p>
+            <div className="text-2xl font-bold text-foreground">{statusLabel}</div>
+            <p className="text-xs text-gray-500 mt-1">{messages.length} recados recebidos</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Payments */}
-      <Card>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <Card className="border-[#ead9cd]">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Últimos Presentes Recebidos</span>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/dashboard/pagamentos">Ver todos</Link>
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentPayments.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">Nenhum pagamento ainda</p>
+            ) : (
+              <div className="space-y-3">
+                {recentPayments.map((payment) => (
+                  <div key={payment.id} className="flex items-center justify-between p-4 rounded-xl bg-[#f7f2ed]">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground truncate">{payment.guestName}</p>
+                      <p className="text-sm text-gray-500 truncate">{payment.giftItem?.name ?? 'Presente'}</p>
+                    </div>
+                    <div className="text-right ml-3 shrink-0">
+                      <p className="font-semibold text-[#0f9d58]">
+                        {(toNumber(payment.totalAmount) - toNumber(payment.feeAmount)).toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        })}
+                      </p>
+                      <p className="text-xs text-gray-500">{new Date(payment.createdAt).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-[#ead9cd]">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Recados Recentes</span>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/dashboard/recados">Ver todos</Link>
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentMessages.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">Nenhum recado ainda</p>
+            ) : (
+              <div className="space-y-3">
+                {recentMessages.map((message) => (
+                  <div key={message.id} className="rounded-xl border border-[#efe2d7] bg-[#fffaf7] px-4 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground truncate">{message.guestName}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {message.order?.giftItem?.name ? `Presente: ${message.order.giftItem.name}` : 'Recado na lista'}
+                        </p>
+                      </div>
+                      <span className="text-xs text-gray-500 shrink-0">
+                        {new Date(message.createdAt).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 mt-2 line-clamp-2">{message.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-[#ead9cd]">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Pagamentos Recentes</span>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/dashboard/pagamentos">Ver todos</Link>
-            </Button>
+            <span>Ações Rápidas</span>
+            <span className="text-sm font-normal text-gray-500">Status: {statusLabel}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {recentPayments.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              Nenhum pagamento ainda
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {recentPayments.map((payment) => (
-                <div
-                  key={payment.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-gray-50"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{payment.guestName}</p>
-                      <p className="text-sm text-gray-500">{payment.giftTitle}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-green-600">
-                      {payment.netAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(payment.date).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ações Rápidas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Button variant="outline" className="h-auto py-4 flex-col gap-2 border-[#e3cdbf] hover:bg-[#fff7f1]" asChild>
               <Link href="/dashboard/presentes">
                 <Gift className="w-6 h-6" />
                 Adicionar Presente
               </Link>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
+            <Button variant="outline" className="h-auto py-4 flex-col gap-2 border-[#e3cdbf] hover:bg-[#fff7f1]" asChild>
               <Link href="/dashboard/editor">
                 <Calendar className="w-6 h-6" />
                 Editar Página
               </Link>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
-              <Link href="/dashboard/preview">
-                <Users className="w-6 h-6" />
+            <Button variant="outline" className="h-auto py-4 flex-col gap-2 border-[#e3cdbf] hover:bg-[#fff7f1]" asChild>
+              <Link href={publicLink} target="_blank">
+                <ExternalLink className="w-6 h-6" />
                 Ver Lista Pública
+              </Link>
+            </Button>
+            <Button variant="outline" className="h-auto py-4 flex-col gap-2 border-[#e3cdbf] hover:bg-[#fff7f1]" asChild>
+              <Link href="/dashboard/configuracoes">
+                <Settings className="w-6 h-6" />
+                Configurações
               </Link>
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar saque</DialogTitle>
+            <DialogDescription>
+              A taxa de transferencia e de{' '}
+              {(WITHDRAW_FEE_CENTS / 100).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+              })}
+              . Deseja continuar com o saque?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setWithdrawOpen(false)}
+              disabled={withdrawing}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white"
+              onClick={requestWithdraw}
+              disabled={withdrawing}
+            >
+              {withdrawing ? 'Solicitando...' : 'Confirmar saque'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
