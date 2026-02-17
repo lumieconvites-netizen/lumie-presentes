@@ -82,6 +82,8 @@ PAGARME_API_KEY="sua-api-key-pagarme"
 PAGARME_SECRET_KEY="sua-secret-key-pagarme"
 PAGARME_WEBHOOK_SECRET="webhook-secret-pagarme"
 PAGARME_ENVIRONMENT="sandbox" # ou "production"
+WITHDRAW_GATEWAY_URL=""
+WITHDRAW_GATEWAY_TOKEN=""
 
 # Comissão da plataforma
 PLATFORM_FEE_PERCENTAGE="7.99"

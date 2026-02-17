@@ -36,6 +36,8 @@ npm run build
 - `PAGARME_WEBHOOK_BASIC_USER` (se habilitar autenticacao no webhook)
 - `PAGARME_WEBHOOK_BASIC_PASSWORD` (se habilitar autenticacao no webhook)
 - `PAGARME_ENVIRONMENT=production`
+- `WITHDRAW_GATEWAY_URL` (URL do backend com IP fixo para saque)
+- `WITHDRAW_GATEWAY_TOKEN` (token compartilhado com o gateway)
 
 ## 4) Supabase Storage
 - Bucket: `avatars`
@@ -55,3 +57,4 @@ vercel --prod
 - Criar presentes com upload
 - Publicar lista e testar link copiado
 - Abrir checkout e confirmar criacao de pedido
+- Testar `GET /api/pagarme/ping` e fluxo de saque no dashboard

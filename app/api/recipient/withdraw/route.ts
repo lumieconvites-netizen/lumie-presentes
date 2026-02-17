@@ -2,7 +2,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { createRecipientTransfer, getRecipientBalanceSummary } from "@/lib/pagarme";
+import { getRecipientBalanceSummary } from "@/lib/pagarme";
+import { createRecipientTransferWithGateway } from "@/lib/withdraw-gateway";
 
 const WITHDRAW_FEE_CENTS = 367;
 
@@ -87,7 +88,7 @@ export async function POST() {
       );
     }
 
-    const transfer = await createRecipientTransfer({
+    const transfer = await createRecipientTransferWithGateway({
       recipientId: recipient.pagarmeRecipientId,
       amountInCents: availableBalance,
       metadata: {
