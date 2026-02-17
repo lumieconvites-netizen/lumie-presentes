@@ -18,7 +18,8 @@ export default function RegisterPage() {
   const searchParams = useSearchParams();
   const selectedTemplate = searchParams.get('template') || '';
   const inviteCodeFromUrl = searchParams.get('code') || '';
-  const roleFromUrl = searchParams.get('tipo') === 'parceiro' ? 'PARTNER' : 'CLIENT';
+  const isPartnerMode = searchParams.get('tipo') === 'parceiro';
+  const roleFromUrl = isPartnerMode ? 'PARTNER' : 'CLIENT';
   const [step, setStep] = useState<Step>('register');
   const [isLoading, setIsLoading] = useState(false);
   const [code, setCode] = useState('');
@@ -204,27 +205,15 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Tipo de conta</Label>
-                <select
-                  id="role"
-                  className="w-full border rounded-md h-10 px-3 text-sm"
-                  value={formData.role}
-                  onChange={(e) =>
-                    setFormData({ ...formData, role: e.target.value as 'CLIENT' | 'PARTNER' })
-                  }
-                  disabled={isLoading}
-                >
-                  <option value="CLIENT">Cliente</option>
-                  <option value="PARTNER">Parceiro</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="inviteCode">Codigo de convite (opcional)</Label>
+                <Label htmlFor="inviteCode">
+                  {isPartnerMode
+                    ? 'Codigo do embaixador (opcional)'
+                    : 'Codigo de convite (opcional)'}
+                </Label>
                 <Input
                   id="inviteCode"
                   type="text"
-                  placeholder="Ex: PAR_ABC12345"
+                  placeholder={isPartnerMode ? 'Ex: AMBPAR_ABC12345' : 'Ex: PAR_ABC12345'}
                   value={formData.inviteCode}
                   onChange={(e) =>
                     setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })
@@ -281,6 +270,21 @@ export default function RegisterPage() {
             <Link href="/login" className="text-terracota-600 hover:text-terracota-700 font-medium">
               Faca login
             </Link>
+          </div>
+
+          <div className="mt-4 text-center text-sm">
+            {isPartnerMode ? (
+              <Link href="/auth/cadastro" className="text-terracota-600 hover:text-terracota-700 font-medium">
+                Criar conta de cliente
+              </Link>
+            ) : (
+              <Link
+                href="/auth/cadastro?tipo=parceiro"
+                className="text-terracota-600 hover:text-terracota-700 font-medium"
+              >
+                Tornar-se parceiro
+              </Link>
+            )}
           </div>
 
           <div className="mt-6 text-center">
