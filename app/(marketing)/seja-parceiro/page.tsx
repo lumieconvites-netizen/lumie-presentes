@@ -3,18 +3,18 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, BadgeDollarSign, Sparkles, Users, BarChart3, Rocket } from 'lucide-react';
 
 const revenueExamples = [
-  { clientes: 5, mediaMensal: 1800, totalMovimentado: 9000, comissao: 180 },
-  { clientes: 15, mediaMensal: 2200, totalMovimentado: 33000, comissao: 660 },
-  { clientes: 30, mediaMensal: 2800, totalMovimentado: 84000, comissao: 1680 },
-  { clientes: 60, mediaMensal: 3200, totalMovimentado: 192000, comissao: 3840 },
+  { clientes: 5, mediaConvidados: 80, totalPresentes: 12000, comissao: 240 },
+  { clientes: 15, mediaConvidados: 110, totalPresentes: 54000, comissao: 1080 },
+  { clientes: 30, mediaConvidados: 140, totalPresentes: 126000, comissao: 2520 },
+  { clientes: 60, mediaConvidados: 170, totalPresentes: 306000, comissao: 6120 },
 ];
 
-const chartData = [
-  { mes: 'Mês 1', valor: 420, width: 'w-1/4' },
-  { mes: 'Mês 2', valor: 960, width: 'w-2/4' },
-  { mes: 'Mês 3', valor: 1510, width: 'w-3/4' },
-  { mes: 'Mês 4', valor: 2140, width: 'w-full' },
-];
+const columnChartData = revenueExamples.map((item) => ({
+  label: `${item.clientes} clientes`,
+  value: item.comissao,
+}));
+
+const maxCommission = Math.max(...columnChartData.map((item) => item.value));
 
 export default function SejaParceiroPage() {
   return (
@@ -31,7 +31,7 @@ export default function SejaParceiroPage() {
                 Seja nosso parceiro e transforme indicações em renda recorrente
               </h1>
               <p className="text-lg text-[#5f534e] max-w-xl">
-                💍 Indique clientes para a LUMIE e ganhe <strong>2% de comissão</strong> em todos os presentes recebidos.
+                🚀 Indique clientes para a LUMIE e ganhe <strong>2% de comissão</strong> em todos os presentes recebidos.
                 Você oferece uma solução linda e completa, e cria uma nova fonte de faturamento todo mês.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -53,7 +53,7 @@ export default function SejaParceiroPage() {
                 <li className="flex gap-2"><span>✅</span><span>Lista de presentes com visual premium</span></li>
                 <li className="flex gap-2"><span>✅</span><span>Página completa do evento (layout, recados, RSVP)</span></li>
                 <li className="flex gap-2"><span>✅</span><span>Gestão simples de pagamentos e saques</span></li>
-                <li className="flex gap-2"><span>✅</span><span>Experiência moderna para noivos e convidados</span></li>
+                <li className="flex gap-2"><span>✅</span><span>Experiência moderna para clientes e convidados</span></li>
               </ul>
               <div className="mt-6 rounded-2xl bg-[#f7f1eb] p-4 border border-[#e9d8cc]">
                 <p className="text-sm text-[#6c5d56]">
@@ -98,16 +98,16 @@ export default function SejaParceiroPage() {
             <h2 className="font-display text-4xl text-[#2b2422]">Projeção de faturamento do parceiro</h2>
           </div>
           <p className="text-[#685b55] mb-8">
-            Cenários ilustrativos para mostrar potencial de crescimento com comissão de 2% sobre o total movimentado dos clientes indicados.
+            Cenários ilustrativos com comissão de 2% sobre os presentes recebidos dos clientes indicados.
           </p>
 
           <div className="overflow-x-auto rounded-2xl border border-[#e3d2c6] bg-white mb-10">
-            <table className="w-full text-left min-w-[680px]">
+            <table className="w-full text-left min-w-[760px]">
               <thead className="bg-[#fbf4ee]">
                 <tr className="text-[#4f3f38]">
                   <th className="px-5 py-4 font-semibold">Clientes ativos</th>
-                  <th className="px-5 py-4 font-semibold">Média por cliente/mês</th>
-                  <th className="px-5 py-4 font-semibold">Total movimentado/mês</th>
+                  <th className="px-5 py-4 font-semibold">Média de convidados por cliente</th>
+                  <th className="px-5 py-4 font-semibold">Total de presentes recebidos (R$)</th>
                   <th className="px-5 py-4 font-semibold">Comissão (2%)</th>
                 </tr>
               </thead>
@@ -115,8 +115,8 @@ export default function SejaParceiroPage() {
                 {revenueExamples.map((item) => (
                   <tr key={item.clientes} className="border-t border-[#f0e2d8] text-[#5f534e]">
                     <td className="px-5 py-4">{item.clientes}</td>
-                    <td className="px-5 py-4">R$ {item.mediaMensal.toLocaleString('pt-BR')}</td>
-                    <td className="px-5 py-4">R$ {item.totalMovimentado.toLocaleString('pt-BR')}</td>
+                    <td className="px-5 py-4">{item.mediaConvidados}</td>
+                    <td className="px-5 py-4">R$ {item.totalPresentes.toLocaleString('pt-BR')}</td>
                     <td className="px-5 py-4 font-semibold text-[#1e8a43]">R$ {item.comissao.toLocaleString('pt-BR')}</td>
                   </tr>
                 ))}
@@ -125,19 +125,23 @@ export default function SejaParceiroPage() {
           </div>
 
           <div className="rounded-2xl border border-[#e3d2c6] bg-white p-6">
-            <h3 className="font-display text-2xl text-[#2b2422] mb-5">Exemplo visual de evolução mensal 🚀</h3>
-            <div className="space-y-4">
-              {chartData.map((row) => (
-                <div key={row.mes}>
-                  <div className="flex justify-between text-sm text-[#645750] mb-1">
-                    <span>{row.mes}</span>
-                    <span>R$ {row.valor.toLocaleString('pt-BR')}</span>
+            <h3 className="font-display text-2xl text-[#2b2422] mb-2">Quanto mais indicar, mais você ganha 📊</h3>
+            <p className="text-[#685b55] mb-6">Exemplo de crescimento de comissão conforme aumenta a base de clientes.</p>
+            <div className="h-[280px] md:h-[320px]">
+              <div className="h-full flex items-end justify-between gap-3 md:gap-6 border-l border-b border-[#ead8cb] px-3 pb-2">
+                {columnChartData.map((item) => (
+                  <div key={item.label} className="flex-1 flex flex-col items-center gap-2">
+                    <span className="text-xs md:text-sm font-semibold text-[#5d514b]">
+                      R$ {item.value.toLocaleString('pt-BR')}
+                    </span>
+                    <div
+                      className="w-full max-w-[80px] rounded-t-xl bg-gradient-to-t from-[#c85e3e] to-[#de977b]"
+                      style={{ height: `${Math.max((item.value / maxCommission) * 220, 24)}px` }}
+                    />
+                    <span className="text-[11px] md:text-sm text-[#685b55] text-center">{item.label}</span>
                   </div>
-                  <div className="h-4 bg-[#f1e4db] rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full bg-gradient-to-r from-[#c65a3a] to-[#d88b6f] ${row.width}`} />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -149,14 +153,9 @@ export default function SejaParceiroPage() {
           <p className="text-lg text-[#6a5e58] mb-8">
             Cadastre sua conta de parceiro e comece a indicar clientes agora mesmo.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="rounded-xl px-8 py-6 text-base">
-              <Link href="/cadastro?tipo=parceiro">Tornar-se parceiro</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-xl px-8 py-6 text-base border-[#d8c0b0]">
-              <Link href="/cadastro?tipo=parceiro">Criar conta de parceiro</Link>
-            </Button>
-          </div>
+          <Button asChild size="lg" className="rounded-xl px-8 py-6 text-base">
+            <Link href="/cadastro?tipo=parceiro">Tornar-se parceiro</Link>
+          </Button>
         </div>
       </section>
     </div>
