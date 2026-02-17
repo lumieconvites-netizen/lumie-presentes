@@ -45,6 +45,64 @@ function isRealRecipientId(value?: string | null) {
   return !value.startsWith('pending_');
 }
 
+function readPercent(name: string, fallback: number) {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+  return parsed;
+}
+
+function roundCents(value: number) {
+  return Math.round(value);
+}
+
+function calculateCommissionSplit(params: {
+  baseAmount: number;
+  totalAmount: number;
+  acquisitionSource: string;
+  hasPartnerRecipient: boolean;
+  hasAmbassadorRecipient: boolean;
+}) {
+  const processingFeePercentage = readPercent('PAGARME_PROCESSING_FEE_PERCENTAGE', 1.09);
+  const networkFeePercentage = readPercent('PLATFORM_NETWORK_FEE_PERCENTAGE', 10.9);
+  const partnerFeePercentage = readPercent('PARTNER_COMMISSION_PERCENTAGE', 2);
+  const ambassadorFeePercentage = readPercent('AMBASSADOR_COMMISSION_PERCENTAGE', 3);
+
+  const baseInCents = roundCents(params.baseAmount * 100);
+  const totalInCents = roundCents(params.totalAmount * 100);
+
+  const enablePartner = params.hasPartnerRecipient && ['PARTNER_DIRECT', 'PARTNER_WITH_AMBASSADOR'].includes(params.acquisitionSource);
+  const enableAmbassador =
+    params.hasAmbassadorRecipient && ['AMBASSADOR_DIRECT', 'PARTNER_WITH_AMBASSADOR'].includes(params.acquisitionSource);
+
+  const partnerInCents = enablePartner ? roundCents((baseInCents * partnerFeePercentage) / 100) : 0;
+  const ambassadorInCents = enableAmbassador ? roundCents((baseInCents * ambassadorFeePercentage) / 100) : 0;
+  const platformCommercialPercentage = Math.max(networkFeePercentage - (enablePartner ? partnerFeePercentage : 0) - (enableAmbassador ? ambassadorFeePercentage : 0), 0);
+  const platformGrossPercentage = platformCommercialPercentage + processingFeePercentage;
+  const platformInCents = roundCents((baseInCents * platformGrossPercentage) / 100);
+  const clientInCents = Math.max(totalInCents - platformInCents - partnerInCents - ambassadorInCents, 0);
+
+  return {
+    totalInCents,
+    clientInCents,
+    platformInCents,
+    partnerInCents,
+    ambassadorInCents,
+    splitProfile: {
+      source: params.acquisitionSource,
+      partnerEnabled: enablePartner,
+      ambassadorEnabled: enableAmbassador,
+      processingFeePercentage,
+      networkFeePercentage,
+      platformCommercialPercentage,
+      platformGrossPercentage,
+      partnerFeePercentage,
+      ambassadorFeePercentage,
+    },
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -73,6 +131,16 @@ export async function POST(request: Request) {
             user: {
               include: {
                 recipient: true,
+                referredByPartner: {
+                  include: {
+                    recipient: true,
+                  },
+                },
+                referredByAmbassador: {
+                  include: {
+                    recipient: true,
+                  },
+                },
               },
             },
           },
@@ -126,18 +194,31 @@ export async function POST(request: Request) {
         const platformRecipientId = process.env.PAGARME_PLATFORM_RECIPIENT_ID;
         const clientRecipientId = gift.giftList.user.recipient?.pagarmeRecipientId;
 
-        const totalInCents = Math.round(calculation.totalAmount * 100);
-        const feeInCents = Math.round(calculation.feeAmount * 100);
-        const recipientInCents = Math.max(0, totalInCents - feeInCents);
+        const partnerRecipientId = gift.giftList.user.referredByPartner?.recipient?.pagarmeRecipientId;
+        const ambassadorRecipientId = gift.giftList.user.referredByAmbassador?.recipient?.pagarmeRecipientId;
+
+        const splitAmounts = calculateCommissionSplit({
+          baseAmount: calculation.baseAmount,
+          totalAmount: calculation.totalAmount,
+          acquisitionSource: gift.giftList.user.acquisitionSource,
+          hasPartnerRecipient: isRealRecipientId(partnerRecipientId),
+          hasAmbassadorRecipient: isRealRecipientId(ambassadorRecipientId),
+        });
 
         const splitRules =
           platformRecipientId &&
           isRealRecipientId(clientRecipientId) &&
-          feeInCents > 0 &&
-          recipientInCents > 0
+          splitAmounts.totalInCents > 0 &&
+          splitAmounts.clientInCents >= 0
             ? [
-                { recipientId: clientRecipientId as string, amountInCents: recipientInCents },
-                { recipientId: platformRecipientId, amountInCents: feeInCents },
+                { recipientId: clientRecipientId as string, amountInCents: splitAmounts.clientInCents },
+                ...(splitAmounts.partnerInCents > 0 && isRealRecipientId(partnerRecipientId)
+                  ? [{ recipientId: partnerRecipientId as string, amountInCents: splitAmounts.partnerInCents }]
+                  : []),
+                ...(splitAmounts.ambassadorInCents > 0 && isRealRecipientId(ambassadorRecipientId)
+                  ? [{ recipientId: ambassadorRecipientId as string, amountInCents: splitAmounts.ambassadorInCents }]
+                  : []),
+                { recipientId: platformRecipientId, amountInCents: splitAmounts.platformInCents },
               ]
             : undefined;
 
@@ -147,12 +228,10 @@ export async function POST(request: Request) {
             ? 'missing_platform_recipient'
             : !isRealRecipientId(clientRecipientId)
               ? 'missing_client_recipient'
-              : feeInCents <= 0 || recipientInCents <= 0
-                ? 'invalid_split_amount'
-                : 'unknown';
+              : 'invalid_split_amount';
 
         const pagarmeOrder = await createPixOrder({
-          amountInCents: totalInCents,
+          amountInCents: splitAmounts.totalInCents,
           itemTitle: gift.name,
           quantity: data.quantity,
           splitRules,
@@ -171,6 +250,10 @@ export async function POST(request: Request) {
             splitReason,
             platformRecipientId: platformRecipientId ?? null,
             clientRecipientId: clientRecipientId ?? null,
+            partnerRecipientId: partnerRecipientId ?? null,
+            ambassadorRecipientId: ambassadorRecipientId ?? null,
+            splitProfile: splitAmounts.splitProfile,
+            splitAmounts,
           },
         });
 

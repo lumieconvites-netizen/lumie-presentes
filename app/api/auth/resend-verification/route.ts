@@ -51,6 +51,8 @@ export async function POST(request: Request) {
           name: pending.name,
           passwordHash: pending.passwordHash,
           templateSlug: pending.templateSlug,
+          requestedRole: pending.requestedRole,
+          inviteCode: pending.inviteCode,
           expiresAt,
         },
       });

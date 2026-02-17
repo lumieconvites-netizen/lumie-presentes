@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { getTemplatePresetBySlug } from "@/lib/template-presets";
+import { ensureDefaultReferralCodesForUser, resolveReferralForSignup } from "@/lib/referrals";
 
 const verifySchema = z.object({
   email: z.string().email("Email invalido"),
@@ -37,6 +38,11 @@ export async function POST(request: Request) {
     }
 
     const selectedTemplate = getTemplatePresetBySlug(verification.templateSlug);
+    const requestedRole = verification.requestedRole === "PARTNER" ? "PARTNER" : "CLIENT";
+    const referral = await resolveReferralForSignup({
+      requestedRole,
+      inviteCode: verification.inviteCode,
+    });
 
     await prisma.$transaction(async (tx) => {
       const user = await tx.user.upsert({
@@ -45,14 +51,31 @@ export async function POST(request: Request) {
           name: verification.name,
           password: verification.passwordHash,
           emailVerified: new Date(),
+          role: requestedRole,
+          partnerAmbassadorId: referral.partnerAmbassadorId,
+          referredByPartnerId: referral.referredByPartnerId,
+          referredByAmbassadorId: referral.referredByAmbassadorId,
+          acquisitionSource: referral.acquisitionSource,
+          appliedReferralCode: referral.normalizedInviteCode,
         },
         create: {
           email: normalizedEmail,
           name: verification.name ?? "Novo usuario",
           password: verification.passwordHash,
           emailVerified: new Date(),
+          role: requestedRole,
+          partnerAmbassadorId: referral.partnerAmbassadorId,
+          referredByPartnerId: referral.referredByPartnerId,
+          referredByAmbassadorId: referral.referredByAmbassadorId,
+          acquisitionSource: referral.acquisitionSource,
+          appliedReferralCode: referral.normalizedInviteCode,
         },
       });
+
+      await ensureDefaultReferralCodesForUser({
+        id: user.id,
+        role: user.role,
+      }, tx);
 
       const giftList = await tx.giftList.upsert({
         where: { slug: `lista-${user.id}` },
@@ -93,6 +116,9 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
+    }
+    if (error instanceof Error && error.message.toLowerCase().includes("codigo")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     console.error("Erro ao confirmar email:", error);

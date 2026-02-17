@@ -17,6 +17,8 @@ export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedTemplate = searchParams.get('template') || '';
+  const inviteCodeFromUrl = searchParams.get('code') || '';
+  const roleFromUrl = searchParams.get('tipo') === 'parceiro' ? 'PARTNER' : 'CLIENT';
   const [step, setStep] = useState<Step>('register');
   const [isLoading, setIsLoading] = useState(false);
   const [code, setCode] = useState('');
@@ -25,6 +27,8 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    role: roleFromUrl as 'CLIENT' | 'PARTNER',
+    inviteCode: inviteCodeFromUrl,
   });
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -51,6 +55,8 @@ export default function RegisterPage() {
           email: formData.email,
           password: formData.password,
           templateSlug: selectedTemplate || undefined,
+          role: formData.role,
+          inviteCode: formData.inviteCode || undefined,
         }),
       });
 
@@ -193,6 +199,36 @@ export default function RegisterPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Tipo de conta</Label>
+                <select
+                  id="role"
+                  className="w-full border rounded-md h-10 px-3 text-sm"
+                  value={formData.role}
+                  onChange={(e) =>
+                    setFormData({ ...formData, role: e.target.value as 'CLIENT' | 'PARTNER' })
+                  }
+                  disabled={isLoading}
+                >
+                  <option value="CLIENT">Cliente</option>
+                  <option value="PARTNER">Parceiro</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode">Codigo de convite (opcional)</Label>
+                <Input
+                  id="inviteCode"
+                  type="text"
+                  placeholder="Ex: PAR_ABC12345"
+                  value={formData.inviteCode}
+                  onChange={(e) =>
+                    setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })
+                  }
                   disabled={isLoading}
                 />
               </div>

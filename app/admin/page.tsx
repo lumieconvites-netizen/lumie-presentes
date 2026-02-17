@@ -16,7 +16,7 @@ type AdminUser = {
   id: string;
   name: string | null;
   email: string;
-  role: 'ADMIN' | 'CLIENT';
+  role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR';
   isBlocked: boolean;
   emailVerified: string | null;
   createdAt: string;
@@ -52,7 +52,7 @@ export default function AdminPage() {
   const [giftLists, setGiftLists] = useState<AdminGiftList[]>([]);
 
   const [userQuery, setUserQuery] = useState('');
-  const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'ADMIN' | 'CLIENT'>('ALL');
+  const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR'>('ALL');
   const [userBlockedFilter, setUserBlockedFilter] = useState<'ALL' | 'BLOCKED' | 'ACTIVE'>('ALL');
 
   const [listQuery, setListQuery] = useState('');
@@ -123,7 +123,10 @@ export default function AdminPage() {
     loadGiftLists().catch(() => null);
   }, [listQueryString]);
 
-  async function updateUser(userId: string, payload: { role?: 'ADMIN' | 'CLIENT'; isBlocked?: boolean }) {
+  async function updateUser(
+    userId: string,
+    payload: { role?: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR'; isBlocked?: boolean }
+  ) {
     setBusyUserId(userId);
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
@@ -210,6 +213,8 @@ export default function AdminPage() {
               <option value="ALL">Todos os papeis</option>
               <option value="ADMIN">Admins</option>
               <option value="CLIENT">Clientes</option>
+              <option value="PARTNER">Parceiros</option>
+              <option value="AMBASSADOR">Embaixadores</option>
             </select>
             <select
               className="border rounded-md h-10 px-3 text-sm"
@@ -251,9 +256,11 @@ export default function AdminPage() {
                       <button
                         className="px-3 h-8 rounded-md border"
                         disabled={busyUserId === user.id}
-                        onClick={() => updateUser(user.id, { role: user.role === 'ADMIN' ? 'CLIENT' : 'ADMIN' })}
+                        onClick={() =>
+                          updateUser(user.id, { role: user.role === 'ADMIN' ? 'CLIENT' : 'ADMIN' })
+                        }
                       >
-                        {user.role === 'ADMIN' ? 'Tornar Client' : 'Tornar Admin'}
+                        {user.role === 'ADMIN' ? 'Tornar Cliente' : 'Tornar Admin'}
                       </button>
                       <button
                         className="px-3 h-8 rounded-md border"

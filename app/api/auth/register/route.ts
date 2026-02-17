@@ -4,19 +4,28 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { sendVerificationCodeEmail } from "@/lib/email";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
+import { resolveReferralForSignup } from "@/lib/referrals";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   email: z.string().email("Email invalido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   templateSlug: z.string().optional(),
+  role: z.enum(["CLIENT", "PARTNER"]).optional(),
+  inviteCode: z.string().optional(),
 });
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, password, templateSlug } = registerSchema.parse(body);
+    const { name, email, password, templateSlug, role, inviteCode } = registerSchema.parse(body);
     const normalizedEmail = email.trim().toLowerCase();
+    const requestedRole = role ?? "CLIENT";
+
+    const referral = await resolveReferralForSignup({
+      requestedRole,
+      inviteCode,
+    });
 
     const existingUser = await prisma.user.findUnique({
       where: { email: normalizedEmail },
@@ -49,6 +58,8 @@ export async function POST(request: Request) {
           name,
           passwordHash,
           templateSlug: templateSlug || null,
+          requestedRole,
+          inviteCode: referral.normalizedInviteCode,
           expiresAt,
         },
       });
@@ -60,6 +71,12 @@ export async function POST(request: Request) {
             name,
             password: passwordHash,
             emailVerified: null,
+            role: requestedRole,
+            partnerAmbassadorId: referral.partnerAmbassadorId,
+            referredByPartnerId: referral.referredByPartnerId,
+            referredByAmbassadorId: referral.referredByAmbassadorId,
+            acquisitionSource: referral.acquisitionSource,
+            appliedReferralCode: referral.normalizedInviteCode,
           },
         });
       }
@@ -76,6 +93,9 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
+    }
+    if (error instanceof Error && error.message.toLowerCase().includes("codigo")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     console.error("Erro ao iniciar cadastro:", error);

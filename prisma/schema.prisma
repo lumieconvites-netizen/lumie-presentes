@@ -10,35 +10,53 @@ datasource db {
 // ===== AUTENTICAÇÃO =====
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?
-  image         String?
-  role          UserRole  @default(CLIENT)
-  isBlocked     Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                     String            @id @default(cuid())
+  name                   String?
+  email                  String            @unique
+  emailVerified          DateTime?
+  password               String?
+  image                  String?
+  role                   UserRole          @default(CLIENT)
+  isBlocked              Boolean           @default(false)
+  partnerAmbassadorId    String?
+  referredByPartnerId    String?
+  referredByAmbassadorId String?
+  acquisitionSource      AcquisitionSource @default(PLATFORM_DIRECT)
+  appliedReferralCode    String?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
 
-  giftLists     GiftList[]
-  recipient     Recipient?
+  giftLists                   GiftList[]
+  recipient                   Recipient?
+  partnerAmbassador           User?          @relation("PartnerToAmbassador", fields: [partnerAmbassadorId], references: [id], onDelete: SetNull)
+  partnerReferrals            User[]         @relation("PartnerToAmbassador")
+  referredByPartner           User?          @relation("PartnerToClient", fields: [referredByPartnerId], references: [id], onDelete: SetNull)
+  referredClientsAsPartner    User[]         @relation("PartnerToClient")
+  referredByAmbassador        User?          @relation("AmbassadorToClient", fields: [referredByAmbassadorId], references: [id], onDelete: SetNull)
+  referredClientsAsAmbassador User[]         @relation("AmbassadorToClient")
+  referralCodes               ReferralCode[]
 
+  @@index([role])
+  @@index([partnerAmbassadorId])
+  @@index([referredByPartnerId])
+  @@index([referredByAmbassadorId])
   @@map("users")
 }
 
 model EmailVerificationCode {
-  id           String               @id @default(cuid())
-  email        String
-  code         String
-  purpose      VerificationPurpose
-  name         String?
-  passwordHash String?
-  templateSlug String?
-  expiresAt    DateTime
-  usedAt       DateTime?
-  attempts     Int                  @default(0)
-  createdAt    DateTime             @default(now())
+  id            String              @id @default(cuid())
+  email         String
+  code          String
+  purpose       VerificationPurpose
+  name          String?
+  passwordHash  String?
+  templateSlug  String?
+  requestedRole UserRole            @default(CLIENT)
+  inviteCode    String?
+  expiresAt     DateTime
+  usedAt        DateTime?
+  attempts      Int                 @default(0)
+  createdAt     DateTime            @default(now())
 
   @@index([email, purpose])
   @@index([expiresAt])
@@ -51,35 +69,66 @@ enum VerificationPurpose {
 
 enum UserRole {
   CLIENT
+  PARTNER
+  AMBASSADOR
   ADMIN
+}
+
+enum AcquisitionSource {
+  PLATFORM_DIRECT
+  AMBASSADOR_DIRECT
+  PARTNER_DIRECT
+  PARTNER_WITH_AMBASSADOR
+}
+
+model ReferralCode {
+  id          String           @id @default(cuid())
+  ownerUserId String
+  code        String           @unique
+  type        ReferralCodeType
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  owner User @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@index([ownerUserId])
+  @@index([type])
+  @@map("referral_codes")
+}
+
+enum ReferralCodeType {
+  PARTNER_CLIENT
+  AMBASSADOR_CLIENT
+  AMBASSADOR_PARTNER
 }
 
 // ===== LISTA DE PRESENTES =====
 
 model GiftList {
-  id                String    @id @default(cuid())
-  userId            String
-  slug              String    @unique
-  title             String
-  description       String?
-  eventDate         DateTime?
-  isPublished       Boolean   @default(false)
-  templateId        String?
-  feeMode           FeeMode   @default(PASS_TO_GUEST)
-  allowMessages     Boolean   @default(true)
-  allowPhotoUpload  Boolean   @default(true)
-  showGuestNames    Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  userId           String
+  slug             String    @unique
+  title            String
+  description      String?
+  eventDate        DateTime?
+  isPublished      Boolean   @default(false)
+  templateId       String?
+  feeMode          FeeMode   @default(PASS_TO_GUEST)
+  allowMessages    Boolean   @default(true)
+  allowPhotoUpload Boolean   @default(true)
+  showGuestNames   Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  template          Template? @relation(fields: [templateId], references: [id])
-  pageLayout        PageLayout?
-  gifts             GiftItem[]
-  orders            Order[]
-  messages          Message[]
-  rsvpSettings      RsvpSettings?
-  rsvpGuests        RsvpGuest[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template     Template?     @relation(fields: [templateId], references: [id])
+  pageLayout   PageLayout?
+  gifts        GiftItem[]
+  orders       Order[]
+  messages     Message[]
+  rsvpSettings RsvpSettings?
+  rsvpGuests   RsvpGuest[]
 
   @@index([userId])
   @@index([slug])
@@ -94,15 +143,15 @@ enum FeeMode {
 // ===== LAYOUT DA PÁGINA =====
 
 model PageLayout {
-  id            String    @id @default(cuid())
-  giftListId    String    @unique
-  blocks        Json
-  theme         Json
-  customCss     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id         String   @id @default(cuid())
+  giftListId String   @unique
+  blocks     Json
+  theme      Json
+  customCss  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  giftList      GiftList  @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
 
   @@map("page_layouts")
 }
@@ -110,21 +159,21 @@ model PageLayout {
 // ===== PRESENTES =====
 
 model GiftItem {
-  id              String    @id @default(cuid())
-  giftListId      String
-  name            String
-  description     String?
-  imageUrl        String?
-  basePrice       Decimal   @db.Decimal(10, 2)
-  totalQuantity   Int       @default(1)
-  availableQty    Int       @default(1)
-  isActive        Boolean   @default(true)
-  order           Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String   @id @default(cuid())
+  giftListId    String
+  name          String
+  description   String?
+  imageUrl      String?
+  basePrice     Decimal  @db.Decimal(10, 2)
+  totalQuantity Int      @default(1)
+  availableQty  Int      @default(1)
+  isActive      Boolean  @default(true)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  giftList        GiftList  @relation(fields: [giftListId], references: [id], onDelete: Cascade)
-  orders          Order[]
+  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  orders   Order[]
 
   @@index([giftListId])
   @@index([isActive])
@@ -152,13 +201,13 @@ model Order {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
-  giftList        GiftList    @relation(fields: [giftListId], references: [id], onDelete: Cascade)
-  giftItem        GiftItem    @relation(fields: [giftItemId], references: [id])
+  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  giftItem GiftItem @relation(fields: [giftItemId], references: [id])
 
   // ✅ deixa explícito para evitar ambiguidade
-  message         Message?    @relation("OrderToMessage")
+  message Message? @relation("OrderToMessage")
 
-  webhookEvents   WebhookEvent[]
+  webhookEvents WebhookEvent[]
 
   @@index([giftListId])
   @@index([status])
@@ -192,8 +241,8 @@ model Message {
   updatedAt  DateTime @updatedAt
 
   // ✅ mesmo nome da relation do Order
-  order      Order    @relation("OrderToMessage", fields: [orderId], references: [id], onDelete: Cascade)
-  giftList   GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  order    Order    @relation("OrderToMessage", fields: [orderId], references: [id], onDelete: Cascade)
+  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
 
   @@index([giftListId])
   @@index([isPublic])
@@ -211,7 +260,7 @@ model Recipient {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("recipients")
 }
@@ -224,7 +273,7 @@ model WebhookEvent {
   processed Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  order     Order?   @relation(fields: [orderId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
 
   @@index([eventType])
   @@index([processed])
@@ -234,20 +283,20 @@ model WebhookEvent {
 // ===== TEMPLATES =====
 
 model Template {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
-  slug          String    @unique
+  slug          String   @unique
   description   String?
   category      String
   thumbnail     String?
   defaultBlocks Json
   defaultTheme  Json
-  isActive      Boolean   @default(true)
-  order         Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  isActive      Boolean  @default(true)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  giftLists     GiftList[]
+  giftLists GiftList[]
 
   @@map("templates")
 }
@@ -270,31 +319,31 @@ model RsvpSettings {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  giftList          GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
 
   @@map("rsvp_settings")
 }
 
 model RsvpGuest {
-  id            String      @id @default(cuid())
-  giftListId    String
-  fullName      String
-  email         String?
-  phone         String?
-  notes         String?
-  adultLimit    Int         @default(0)
-  childLimit    Int         @default(0)
-  confirmedAdults Int?
+  id                String     @id @default(cuid())
+  giftListId        String
+  fullName          String
+  email             String?
+  phone             String?
+  notes             String?
+  adultLimit        Int        @default(0)
+  childLimit        Int        @default(0)
+  confirmedAdults   Int?
   confirmedChildren Int?
-  status        RsvpStatus  @default(PENDING)
-  qrToken       String      @unique
-  confirmedAt   DateTime?
-  checkedInAt   DateTime?
-  checkInCode   String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  status            RsvpStatus @default(PENDING)
+  qrToken           String     @unique
+  confirmedAt       DateTime?
+  checkedInAt       DateTime?
+  checkInCode       String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
-  giftList      GiftList    @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
 
   @@index([giftListId])
   @@index([status])
