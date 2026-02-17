@@ -178,24 +178,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="bg-[#2b2422] text-white py-14">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-          <div>
-            <div className="relative w-24 h-12 mb-3 brightness-0 invert">
-              <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" />
-            </div>
-            <p className="text-sm text-gray-400">Transforme seus presentes em sonhos realizados.</p>
-          </div>
-
-          <div className="flex flex-wrap gap-6 text-sm text-gray-300">
-            <Link href="/como-funciona" className="hover:text-white">Como Funciona</Link>
-            <Link href="/tarifas" className="hover:text-white">Tarifas</Link>
-            <Link href="/templates" className="hover:text-white">Templates</Link>
-            <Link href="/termos" className="hover:text-white">Termos</Link>
-            <Link href="/privacidade" className="hover:text-white">Privacidade</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

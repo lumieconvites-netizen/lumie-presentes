@@ -272,21 +272,6 @@ export default function RegisterPage() {
             </Link>
           </div>
 
-          <div className="mt-4 text-center text-sm">
-            {isPartnerMode ? (
-              <Link href="/auth/cadastro" className="text-terracota-600 hover:text-terracota-700 font-medium">
-                Criar conta de cliente
-              </Link>
-            ) : (
-              <Link
-                href="/auth/cadastro?tipo=parceiro"
-                className="text-terracota-600 hover:text-terracota-700 font-medium"
-              >
-                Tornar-se parceiro
-              </Link>
-            )}
-          </div>
-
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
               Voltar para o inicio
