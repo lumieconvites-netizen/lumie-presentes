@@ -11,7 +11,7 @@ export function Footer() {
             <div className="relative w-24 h-12 mb-4 brightness-0 invert">
               <Image
                 src="/logo.png"
-                alt="LUMIÊ"
+                alt="LUMIÃŠ"
                 fill
                 className="object-contain"
               />
@@ -63,7 +63,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/privacidade" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Política de Privacidade
+                  PolÃ­tica de Privacidade
                 </Link>
               </li>
               <li>
@@ -77,7 +77,7 @@ export function Footer() {
         
         <div className="mt-12 pt-8 border-t border-gray-800 text-center">
           <p className="text-sm text-gray-500">
-            � {currentYear} LUMI�. Todos os direitos reservados.
+            © {currentYear} LUMIÊ. Todos os direitos reservados.
           </p>
         </div>
       </div>
