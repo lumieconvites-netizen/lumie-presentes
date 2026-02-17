@@ -3,14 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getRecipientBalanceSummary } from "@/lib/pagarme";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ ok: false, error: "Nao autenticado" }, { status: 401 });
   }
 
-  const recipientId = process.env.PAGARME_PLATFORM_RECIPIENT_ID;
-  if (!recipientId) {
+  const platformRecipientId = process.env.PAGARME_PLATFORM_RECIPIENT_ID;
+  if (!platformRecipientId) {
     return NextResponse.json(
       {
         ok: false,
@@ -20,12 +20,17 @@ export async function GET() {
     );
   }
 
+  const { searchParams } = new URL(request.url);
+  const requestedRecipientId = searchParams.get("recipientId");
+  const recipientId = requestedRecipientId?.trim() || platformRecipientId;
+
   try {
     const summary = await getRecipientBalanceSummary(recipientId);
     return NextResponse.json({
       ok: true,
       provider: "pagarme",
       recipientId,
+      usedPlatformRecipient: recipientId === platformRecipientId,
       summary,
     });
   } catch (error: any) {
