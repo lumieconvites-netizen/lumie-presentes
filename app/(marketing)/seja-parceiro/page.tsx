@@ -2,19 +2,21 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, BadgeDollarSign, Sparkles, Users, BarChart3, Rocket } from 'lucide-react';
 
-const revenueExamples = [
-  { clientes: 5, mediaConvidados: 80, totalPresentes: 12000, comissao: 240 },
-  { clientes: 15, mediaConvidados: 110, totalPresentes: 54000, comissao: 1080 },
-  { clientes: 30, mediaConvidados: 140, totalPresentes: 126000, comissao: 2520 },
-  { clientes: 60, mediaConvidados: 170, totalPresentes: 306000, comissao: 6120 },
-];
+const averageGiftsPerClient = 25;
+const averageGiftValue = 100;
+const clientsProjection = [1, 5, 15, 30, 60];
 
-const columnChartData = revenueExamples.map((item) => ({
-  label: `${item.clientes} clientes`,
-  value: item.comissao,
-}));
-
-const maxCommission = Math.max(...columnChartData.map((item) => item.value));
+const revenueExamples = clientsProjection.map((clientes) => {
+  const totalPresentes = clientes * averageGiftsPerClient * averageGiftValue;
+  const comissao = totalPresentes * 0.02;
+  return {
+    clientes,
+    mediaPresentesPorCliente: averageGiftsPerClient,
+    valorMedioPorPresente: averageGiftValue,
+    totalPresentes,
+    comissao,
+  };
+});
 
 export default function SejaParceiroPage() {
   return (
@@ -98,15 +100,15 @@ export default function SejaParceiroPage() {
             <h2 className="font-display text-4xl text-[#2b2422]">Projeção de faturamento do parceiro</h2>
           </div>
           <p className="text-[#685b55] mb-8">
-            Cenários ilustrativos com comissão de 2% sobre os presentes recebidos dos clientes indicados.
+            Cenários ilustrativos com média de {averageGiftsPerClient} presentes por cliente e ticket médio de R$ {averageGiftValue.toLocaleString('pt-BR')} por presente.
           </p>
 
           <div className="overflow-x-auto rounded-2xl border border-[#e3d2c6] bg-white mb-10">
             <table className="w-full text-left min-w-[760px]">
               <thead className="bg-[#fbf4ee]">
                 <tr className="text-[#4f3f38]">
-                  <th className="px-5 py-4 font-semibold">Clientes ativos</th>
-                  <th className="px-5 py-4 font-semibold">Média de convidados por cliente</th>
+                  <th className="px-5 py-4 font-semibold">Clientes</th>
+                  <th className="px-5 py-4 font-semibold">Média de presentes recebidos por cliente</th>
                   <th className="px-5 py-4 font-semibold">Total de presentes recebidos (R$)</th>
                   <th className="px-5 py-4 font-semibold">Comissão (2%)</th>
                 </tr>
@@ -115,7 +117,7 @@ export default function SejaParceiroPage() {
                 {revenueExamples.map((item) => (
                   <tr key={item.clientes} className="border-t border-[#f0e2d8] text-[#5f534e]">
                     <td className="px-5 py-4">{item.clientes}</td>
-                    <td className="px-5 py-4">{item.mediaConvidados}</td>
+                    <td className="px-5 py-4">{item.mediaPresentesPorCliente} presentes (R$ {item.valorMedioPorPresente.toLocaleString('pt-BR')} cada)</td>
                     <td className="px-5 py-4">R$ {item.totalPresentes.toLocaleString('pt-BR')}</td>
                     <td className="px-5 py-4 font-semibold text-[#1e8a43]">R$ {item.comissao.toLocaleString('pt-BR')}</td>
                   </tr>
@@ -124,26 +126,6 @@ export default function SejaParceiroPage() {
             </table>
           </div>
 
-          <div className="rounded-2xl border border-[#e3d2c6] bg-white p-6">
-            <h3 className="font-display text-2xl text-[#2b2422] mb-2">Quanto mais indicar, mais você ganha 📊</h3>
-            <p className="text-[#685b55] mb-6">Exemplo de crescimento de comissão conforme aumenta a base de clientes.</p>
-            <div className="h-[280px] md:h-[320px]">
-              <div className="h-full flex items-end justify-between gap-3 md:gap-6 border-l border-b border-[#ead8cb] px-3 pb-2">
-                {columnChartData.map((item) => (
-                  <div key={item.label} className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-xs md:text-sm font-semibold text-[#5d514b]">
-                      R$ {item.value.toLocaleString('pt-BR')}
-                    </span>
-                    <div
-                      className="w-full max-w-[80px] rounded-t-xl bg-gradient-to-t from-[#c85e3e] to-[#de977b]"
-                      style={{ height: `${Math.max((item.value / maxCommission) * 220, 24)}px` }}
-                    />
-                    <span className="text-[11px] md:text-sm text-[#685b55] text-center">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
