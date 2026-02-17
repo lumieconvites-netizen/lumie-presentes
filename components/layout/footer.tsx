@@ -41,7 +41,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/cadastro?tipo=parceiro" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/seja-parceiro" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Seja Nosso Parceiro
                 </Link>
               </li>
