@@ -154,10 +154,14 @@ export default function RegisterPage() {
               <Image src="/logo.png" alt="LUMIE" fill className="object-contain" priority />
             </div>
           </div>
-          <CardTitle className="text-center font-display text-3xl text-terracota-700">Criar conta na LUMIE</CardTitle>
+          <CardTitle className="text-center font-display text-3xl text-terracota-700">
+            {isPartnerMode ? 'Criar conta de Parceiro' : 'Criar conta na LUMIE'}
+          </CardTitle>
           <CardDescription className="text-center">
             {step === 'register'
-              ? 'Comece a criar sua lista de presentes gratuitamente'
+              ? isPartnerMode
+                ? 'Crie sua conta de parceiro e ganhe comissões por indicação.'
+                : 'Comece a criar sua lista de presentes gratuitamente'
               : `Digite o codigo enviado para ${formData.email}`}
           </CardDescription>
         </CardHeader>
@@ -205,6 +209,19 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar senha</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Digite a senha novamente"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="inviteCode">
                   {isPartnerMode
                     ? 'Codigo do embaixador (opcional)'
@@ -222,21 +239,8 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Digite a senha novamente"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
               <Button type="submit" className="w-full bg-terracota-500 hover:bg-terracota-600" disabled={isLoading}>
-                {isLoading ? 'Enviando codigo...' : 'Criar conta'}
+                {isLoading ? 'Enviando codigo...' : isPartnerMode ? 'Criar conta de Parceiro' : 'Criar conta'}
               </Button>
             </form>
           ) : (
