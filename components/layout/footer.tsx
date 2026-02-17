@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export function Footer() {
+  const currentYear = new Date().getFullYear();
   return (
     <footer className="bg-[#2B2422] text-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,10 +77,11 @@ export function Footer() {
         
         <div className="mt-12 pt-8 border-t border-gray-800 text-center">
           <p className="text-sm text-gray-500">
-            Â© 2024 LUMIÃŠ. Todos os direitos reservados.
+            © {currentYear} LUMIÊ. Todos os direitos reservados.
           </p>
         </div>
       </div>
     </footer>
   );
 }
+
