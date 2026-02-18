@@ -80,12 +80,32 @@ function extractTransfers(payload) {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data)) return payload.data;
   if (Array.isArray(payload?.transfers)) return payload.transfers;
+  if (Array.isArray(payload?.items)) return payload.items;
   return [];
 }
 
 function isTransferPending(status) {
   const s = String(status || "").toLowerCase();
-  return ["pending", "processing", "created", "scheduled", "waiting_transfer"].includes(s);
+  return [
+    "pending",
+    "processing",
+    "created",
+    "scheduled",
+    "waiting_transfer",
+    "pending_transfer",
+    "requested",
+  ].includes(s);
+}
+
+function mergeTransfers(...lists) {
+  const map = new Map();
+  for (const list of lists) {
+    for (const item of list || []) {
+      const key = String(item?.id || "") || JSON.stringify(item);
+      if (!map.has(key)) map.set(key, item);
+    }
+  }
+  return Array.from(map.values());
 }
 
 app.get("/health", (_req, res) => {
@@ -145,11 +165,17 @@ app.get("/recipient-summary/:recipientId", async (req, res) => {
   if (!recipientId) return fail(res, 400, "recipientId obrigatorio");
 
   try {
-    const [{ response: balanceRes, parsed: balancePayload }, { response: transfersRes, parsed: transfersPayload }] =
-      await Promise.all([
-        pagarmeGet(`/recipients/${encodeURIComponent(recipientId)}/balance`),
-        pagarmeGet(`/transfers?recipient_id=${encodeURIComponent(recipientId)}&page=1&size=20`),
-      ]);
+    const [
+      { response: balanceRes, parsed: balancePayload },
+      { response: transfersByRecipientRes, parsed: transfersByRecipientPayload },
+      { response: transfersByQueryRes, parsed: transfersByQueryPayload },
+      { response: transfersAllRes, parsed: transfersAllPayload },
+    ] = await Promise.all([
+      pagarmeGet(`/recipients/${encodeURIComponent(recipientId)}/balance`),
+      pagarmeGet(`/recipients/${encodeURIComponent(recipientId)}/transfers?page=1&size=50`),
+      pagarmeGet(`/transfers?recipient_id=${encodeURIComponent(recipientId)}&page=1&size=50`),
+      pagarmeGet(`/transfers?page=1&size=50`),
+    ]);
 
     if (!balanceRes.ok) {
       return res.status(balanceRes.status).json({
@@ -173,7 +199,15 @@ app.get("/recipient-summary/:recipientId", async (req, res) => {
       readAmount(balancePayload?.balance?.waiting_funds) ||
       readAmount(balancePayload?.balance?.waiting_funds_amount);
 
-    const transfers = transfersRes.ok ? extractTransfers(transfersPayload) : [];
+    const byRecipient = transfersByRecipientRes.ok ? extractTransfers(transfersByRecipientPayload) : [];
+    const byQuery = transfersByQueryRes.ok ? extractTransfers(transfersByQueryPayload) : [];
+    const fromAll = transfersAllRes.ok
+      ? extractTransfers(transfersAllPayload).filter(
+          (t) => String(t?.recipient_id || t?.recipientId || "") === recipientId
+        )
+      : [];
+
+    const transfers = mergeTransfers(byRecipient, byQuery, fromAll);
     const pendingTransfers = transfers.filter((t) => isTransferPending(t?.status));
     const pendingTransferAmount = pendingTransfers.reduce((sum, t) => sum + readAmount(t?.amount), 0);
     const latestPendingTransfer = pendingTransfers
