@@ -309,3 +309,24 @@
     height: 46px;
   }
 }
+
+@keyframes heroChipInOut {
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-10px) scale(0.98);
+    opacity: 0.92;
+  }
+}
+
+.hero-chip {
+  will-change: transform, opacity;
+  animation: heroChipInOut 3.4s ease-in-out infinite;
+}
+
+.hero-chip-bottom {
+  animation-delay: 0.45s;
+}

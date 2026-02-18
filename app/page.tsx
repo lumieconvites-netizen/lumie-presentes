@@ -101,7 +101,7 @@ export default function HomePage() {
               <div className="floating-balloon balloon-c" />
               <div className="floating-balloon balloon-d" />
 
-              <div className="absolute top-6 right-6 z-20 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 border border-[#ecdccf]">
+              <div className="hero-chip hero-chip-top absolute top-6 right-6 z-20 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 border border-[#ecdccf]">
                 <div className="w-9 h-9 bg-[#fff1eb] rounded-full flex items-center justify-center">
                   <MessageCircleHeart className="w-4 h-4 text-[#c65a3a]" />
                 </div>
@@ -110,7 +110,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="absolute bottom-8 left-6 z-20 bg-white rounded-2xl shadow-lg px-5 py-4 flex items-center gap-3 border border-[#ecdccf]">
+              <div className="hero-chip hero-chip-bottom absolute bottom-8 left-6 z-20 bg-white rounded-2xl shadow-lg px-5 py-4 flex items-center gap-3 border border-[#ecdccf]">
                 <div className="w-10 h-10 bg-[#e8f9ed] rounded-full flex items-center justify-center">
                   <CreditCard className="w-5 h-5 text-[#1e8a43]" />
                 </div>
