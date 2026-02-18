@@ -151,11 +151,11 @@ export default function RegisterPage() {
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
             <div className="relative w-48 h-24">
-              <Image src="/logo.png" alt="LUMIE" fill className="object-contain" priority />
+              <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" priority />
             </div>
           </div>
           <CardTitle className="text-center font-display text-3xl text-terracota-700">
-            {isPartnerMode ? 'Criar conta de Parceiro' : 'Criar conta na LUMIE'}
+            {isPartnerMode ? 'Criar conta de Parceiro' : 'Criar conta na LUMIÊ'}
           </CardTitle>
           <CardDescription className="text-center">
             {step === 'register'
@@ -286,3 +286,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+

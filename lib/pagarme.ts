@@ -248,7 +248,7 @@ export async function createRecipient(params: {
   const payload = {
     name: params.owner.name.trim(),
     email: params.owner.email.trim(),
-    description: "Recebedor criado automaticamente pela plataforma LUMIE",
+    description: "Recebedor criado automaticamente pela plataforma LUMIÊ",
     document: ownerDocument,
     type: ownerType,
     default_bank_account: buildDefaultBankAccount(params.bankAccount),
@@ -348,3 +348,4 @@ export async function createPixOrder(input: CreatePixOrderInput) {
     body: JSON.stringify(payload),
   });
 }
+

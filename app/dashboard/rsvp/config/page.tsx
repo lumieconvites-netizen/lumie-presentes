@@ -483,7 +483,7 @@ export default function RsvpConfigPage() {
               <Input
                 value={settings.eventLocation}
                 onChange={(e) => setSettings((s) => ({ ...s, eventLocation: e.target.value }))}
-                placeholder="Ex.: Espaço Lumie, São Paulo - SP"
+                placeholder="Ex.: Espaço LUMIÊ, São Paulo - SP"
               />
             </div>
 
@@ -720,4 +720,5 @@ export default function RsvpConfigPage() {
     </div>
   );
 }
+
 

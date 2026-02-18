@@ -85,7 +85,7 @@ export default function PageBuilder() {
     font_body: 'Inter',
     header: {
       enabled: true,
-      brandText: 'LUMIE',
+      brandText: 'LUMIÊ',
       backgroundColor: '#0B0B0B',
       textColor: '#FFFFFF',
       showMeuSite: true,
@@ -453,7 +453,7 @@ export default function PageBuilder() {
               <div>
                 <Label className="text-sm font-medium mb-2 block">Marca no cabeçalho</Label>
                 <Input
-                  value={theme.header?.brandText || 'LUMIE'}
+                  value={theme.header?.brandText || 'LUMIÊ'}
                   onChange={(e) =>
                     updateTheme({
                       ...theme,
@@ -646,3 +646,4 @@ export default function PageBuilder() {
     </div>
   );
 }
+

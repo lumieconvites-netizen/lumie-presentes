@@ -131,7 +131,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
         >
           <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="font-semibold text-2xl" style={{ fontFamily: fontTitle }}>
-              {header.brandText || 'LUMIE'}
+              {header.brandText || 'LUMIÊ'}
             </div>
 
             <nav className="hidden md:flex items-center gap-8 text-sm uppercase tracking-wide">
@@ -447,5 +447,6 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
     </div>
   );
 }
+
 
 

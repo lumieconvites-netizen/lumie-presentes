@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth";
+﻿import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
@@ -24,7 +24,7 @@ export default async function AdminLayout({
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-display text-[#8E3D2C]">Painel Admin</h1>
-            <p className="text-sm text-gray-500">Controle geral da plataforma LUMIE</p>
+            <p className="text-sm text-gray-500">Controle geral da plataforma LUMIÊ</p>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/dashboard" className="text-[#8E3D2C] hover:underline">
@@ -37,3 +37,4 @@ export default async function AdminLayout({
     </div>
   );
 }
+

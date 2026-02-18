@@ -28,7 +28,7 @@ export default function SejaParceiroPage() {
             <div className="space-y-6">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#e8cdbd] bg-white px-4 py-2 text-sm text-[#4a3a33]">
                 <Sparkles className="w-4 h-4 text-primary" />
-                Programa de Parceiros LUMIÉ
+                Programa de Parceiros LUMIÊ
               </span>
 
               <h1 className="font-display text-5xl lg:text-6xl leading-tight text-[#2b2422]">
@@ -36,7 +36,7 @@ export default function SejaParceiroPage() {
               </h1>
 
               <p className="text-lg text-[#5f534e] max-w-2xl">
-                A LUMIÉ transforma experiências e, agora, também transforma seus resultados. 💼🌷
+                A LUMIÊ transforma experiências e, agora, também transforma seus resultados. 💼🌷
                 <br />
                 Ao se tornar parceira, você recebe <strong>2% de comissão</strong> sobre todos os presentes convertidos em dinheiro nas listas dos seus clientes.
               </p>
@@ -50,7 +50,7 @@ export default function SejaParceiroPage() {
             </div>
 
             <div className="rounded-3xl bg-white border border-[#e7d7cb] p-7 shadow-xl">
-              <h2 className="font-display text-3xl text-[#2b2422] mb-4">Por que clientes escolhem a LUMIÉ? ✨</h2>
+              <h2 className="font-display text-3xl text-[#2b2422] mb-4">Por que clientes escolhem a LUMIÊ? ✨</h2>
               <ul className="space-y-3 text-[#5f534e]">
                 <li className="flex gap-2"><span>✅</span><span>Lista de presentes com visual premium.</span></li>
                 <li className="flex gap-2"><span>✅</span><span>Página completa do evento (layout, recados, RSVP).</span></li>
@@ -71,14 +71,14 @@ export default function SejaParceiroPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="font-display text-4xl text-[#2b2422] mb-3">Como funciona na prática</h2>
-            <p className="text-[#6b5f58] text-lg">Você indica. A LUMIÉ opera. Você recebe. Simples assim.</p>
+            <p className="text-[#6b5f58] text-lg">Você indica. A LUMIÊ opera. Você recebe. Simples assim.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="rounded-2xl border border-[#eadacf] bg-[#fffaf6] p-7">
               <Users className="w-8 h-8 text-primary mb-4" />
               <h3 className="font-display text-2xl text-[#2b2422] mb-2">1. Indique clientes.</h3>
-              <p className="text-[#61554f]">Convide seus clientes para criarem a lista com a LUMIÉ.</p>
+              <p className="text-[#61554f]">Convide seus clientes para criarem a lista com a LUMIÊ.</p>
             </div>
 
             <div className="rounded-2xl border border-[#eadacf] bg-[#fffaf6] p-7">
@@ -100,7 +100,7 @@ export default function SejaParceiroPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="font-display text-4xl text-[#2b2422] mb-3">Sem dor de cabeça para você</h2>
-            <p className="text-[#6b5f58] text-lg">Enquanto você brilha na frente, a LUMIÉ faz o trabalho pesado nos bastidores.</p>
+            <p className="text-[#6b5f58] text-lg">Enquanto você brilha na frente, a LUMIÊ faz o trabalho pesado nos bastidores.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -160,7 +160,7 @@ export default function SejaParceiroPage() {
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="font-display text-4xl text-[#2b2422] mb-4">Mais autoridade. Mais renda. Zero complicação. 💎</h2>
           <p className="text-lg text-[#6a5e58] mb-8">
-            LUMIÉ: enquanto você realiza sonhos, nós potencializamos seus ganhos.
+            LUMIÊ: enquanto você realiza sonhos, nós potencializamos seus ganhos.
           </p>
           <Button asChild size="lg" className="rounded-xl px-8 py-6 text-base">
             <Link href="/cadastro?tipo=parceiro">

@@ -1,9 +1,9 @@
-export default function TermosPage() {
+﻿export default function TermosPage() {
   return (
     <main className="max-w-4xl mx-auto px-6 py-12 space-y-6">
       <h1 className="font-display text-4xl text-[#8E3D2C]">Termos de Uso</h1>
       <p className="text-gray-600">
-        Ao utilizar a LUMIE, voce concorda com estes termos. O servico permite criar lista de presentes e
+        Ao utilizar a LUMIÊ, voce concorda com estes termos. O servico permite criar lista de presentes e
         receber pagamentos em dinheiro conforme as regras da plataforma.
       </p>
       <section className="space-y-3">
@@ -21,3 +21,4 @@ export default function TermosPage() {
     </main>
   );
 }
+

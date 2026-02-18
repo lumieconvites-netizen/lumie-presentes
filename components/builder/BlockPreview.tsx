@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
@@ -35,7 +35,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
   const menuMeuSite = String(header.menuMeuSite || 'Meu Site').toUpperCase();
   const menuGifts = String(header.menuGifts || 'Lista de Presentes').toUpperCase();
-  const menuRsvp = String(header.menuRsvp || 'Confirmar Presença').toUpperCase();
+  const menuRsvp = String(header.menuRsvp || 'Confirmar PresenÃ§a').toUpperCase();
   const menuMap = String(header.menuMap || 'Como Chegar').toUpperCase();
 
   const toYoutubeEmbedUrl = (url: string) => {
@@ -114,10 +114,10 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
           <Layout className="w-10 h-10 text-gray-400" />
         </div>
         <h3 className="text-2xl font-semibold text-gray-700 mb-3">
-          Sua Página Está Vazia
+          Sua PÃ¡gina EstÃ¡ Vazia
         </h3>
         <p className="text-gray-500 max-w-md mb-6">
-          Adicione blocos usando a barra lateral à esquerda para começar a construir sua página de presentes
+          Adicione blocos usando a barra lateral Ã  esquerda para comeÃ§ar a construir sua pÃ¡gina de presentes
         </p>
         <div className="flex gap-2 text-sm text-gray-400">
           <span className="px-3 py-1 bg-white rounded-full">Capa</span>
@@ -146,7 +146,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
         >
           <div className="px-5 py-4 flex items-center justify-between">
             <div className="font-semibold text-2xl" style={{ fontFamily: fontTitle }}>
-              {header.brandText || 'LUMIE'}
+              {header.brandText || 'LUMIÊ'}
             </div>
             <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-wide">
               {header.showMeuSite !== false && (
@@ -248,10 +248,10 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                   className="text-3xl md:text-4xl mb-6" 
                   style={{ color: primaryColor, fontFamily: fontTitle }}
                 >
-                  {config.title || 'Nossa História'}
+                  {config.title || 'Nossa HistÃ³ria'}
                 </h2>
                 <p className="text-base md:text-lg text-gray-700 mb-4 max-w-3xl mx-auto leading-relaxed whitespace-pre-wrap">
-                  {config.message || 'Escreva aqui uma mensagem especial para seus convidados. Conte sua história, compartilhe seus sonhos e torne este momento ainda mais especial.'}
+                  {config.message || 'Escreva aqui uma mensagem especial para seus convidados. Conte sua histÃ³ria, compartilhe seus sonhos e torne este momento ainda mais especial.'}
                 </p>
                 {config.signature && (
                   <p className="text-gray-600 italic mt-8 text-lg">{config.signature}</p>
@@ -326,10 +326,10 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
                   {[
-                    { name: 'Maria Silva', message: 'Parabéns! Que esse dia seja repleto de alegrias e momentos inesquecíveis. 🎉', time: '2 dias atrás' },
-                    { name: 'João Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrás' },
-                    { name: 'Ana Costa', message: 'Muitas bênçãos e sucesso! Você merece toda a felicidade do mundo. ❤️', time: '5 dias atrás' },
-                    { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atrás' }
+                    { name: 'Maria Silva', message: 'ParabÃ©ns! Que esse dia seja repleto de alegrias e momentos inesquecÃ­veis. ðŸŽ‰', time: '2 dias atrÃ¡s' },
+                    { name: 'JoÃ£o Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrÃ¡s' },
+                    { name: 'Ana Costa', message: 'Muitas bÃªnÃ§Ã£os e sucesso! VocÃª merece toda a felicidade do mundo. â¤ï¸', time: '5 dias atrÃ¡s' },
+                    { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atrÃ¡s' }
                   ].map((msg, i) => (
                     <Card key={i} className="p-6 bg-white">
                       <div className="flex items-start gap-4 mb-4">
@@ -385,7 +385,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {block.type === 'event-info' && (
               <div className="p-12 md:p-16" style={{ background: backgroundColor }}>
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: primaryColor, fontFamily: fontTitle }}>
-                  {config.title || 'Informações do Evento'}
+                  {config.title || 'InformaÃ§Ãµes do Evento'}
                 </h2>
                 <div className="max-w-3xl mx-auto space-y-6">
                   <div className="flex items-start gap-6 p-8 bg-white rounded-2xl shadow-sm">
@@ -405,7 +405,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                               hour: '2-digit',
                               minute: '2-digit'
                             })
-                          : '10 de março de 2026 às 19:00'}
+                          : '10 de marÃ§o de 2026 Ã s 19:00'}
                       </p>
                     </div>
                   </div>
@@ -419,7 +419,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                         {config.location || 'Local do Evento'}
                       </h3>
                       <p className="text-gray-600 mb-3">
-                        {config.address || 'Endereço será informado em breve'}
+                        {config.address || 'EndereÃ§o serÃ¡ informado em breve'}
                       </p>
                       {config.mapLink && (
                         <a 
@@ -536,3 +536,4 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
     </div>
   );
 }
+

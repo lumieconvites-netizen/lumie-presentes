@@ -3,25 +3,21 @@ import Image from 'next/image';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+
   return (
     <footer className="bg-[#2B2422] text-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="col-span-1 md:col-span-2">
             <div className="relative w-24 h-12 mb-4 brightness-0 invert">
-              <Image
-                src="/logo.png"
-                alt="LUMIÃŠ"
-                fill
-                className="object-contain"
-              />
+              <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" />
             </div>
             <p className="text-gray-400 text-sm max-w-sm">
-              Transforme seus presentes em sonhos realizados. 
+              Transforme seus presentes em sonhos realizados.
               A forma mais elegante de celebrar momentos especiais.
             </p>
           </div>
-          
+
           <div>
             <h4 className="font-display text-lg mb-4">Links</h4>
             <ul className="space-y-2">
@@ -52,7 +48,7 @@ export function Footer() {
               </li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="font-display text-lg mb-4">Legal</h4>
             <ul className="space-y-2">
@@ -63,7 +59,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/privacidade" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  PolÃ­tica de Privacidade
+                  Política de Privacidade
                 </Link>
               </li>
               <li>
@@ -74,7 +70,7 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        
+
         <div className="mt-12 pt-8 border-t border-gray-800 text-center">
           <p className="text-sm text-gray-500">
             © {currentYear} LUMIÊ. Todos os direitos reservados.
@@ -84,4 +80,3 @@ export function Footer() {
     </footer>
   );
 }
-

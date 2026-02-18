@@ -1,4 +1,4 @@
-const RESEND_API_URL = "https://api.resend.com/emails";
+﻿const RESEND_API_URL = "https://api.resend.com/emails";
 
 type SendVerificationEmailInput = {
   to: string;
@@ -15,11 +15,11 @@ type SendRsvpNotificationInput = {
 
 export async function sendVerificationCodeEmail(input: SendVerificationEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM ?? "LUMIE <onboarding@resend.dev>";
+  const from = process.env.EMAIL_FROM ?? "LUMIÊ <onboarding@resend.dev>";
 
   const html = `
     <div style="font-family: Inter, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
-      <h1 style="color: #8E3D2C; margin-bottom: 8px;">Confirme seu cadastro na LUMIE</h1>
+      <h1 style="color: #8E3D2C; margin-bottom: 8px;">Confirme seu cadastro na LUMIÊ</h1>
       <p style="color: #333; margin-top: 0;">${input.name ? `Ola, ${input.name}.` : "Ola."} Use o codigo abaixo para confirmar seu email:</p>
       <div style="font-size: 32px; letter-spacing: 6px; font-weight: 700; color: #C65A3A; margin: 24px 0;">
         ${input.code}
@@ -42,7 +42,7 @@ export async function sendVerificationCodeEmail(input: SendVerificationEmailInpu
     body: JSON.stringify({
       from,
       to: [input.to],
-      subject: "Codigo de confirmacao - LUMIE",
+      subject: "Codigo de confirmacao - LUMIÊ",
       html,
     }),
   });
@@ -57,7 +57,7 @@ export async function sendVerificationCodeEmail(input: SendVerificationEmailInpu
 
 export async function sendRsvpNotificationEmail(input: SendRsvpNotificationInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM ?? "LUMIE <onboarding@resend.dev>";
+  const from = process.env.EMAIL_FROM ?? "LUMIÊ <onboarding@resend.dev>";
   const statusText = input.status === "CONFIRMED" ? "confirmou presença" : "não poderá comparecer";
 
   const html = `
@@ -96,3 +96,4 @@ export async function sendRsvpNotificationEmail(input: SendRsvpNotificationInput
 
   return { sent: true, provider: "resend" as const };
 }
+
