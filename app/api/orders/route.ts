@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateTotal } from '@/lib/utils';
-import { createPixOrder } from '@/lib/pagarme';
+import { createCreditCardOrder, createPixOrder } from '@/lib/pagarme';
 import { z } from 'zod';
 
 const orderSchema = z.object({
@@ -12,6 +12,17 @@ const orderSchema = z.object({
   guestDocument: z.string().optional(),
   guestPhoneArea: z.string().optional(),
   guestPhoneNumber: z.string().optional(),
+  paymentMethod: z.enum(['PIX', 'CREDIT_CARD']).optional().default('PIX'),
+  card: z
+    .object({
+      number: z.string().min(12),
+      holderName: z.string().min(2),
+      expMonth: z.string().min(1),
+      expYear: z.string().min(2),
+      cvv: z.string().min(3),
+      installments: z.number().int().min(1).max(12).optional(),
+    })
+    .optional(),
   quantity: z.number().int().positive(),
   message: z.string().optional(),
   signature: z.string().optional(),
@@ -119,6 +130,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Telefone invalido. Use DDD + numero.' }, { status: 400 });
     }
 
+    if (data.paymentMethod === 'CREDIT_CARD') {
+      const cardNumber = onlyDigits(data.card?.number);
+      const expMonth = onlyDigits(data.card?.expMonth);
+      const expYear = onlyDigits(data.card?.expYear);
+      const cvv = onlyDigits(data.card?.cvv);
+      const holderName = (data.card?.holderName ?? '').trim();
+
+      if (!cardNumber || cardNumber.length < 13 || cardNumber.length > 19) {
+        return NextResponse.json({ error: 'Numero do cartao invalido.' }, { status: 400 });
+      }
+      if (!holderName || holderName.length < 2) {
+        return NextResponse.json({ error: 'Nome do titular invalido.' }, { status: 400 });
+      }
+      if (!expMonth || Number(expMonth) < 1 || Number(expMonth) > 12) {
+        return NextResponse.json({ error: 'Mes de validade invalido.' }, { status: 400 });
+      }
+      if (!expYear || expYear.length < 2) {
+        return NextResponse.json({ error: 'Ano de validade invalido.' }, { status: 400 });
+      }
+      if (!cvv || cvv.length < 3 || cvv.length > 4) {
+        return NextResponse.json({ error: 'CVV invalido.' }, { status: 400 });
+      }
+    }
+
     const gift = await prisma.giftItem.findFirst({
       where: {
         id: data.giftId,
@@ -170,6 +205,7 @@ export async function POST(request: Request) {
         feeAmount: calculation.feeAmount,
         totalAmount: calculation.totalAmount,
         status: 'PENDING',
+        paymentMethod: data.paymentMethod === 'CREDIT_CARD' ? 'credit_card' : 'pix',
       },
     });
 
@@ -230,7 +266,7 @@ export async function POST(request: Request) {
               ? 'missing_client_recipient'
               : 'invalid_split_amount';
 
-        const pagarmeOrder = await createPixOrder({
+        const commonPayload = {
           amountInCents: splitAmounts.totalInCents,
           itemTitle: gift.name,
           quantity: data.quantity,
@@ -246,6 +282,7 @@ export async function POST(request: Request) {
             localOrderId: order.id,
             giftListId: data.giftListId,
             giftId: data.giftId,
+            paymentMethod: data.paymentMethod,
             splitApplied: Boolean(splitRules?.length),
             splitReason,
             platformRecipientId: platformRecipientId ?? null,
@@ -255,7 +292,25 @@ export async function POST(request: Request) {
             splitProfile: splitAmounts.splitProfile,
             splitAmounts,
           },
-        });
+        };
+
+        const pagarmeOrder =
+          data.paymentMethod === 'CREDIT_CARD'
+            ? await createCreditCardOrder({
+                ...commonPayload,
+                card: {
+                  number: onlyDigits(data.card?.number),
+                  holderName: (data.card?.holderName ?? '').trim(),
+                  expMonth: String(Number(onlyDigits(data.card?.expMonth))).padStart(2, '0'),
+                  expYear: (() => {
+                    const year = onlyDigits(data.card?.expYear);
+                    return year.length === 2 ? `20${year}` : year;
+                  })(),
+                  cvv: onlyDigits(data.card?.cvv),
+                },
+                installments: data.card?.installments ?? 1,
+              })
+            : await createPixOrder(commonPayload);
 
         const charge = pagarmeOrder?.charges?.[0];
         const transaction = charge?.last_transaction;
@@ -282,6 +337,7 @@ export async function POST(request: Request) {
           data: {
             pagarmeOrderId: pagarmeOrder?.id ?? null,
             pagarmeChargeId: charge?.id ?? null,
+            paymentMethod: data.paymentMethod === 'CREDIT_CARD' ? 'credit_card' : 'pix',
             ...(isFailed ? { status: 'REFUSED' as const } : {}),
           },
         });
@@ -301,9 +357,11 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
           orderId: order.id,
-          mode: 'pagarme_pix',
+          mode: data.paymentMethod === 'CREDIT_CARD' ? 'pagarme_credit_card' : 'pagarme_pix',
           splitApplied: Boolean(splitRules?.length),
           splitReason,
+          chargeStatus: charge?.status ?? null,
+          transactionStatus: transaction?.status ?? null,
           checkoutUrl: transaction?.url ?? null,
           pixQrCode: transaction?.qr_code ?? null,
           pixQrCodeUrl: transaction?.qr_code_url ?? null,

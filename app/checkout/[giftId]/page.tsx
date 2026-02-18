@@ -77,6 +77,13 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
   const [guestPhone, setGuestPhone] = useState('');
   const [message, setMessage] = useState('');
   const [qty, setQty] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CREDIT_CARD'>('PIX');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardHolderName, setCardHolderName] = useState('');
+  const [cardExpMonth, setCardExpMonth] = useState('');
+  const [cardExpYear, setCardExpYear] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [cardInstallments, setCardInstallments] = useState(1);
   const [pixData, setPixData] = useState<{
     qrCode: string | null;
     qrCodeUrl: string | null;
@@ -134,6 +141,13 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
     if (!guestName.trim()) return alert('Digite seu nome.');
     if (!guestEmail.trim()) return alert('Digite seu email.');
     if (quantity > available) return alert(`Quantidade indisponivel. Maximo: ${available}.`);
+    if (paymentMethod === 'CREDIT_CARD') {
+      if (!cardNumber.trim()) return alert('Digite o numero do cartao.');
+      if (!cardHolderName.trim()) return alert('Digite o nome do titular.');
+      if (!cardExpMonth.trim()) return alert('Digite o mes de validade.');
+      if (!cardExpYear.trim()) return alert('Digite o ano de validade.');
+      if (!cardCvv.trim()) return alert('Digite o CVV.');
+    }
 
     const phoneDigits = guestPhone.replace(/\D/g, '');
     const parsedArea = phoneDigits.length >= 10 ? phoneDigits.slice(0, 2) : '';
@@ -153,6 +167,18 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
           guestDocument: guestDocument.trim() || undefined,
           guestPhoneArea: parsedArea || undefined,
           guestPhoneNumber: parsedNumber || undefined,
+          paymentMethod,
+          card:
+            paymentMethod === 'CREDIT_CARD'
+              ? {
+                  number: cardNumber,
+                  holderName: cardHolderName,
+                  expMonth: cardExpMonth,
+                  expYear: cardExpYear,
+                  cvv: cardCvv,
+                  installments: cardInstallments,
+                }
+              : undefined,
           quantity,
           message: message.trim() || undefined,
           signature: guestName.trim(),
@@ -174,6 +200,13 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
           splitReason: data?.splitReason ?? null,
           orderId: data?.orderId,
         });
+        return;
+      }
+
+      if (data?.mode === 'pagarme_credit_card') {
+        alert('Pagamento em cartao enviado com sucesso. Ele pode ficar em processamento ate a confirmacao.');
+        router.push(`/site/${giftData.giftList.slug}`);
+        router.refresh();
         return;
       } else {
         alert(data?.message || data?.error || 'Pedido registrado com sucesso.');
@@ -275,6 +308,23 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
             <div className="text-sm text-gray-500 mt-1">Finalize seu presente e deixe um recado opcional.</div>
 
             <div className="grid gap-3 mt-6">
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant={paymentMethod === 'PIX' ? 'default' : 'outline'}
+                  onClick={() => setPaymentMethod('PIX')}
+                >
+                  PIX
+                </Button>
+                <Button
+                  type="button"
+                  variant={paymentMethod === 'CREDIT_CARD' ? 'default' : 'outline'}
+                  onClick={() => setPaymentMethod('CREDIT_CARD')}
+                >
+                  Cartao de credito
+                </Button>
+              </div>
+
               <Input placeholder="Seu nome" value={guestName} onChange={(e) => setGuestName(e.target.value)} />
               <Input placeholder="Seu email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
               <Input
@@ -305,6 +355,43 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
+              ) : null}
+
+              {paymentMethod === 'CREDIT_CARD' ? (
+                <div className="space-y-3 rounded-lg border bg-white p-3">
+                  <div className="text-sm font-medium">Dados do cartao</div>
+                  <Input
+                    placeholder="Numero do cartao"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Nome do titular"
+                    value={cardHolderName}
+                    onChange={(e) => setCardHolderName(e.target.value)}
+                  />
+                  <div className="grid grid-cols-3 gap-3">
+                    <Input
+                      placeholder="Mes (MM)"
+                      value={cardExpMonth}
+                      onChange={(e) => setCardExpMonth(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Ano (AA ou AAAA)"
+                      value={cardExpYear}
+                      onChange={(e) => setCardExpYear(e.target.value)}
+                    />
+                    <Input placeholder="CVV" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} />
+                  </div>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={12}
+                    placeholder="Parcelas"
+                    value={cardInstallments}
+                    onChange={(e) => setCardInstallments(Math.max(1, Math.min(12, Number(e.target.value) || 1)))}
+                  />
+                </div>
               ) : null}
             </div>
 

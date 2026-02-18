@@ -349,3 +349,92 @@ export async function createPixOrder(input: CreatePixOrderInput) {
   });
 }
 
+type CreateCreditCardOrderInput = {
+  amountInCents: number;
+  itemTitle: string;
+  quantity: number;
+  splitRules?: Array<{
+    recipientId: string;
+    amountInCents: number;
+  }>;
+  customer: {
+    name: string;
+    email: string;
+    document: string;
+    areaCode: string;
+    number: string;
+  };
+  card: {
+    number: string;
+    holderName: string;
+    expMonth: string;
+    expYear: string;
+    cvv: string;
+  };
+  installments?: number;
+  metadata?: Record<string, any>;
+};
+
+export async function createCreditCardOrder(input: CreateCreditCardOrderInput) {
+  const splitRules =
+    input.splitRules && input.splitRules.length > 0
+      ? input.splitRules.map((rule, index, arr) => ({
+          type: "flat",
+          amount: rule.amountInCents,
+          recipient_id: rule.recipientId,
+          options: {
+            liable: true,
+            charge_processing_fee: index === arr.length - 1,
+            charge_remainder_fee: index === arr.length - 1,
+          },
+        }))
+      : undefined;
+
+  const payload = {
+    items: [
+      {
+        amount: input.amountInCents,
+        description: input.itemTitle,
+        quantity: 1,
+        code: `gift_${Date.now()}`,
+      },
+    ],
+    customer: {
+      name: input.customer.name,
+      email: input.customer.email,
+      type: "individual",
+      document: input.customer.document,
+      phones: {
+        mobile_phone: {
+          country_code: "55",
+          area_code: input.customer.areaCode,
+          number: input.customer.number,
+        },
+      },
+    },
+    payments: [
+      {
+        payment_method: "credit_card",
+        credit_card: {
+          installments: Math.max(1, Number(input.installments ?? 1)),
+          statement_descriptor: "LUMIE",
+          card: {
+            number: input.card.number,
+            holder_name: input.card.holderName,
+            exp_month: input.card.expMonth,
+            exp_year: input.card.expYear,
+            cvv: input.card.cvv,
+          },
+        },
+        ...(splitRules ? { split: splitRules } : {}),
+      },
+    ],
+    metadata: input.metadata ?? {},
+  };
+
+  return pagarmeFetch<any>("/orders", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
