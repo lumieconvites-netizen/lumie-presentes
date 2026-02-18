@@ -29,7 +29,7 @@ type GiftDraft = {
   totalQuantity: number;
 };
 
-const feePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 7.99);
+const feePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
 
 function withFee(value: number, feePassedToGuest: boolean) {
   if (!feePassedToGuest) return value;

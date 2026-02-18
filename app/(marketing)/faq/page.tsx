@@ -33,7 +33,7 @@ const faqs = [
     questions: [
       {
         q: 'Quanto custa criar uma lista?',
-        a: 'Criar sua lista é totalmente gratuito! Você só paga uma taxa de 7,99% por transação quando um convidado presentear você. Não há mensalidades ou custos fixos.'
+        a: 'Criar sua lista é totalmente gratuito! Você só paga uma taxa de 11,99% por transação quando um convidado presentear você. Não há mensalidades ou custos fixos.'
       },
       {
         q: 'Quantos presentes posso cadastrar?',
@@ -54,7 +54,7 @@ const faqs = [
     questions: [
       {
         q: 'Qual é a taxa cobrada?',
-        a: 'A taxa é de 7,99% por transação. Você pode escolher repassar essa taxa para o convidado (que pagará o valor do presente + taxa) ou assumir você mesmo (a taxa será descontada do seu repasse).'
+        a: 'A taxa é de 11,99% por transação. Você pode escolher repassar essa taxa para o convidado (que pagará o valor do presente + taxa) ou assumir você mesmo (a taxa será descontada do seu repasse).'
       },
       {
         q: 'Quais formas de pagamento são aceitas?',

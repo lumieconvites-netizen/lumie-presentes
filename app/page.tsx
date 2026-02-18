@@ -319,7 +319,7 @@ export default function HomePage() {
         <div className="container mx-auto px-6 text-center">
           <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-8">Preço justo e transparente</h2>
           <div className="max-w-lg mx-auto bg-gradient-to-br from-primary/10 to-primary/5 rounded-3xl p-12 shadow-lg border border-[#ead9cd]">
-            <div className="text-6xl font-display font-bold text-primary mb-4">7,99%</div>
+            <div className="text-6xl font-display font-bold text-primary mb-4">11,99%</div>
             <p className="text-xl text-foreground mb-8">Taxa única por presente recebido</p>
             <div className="space-y-3 text-left mb-8 text-foreground">
               <p>Sem mensalidade</p>

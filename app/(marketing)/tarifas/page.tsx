@@ -23,7 +23,7 @@ export default function Pricing() {
 
   const faqs = [
     {
-      q: 'O que Ã© a taxa de 7,99%?',
+      q: 'O que Ã© a taxa de 11,99%?',
       a: 'Ã‰ a nossa taxa de serviÃ§o que cobre os custos de processamento de pagamentos, manutenÃ§Ã£o da plataforma e suporte. VocÃª pode escolher repassar essa taxa para o convidado ou assumir vocÃª mesmo.'
     },
     {
@@ -66,7 +66,7 @@ export default function Pricing() {
             <CardContent className="p-8">
               <div className="text-center mb-8">
                 <div className="flex items-end justify-center gap-1">
-                  <span className="text-5xl font-display font-bold text-primary">7,99%</span>
+                  <span className="text-5xl font-display font-bold text-primary">11,99%</span>
                 </div>
                 <p className="text-gray-600 mt-2">
                   por transaÃ§Ã£o
@@ -117,13 +117,13 @@ export default function Pricing() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-6">
-                  O convidado paga o valor do presente + 7,99% de taxa. 
+                  O convidado paga o valor do presente + 11,99% de taxa. 
                   VocÃª recebe o valor integral do presente.
                 </p>
                 <div className="p-4 bg-green-50 rounded-xl">
                   <p className="text-sm text-green-800 font-medium">Exemplo: Presente de R$ 100,00</p>
                   <p className="text-green-700 mt-2">
-                    Convidado paga: <strong>R$ 107,99</strong>
+                    Convidado paga: <strong>R$ 111,99</strong>
                   </p>
                   <p className="text-green-700">
                     VocÃª recebe: <strong>R$ 100,00</strong>
@@ -141,7 +141,7 @@ export default function Pricing() {
               <CardContent>
                 <p className="text-gray-600 mb-6">
                   O convidado paga apenas o valor do presente. 
-                  A taxa de 7,99% Ã© descontada do seu repasse.
+                  A taxa de 11,99% Ã© descontada do seu repasse.
                 </p>
                 <div className="p-4 bg-yellow-50 rounded-xl">
                   <p className="text-sm text-yellow-800 font-medium">Exemplo: Presente de R$ 100,00</p>
@@ -149,7 +149,7 @@ export default function Pricing() {
                     Convidado paga: <strong>R$ 100,00</strong>
                   </p>
                   <p className="text-yellow-700">
-                    VocÃª recebe: <strong>R$ 92,01</strong>
+                    VocÃª recebe: <strong>R$ 88,01</strong>
                   </p>
                 </div>
               </CardContent>
