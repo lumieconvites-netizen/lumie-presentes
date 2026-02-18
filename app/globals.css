@@ -369,3 +369,13 @@
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(120, 60, 35, 0.12);
 }
+
+.mock-tilt {
+  transition: transform 320ms ease, box-shadow 320ms ease;
+  transform-origin: center;
+}
+
+.mock-tilt:hover {
+  transform: perspective(1200px) rotateX(2deg) rotateY(-2.5deg) translateY(-4px);
+  box-shadow: 0 24px 48px rgba(86, 45, 28, 0.2);
+}

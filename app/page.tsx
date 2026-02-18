@@ -55,6 +55,11 @@ const showcaseGiftItems = [
   { id: 3, title: 'Viagens', value: 'R$ 300,00', icon: 'travel' },
 ];
 
+const showcaseReceived = [
+  { id: 1, name: 'Isabella', value: 'R$ 350,00' },
+  { id: 2, name: 'Mariana', value: 'R$ 180,00' },
+];
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#f7f5f2]">
@@ -209,7 +214,19 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="relative rounded-[2rem] border border-[#e5d1c3] bg-gradient-to-b from-white to-[#f8f1ea] shadow-xl overflow-hidden">
+            <div className="relative mock-tilt rounded-[2rem] border border-[#e5d1c3] bg-gradient-to-b from-white to-[#f8f1ea] shadow-xl overflow-hidden">
+              <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+                {showcaseReceived.map((item, idx) => (
+                  <div
+                    key={item.id}
+                    className="rounded-xl bg-white/95 backdrop-blur px-3 py-2 border border-[#ecdccf] shadow-sm text-xs"
+                    style={{ animationDelay: `${idx * 120}ms` }}
+                  >
+                    <p className="font-semibold text-[#3d2f29]">{item.name} presenteou você!</p>
+                    <p className="text-[#9a6a55]">{item.value}</p>
+                  </div>
+                ))}
+              </div>
               <div className="absolute -top-16 -right-10 h-40 w-40 rounded-full bg-[#c65a3a]/10 blur-3xl" />
               <div className="bg-gradient-to-r from-[#8e3d2c] to-[#c65a3a] text-white px-7 py-7">
                 <h4 className="font-display text-4xl">Lista de Presentes</h4>
@@ -225,6 +242,7 @@ export default function HomePage() {
                       style={{ animationDelay: `${index * 120}ms` }}
                     >
                     <div className="flex items-center gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                         <div className="h-10 w-10 rounded-xl bg-[#f8e7dd] text-[#b05134] inline-flex items-center justify-center">
                           {item.icon === 'makeup' && <Brush className="w-5 h-5" />}
                           {item.icon === 'store' && <ShoppingBag className="w-5 h-5" />}
@@ -246,12 +264,12 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-5 flex gap-3">
-                  <div className="flex-1 rounded-xl bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white text-center py-3 font-semibold">
+                  <Link href="/cadastro" className="flex-1 rounded-xl bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white text-center py-3 font-semibold hover:brightness-105 transition">
                     Criar lista
-                  </div>
-                  <div className="flex-1 rounded-xl border border-[#d7b7a3] bg-white text-[#8e3d2c] text-center py-3 font-semibold">
-                    Ver opções
-                  </div>
+                  </Link>
+                  <Link href="/templates" className="flex-1 rounded-xl border border-[#d7b7a3] bg-white text-[#8e3d2c] text-center py-3 font-semibold hover:bg-[#fff8f3] transition">
+                    Ver modelos
+                  </Link>
                 </div>
               </div>
             </div>
