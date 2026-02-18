@@ -148,8 +148,8 @@ export default function HomePage() {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="font-display text-5xl md:text-7xl leading-[1.02] text-foreground">
-              O site do seu evento
-              <span className="block text-primary">elegante, moderno e premium.</span>
+              Uma experiência única
+              <span className="block text-primary">para o site do seu evento.</span>
             </h2>
 
             <p className="mt-8 text-lg md:text-2xl text-[#5b473e] leading-relaxed">
@@ -158,7 +158,7 @@ export default function HomePage() {
             </p>
 
             <p className="mt-10 text-xs md:text-sm tracking-[0.24em] uppercase text-[#9f6a53]">
-              recursos exclusivos • elegância • experiência única
+              recursos exclusivos • elegância • praticidade
             </p>
           </div>
         </div>
