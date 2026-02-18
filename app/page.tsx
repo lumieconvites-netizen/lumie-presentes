@@ -148,29 +148,15 @@ export default function HomePage() {
 
         <div className="container mx-auto px-6">
           <div className="max-w-5xl mx-auto text-center">
-            <p className="text-sm uppercase tracking-[0.28em] text-[#9d644d] mb-6">Lumiê Signature Experience</p>
-
             <h2 className="font-display text-4xl md:text-6xl leading-[1.08] text-foreground">
-              Seu evento com presença digital premium,
+              Seu evento com presença digital premium
               <span className="block text-primary">em um único lugar.</span>
             </h2>
 
             <p className="mt-8 text-lg md:text-2xl text-[#5e4b41] leading-relaxed">
-              Crie sua lista gratuitamente e ofereça aos seus convidados uma experiência sofisticada:
+              Crie o site do seu evento gratuitamente e ofereça aos seus convidados uma experiência sofisticada:
               presentes convertidos em dinheiro, confirmação de presença, álbum de fotos, recados e gestão completa.
             </p>
-
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm md:text-base text-[#7b4d3b]">
-              <span>Site exclusivo</span>
-              <span className="opacity-50">•</span>
-              <span>Lista inteligente</span>
-              <span className="opacity-50">•</span>
-              <span>RSVP integrado</span>
-              <span className="opacity-50">•</span>
-              <span>Álbum e recados</span>
-              <span className="opacity-50">•</span>
-              <span>Tudo em tempo real</span>
-            </div>
           </div>
         </div>
       </section>
