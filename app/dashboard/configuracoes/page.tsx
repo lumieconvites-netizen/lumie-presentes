@@ -30,6 +30,7 @@ export default function ConfiguracoesPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [uploading, setUploading] = useState(false);
   const [savingFeeMode, setSavingFeeMode] = useState(false);
+  const [giftListId, setGiftListId] = useState('');
 
   // Sempre que session atualizar, sincroniza a UI
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function ConfiguracoesPage() {
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
+        if (data?.id) setGiftListId(data.id);
         updateSettings({ feePassedToGuest: data?.feeMode === 'PASS_TO_GUEST' });
       } catch {
         // sem bloqueio de tela em caso de falha de leitura
@@ -69,6 +71,7 @@ export default function ConfiguracoesPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          giftListId: giftListId || undefined,
           feeMode: checked ? 'PASS_TO_GUEST' : 'ABSORB',
         }),
       });

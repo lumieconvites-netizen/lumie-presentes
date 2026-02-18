@@ -16,6 +16,7 @@ export async function GET() {
 
     let giftList = await prisma.giftList.findFirst({
       where: { userId: session.user.id },
+      orderBy: { updatedAt: "desc" },
     });
 
     if (!giftList) {
@@ -46,8 +47,14 @@ export async function PATCH(req: Request) {
     const body = await req.json().catch(() => ({} as any));
 
     const giftList = await prisma.giftList.findFirst({
-      where: { userId: session.user.id },
+      where: {
+        userId: session.user.id,
+        ...(typeof body?.giftListId === "string" && body.giftListId
+          ? { id: body.giftListId }
+          : {}),
+      },
       select: { id: true },
+      orderBy: { updatedAt: "desc" },
     });
 
     if (!giftList) {
