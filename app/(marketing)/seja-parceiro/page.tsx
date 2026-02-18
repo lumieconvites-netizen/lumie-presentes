@@ -7,11 +7,12 @@ const averageGiftValue = 100;
 const clientsProjection = [1, 5, 15, 30, 60];
 
 const revenueExamples = clientsProjection.map((clientes) => {
-  const totalPresentes = clientes * averageGiftsPerClient * averageGiftValue;
+  const mediaPresentesRecebidos = clientes * averageGiftsPerClient;
+  const totalPresentes = mediaPresentesRecebidos * averageGiftValue;
   const comissao = totalPresentes * 0.02;
   return {
     clientes,
-    mediaPresentesPorCliente: averageGiftsPerClient,
+    mediaPresentesRecebidos,
     valorMedioPorPresente: averageGiftValue,
     totalPresentes,
     comissao,
@@ -34,7 +35,7 @@ export default function SejaParceiroPage() {
               </h1>
               <p className="text-lg text-[#5f534e] max-w-xl">
                 🚀 Indique clientes para a LUMIE e ganhe <strong>2% de comissão</strong> em todos os presentes recebidos.
-                Você oferece uma solução linda e completa, e cria uma nova fonte de faturamento todo mês.
+                Você oferece uma solução elegante e completa, e cria uma nova fonte de faturamento todo mês.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" className="rounded-xl px-8 py-6 text-base">
@@ -42,9 +43,6 @@ export default function SejaParceiroPage() {
                     Seja Nosso Parceiro
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="rounded-xl px-8 py-6 text-base border-[#d8c0b0]">
-                  <Link href="/como-funciona">Ver como funciona a LUMIE</Link>
                 </Button>
               </div>
             </div>
@@ -108,7 +106,7 @@ export default function SejaParceiroPage() {
               <thead className="bg-[#fbf4ee]">
                 <tr className="text-[#4f3f38]">
                   <th className="px-5 py-4 font-semibold">Clientes</th>
-                  <th className="px-5 py-4 font-semibold">Média de presentes recebidos por cliente</th>
+                  <th className="px-5 py-4 font-semibold">Média de presentes recebidos</th>
                   <th className="px-5 py-4 font-semibold">Total de presentes recebidos (R$)</th>
                   <th className="px-5 py-4 font-semibold">Comissão (2%)</th>
                 </tr>
@@ -117,7 +115,7 @@ export default function SejaParceiroPage() {
                 {revenueExamples.map((item) => (
                   <tr key={item.clientes} className="border-t border-[#f0e2d8] text-[#5f534e]">
                     <td className="px-5 py-4">{item.clientes}</td>
-                    <td className="px-5 py-4">{item.mediaPresentesPorCliente} presentes (R$ {item.valorMedioPorPresente.toLocaleString('pt-BR')} cada)</td>
+                    <td className="px-5 py-4">{item.mediaPresentesRecebidos} presentes (R$ {item.valorMedioPorPresente.toLocaleString('pt-BR')} cada)</td>
                     <td className="px-5 py-4">R$ {item.totalPresentes.toLocaleString('pt-BR')}</td>
                     <td className="px-5 py-4 font-semibold text-[#1e8a43]">R$ {item.comissao.toLocaleString('pt-BR')}</td>
                   </tr>
