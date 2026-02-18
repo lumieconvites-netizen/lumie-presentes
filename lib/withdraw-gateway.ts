@@ -1,4 +1,4 @@
-import { createRecipientTransfer } from "@/lib/pagarme";
+import { createRecipientTransfer, getRecipientBalanceSummary } from "@/lib/pagarme";
 
 type CreateTransferInput = {
   recipientId: string;
@@ -65,3 +65,70 @@ export async function createRecipientTransferWithGateway(input: CreateTransferIn
   return createRecipientTransfer(input);
 }
 
+type RecipientFinancialSummary = {
+  available: number;
+  waitingFunds: number;
+  pendingTransferAmount: number;
+  pendingTransferCount: number;
+  latestPendingTransfer: {
+    id: string | null;
+    status: string | null;
+    amount: number;
+    createdAt: string | null;
+  } | null;
+};
+
+async function getSummaryViaGateway(recipientId: string): Promise<RecipientFinancialSummary> {
+  const { baseUrl, token } = readGatewayConfig();
+  if (!baseUrl) throw new Error("WITHDRAW_GATEWAY_URL nao configurada");
+  if (!token) throw new Error("WITHDRAW_GATEWAY_TOKEN nao configurada");
+
+  const res = await fetch(
+    `${baseUrl.replace(/\/+$/, "")}/recipient-summary/${encodeURIComponent(recipientId)}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  const raw = await res.text().catch(() => "");
+  let payload: any = {};
+  try {
+    payload = raw ? JSON.parse(raw) : {};
+  } catch {
+    payload = { raw };
+  }
+
+  if (!res.ok) {
+    const msg =
+      payload?.message ||
+      payload?.error ||
+      payload?.result?.message ||
+      raw ||
+      "Erro ao consultar summary do gateway";
+    throw new Error(`Withdraw gateway error ${res.status}: ${msg}`);
+  }
+
+  return payload?.summary ?? {};
+}
+
+export async function getRecipientFinancialSummaryWithGateway(
+  recipientId: string
+): Promise<RecipientFinancialSummary> {
+  const { baseUrl } = readGatewayConfig();
+  if (baseUrl) {
+    return getSummaryViaGateway(recipientId);
+  }
+
+  const { available, waitingFunds } = await getRecipientBalanceSummary(recipientId);
+  return {
+    available,
+    waitingFunds,
+    pendingTransferAmount: 0,
+    pendingTransferCount: 0,
+    latestPendingTransfer: null,
+  };
+}

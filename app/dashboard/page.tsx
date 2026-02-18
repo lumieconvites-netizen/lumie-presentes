@@ -15,12 +15,12 @@ import {
   Copy,
   DollarSign,
   Gift,
-  MessageSquare,
   Calendar,
   ExternalLink,
   Clock3,
   Wallet,
   Settings,
+  Landmark,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -42,6 +42,7 @@ type Order = {
   guestName: string;
   totalAmount: number | string;
   feeAmount: number | string;
+  paymentMethod?: string | null;
   status: 'PENDING' | 'PAID' | 'AUTHORIZED' | 'REFUSED' | 'REFUNDED' | 'CHARGEBACK';
   createdAt: string;
   giftItem?: { name?: string } | null;
@@ -57,6 +58,19 @@ type FullList = {
   orders: Order[];
 };
 
+type FinancialSummary = {
+  available: number;
+  waitingFunds: number;
+  pendingTransferAmount: number;
+  pendingTransferCount: number;
+  latestPendingTransfer: {
+    id: string | null;
+    status: string | null;
+    amount: number;
+    createdAt: string | null;
+  } | null;
+};
+
 function toNumber(v: number | string) {
   return typeof v === 'number' ? v : Number(v ?? 0);
 }
@@ -65,6 +79,7 @@ const WITHDRAW_FEE_CENTS = 367;
 
 export default function DashboardPage() {
   const [data, setData] = useState<FullList | null>(null);
+  const [financial, setFinancial] = useState<FinancialSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [copying, setCopying] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -75,10 +90,17 @@ export default function DashboardPage() {
 
     (async () => {
       try {
-        const res = await fetch('/api/gift-lists/my-list/full', { cache: 'no-store' });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json?.error ?? 'Falha ao carregar dashboard');
-        if (!cancelled) setData(json);
+        const [listRes, financialRes] = await Promise.all([
+          fetch('/api/gift-lists/my-list/full', { cache: 'no-store' }),
+          fetch('/api/recipient/financial-summary', { cache: 'no-store' }),
+        ]);
+        const listJson = await listRes.json();
+        const financialJson = await financialRes.json();
+        if (!listRes.ok) throw new Error(listJson?.error ?? 'Falha ao carregar dashboard');
+        if (!cancelled) {
+          setData(listJson);
+          setFinancial(financialJson?.summary ?? null);
+        }
       } catch (error: any) {
         if (!cancelled) alert(error?.message ?? 'Erro ao carregar dashboard');
       } finally {
@@ -95,14 +117,22 @@ export default function DashboardPage() {
   const messages = data?.messages ?? [];
   const orders = data?.orders ?? [];
 
+  const isCardPaymentMethod = (value?: string | null) => {
+    const v = String(value ?? '').toLowerCase();
+    return v.includes('credit') || v.includes('card') || v.includes('cartao');
+  };
+
   const totalGifts = gifts.length;
   const activeGifts = gifts.filter((g) => g.availableQty > 0).length;
   const paidOrders = orders.filter((o) => o.status === 'PAID' || o.status === 'AUTHORIZED');
-  const pendingOrders = orders.filter((o) => o.status === 'PENDING');
+  const pendingOrders = orders.filter((o) => o.status === 'PENDING' && isCardPaymentMethod(o.paymentMethod));
   const totalPaid = paidOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
   const totalPending = pendingOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
   const recentPayments = paidOrders.slice(0, 6);
   const recentMessages = messages.slice(0, 5);
+  const availableNow = Math.max(0, Number(financial?.available ?? 0));
+  const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0));
+  const pendingTransferCount = Math.max(0, Number(financial?.pendingTransferCount ?? 0));
 
   const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
   const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);
@@ -134,6 +164,9 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error(json?.error ?? 'Nao foi possivel solicitar o saque.');
       alert(json?.message ?? 'Saque solicitado com sucesso.');
       setWithdrawOpen(false);
+      const summaryRes = await fetch('/api/recipient/financial-summary', { cache: 'no-store' });
+      const summaryJson = await summaryRes.json();
+      if (summaryRes.ok) setFinancial(summaryJson?.summary ?? null);
     } catch (error: any) {
       alert(error?.message ?? 'Erro ao solicitar saque.');
     } finally {
@@ -192,6 +225,7 @@ export default function DashboardPage() {
               {totalPaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
             <p className="text-xs text-gray-500 mt-1">{paidOrders.length} pagamentos aprovados</p>
+            <p className="text-xs text-gray-500">Saldo atual: {availableNow.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
           </CardContent>
         </Card>
 
@@ -206,7 +240,7 @@ export default function DashboardPage() {
             <div className="text-2xl font-bold text-foreground">
               {totalPending.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">{pendingOrders.length} pagamentos pendentes</p>
+            <p className="text-xs text-gray-500 mt-1">{pendingOrders.length} pendentes no cartao</p>
           </CardContent>
         </Card>
 
@@ -225,14 +259,18 @@ export default function DashboardPage() {
 
         <Card className="border-[#dae6ff] bg-gradient-to-br from-[#f5f9ff] to-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 gap-3">
-            <CardTitle className="text-sm font-medium text-gray-700">Status</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-700">Saque em processamento</CardTitle>
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#e5efff] text-[#2f67cc]">
-              <MessageSquare className="w-5 h-5" />
+              <Landmark className="w-5 h-5" />
             </span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{statusLabel}</div>
-            <p className="text-xs text-gray-500 mt-1">{messages.length} recados recebidos</p>
+            <div className="text-2xl font-bold text-foreground">
+              {pendingTransferAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {pendingTransferCount > 0 ? `${pendingTransferCount} saque(s) aguardando transferencia` : 'Nenhum saque aguardando transferencia'}
+            </p>
           </CardContent>
         </Card>
       </div>
