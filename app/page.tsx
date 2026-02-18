@@ -176,12 +176,8 @@ export default function HomePage() {
         <div className="container mx-auto px-6">
           <div className="text-center max-w-4xl mx-auto">
             <h2 className="font-display text-4xl md:text-6xl text-foreground leading-tight">
-              A solução completa para o seu evento
+              Lumiê, a solução completa para você e seus convidados.
             </h2>
-            <p className="mt-5 text-lg md:text-2xl text-muted-foreground">
-              Site personalizado, lista em dinheiro e confirmação de presença:
-              tudo o que você precisa para o grande dia, em um só lugar.
-            </p>
           </div>
 
           <div className="mt-16 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
@@ -193,6 +189,8 @@ export default function HomePage() {
               <h3 className="mt-8 font-display text-4xl text-foreground">A melhor Lista de Presentes</h3>
               <p className="mt-5 text-xl text-muted-foreground leading-relaxed max-w-xl">
                 Crie listas personalizadas e receba contribuições de forma rápida, elegante e segura.
+                Nada de presentes físicos com risco de itens repetidos: cada contribuição chega com
+                organização, praticidade e total liberdade para você usar como preferir.
               </p>
 
               <div className="mt-8 space-y-4">
