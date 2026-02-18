@@ -199,3 +199,20 @@
 .list-font-scope .list-title {
   font-family: var(--list-font-title, 'Playfair Display'), serif !important;
 }
+
+/* Hero slideshow */
+@keyframes heroCrossfade {
+  0%,
+  12% {
+    opacity: 1;
+  }
+  16%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.hero-slide {
+  opacity: 0;
+  animation: heroCrossfade 21s infinite ease-in-out;
+}

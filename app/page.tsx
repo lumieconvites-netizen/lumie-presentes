@@ -2,7 +2,17 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
-import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, Gift, CreditCard } from 'lucide-react';
+import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard } from 'lucide-react';
+
+const heroSlides = [
+  { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
+  { src: '/hero-slides/15-anos-02.jpg', alt: 'Festa de 15 anos 2' },
+  { src: '/hero-slides/15-anos-03.jpg', alt: 'Festa de 15 anos 3' },
+  { src: '/hero-slides/casamento-01.jpg', alt: 'Casamento 1' },
+  { src: '/hero-slides/casamento-02.jpg', alt: 'Casamento 2' },
+  { src: '/hero-slides/aniversario-menina-01.jpg', alt: 'Aniversario de menina' },
+  { src: '/hero-slides/aniversario-menino-01.jpg', alt: 'Aniversario de menino' },
+];
 
 const steps = [
   { n: 1, title: 'Crie sua conta', desc: 'Cadastre-se gratuitamente em menos de 2 minutos.' },
@@ -85,17 +95,18 @@ export default function HomePage() {
             </div>
 
             <div className="relative lg:h-[560px] h-[360px]">
-              <div className="absolute top-6 right-6 z-10 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 border border-[#ecdccf]">
-                <div className="w-10 h-10 bg-[#e8f9ed] rounded-full flex items-center justify-center">
-                  <Gift className="w-5 h-5 text-[#1e8a43]" />
+              <div className="absolute -inset-6 rounded-[2rem] bg-[radial-gradient(circle_at_30%_30%,rgba(198,90,58,0.22),rgba(142,61,44,0.08)_45%,transparent_70%)] blur-2xl" />
+
+              <div className="absolute top-6 right-6 z-20 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 border border-[#ecdccf]">
+                <div className="w-9 h-9 bg-[#fff1eb] rounded-full flex items-center justify-center">
+                  <MessageCircleHeart className="w-4 h-4 text-[#c65a3a]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Lista ativa</p>
-                  <p className="text-xs text-muted-foreground">Presentes e recados em tempo real</p>
+                  <p className="text-sm font-semibold text-foreground">127 recados</p>
                 </div>
               </div>
 
-              <div className="absolute bottom-8 left-6 z-10 bg-white rounded-2xl shadow-lg px-5 py-4 flex items-center gap-3 border border-[#ecdccf]">
+              <div className="absolute bottom-8 left-6 z-20 bg-white rounded-2xl shadow-lg px-5 py-4 flex items-center gap-3 border border-[#ecdccf]">
                 <div className="w-10 h-10 bg-[#e8f9ed] rounded-full flex items-center justify-center">
                   <CreditCard className="w-5 h-5 text-[#1e8a43]" />
                 </div>
@@ -105,9 +116,19 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl border border-[#e6d3c6]">
-                <Image src="/hero-image.jpg" alt="Celebração" fill className="object-cover" priority />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+              <div className="relative z-10 h-full w-full rounded-3xl overflow-hidden shadow-2xl border border-[#e6d3c6]">
+                {heroSlides.map((slide, index) => (
+                  <Image
+                    key={slide.src}
+                    src={slide.src}
+                    alt={slide.alt}
+                    fill
+                    priority={index === 0}
+                    className="hero-slide object-cover"
+                    style={{ animationDelay: `${index * 3}s` }}
+                  />
+                ))}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
               </div>
             </div>
           </div>
