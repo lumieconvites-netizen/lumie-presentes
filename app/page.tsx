@@ -142,30 +142,34 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-24 bg-[#f7f2ed]">
+      <section className="relative py-28 bg-gradient-to-b from-[#f8f1ea] via-[#f3e7dc] to-[#f8f1ea] overflow-hidden">
+        <div className="pointer-events-none absolute -top-20 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-[#c65a3a]/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-8 right-10 h-40 w-40 rounded-full bg-[#8e3d2c]/10 blur-3xl" />
+
         <div className="container mx-auto px-6">
-          <div className="max-w-6xl mx-auto">
-            <p className="text-sm uppercase tracking-[0.22em] text-[#a76a53] mb-5">Lumiê em um só lugar</p>
-            <h2 className="font-display text-4xl md:text-6xl leading-tight text-foreground max-w-5xl">
-              Já imaginou ter um site exclusivo para a sua festa, com tudo que você precisa para organizar,
-              encantar e receber com praticidade?
+          <div className="max-w-5xl mx-auto text-center">
+            <p className="text-sm uppercase tracking-[0.28em] text-[#9d644d] mb-6">Lumiê Signature Experience</p>
+
+            <h2 className="font-display text-4xl md:text-6xl leading-[1.08] text-foreground">
+              Seu evento com presença digital premium,
+              <span className="block text-primary">em um único lugar.</span>
             </h2>
 
-            <div className="mt-8 grid md:grid-cols-2 gap-10">
-              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                Na Lumiê, você cria sua lista gratuitamente e transforma a experiência do seu evento em algo mais
-                profissional, elegante e memorável para todos os convidados.
-              </p>
-              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                Receba presentes convertidos em dinheiro, confirme presença, publique fotos, receba recados e
-                acompanhe tudo com facilidade em uma única plataforma.
-              </p>
-            </div>
+            <p className="mt-8 text-lg md:text-2xl text-[#5e4b41] leading-relaxed">
+              Crie sua lista gratuitamente e ofereça aos seus convidados uma experiência sofisticada:
+              presentes convertidos em dinheiro, confirmação de presença, álbum de fotos, recados e gestão completa.
+            </p>
 
-            <div className="mt-10 border-t border-[#e5d5c9] pt-6">
-              <p className="text-base md:text-lg text-[#7b4d3b] leading-relaxed">
-                Site exclusivo • Lista inteligente • RSVP • Álbum de fotos • Recados em tempo real • Gestão completa
-              </p>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm md:text-base text-[#7b4d3b]">
+              <span>Site exclusivo</span>
+              <span className="opacity-50">•</span>
+              <span>Lista inteligente</span>
+              <span className="opacity-50">•</span>
+              <span>RSVP integrado</span>
+              <span className="opacity-50">•</span>
+              <span>Álbum e recados</span>
+              <span className="opacity-50">•</span>
+              <span>Tudo em tempo real</span>
             </div>
           </div>
         </div>
