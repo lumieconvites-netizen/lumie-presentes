@@ -270,14 +270,16 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       <p className="max-w-2xl mb-5" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
                         {config.description || 'Esta e nossa lista de presentes. Ficamos felizes em compartilhar esse momento com voce.'}
                       </p>
-                      <Button
-                        size="lg"
-                        className="transition-all duration-200 hover:brightness-110 hover:saturate-125"
-                        style={{ backgroundColor: config.buttonBgColor || primaryColor, color: config.buttonTextColor || '#FFFFFF' }}
-                        asChild
+                      <Link
+                        href={presentsHref}
+                        className="inline-flex h-11 items-center justify-center rounded-md px-8 text-sm font-medium shadow-sm transition-all duration-200 hover:brightness-110 hover:saturate-125"
+                        style={{
+                          backgroundColor: config.buttonBgColor || primaryColor,
+                          color: config.buttonTextColor || '#FFFFFF',
+                        }}
                       >
-                        <Link href={presentsHref}>{config.buttonText || 'Presentear'}</Link>
-                      </Button>
+                        {config.buttonText || 'Presentear'}
+                      </Link>
                     </div>
                   </div>
                 </div>

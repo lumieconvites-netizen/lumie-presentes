@@ -306,12 +306,16 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       <p className="max-w-2xl mb-5" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
                         {config.description || 'Criamos esta lista com carinho para quem desejar nos presentear.'}
                       </p>
-                      <Button
-                        size="lg"
-                        style={{ backgroundColor: config.buttonBgColor || primaryColor, color: config.buttonTextColor || '#FFFFFF' }}
+                      <button
+                        type="button"
+                        className="inline-flex h-11 items-center justify-center rounded-md px-8 text-sm font-medium shadow-sm transition-all duration-200 hover:brightness-110 hover:saturate-125"
+                        style={{
+                          backgroundColor: config.buttonBgColor || primaryColor,
+                          color: config.buttonTextColor || '#FFFFFF',
+                        }}
                       >
                         {config.buttonText || 'Presentear'}
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </div>
