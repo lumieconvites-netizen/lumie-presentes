@@ -96,6 +96,10 @@ export default function HomePage() {
 
             <div className="relative lg:h-[560px] h-[360px]">
               <div className="absolute -inset-6 rounded-[2rem] bg-[radial-gradient(circle_at_30%_30%,rgba(198,90,58,0.22),rgba(142,61,44,0.08)_45%,transparent_70%)] blur-2xl" />
+              <div className="floating-balloon balloon-a" />
+              <div className="floating-balloon balloon-b" />
+              <div className="floating-balloon balloon-c" />
+              <div className="floating-balloon balloon-d" />
 
               <div className="absolute top-6 right-6 z-20 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 border border-[#ecdccf]">
                 <div className="w-9 h-9 bg-[#fff1eb] rounded-full flex items-center justify-center">

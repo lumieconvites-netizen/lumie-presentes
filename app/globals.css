@@ -216,3 +216,96 @@
   opacity: 0;
   animation: heroCrossfade 21s infinite ease-in-out;
 }
+
+@keyframes balloonFloat {
+  0% {
+    transform: translateY(0) translateX(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-16px) translateX(8px) rotate(2deg);
+  }
+  100% {
+    transform: translateY(0) translateX(0) rotate(-2deg);
+  }
+}
+
+.floating-balloon {
+  position: absolute;
+  z-index: 12;
+  width: 56px;
+  height: 70px;
+  border-radius: 60% 60% 58% 58%;
+  background: linear-gradient(165deg, #e89f82, #c65a3a 60%, #8e3d2c);
+  box-shadow: 0 10px 20px rgba(120, 40, 20, 0.25);
+  animation: balloonFloat 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.floating-balloon::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 8px;
+  left: 50%;
+  bottom: -5px;
+  transform: translateX(-50%);
+  border-radius: 0 0 6px 6px;
+  background: #9b4632;
+}
+
+.floating-balloon::after {
+  content: '';
+  position: absolute;
+  width: 1.5px;
+  height: 44px;
+  left: 50%;
+  bottom: -47px;
+  transform: translateX(-50%);
+  background: rgba(160, 90, 70, 0.45);
+}
+
+.balloon-a {
+  top: 22px;
+  left: -8px;
+  animation-delay: 0s;
+}
+
+.balloon-b {
+  top: 72px;
+  left: 42px;
+  width: 44px;
+  height: 56px;
+  animation-delay: 1.2s;
+}
+
+.balloon-c {
+  right: -10px;
+  top: 140px;
+  animation-delay: 0.8s;
+}
+
+.balloon-d {
+  right: 48px;
+  top: -8px;
+  width: 48px;
+  height: 62px;
+  animation-delay: 1.8s;
+}
+
+@media (max-width: 1024px) {
+  .floating-balloon {
+    width: 40px;
+    height: 52px;
+  }
+
+  .floating-balloon::after {
+    height: 30px;
+    bottom: -33px;
+  }
+
+  .balloon-b,
+  .balloon-d {
+    width: 34px;
+    height: 46px;
+  }
+}
