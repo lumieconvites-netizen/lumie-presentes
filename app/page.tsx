@@ -142,21 +142,48 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="relative py-28 bg-gradient-to-b from-[#f8f1ea] via-[#f3e7dc] to-[#f8f1ea] overflow-hidden">
-        <div className="pointer-events-none absolute -top-20 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-[#c65a3a]/10 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-8 right-10 h-40 w-40 rounded-full bg-[#8e3d2c]/10 blur-3xl" />
+      <section className="relative py-28 bg-gradient-to-b from-[#f7efe7] via-[#f3e5d8] to-[#f7efe7] overflow-hidden">
+        <div className="pointer-events-none absolute -top-16 left-12 h-44 w-44 rounded-full bg-[#c65a3a]/10 blur-3xl" />
+        <div className="pointer-events-none absolute top-24 right-20 h-36 w-36 rounded-full bg-[#8e3d2c]/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-10 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-[#c65a3a]/8 blur-3xl" />
 
         <div className="container mx-auto px-6">
           <div className="max-w-5xl mx-auto text-center">
-            <h2 className="font-display text-4xl md:text-6xl leading-[1.08] text-foreground">
-              Seu evento com presença digital premium
-              <span className="block text-primary">em um único lugar.</span>
+            <h2 className="font-display text-4xl md:text-6xl leading-[1.05] text-foreground">
+              Crie o site do seu evento gratuitamente
+              <span className="block text-primary">e viva tudo em um só lugar.</span>
             </h2>
 
-            <p className="mt-8 text-lg md:text-2xl text-[#5e4b41] leading-relaxed">
-              Crie o site do seu evento gratuitamente e ofereça aos seus convidados uma experiência sofisticada:
-              presentes convertidos em dinheiro, confirmação de presença, álbum de fotos, recados e gestão completa.
+            <p className="mt-8 text-lg md:text-2xl text-[#5e4b41] leading-relaxed max-w-4xl mx-auto">
+              A Lumiê reúne sofisticação e praticidade para quem quer celebrar com elegância.
+              Você centraliza toda a experiência do evento em uma plataforma bonita, intuitiva e profissional.
             </p>
+          </div>
+
+          <div className="mt-14 max-w-5xl mx-auto grid md:grid-cols-2 gap-12">
+            <div className="border-l border-[#d9bca9] pl-6 space-y-4">
+              <p className="text-lg text-[#4f3f37] leading-relaxed">
+                Presentes convertidos em dinheiro, direto na sua conta.
+              </p>
+              <p className="text-lg text-[#4f3f37] leading-relaxed">
+                Confirmação de presença simples para você acompanhar cada convidado.
+              </p>
+              <p className="text-lg text-[#4f3f37] leading-relaxed">
+                Álbum de fotos e recados para registrar cada detalhe da celebração.
+              </p>
+            </div>
+
+            <div className="border-l border-[#d9bca9] pl-6 space-y-4">
+              <p className="text-lg text-[#4f3f37] leading-relaxed">
+                Página exclusiva com identidade do seu evento.
+              </p>
+              <p className="text-lg text-[#4f3f37] leading-relaxed">
+                Gestão completa, sem complexidade e sem custos para começar.
+              </p>
+              <p className="text-lg text-[#4f3f37] leading-relaxed">
+                Uma experiência premium para você e inesquecível para seus convidados.
+              </p>
+            </div>
           </div>
         </div>
       </section>
