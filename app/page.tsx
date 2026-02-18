@@ -148,12 +148,12 @@ export default function HomePage() {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="font-display text-5xl md:text-7xl leading-[1.02] text-foreground">
-              Uma experiência única
-              <span className="block text-primary">para o site do seu evento.</span>
+              O site do seu evento
+              <span className="block text-primary">elegante, moderno e premium.</span>
             </h2>
 
             <p className="mt-8 text-lg md:text-2xl text-[#5b473e] leading-relaxed">
-              Uma experiência exclusiva, sofisticada e memorável para você e seus convidados.
+              Uma experiência única, sofisticada e memorável para você e seus convidados.
               A presença digital do seu evento no nível que ele merece.
             </p>
 
