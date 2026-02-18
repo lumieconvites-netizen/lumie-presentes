@@ -21,6 +21,7 @@ import {
   Wallet,
   Settings,
   Landmark,
+  Info,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -231,7 +232,16 @@ export default function DashboardPage() {
 
         <Card className="border-[#f0e2cb] bg-gradient-to-br from-[#fffaf1] to-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 gap-3">
-            <CardTitle className="text-sm font-medium text-gray-700">Pendente</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+              <span>Pendente</span>
+              <span
+                className="inline-flex items-center text-gray-400 hover:text-gray-600 cursor-help"
+                title="Pagamentos em cartão ficam pendentes até a liquidação pela operadora (prazo médio D+30). Após liberação, o valor entra em Saldo atual."
+                aria-label="Informações sobre pendência de cartão"
+              >
+                <Info className="w-4 h-4" />
+              </span>
+            </CardTitle>
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#fff0cb] text-[#b8860b]">
               <Clock3 className="w-5 h-5" />
             </span>
