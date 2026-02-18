@@ -88,23 +88,37 @@ export async function POST() {
       );
     }
 
+    const netAmount = Math.max(availableBalance - WITHDRAW_FEE_CENTS, 0);
+    if (netAmount <= 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Saldo insuficiente para saque apos desconto da taxa de transferencia.",
+          debug: {
+            availableBalanceInCents: availableBalance,
+            waitingFundsInCents: waitingFunds,
+            feeInCents: WITHDRAW_FEE_CENTS,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     const transfer = await createRecipientTransferWithGateway({
       recipientId: recipient.pagarmeRecipientId,
-      amountInCents: availableBalance,
+      amountInCents: netAmount,
       metadata: {
         source: "lumie_dashboard_withdraw",
         userId: session.user.id,
       },
     });
 
-    const netAmount = Math.max(availableBalance - WITHDRAW_FEE_CENTS, 0);
-
     return NextResponse.json({
       message: `Saque solicitado com sucesso. Valor solicitado: R$ ${(availableBalance / 100).toFixed(
         2
       )}. Valor liquido estimado: R$ ${(netAmount / 100).toFixed(2)}.`,
       transferId: transfer?.id ?? null,
-      amountInCents: availableBalance,
+      amountInCents: netAmount,
       estimatedNetAmountInCents: netAmount,
       feeInCents: WITHDRAW_FEE_CENTS,
     });
