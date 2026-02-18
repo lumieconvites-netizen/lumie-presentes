@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
-import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift } from 'lucide-react';
+import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Check } from 'lucide-react';
 
 const heroSlides = [
   { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
@@ -50,9 +50,9 @@ const features = [
 ];
 
 const showcaseGiftItems = [
-  { emoji: '💄', title: 'Maquiagem', value: 'R$ 450,00' },
-  { emoji: '🛍️', title: 'Lojas', value: 'R$ 500,00' },
-  { emoji: '✈️', title: 'Viagens', value: 'R$ 300,00' },
+  { id: 1, emoji: '💄', title: 'Maquiagem', value: 'R$ 450,00' },
+  { id: 2, emoji: '🛍️', title: 'Lojas', value: 'R$ 500,00' },
+  { id: 3, emoji: '✈️', title: 'Viagens', value: 'R$ 300,00' },
 ];
 
 export default function HomePage() {
@@ -209,17 +209,21 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-[#ead9cd] bg-white shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-terracota-600 to-terracota-700 text-white px-7 py-7">
-                <h4 className="font-display text-4xl">Lista de Presentes</h4>
-                <p className="text-sm text-white/90 mt-1">Receba em dinheiro na hora</p>
+            <div className="rounded-[2rem] border border-[#ead9cd] bg-gradient-to-b from-white to-[#fbf6f1] shadow-xl overflow-hidden relative">
+              <div className="absolute top-4 right-4 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1">
+                Lista ativa
+              </div>
+              <div className="bg-gradient-to-r from-[#9f3f24] to-[#c65a3a] text-white px-7 py-7">
+                <h4 className="font-display text-4xl">Painel da Lista</h4>
+                <p className="text-sm text-white/90 mt-1">Acompanhe os presentes em tempo real</p>
               </div>
 
               <div className="p-6 space-y-4">
-                {showcaseGiftItems.map((item) => (
+                {showcaseGiftItems.map((item, index) => (
                   <div
                     key={item.title}
-                    className="rounded-2xl border border-[#ead9cd] bg-[#fcfaf8] px-4 py-3 flex items-center justify-between"
+                    className="gift-check-row rounded-2xl border border-[#ead9cd] bg-white px-4 py-3 flex items-center justify-between"
+                    style={{ animationDelay: `${index * 120}ms` }}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{item.emoji}</span>
@@ -228,13 +232,19 @@ export default function HomePage() {
                         <p className="text-[#b05134] font-semibold">{item.value}</p>
                       </div>
                     </div>
-                    <div className="h-8 w-8 rounded-lg bg-terracota-600" />
+                    <div className="h-8 w-8 rounded-full bg-emerald-500 text-white inline-flex items-center justify-center shadow-sm">
+                      <Check className="w-4 h-4" />
+                    </div>
                   </div>
                 ))}
 
                 <div className="rounded-2xl bg-gradient-to-r from-[#20b77c] to-[#30d88f] p-5 text-white">
                   <p className="text-sm opacity-95">Convertido em dinheiro</p>
                   <p className="text-4xl font-bold mt-1">R$ 1.250,00</p>
+                </div>
+
+                <div className="h-2 rounded-full bg-[#ead9cd] overflow-hidden">
+                  <div className="h-full w-[78%] bg-gradient-to-r from-terracota-500 to-terracota-700 rounded-full" />
                 </div>
               </div>
             </div>

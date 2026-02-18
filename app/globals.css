@@ -348,3 +348,24 @@
 .hero-chip-bottom {
   animation-name: heroChipBottomInOut;
 }
+
+@keyframes giftRowFloatIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gift-check-row {
+  animation: giftRowFloatIn 520ms ease-out both;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.gift-check-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(120, 60, 35, 0.12);
+}
