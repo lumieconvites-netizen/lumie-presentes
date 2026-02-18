@@ -376,6 +376,14 @@ type CreateCreditCardOrderInput = {
 };
 
 export async function createCreditCardOrder(input: CreateCreditCardOrderInput) {
+  const billingAddress = {
+    line_1: process.env.PAGARME_BILLING_LINE_1 ?? "Av Paulista, 1000",
+    zip_code: process.env.PAGARME_BILLING_ZIP_CODE ?? "01310000",
+    city: process.env.PAGARME_BILLING_CITY ?? "Sao Paulo",
+    state: process.env.PAGARME_BILLING_STATE ?? "SP",
+    country: process.env.PAGARME_BILLING_COUNTRY ?? "BR",
+  };
+
   const splitRules =
     input.splitRules && input.splitRules.length > 0
       ? input.splitRules.map((rule, index, arr) => ({
@@ -418,6 +426,7 @@ export async function createCreditCardOrder(input: CreateCreditCardOrderInput) {
         credit_card: {
           installments: Math.max(1, Number(input.installments ?? 1)),
           statement_descriptor: "LUMIE",
+          billing_address: billingAddress,
           card: {
             number: input.card.number,
             holder_name: input.card.holderName,
