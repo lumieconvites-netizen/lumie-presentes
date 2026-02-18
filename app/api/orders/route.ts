@@ -421,6 +421,8 @@ export async function POST(request: Request) {
             {
               error: 'Pagamento recusado pela Pagar.me.',
               details: failReason,
+              chargeStatus: charge?.status ?? null,
+              transactionStatus: transaction?.status ?? null,
               orderId: order.id,
               splitApplied: Boolean(splitRules?.length),
               splitReason,
