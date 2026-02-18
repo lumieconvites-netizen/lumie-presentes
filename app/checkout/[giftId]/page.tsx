@@ -400,12 +400,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
             </div>
 
             <div className="mt-6 rounded-lg border bg-white p-4">
-              <div className="flex items-center justify-between text-sm">
-                <span>Subtotal</span>
-                <b>{formatBRL(totals.total)}</b>
-              </div>
-
-              <div className="flex items-center justify-between text-base mt-3 pt-3 border-t">
+              <div className="flex items-center justify-between text-base">
                 <span>Total</span>
                 <b>{formatBRL(totals.total)}</b>
               </div>
