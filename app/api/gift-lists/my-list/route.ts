@@ -61,22 +61,39 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
 
+    const nextFeeMode =
+      body?.feeMode === "PASS_TO_GUEST" || body?.feeMode === "ABSORB"
+        ? body.feeMode
+        : null;
+
     const data: any = {};
     if (typeof body?.isPublished === "boolean") data.isPublished = body.isPublished;
     if (typeof body?.title === "string") data.title = body.title.trim() || "Minha Lista de Presentes";
     if (typeof body?.description === "string") data.description = body.description.trim() || null;
-    if (body?.feeMode === "PASS_TO_GUEST" || body?.feeMode === "ABSORB") {
-      data.feeMode = body.feeMode;
-    }
 
-    if (Object.keys(data).length === 0) {
+    if (Object.keys(data).length === 0 && !nextFeeMode) {
       return NextResponse.json({ error: "Nenhum campo valido para atualizar" }, { status: 400 });
     }
 
-    const updated = await prisma.giftList.update({
-      where: { id: giftList.id },
-      data,
-    });
+    // Mantem feeMode consistente em todas as listas do mesmo dono
+    if (nextFeeMode) {
+      await prisma.giftList.updateMany({
+        where: { userId: session.user.id },
+        data: { feeMode: nextFeeMode },
+      });
+    }
+
+    let updated = giftList as any;
+    if (Object.keys(data).length > 0) {
+      updated = await prisma.giftList.update({
+        where: { id: giftList.id },
+        data,
+      });
+    } else {
+      updated = await prisma.giftList.findUnique({
+        where: { id: giftList.id },
+      });
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

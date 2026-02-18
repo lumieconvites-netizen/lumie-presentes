@@ -53,6 +53,7 @@ export default function PresentesDashboard() {
   const { settings } = useUser();
   const [giftListId, setGiftListId] = useState<string>('');
   const [giftListSlug, setGiftListSlug] = useState<string>('');
+  const [giftListFeeMode, setGiftListFeeMode] = useState<'PASS_TO_GUEST' | 'ABSORB'>('PASS_TO_GUEST');
   const [gifts, setGifts] = useState<GiftRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -95,6 +96,7 @@ export default function PresentesDashboard() {
       if (!glRes.ok) throw new Error(glData?.error ?? 'Erro ao carregar lista');
       setGiftListId(glData.id);
       setGiftListSlug(glData.slug || '');
+      setGiftListFeeMode(glData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
       setListPageTitle(glData?.title || 'Minha Lista de Presentes');
       setListPageMessage(glData?.description || '');
 
@@ -448,7 +450,7 @@ export default function PresentesDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredGifts.map((gift) => {
-              const valueShown = withFee(Number(gift.basePrice), !!settings?.feePassedToGuest);
+              const valueShown = withFee(Number(gift.basePrice), giftListFeeMode === 'PASS_TO_GUEST');
               const soldOut = gift.availableQty <= 0;
 
               return (
@@ -488,7 +490,7 @@ export default function PresentesDashboard() {
                     <div className="flex items-end justify-between mb-4">
                       <div>
                         <p className="text-3xl font-bold" style={{ color: primary }}>{formatBRL(valueShown)}</p>
-                        <p className="text-xs text-gray-500 mt-1">{settings?.feePassedToGuest ? 'Valor com taxa' : 'Valor do presente'}</p>
+                        <p className="text-xs text-gray-500 mt-1">{giftListFeeMode === 'PASS_TO_GUEST' ? 'Valor com taxa' : 'Valor do presente'}</p>
                       </div>
 
                       <div className="text-right">
@@ -547,7 +549,7 @@ export default function PresentesDashboard() {
               <Input type="number" placeholder="Quantidade" value={draft.totalQuantity} onChange={(e) => setDraft((d) => ({ ...d, totalQuantity: Number(e.target.value) }))} />
             </div>
 
-            <div className="text-xs text-muted-foreground">Valor exibido ao convidado: <span className="font-medium">{formatBRL(withFee(draft.basePrice, !!settings?.feePassedToGuest))}</span></div>
+            <div className="text-xs text-muted-foreground">Valor exibido ao convidado: <span className="font-medium">{formatBRL(withFee(draft.basePrice, giftListFeeMode === 'PASS_TO_GUEST'))}</span></div>
           </div>
 
           <DialogFooter>
