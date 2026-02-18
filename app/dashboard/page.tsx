@@ -203,10 +203,11 @@ export default function DashboardPage() {
               variant="outline"
               className="border-[#e0c6b4] bg-white hover:bg-[#fff6ef]"
               onClick={copyPublicLink}
-              disabled={!data?.slug || copying}
+              disabled={!data?.slug || !data?.isPublished || copying}
+              title={!data?.isPublished ? 'Publique seu site para copiar o link.' : undefined}
             >
               <Copy className="h-4 w-4 mr-2" />
-              {copying ? 'Copiando...' : 'Copiar Link'}
+              {copying ? 'Copiando...' : 'Copiar link do site'}
             </Button>
 
           </div>
