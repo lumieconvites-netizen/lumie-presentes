@@ -90,6 +90,11 @@ function roundCents(value: number) {
   return Math.round(value);
 }
 
+function isInvalidRequestError(error: any) {
+  const raw = String(error?.message ?? "");
+  return /Pagar\.me error 400/i.test(raw) && /request is invalid/i.test(raw);
+}
+
 function calculateCommissionSplit(params: {
   baseAmount: number;
   totalAmount: number;
@@ -324,23 +329,53 @@ export async function POST(request: Request) {
           },
         };
 
-        const pagarmeOrder =
-          data.paymentMethod === 'CREDIT_CARD'
-            ? await createCreditCardOrder({
-                ...commonPayload,
-                card: {
-                  number: onlyDigits(data.card?.number),
-                  holderName: (data.card?.holderName ?? '').trim(),
-                  expMonth: String(Number(onlyDigits(data.card?.expMonth))).padStart(2, '0'),
-                  expYear: (() => {
-                    const year = onlyDigits(data.card?.expYear);
-                    return year.length === 2 ? `20${year}` : year;
-                  })(),
-                  cvv: onlyDigits(data.card?.cvv),
-                },
-                installments: data.card?.installments ?? 1,
-              })
-            : await createPixOrder(commonPayload);
+        const createGatewayOrder = (payload: typeof commonPayload) => {
+          if (data.paymentMethod === 'CREDIT_CARD') {
+            return createCreditCardOrder({
+              ...payload,
+              card: {
+                number: onlyDigits(data.card?.number),
+                holderName: (data.card?.holderName ?? '').trim(),
+                expMonth: String(Number(onlyDigits(data.card?.expMonth))).padStart(2, '0'),
+                expYear: (() => {
+                  const year = onlyDigits(data.card?.expYear);
+                  return year.length === 2 ? `20${year}` : year;
+                })(),
+                cvv: onlyDigits(data.card?.cvv),
+              },
+              installments: data.card?.installments ?? 1,
+            });
+          }
+
+          return createPixOrder(payload);
+        };
+
+        let effectiveSplitApplied = Boolean(splitRules?.length);
+        let effectiveSplitReason = splitReason;
+
+        let pagarmeOrder: any;
+        try {
+          pagarmeOrder = await createGatewayOrder(commonPayload);
+        } catch (firstGatewayError: any) {
+          const shouldRetryWithoutSplit = Boolean(splitRules?.length) && isInvalidRequestError(firstGatewayError);
+          if (!shouldRetryWithoutSplit) {
+            throw firstGatewayError;
+          }
+
+          const fallbackPayload = {
+            ...commonPayload,
+            splitRules: undefined,
+            metadata: {
+              ...commonPayload.metadata,
+              splitApplied: false,
+              splitReason: 'split_invalid_fallback',
+            },
+          };
+
+          pagarmeOrder = await createGatewayOrder(fallbackPayload);
+          effectiveSplitApplied = false;
+          effectiveSplitReason = 'split_invalid_fallback';
+        }
 
         const charge = pagarmeOrder?.charges?.[0];
         const transaction = charge?.last_transaction;
@@ -388,8 +423,8 @@ export async function POST(request: Request) {
         return NextResponse.json({
           orderId: order.id,
           mode: data.paymentMethod === 'CREDIT_CARD' ? 'pagarme_credit_card' : 'pagarme_pix',
-          splitApplied: Boolean(splitRules?.length),
-          splitReason,
+          splitApplied: effectiveSplitApplied,
+          splitReason: effectiveSplitReason,
           chargeStatus: charge?.status ?? null,
           transactionStatus: transaction?.status ?? null,
           checkoutUrl: transaction?.url ?? null,
