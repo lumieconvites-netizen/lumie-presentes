@@ -151,8 +151,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'CPF invalido' }, { status: 400 });
     }
 
-    if (!guestArea || guestArea.length !== 2 || !guestNumber || guestNumber.length < 8) {
-      return NextResponse.json({ error: 'Telefone invalido. Use DDD + numero.' }, { status: 400 });
+    if (!guestArea || guestArea.length !== 2 || !guestNumber || guestNumber.length < 9) {
+      return NextResponse.json(
+        { error: 'Telefone invalido. Use DDD + celular com 9 digitos (ex: 11988887777).' },
+        { status: 400 }
+      );
     }
 
     if (data.paymentMethod === 'CREDIT_CARD') {
@@ -401,9 +404,14 @@ export async function POST(request: Request) {
           where: { id: order.id },
           data: { status: 'REFUSED' },
         });
+        const gatewayMessage =
+          data.paymentMethod === 'CREDIT_CARD'
+            ? 'Nao foi possivel processar o cartao neste momento.'
+            : 'Nao foi possivel gerar o PIX neste momento.';
+
         return NextResponse.json(
           {
-            error: 'Nao foi possivel gerar o PIX neste momento.',
+            error: gatewayMessage,
             details,
             orderId: order.id,
           },
