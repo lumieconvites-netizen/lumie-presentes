@@ -9,6 +9,7 @@ const heroSlides = [
   { src: '/hero-slides/15-anos-02.jpg', alt: 'Festa de 15 anos 2' },
   { src: '/hero-slides/casamento-01.jpg', alt: 'Casamento 1' },
   { src: '/hero-slides/aniversario-menina-01.jpg', alt: 'Aniversario de menina' },
+  { src: '/hero-slides/15-anos-03.jpg', alt: 'Festa de 15 anos 3' },
   { src: '/hero-slides/casamento-02.jpg', alt: 'Casamento 2' },
   { src: '/hero-slides/aniversario-menino-01.jpg', alt: 'Aniversario de menino' },
 ];
