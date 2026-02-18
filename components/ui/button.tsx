@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
@@ -10,7 +10,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default:
+          'bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm',
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/90',
         outline:
@@ -20,7 +21,8 @@ const buttonVariants = cva(
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
         gold: 'bg-gold-500 text-white hover:bg-gold-600',
-        terracota: 'bg-terracota-500 text-white hover:bg-terracota-600',
+        terracota:
+          'bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm',
       },
       size: {
         default: 'h-10 px-4 py-2',
@@ -58,3 +60,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = 'Button';
 
 export { Button, buttonVariants };
+

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
@@ -9,7 +9,7 @@ export default function NotFound() {
         <div className="relative w-32 h-16 mx-auto mb-8">
           <Image
             src="/logo.png"
-            alt="LUMIÊ"
+            alt="LUMIÃŠ"
             fill
             className="object-contain"
           />
@@ -20,19 +20,19 @@ export default function NotFound() {
         </div>
 
         <h1 className="font-display text-3xl font-bold text-foreground mb-4">
-          Página não encontrada
+          PÃ¡gina nÃ£o encontrada
         </h1>
 
         <p className="text-lg text-gray-600 mb-8">
-          Ops! A página que você está procurando não existe ou foi removida.
+          Ops! A pÃ¡gina que vocÃª estÃ¡ procurando nÃ£o existe ou foi removida.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
             asChild
-            className="bg-primary hover:bg-primary/90"
+            className="bg-gradient-to-r from-terracota-500 to-terracota-700 hover:from-terracota-600 hover:to-terracota-800 shadow-sm"
           >
-            <Link href="/">Ir para o início</Link>
+            <Link href="/">Ir para o inÃ­cio</Link>
           </Button>
 
           <Button asChild variant="outline">
@@ -41,9 +41,10 @@ export default function NotFound() {
         </div>
 
         <div className="mt-12 text-6xl opacity-50">
-          🎁
+          ðŸŽ
         </div>
       </div>
     </div>
   );
 }
+

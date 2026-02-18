@@ -105,7 +105,7 @@ export default function LoginPage() {
               />
             </div>
 
-            <Button type="submit" className="w-full bg-terracota-500 hover:bg-terracota-600" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-terracota-500 to-terracota-700 hover:from-terracota-600 hover:to-terracota-800 shadow-sm" disabled={isLoading}>
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
@@ -127,4 +127,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
 

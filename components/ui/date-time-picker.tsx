@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,7 @@ export function DateTimePicker({ value, onChange, label }: DateTimePickerProps) 
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900">Selecione Data e Hora</p>
-                <p className="text-xs text-gray-500">Escolha o dia e horário do evento</p>
+                <p className="text-xs text-gray-500">Escolha o dia e horÃ¡rio do evento</p>
               </div>
             </div>
             
@@ -96,7 +96,7 @@ export function DateTimePicker({ value, onChange, label }: DateTimePickerProps) 
                 Cancelar
               </Button>
               <Button
-                className="flex-1 bg-primary hover:bg-primary/90"
+                className="flex-1 bg-gradient-to-r from-terracota-500 to-terracota-700 hover:from-terracota-600 hover:to-terracota-800 shadow-sm"
                 onClick={handleConfirm}
                 disabled={!tempDate}
               >
@@ -110,3 +110,4 @@ export function DateTimePicker({ value, onChange, label }: DateTimePickerProps) 
     </div>
   );
 }
+

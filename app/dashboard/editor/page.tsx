@@ -315,7 +315,7 @@ export default function PageBuilder() {
               <Button variant="outline" onClick={unpublishList} className="border-yellow-500 text-yellow-700">Despublicar</Button>
               </>
             ) : (
-              <Button onClick={publishList} className="bg-primary hover:bg-primary/90 text-white">
+              <Button onClick={publishList} className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Publicar
               </Button>
@@ -646,4 +646,5 @@ export default function PageBuilder() {
     </div>
   );
 }
+
 

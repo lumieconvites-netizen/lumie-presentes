@@ -64,7 +64,7 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-xl px-8 py-6 text-base">
+                <Button asChild size="lg" className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm rounded-xl px-8 py-6 text-base">
                   <Link href="/cadastro">Criar Minha Lista</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="rounded-xl px-8 py-6 text-base border-[#dfc7b7] hover:bg-[#fff7f1]">
@@ -171,7 +171,7 @@ export default function HomePage() {
               <p>Você escolhe quem paga a taxa</p>
               <p>Até 100 presentes por lista</p>
             </div>
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-xl px-8">
+            <Button asChild size="lg" className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm rounded-xl px-8">
               <Link href="/cadastro">Começar agora</Link>
             </Button>
           </div>
@@ -181,3 +181,4 @@ export default function HomePage() {
     </div>
   );
 }
+

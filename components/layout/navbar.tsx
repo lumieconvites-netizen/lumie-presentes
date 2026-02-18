@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -22,11 +22,11 @@ export function Navbar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-12">
             <a href="/" className="relative w-16 h-8 shrink-0 pointer-events-auto">
-              <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" />
+              <Image src="/logo.png" alt="LUMIÃŠ" fill className="object-contain" />
             </a>
 
             <div className="hidden md:flex items-center gap-8 text-sm">
-              <a href="/" className={linkClass('/')}>Início</a>
+              <a href="/" className={linkClass('/')}>InÃ­cio</a>
               <a href="/como-funciona" className={linkClass('/como-funciona')}>Como Funciona</a>
               <a href="/tarifas" className={linkClass('/tarifas')}>Tarifas</a>
               <a href="/templates" className={linkClass('/templates')}>Templates</a>
@@ -43,7 +43,7 @@ export function Navbar() {
 
             <a
               href="/cadastro"
-              className="pointer-events-auto inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
+              className="pointer-events-auto inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-terracota-500 to-terracota-700 px-5 text-sm font-medium text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm transition-colors"
             >
               Criar Conta
             </a>
@@ -53,3 +53,4 @@ export function Navbar() {
     </nav>
   );
 }
+

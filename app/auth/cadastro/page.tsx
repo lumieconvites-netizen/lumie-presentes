@@ -239,7 +239,7 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-terracota-500 hover:bg-terracota-600" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-gradient-to-r from-terracota-500 to-terracota-700 hover:from-terracota-600 hover:to-terracota-800 shadow-sm" disabled={isLoading}>
                 {isLoading ? 'Enviando codigo...' : isPartnerMode ? 'Criar conta de Parceiro' : 'Criar conta'}
               </Button>
             </form>
@@ -259,7 +259,7 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-terracota-500 hover:bg-terracota-600" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-gradient-to-r from-terracota-500 to-terracota-700 hover:from-terracota-600 hover:to-terracota-800 shadow-sm" disabled={isLoading}>
                 {isLoading ? 'Confirmando...' : 'Confirmar email'}
               </Button>
 
@@ -286,4 +286,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
 

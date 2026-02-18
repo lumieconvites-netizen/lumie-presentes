@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,32 +11,32 @@ import {
 export default function Pricing() {
   const features = [
     'Criar lista de presentes',
-    'Até 100 presentes por lista',
-    'Editor visual de página',
-    'Templates personalizáveis',
+    'AtÃ© 100 presentes por lista',
+    'Editor visual de pÃ¡gina',
+    'Templates personalizÃ¡veis',
     'Recados dos convidados',
-    'Pagamento com cartão e PIX',
+    'Pagamento com cartÃ£o e PIX',
     'Dashboard de acompanhamento',
-    'Exportar relatórios',
+    'Exportar relatÃ³rios',
     'Suporte por e-mail'
   ];
 
   const faqs = [
     {
-      q: 'O que é a taxa de 7,99%?',
-      a: 'É a nossa taxa de serviço que cobre os custos de processamento de pagamentos, manutenção da plataforma e suporte. Você pode escolher repassar essa taxa para o convidado ou assumir você mesmo.'
+      q: 'O que Ã© a taxa de 7,99%?',
+      a: 'Ã‰ a nossa taxa de serviÃ§o que cobre os custos de processamento de pagamentos, manutenÃ§Ã£o da plataforma e suporte. VocÃª pode escolher repassar essa taxa para o convidado ou assumir vocÃª mesmo.'
     },
     {
       q: 'Como recebo o dinheiro?',
-      a: 'Os valores são repassados para sua conta bancária através da Pagar.me. O prazo de recebimento depende do método de pagamento: PIX é instantâneo, cartão de crédito segue o prazo padrão de D+30.'
+      a: 'Os valores sÃ£o repassados para sua conta bancÃ¡ria atravÃ©s da Pagar.me. O prazo de recebimento depende do mÃ©todo de pagamento: PIX Ã© instantÃ¢neo, cartÃ£o de crÃ©dito segue o prazo padrÃ£o de D+30.'
     },
     {
       q: 'Preciso pagar para criar a lista?',
-      a: 'Não! Criar a lista é totalmente gratuito. Você só paga a taxa quando receber um pagamento, ou seja, só paga quando começar a receber.'
+      a: 'NÃ£o! Criar a lista Ã© totalmente gratuito. VocÃª sÃ³ paga a taxa quando receber um pagamento, ou seja, sÃ³ paga quando comeÃ§ar a receber.'
     },
     {
       q: 'Posso alterar quem paga a taxa depois?',
-      a: 'Sim! Você pode alterar a configuração a qualquer momento nas configurações da sua lista. A mudança vale para os próximos pagamentos.'
+      a: 'Sim! VocÃª pode alterar a configuraÃ§Ã£o a qualquer momento nas configuraÃ§Ãµes da sua lista. A mudanÃ§a vale para os prÃ³ximos pagamentos.'
     }
   ];
 
@@ -49,7 +49,7 @@ export default function Pricing() {
             Tarifas simples e transparentes
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Criar sua lista é grátis. Você só paga quando receber.
+            Criar sua lista Ã© grÃ¡tis. VocÃª sÃ³ paga quando receber.
           </p>
         </div>
       </section>
@@ -60,7 +60,7 @@ export default function Pricing() {
           <Card className="border-2 border-primary shadow-xl overflow-hidden">
             <div className="bg-gradient-to-r from-primary to-accent p-6 text-white text-center">
               <Sparkles className="w-10 h-10 mx-auto mb-2" />
-              <h2 className="font-display text-2xl">LUMIÊ</h2>
+              <h2 className="font-display text-2xl">LUMIÃŠ</h2>
             </div>
             
             <CardContent className="p-8">
@@ -69,7 +69,7 @@ export default function Pricing() {
                   <span className="text-5xl font-display font-bold text-primary">7,99%</span>
                 </div>
                 <p className="text-gray-600 mt-2">
-                  por transação
+                  por transaÃ§Ã£o
                 </p>
               </div>
 
@@ -84,11 +84,11 @@ export default function Pricing() {
 
               <Button
                 size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-white py-6"
+                className="w-full bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm py-6"
                 asChild
               >
                 <Link href="/cadastro">
-                  Criar Minha Lista Grátis
+                  Criar Minha Lista GrÃ¡tis
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
               </Button>
@@ -105,7 +105,7 @@ export default function Pricing() {
       <section className="py-20 px-4 bg-[#FAF4EF]">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-display text-3xl text-[#2B2422] text-center mb-12">
-            Você escolhe quem paga a taxa
+            VocÃª escolhe quem paga a taxa
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8">
@@ -118,7 +118,7 @@ export default function Pricing() {
               <CardContent>
                 <p className="text-gray-600 mb-6">
                   O convidado paga o valor do presente + 7,99% de taxa. 
-                  Você recebe o valor integral do presente.
+                  VocÃª recebe o valor integral do presente.
                 </p>
                 <div className="p-4 bg-green-50 rounded-xl">
                   <p className="text-sm text-green-800 font-medium">Exemplo: Presente de R$ 100,00</p>
@@ -126,7 +126,7 @@ export default function Pricing() {
                     Convidado paga: <strong>R$ 107,99</strong>
                   </p>
                   <p className="text-green-700">
-                    Você recebe: <strong>R$ 100,00</strong>
+                    VocÃª recebe: <strong>R$ 100,00</strong>
                   </p>
                 </div>
               </CardContent>
@@ -135,13 +135,13 @@ export default function Pricing() {
             <Card className="border-[#F1E3D6]">
               <CardHeader>
                 <CardTitle className="font-display text-xl text-[#2B2422]">
-                  Você Assume a Taxa
+                  VocÃª Assume a Taxa
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-6">
                   O convidado paga apenas o valor do presente. 
-                  A taxa de 7,99% é descontada do seu repasse.
+                  A taxa de 7,99% Ã© descontada do seu repasse.
                 </p>
                 <div className="p-4 bg-yellow-50 rounded-xl">
                   <p className="text-sm text-yellow-800 font-medium">Exemplo: Presente de R$ 100,00</p>
@@ -149,7 +149,7 @@ export default function Pricing() {
                     Convidado paga: <strong>R$ 100,00</strong>
                   </p>
                   <p className="text-yellow-700">
-                    Você recebe: <strong>R$ 92,01</strong>
+                    VocÃª recebe: <strong>R$ 92,01</strong>
                   </p>
                 </div>
               </CardContent>
@@ -191,7 +191,7 @@ export default function Pricing() {
             Comece agora mesmo
           </h2>
           <p className="text-white/80 mb-8">
-            Crie sua lista em minutos. É grátis!
+            Crie sua lista em minutos. Ã‰ grÃ¡tis!
           </p>
           <Button 
             size="lg"
@@ -208,3 +208,4 @@ export default function Pricing() {
     </div>
   );
 }
+
