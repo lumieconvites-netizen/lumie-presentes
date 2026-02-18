@@ -426,13 +426,13 @@ export async function createCreditCardOrder(input: CreateCreditCardOrderInput) {
         credit_card: {
           installments: Math.max(1, Number(input.installments ?? 1)),
           statement_descriptor: "LUMIE",
-          billing_address: billingAddress,
           card: {
             number: input.card.number,
             holder_name: input.card.holderName,
             exp_month: input.card.expMonth,
             exp_year: input.card.expYear,
             cvv: input.card.cvv,
+            billing_address: billingAddress,
           },
         },
         ...(splitRules ? { split: splitRules } : {}),
