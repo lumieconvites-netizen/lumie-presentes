@@ -55,10 +55,7 @@ const showcaseGiftItems = [
   { id: 3, title: 'Viagens', value: 'R$ 300,00', icon: 'travel' },
 ];
 
-const showcaseReceived = [
-  { id: 1, name: 'Isabella', value: 'R$ 350,00' },
-  { id: 2, name: 'Mariana', value: 'R$ 180,00' },
-];
+const showcaseReceived = { name: 'Isabella', value: 'R$ 350,00' };
 
 export default function HomePage() {
   return (
@@ -215,17 +212,12 @@ export default function HomePage() {
             </div>
 
             <div className="relative mock-tilt rounded-[2rem] border border-[#e5d1c3] bg-gradient-to-b from-white to-[#f8f1ea] shadow-xl overflow-hidden">
-              <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-                {showcaseReceived.map((item, idx) => (
-                  <div
-                    key={item.id}
-                    className="rounded-xl bg-white/95 backdrop-blur px-3 py-2 border border-[#ecdccf] shadow-sm text-xs"
-                    style={{ animationDelay: `${idx * 120}ms` }}
-                  >
-                    <p className="font-semibold text-[#3d2f29]">{item.name} presenteou você!</p>
-                    <p className="text-[#9a6a55]">{item.value}</p>
-                  </div>
-                ))}
+              <div className="absolute -top-5 -right-8 z-30 rounded-xl bg-white/95 backdrop-blur px-3 py-2 border border-[#ecdccf] shadow-md text-xs note-chip-float">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-[#3d2f29]">{showcaseReceived.name} presenteou você!</p>
+                  <span className="text-[#c65a3a]">❤</span>
+                </div>
+                <p className="text-[#9a6a55]">{showcaseReceived.value}</p>
               </div>
               <div className="absolute -top-16 -right-10 h-40 w-40 rounded-full bg-[#c65a3a]/10 blur-3xl" />
               <div className="bg-gradient-to-r from-[#8e3d2c] to-[#c65a3a] text-white px-7 py-7">
