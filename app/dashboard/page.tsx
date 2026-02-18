@@ -128,12 +128,13 @@ export default function DashboardPage() {
   const paidOrders = orders.filter((o) => o.status === 'PAID' || o.status === 'AUTHORIZED');
   const pendingOrders = orders.filter((o) => o.status === 'PENDING' && isCardPaymentMethod(o.paymentMethod));
   const totalPaid = paidOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
-  const totalPending = pendingOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
   const recentPayments = paidOrders.slice(0, 6);
   const recentMessages = messages.slice(0, 5);
   const availableNow = Math.max(0, Number(financial?.available ?? 0)) / 100;
+  const waitingFunds = Math.max(0, Number(financial?.waitingFunds ?? 0)) / 100;
   const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0)) / 100;
   const pendingTransferCount = Math.max(0, Number(financial?.pendingTransferCount ?? 0));
+  const releasedTotal = availableNow + pendingTransferAmount;
 
   const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
   const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);
@@ -224,9 +225,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {totalPaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              {releasedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">{paidOrders.length} pagamentos aprovados</p>
+            <p className="text-xs text-gray-500 mt-1">Valor ja liberado pela Pagar.me</p>
             <p className="text-xs text-gray-500">Saldo atual: {availableNow.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
           </CardContent>
         </Card>
@@ -249,9 +250,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {totalPending.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              {waitingFunds.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">{pendingOrders.length} pendentes no cartao</p>
+            <p className="text-xs text-gray-500 mt-1">Em processamento (cartao)</p>
+            <p className="text-xs text-gray-500">{pendingOrders.length} pedido(s) em status pendente</p>
           </CardContent>
         </Card>
 
