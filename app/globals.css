@@ -310,23 +310,41 @@
   }
 }
 
-@keyframes heroChipInOut {
+@keyframes heroChipTopInOut {
   0%,
   100% {
-    transform: translateX(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
     opacity: 1;
   }
   50% {
-    transform: translateX(-10px) scale(0.98);
-    opacity: 0.92;
+    transform: translate3d(14px, -8px, 0) scale(0.98);
+    opacity: 0.9;
   }
 }
 
 .hero-chip {
   will-change: transform, opacity;
-  animation: heroChipInOut 3.4s ease-in-out infinite;
+  animation-duration: 3.2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.hero-chip-top {
+  animation-name: heroChipTopInOut;
+}
+
+@keyframes heroChipBottomInOut {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(-14px, 8px, 0) scale(0.98);
+    opacity: 0.9;
+  }
 }
 
 .hero-chip-bottom {
-  animation-delay: 0.45s;
+  animation-name: heroChipBottomInOut;
 }
