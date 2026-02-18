@@ -399,10 +399,10 @@ export async function POST(request: Request) {
           transactionStatus === 'refused';
 
         const failReason =
-          transaction?.gateway_response?.errors?.[0]?.message ||
-          transaction?.acquirer_message ||
           transaction?.status_reason ||
+          transaction?.acquirer_message ||
           charge?.last_transaction?.status_reason ||
+          transaction?.gateway_response?.errors?.[0]?.message ||
           charge?.status ||
           'Pagamento recusado pelo gateway';
 
