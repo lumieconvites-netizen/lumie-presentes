@@ -64,6 +64,28 @@ function readPercent(name: string, fallback: number) {
   return parsed;
 }
 
+function resolveFeePercentages(paymentMethod: 'PIX' | 'CREDIT_CARD') {
+  const defaultPlatformFee = readPercent('PLATFORM_FEE_PERCENTAGE', 11.99);
+  const platformFee =
+    paymentMethod === 'CREDIT_CARD'
+      ? readPercent('PLATFORM_FEE_PERCENTAGE_CREDIT_CARD', defaultPlatformFee)
+      : readPercent('PLATFORM_FEE_PERCENTAGE_PIX', defaultPlatformFee);
+
+  const defaultNetworkFee = readPercent('PLATFORM_NETWORK_FEE_PERCENTAGE', 10.9);
+  const networkFee =
+    paymentMethod === 'CREDIT_CARD'
+      ? readPercent('PLATFORM_NETWORK_FEE_PERCENTAGE_CREDIT_CARD', defaultNetworkFee)
+      : readPercent('PLATFORM_NETWORK_FEE_PERCENTAGE_PIX', defaultNetworkFee);
+
+  const defaultProcessingFee = readPercent('PAGARME_PROCESSING_FEE_PERCENTAGE', 1.09);
+  const processingFee =
+    paymentMethod === 'CREDIT_CARD'
+      ? readPercent('PAGARME_PROCESSING_FEE_PERCENTAGE_CREDIT_CARD', defaultProcessingFee)
+      : readPercent('PAGARME_PROCESSING_FEE_PERCENTAGE_PIX', defaultProcessingFee);
+
+  return { platformFee, networkFee, processingFee };
+}
+
 function roundCents(value: number) {
   return Math.round(value);
 }
@@ -74,9 +96,11 @@ function calculateCommissionSplit(params: {
   acquisitionSource: string;
   hasPartnerRecipient: boolean;
   hasAmbassadorRecipient: boolean;
+  paymentMethod: 'PIX' | 'CREDIT_CARD';
 }) {
-  const processingFeePercentage = readPercent('PAGARME_PROCESSING_FEE_PERCENTAGE', 1.09);
-  const networkFeePercentage = readPercent('PLATFORM_NETWORK_FEE_PERCENTAGE', 10.9);
+  const { processingFee: processingFeePercentage, networkFee: networkFeePercentage } = resolveFeePercentages(
+    params.paymentMethod
+  );
   const partnerFeePercentage = readPercent('PARTNER_COMMISSION_PERCENTAGE', 2);
   const ambassadorFeePercentage = readPercent('AMBASSADOR_COMMISSION_PERCENTAGE', 3);
 
@@ -101,6 +125,7 @@ function calculateCommissionSplit(params: {
     partnerInCents,
     ambassadorInCents,
     splitProfile: {
+      paymentMethod: params.paymentMethod,
       source: params.acquisitionSource,
       partnerEnabled: enablePartner,
       ambassadorEnabled: enableAmbassador,
@@ -192,7 +217,8 @@ export async function POST(request: Request) {
     }
 
     const baseAmount = Number(gift.basePrice) * data.quantity;
-    const calculation = calculateTotal(baseAmount, gift.giftList.feeMode);
+    const { platformFee: platformFeePercentage } = resolveFeePercentages(data.paymentMethod);
+    const calculation = calculateTotal(baseAmount, gift.giftList.feeMode, platformFeePercentage);
 
     const order = await prisma.order.create({
       data: {
@@ -239,6 +265,7 @@ export async function POST(request: Request) {
           acquisitionSource: gift.giftList.user.acquisitionSource,
           hasPartnerRecipient: isRealRecipientId(partnerRecipientId),
           hasAmbassadorRecipient: isRealRecipientId(ambassadorRecipientId),
+          paymentMethod: data.paymentMethod,
         });
 
         const splitRules =

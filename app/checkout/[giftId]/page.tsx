@@ -28,13 +28,17 @@ type GiftResponse = {
   };
 };
 
-const feePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
+const fallbackFeePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
+const feePercentPix = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE_PIX ?? fallbackFeePercent);
+const feePercentCreditCard = Number(
+  process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE_CREDIT_CARD ?? fallbackFeePercent
+);
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function calcTotals(base: number, feeMode: 'PASS_TO_GUEST' | 'ABSORB') {
+function calcTotals(base: number, feeMode: 'PASS_TO_GUEST' | 'ABSORB', feePercent: number) {
   const fee = Number((base * (feePercent / 100)).toFixed(2));
   if (feeMode === 'PASS_TO_GUEST') {
     return {
@@ -131,7 +135,8 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
     return Number(value.toFixed(2));
   }, [giftData?.gift.basePrice, qty]);
 
-  const totals = useMemo(() => calcTotals(baseTotal, feeMode), [baseTotal, feeMode]);
+  const selectedFeePercent = paymentMethod === 'CREDIT_CARD' ? feePercentCreditCard : feePercentPix;
+  const totals = useMemo(() => calcTotals(baseTotal, feeMode, selectedFeePercent), [baseTotal, feeMode, selectedFeePercent]);
 
   async function handleCheckout() {
     if (!giftData) return;
@@ -296,8 +301,8 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
                 <div className="text-2xl font-bold">{formatBRL(gift.basePrice)}</div>
                 <div className="text-xs text-gray-500">
                   {feeMode === 'PASS_TO_GUEST'
-                    ? `Taxa repassada ao convidado (${feePercent}%)`
-                    : `Taxa assumida pelo anfitriao (${feePercent}%)`}
+                    ? `Taxa repassada ao convidado (${selectedFeePercent}%)`
+                    : `Taxa assumida pelo anfitriao (${selectedFeePercent}%)`}
                 </div>
               </div>
             </div>
@@ -402,7 +407,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
               </div>
 
               <div className="flex items-center justify-between text-sm mt-2">
-                <span>Taxa ({feePercent}%)</span>
+                <span>Taxa ({selectedFeePercent}%)</span>
                 <b>{formatBRL(totals.fee)}</b>
               </div>
 
