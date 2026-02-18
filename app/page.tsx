@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
-import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift } from 'lucide-react';
+import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Brush, ShoppingBag, Plane } from 'lucide-react';
 
 const heroSlides = [
   { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
@@ -50,9 +50,9 @@ const features = [
 ];
 
 const showcaseGiftItems = [
-  { id: 1, guest: 'Mariana Costa', title: 'Contribuição em Maquiagem', value: 'R$ 450,00', date: 'Hoje, 10:21' },
-  { id: 2, guest: 'Rafaela Souza', title: 'Contribuição em Lojas', value: 'R$ 500,00', date: 'Hoje, 09:48' },
-  { id: 3, guest: 'Camila Santos', title: 'Contribuição em Viagens', value: 'R$ 300,00', date: 'Ontem, 18:12' },
+  { id: 1, title: 'Maquiagem', value: 'R$ 450,00', icon: 'makeup' },
+  { id: 2, title: 'Lojas', value: 'R$ 500,00', icon: 'store' },
+  { id: 3, title: 'Viagens', value: 'R$ 300,00', icon: 'travel' },
 ];
 
 export default function HomePage() {
@@ -224,16 +224,20 @@ export default function HomePage() {
                       className="gift-check-row flex items-center justify-between rounded-xl border border-[#f0e1d7] bg-[#fdfaf7] px-3 py-3"
                       style={{ animationDelay: `${index * 120}ms` }}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl">{item.emoji}</span>
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-[#f8e7dd] text-[#b05134] inline-flex items-center justify-center">
+                          {item.icon === 'makeup' && <Brush className="w-5 h-5" />}
+                          {item.icon === 'store' && <ShoppingBag className="w-5 h-5" />}
+                          {item.icon === 'travel' && <Plane className="w-5 h-5" />}
+                        </div>
                         <div>
                           <p className="font-semibold text-[#3d2f29] leading-tight">{item.title}</p>
                           <p className="text-[#b05134] text-sm font-semibold">{item.value}</p>
                         </div>
-                      </div>
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                     </div>
-                  ))}
+                      <div className="h-8 w-8 rounded-lg bg-[#b05134]" />
+                  </div>
+                ))}
                 </div>
 
                 <div className="mt-4 rounded-2xl bg-gradient-to-r from-[#1fbf83] to-[#37d998] p-5 text-white shadow-sm">
