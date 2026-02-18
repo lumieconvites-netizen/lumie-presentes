@@ -58,6 +58,9 @@ export async function PATCH(req: Request) {
     if (typeof body?.isPublished === "boolean") data.isPublished = body.isPublished;
     if (typeof body?.title === "string") data.title = body.title.trim() || "Minha Lista de Presentes";
     if (typeof body?.description === "string") data.description = body.description.trim() || null;
+    if (body?.feeMode === "PASS_TO_GUEST" || body?.feeMode === "ABSORB") {
+      data.feeMode = body.feeMode;
+    }
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json({ error: "Nenhum campo valido para atualizar" }, { status: 400 });

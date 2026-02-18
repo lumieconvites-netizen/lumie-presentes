@@ -29,6 +29,7 @@ export default function ConfiguracoesPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [savingFeeMode, setSavingFeeMode] = useState(false);
 
   // Sempre que session atualizar, sincroniza a UI
   useEffect(() => {
@@ -36,6 +37,55 @@ export default function ConfiguracoesPage() {
     if (sessionName) setName(sessionName);
     if (sessionEmail) setEmail(sessionEmail);
   }, [sessionImage, sessionName, sessionEmail]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/gift-lists/my-list', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        updateSettings({ feePassedToGuest: data?.feeMode === 'PASS_TO_GUEST' });
+      } catch {
+        // sem bloqueio de tela em caso de falha de leitura
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleFeeModeToggle = async (checked: boolean) => {
+    const previous = settings.feePassedToGuest;
+    updateSettings({ feePassedToGuest: checked });
+    setSavingFeeMode(true);
+
+    try {
+      const res = await fetch('/api/gift-lists/my-list', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          feeMode: checked ? 'PASS_TO_GUEST' : 'ABSORB',
+        }),
+      });
+
+      if (!res.ok) {
+        updateSettings({ feePassedToGuest: previous });
+        const data = await res.json().catch(() => ({}));
+        alert(data?.error ?? 'Nao foi possivel salvar a configuracao de taxa.');
+        return;
+      }
+    } catch {
+      updateSettings({ feePassedToGuest: previous });
+      alert('Erro ao salvar configuracao de taxa.');
+    } finally {
+      setSavingFeeMode(false);
+    }
+  };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -293,7 +343,8 @@ export default function ConfiguracoesPage() {
 
                   <Switch
                     checked={settings.feePassedToGuest}
-                    onCheckedChange={(checked) => updateSettings({ feePassedToGuest: checked })}
+                    onCheckedChange={handleFeeModeToggle}
+                    disabled={savingFeeMode}
                   />
                 </div>
 
