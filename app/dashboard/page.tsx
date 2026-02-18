@@ -130,8 +130,8 @@ export default function DashboardPage() {
   const totalPending = pendingOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
   const recentPayments = paidOrders.slice(0, 6);
   const recentMessages = messages.slice(0, 5);
-  const availableNow = Math.max(0, Number(financial?.available ?? 0));
-  const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0));
+  const availableNow = Math.max(0, Number(financial?.available ?? 0)) / 100;
+  const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0)) / 100;
   const pendingTransferCount = Math.max(0, Number(financial?.pendingTransferCount ?? 0));
 
   const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
