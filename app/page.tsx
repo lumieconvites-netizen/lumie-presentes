@@ -7,10 +7,9 @@ import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, Cr
 const heroSlides = [
   { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
   { src: '/hero-slides/15-anos-02.jpg', alt: 'Festa de 15 anos 2' },
-  { src: '/hero-slides/15-anos-03.jpg', alt: 'Festa de 15 anos 3' },
   { src: '/hero-slides/casamento-01.jpg', alt: 'Casamento 1' },
-  { src: '/hero-slides/casamento-02.jpg', alt: 'Casamento 2' },
   { src: '/hero-slides/aniversario-menina-01.jpg', alt: 'Aniversario de menina' },
+  { src: '/hero-slides/casamento-02.jpg', alt: 'Casamento 2' },
   { src: '/hero-slides/aniversario-menino-01.jpg', alt: 'Aniversario de menino' },
 ];
 
@@ -129,7 +128,10 @@ export default function HomePage() {
                     fill
                     priority={index === 0}
                     className="hero-slide object-cover"
-                    style={{ animationDelay: `${index * 3}s` }}
+                    style={{
+                      animationDelay: `${index * 3}s`,
+                      animationDuration: `${heroSlides.length * 3}s`,
+                    }}
                   />
                 ))}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
