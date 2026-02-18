@@ -211,8 +211,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="relative mock-tilt rounded-[2rem] border border-[#e5d1c3] bg-gradient-to-b from-white to-[#f8f1ea] shadow-xl overflow-hidden">
-              <div className="absolute -top-5 -right-8 z-30 rounded-xl bg-white/95 backdrop-blur px-3 py-2 border border-[#ecdccf] shadow-md text-xs note-chip-float">
+            <div className="relative mock-tilt rounded-[2rem] border border-[#e5d1c3] bg-gradient-to-b from-white to-[#f8f1ea] shadow-xl overflow-visible">
+              <div className="absolute -top-10 right-6 z-40 rounded-xl bg-white/95 backdrop-blur px-3 py-2 border border-[#ecdccf] shadow-md text-xs note-chip-float">
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-[#3d2f29]">{showcaseReceived.name} presenteou você!</p>
                   <span className="text-[#c65a3a]">❤</span>
@@ -220,6 +220,7 @@ export default function HomePage() {
                 <p className="text-[#9a6a55]">{showcaseReceived.value}</p>
               </div>
               <div className="absolute -top-16 -right-10 h-40 w-40 rounded-full bg-[#c65a3a]/10 blur-3xl" />
+              <div className="rounded-[2rem] overflow-hidden">
               <div className="bg-gradient-to-r from-[#8e3d2c] to-[#c65a3a] text-white px-7 py-7">
                 <h4 className="font-display text-4xl">Lista de Presentes</h4>
                 <p className="text-sm text-white/90 mt-1">Mock de visual elegante da sua página</p>
@@ -234,7 +235,6 @@ export default function HomePage() {
                       style={{ animationDelay: `${index * 120}ms` }}
                     >
                     <div className="flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                         <div className="h-10 w-10 rounded-xl bg-[#f8e7dd] text-[#b05134] inline-flex items-center justify-center">
                           {item.icon === 'makeup' && <Brush className="w-5 h-5" />}
                           {item.icon === 'store' && <ShoppingBag className="w-5 h-5" />}
@@ -245,7 +245,9 @@ export default function HomePage() {
                           <p className="text-[#b05134] text-sm font-semibold">{item.value}</p>
                         </div>
                     </div>
-                      <div className="h-8 w-8 rounded-lg bg-[#b05134]" />
+                      <div className="h-8 w-8 rounded-lg bg-emerald-500 text-white inline-flex items-center justify-center">
+                        <CheckCircle2 className="w-5 h-5" />
+                      </div>
                   </div>
                 ))}
                 </div>
@@ -263,6 +265,7 @@ export default function HomePage() {
                     Ver modelos
                   </Link>
                 </div>
+              </div>
               </div>
             </div>
           </div>
