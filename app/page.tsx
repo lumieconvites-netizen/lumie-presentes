@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
-import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard } from 'lucide-react';
+import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift } from 'lucide-react';
 
 const heroSlides = [
   { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
@@ -47,6 +47,12 @@ const features = [
     text: 'Editor por blocos, temas personalizados, checkout PIX e gestão completa.',
     icon: Sparkles,
   },
+];
+
+const showcaseGiftItems = [
+  { emoji: '💄', title: 'Maquiagem', value: 'R$ 450,00' },
+  { emoji: '🛍️', title: 'Lojas', value: 'R$ 500,00' },
+  { emoji: '✈️', title: 'Viagens', value: 'R$ 300,00' },
 ];
 
 export default function HomePage() {
@@ -160,6 +166,78 @@ export default function HomePage() {
             <p className="mt-10 text-xs md:text-sm tracking-[0.24em] uppercase text-[#9f6a53]">
               recursos exclusivos • elegância • praticidade
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 bg-[#fbf8f5]">
+        <div className="container mx-auto px-6">
+          <div className="text-center max-w-4xl mx-auto">
+            <h2 className="font-display text-4xl md:text-6xl text-foreground leading-tight">
+              A solução completa para o seu evento
+            </h2>
+            <p className="mt-5 text-lg md:text-2xl text-muted-foreground">
+              Site personalizado, lista em dinheiro e confirmação de presença:
+              tudo o que você precisa para o grande dia, em um só lugar.
+            </p>
+          </div>
+
+          <div className="mt-16 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div>
+              <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-terracota-500 to-terracota-700 text-white shadow-lg">
+                <Gift className="w-9 h-9" />
+              </div>
+
+              <h3 className="mt-8 font-display text-4xl text-foreground">A melhor Lista de Presentes</h3>
+              <p className="mt-5 text-xl text-muted-foreground leading-relaxed max-w-xl">
+                Crie listas personalizadas e receba contribuições de forma rápida, elegante e segura.
+              </p>
+
+              <div className="mt-8 space-y-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
+                  <p className="text-lg text-[#4f3f37]">Categorias personalizadas para o estilo do seu evento.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
+                  <p className="text-lg text-[#4f3f37]">Tudo convertido em dinheiro, com praticidade para você.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
+                  <p className="text-lg text-[#4f3f37]">Experiência premium para encantar cada convidado.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-[#ead9cd] bg-white shadow-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-terracota-600 to-terracota-700 text-white px-7 py-7">
+                <h4 className="font-display text-4xl">Lista de Presentes</h4>
+                <p className="text-sm text-white/90 mt-1">Receba em dinheiro na hora</p>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {showcaseGiftItems.map((item) => (
+                  <div
+                    key={item.title}
+                    className="rounded-2xl border border-[#ead9cd] bg-[#fcfaf8] px-4 py-3 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{item.emoji}</span>
+                      <div>
+                        <p className="font-semibold text-[#3d2f29]">{item.title}</p>
+                        <p className="text-[#b05134] font-semibold">{item.value}</p>
+                      </div>
+                    </div>
+                    <div className="h-8 w-8 rounded-lg bg-terracota-600" />
+                  </div>
+                ))}
+
+                <div className="rounded-2xl bg-gradient-to-r from-[#20b77c] to-[#30d88f] p-5 text-white">
+                  <p className="text-sm opacity-95">Convertido em dinheiro</p>
+                  <p className="text-4xl font-bold mt-1">R$ 1.250,00</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
