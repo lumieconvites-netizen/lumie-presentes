@@ -1,6 +1,15 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BadgeDollarSign, BarChart3, Rocket, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import {
+  ArrowRight,
+  BadgeDollarSign,
+  BarChart3,
+  Rocket,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  XCircle,
+} from 'lucide-react';
 
 const averageGiftsPerClient = 25;
 const averageGiftValue = 100;
@@ -19,6 +28,13 @@ const revenueExamples = clientsProjection.map((clientes) => {
     comissao,
   };
 });
+
+const noComplexityItems = [
+  'Sem investir em sites caros.',
+  'Sem lidar com plataformas complexas.',
+  'Sem arcar com custos de operação.',
+  'Sem equipe, suporte ou dor de cabeça.',
+];
 
 export default function SejaParceiroPage() {
   return (
@@ -111,10 +127,15 @@ export default function SejaParceiroPage() {
                 <span className="inline-flex items-center rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs tracking-wide text-white/90 mb-4">
                   SEM COMPLICAÇÃO
                 </span>
-                <p className="text-white text-lg mb-3">🚫 Sem investir em sites caros.</p>
-                <p className="text-white text-lg mb-3">🚫 Sem lidar com plataformas complexas.</p>
-                <p className="text-white text-lg mb-3">🚫 Sem arcar com custos de operação.</p>
-                <p className="text-white text-lg">🚫 Sem equipe, suporte ou dor de cabeça.</p>
+                <h3 className="font-display text-2xl text-white mb-4">Operação leve para seu dia a dia</h3>
+                <div className="space-y-3">
+                  {noComplexityItems.map((item) => (
+                    <p key={item} className="text-white text-lg flex items-start gap-2">
+                      <XCircle className="w-5 h-5 mt-1 text-white/95 shrink-0" />
+                      <span>{item}</span>
+                    </p>
+                  ))}
+                </div>
               </div>
             </div>
 
