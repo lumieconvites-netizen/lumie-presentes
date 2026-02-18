@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
-import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Check } from 'lucide-react';
+import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift } from 'lucide-react';
 
 const heroSlides = [
   { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
@@ -50,9 +50,9 @@ const features = [
 ];
 
 const showcaseGiftItems = [
-  { id: 1, emoji: '💄', title: 'Maquiagem', value: 'R$ 450,00' },
-  { id: 2, emoji: '🛍️', title: 'Lojas', value: 'R$ 500,00' },
-  { id: 3, emoji: '✈️', title: 'Viagens', value: 'R$ 300,00' },
+  { id: 1, guest: 'Mariana Costa', title: 'Contribuição em Maquiagem', value: 'R$ 450,00', date: 'Hoje, 10:21' },
+  { id: 2, guest: 'Rafaela Souza', title: 'Contribuição em Lojas', value: 'R$ 500,00', date: 'Hoje, 09:48' },
+  { id: 3, guest: 'Camila Santos', title: 'Contribuição em Viagens', value: 'R$ 300,00', date: 'Ontem, 18:12' },
 ];
 
 export default function HomePage() {
@@ -209,38 +209,54 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-[#ead9cd] bg-gradient-to-b from-white to-[#fbf6f1] shadow-xl overflow-hidden relative">
-              <div className="absolute top-4 right-4 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1">
-                Lista ativa
-              </div>
+            <div className="rounded-[2rem] border border-[#ead9cd] bg-gradient-to-b from-white to-[#f9f3ed] shadow-xl overflow-hidden relative">
               <div className="bg-gradient-to-r from-[#9f3f24] to-[#c65a3a] text-white px-7 py-7">
-                <h4 className="font-display text-4xl">Painel da Lista</h4>
-                <p className="text-sm text-white/90 mt-1">Acompanhe os presentes em tempo real</p>
+                <h4 className="font-display text-4xl">Presentes recebidos</h4>
+                <p className="text-sm text-white/90 mt-1">Visão do seu dashboard em tempo real</p>
               </div>
 
               <div className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-[#ead9cd] bg-white p-3">
+                    <p className="text-xs uppercase tracking-wide text-[#9b6b55]">Total arrecadado</p>
+                    <p className="text-2xl font-bold text-[#3d2f29] mt-1">R$ 1.250,00</p>
+                  </div>
+                  <div className="rounded-xl border border-[#ead9cd] bg-white p-3">
+                    <p className="text-xs uppercase tracking-wide text-[#9b6b55]">Pendentes</p>
+                    <p className="text-2xl font-bold text-[#3d2f29] mt-1">2 pagamentos</p>
+                  </div>
+                </div>
+
                 {showcaseGiftItems.map((item, index) => (
                   <div
                     key={item.title}
                     className="gift-check-row rounded-2xl border border-[#ead9cd] bg-white px-4 py-3 flex items-center justify-between"
                     style={{ animationDelay: `${index * 120}ms` }}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{item.emoji}</span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#f1d8c8] to-[#e7c0a9] text-[#8e3d2c] inline-flex items-center justify-center font-semibold">
+                        {item.guest.charAt(0)}
+                      </div>
                       <div>
-                        <p className="font-semibold text-[#3d2f29]">{item.title}</p>
-                        <p className="text-[#b05134] font-semibold">{item.value}</p>
+                        <p className="font-semibold text-[#3d2f29] truncate">{item.guest}</p>
+                        <p className="text-sm text-muted-foreground truncate">{item.title}</p>
                       </div>
                     </div>
-                    <div className="h-8 w-8 rounded-full bg-emerald-500 text-white inline-flex items-center justify-center shadow-sm">
-                      <Check className="w-4 h-4" />
+                    <div className="text-right">
+                        <p className="text-[#b05134] font-semibold">{item.value}</p>
+                        <p className="text-xs text-muted-foreground">{item.date}</p>
                     </div>
                   </div>
                 ))}
 
-                <div className="rounded-2xl bg-gradient-to-r from-[#20b77c] to-[#30d88f] p-5 text-white">
-                  <p className="text-sm opacity-95">Convertido em dinheiro</p>
-                  <p className="text-4xl font-bold mt-1">R$ 1.250,00</p>
+                <div className="rounded-2xl bg-gradient-to-r from-[#20b77c] to-[#30d88f] p-4 text-white flex items-center justify-between">
+                  <div>
+                    <p className="text-sm opacity-95">Status da lista</p>
+                    <p className="text-xl font-bold mt-1">Ativa e recebendo</p>
+                  </div>
+                  <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
+                    Online
+                  </span>
                 </div>
 
                 <div className="h-2 rounded-full bg-[#ead9cd] overflow-hidden">
