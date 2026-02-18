@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
-import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard } from 'lucide-react';
+import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, Wallet, Globe, CheckCircle2 } from 'lucide-react';
 
 const heroSlides = [
   { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
@@ -46,6 +46,24 @@ const features = [
     title: 'Muito Mais',
     text: 'Editor por blocos, temas personalizados, checkout PIX e gestão completa.',
     icon: Sparkles,
+  },
+];
+
+const homeHighlights = [
+  {
+    title: 'Site exclusivo para sua festa',
+    text: 'Página personalizada com visual elegante, moderna e pronta para encantar seus convidados.',
+    icon: Globe,
+  },
+  {
+    title: 'Presentes em dinheiro na sua conta',
+    text: 'Seus convidados presenteiam online e você recebe os valores com praticidade e segurança.',
+    icon: Wallet,
+  },
+  {
+    title: 'Tudo em um só lugar',
+    text: 'RSVP, recados, álbum de fotos e gestão completa da sua lista em um único painel.',
+    icon: CheckCircle2,
   },
 ];
 
@@ -137,6 +155,48 @@ export default function HomePage() {
                 ))}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="rounded-3xl border border-[#ead9cd] bg-gradient-to-br from-[#fffaf7] to-[#f7efe8] p-8 md:p-12 shadow-sm">
+            <div className="max-w-4xl">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#e4cbbb] bg-white/80 px-4 py-2 text-sm text-[#8e3d2c]">
+                <Sparkles className="h-4 w-4" />
+                Experiência completa Lumiê
+              </span>
+              <h2 className="mt-5 font-display text-4xl md:text-5xl font-bold text-foreground leading-tight">
+                Já imaginou ter um site exclusivo para sua festa?
+              </h2>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Na Lumiê, você pode ter tudo isso de forma gratuita: receber presentes convertidos em dinheiro,
+                confirmar presença dos convidados, criar álbum de fotos, receber recados e muito mais. Tudo com
+                uma experiência profissional, bonita e fácil de usar.
+              </p>
+            </div>
+
+            <div className="mt-8 grid md:grid-cols-3 gap-4">
+              {homeHighlights.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="rounded-2xl bg-white border border-[#ead9cd] p-5">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#ffe5d9] text-[#c65a3a] mb-3">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <h3 className="font-semibold text-foreground">{item.title}</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{item.text}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-8">
+              <Button asChild size="lg" className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm rounded-xl px-8">
+                <Link href="/cadastro">Criar Minha Lista Grátis</Link>
+              </Button>
             </div>
           </div>
         </div>
