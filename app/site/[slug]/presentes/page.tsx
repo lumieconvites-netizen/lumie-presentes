@@ -7,6 +7,14 @@ function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+const fallbackFeePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
+const feePercentPix = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE_PIX ?? fallbackFeePercent);
+
+function calculateDisplayPrice(basePrice: number, feeMode: "PASS_TO_GUEST" | "ABSORB") {
+  if (feeMode !== "PASS_TO_GUEST") return basePrice;
+  return Number((basePrice * (1 + feePercentPix / 100)).toFixed(2));
+}
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -57,6 +65,7 @@ export default async function SiteGiftsBySlugPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {list.gifts.map((gift) => {
               const soldOut = gift.availableQty <= 0;
+              const displayPrice = calculateDisplayPrice(Number(gift.basePrice || 0), list.feeMode);
               return (
                 <article key={gift.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                   <div className="h-52 bg-gray-100">
@@ -71,7 +80,7 @@ export default async function SiteGiftsBySlugPage({
                     <div className="flex items-center justify-between mt-5">
                       <div>
                         <p className="text-2xl font-bold" style={{ color: primaryColor }}>
-                          {formatBRL(Number(gift.basePrice || 0))}
+                          {formatBRL(displayPrice)}
                         </p>
                         <p className="text-xs text-gray-500">
                           Disponivel: {gift.availableQty} de {gift.totalQuantity}

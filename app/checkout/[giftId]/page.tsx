@@ -137,6 +137,10 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
 
   const selectedFeePercent = paymentMethod === 'CREDIT_CARD' ? feePercentCreditCard : feePercentPix;
   const totals = useMemo(() => calcTotals(baseTotal, feeMode, selectedFeePercent), [baseTotal, feeMode, selectedFeePercent]);
+  const displayUnitPrice = useMemo(() => {
+    const single = calcTotals(Number(giftData?.gift.basePrice ?? 0), feeMode, selectedFeePercent);
+    return single.total;
+  }, [giftData?.gift.basePrice, feeMode, selectedFeePercent]);
 
   async function handleCheckout() {
     if (!giftData) return;
@@ -298,12 +302,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
               </div>
 
               <div className="mt-4">
-                <div className="text-2xl font-bold">{formatBRL(gift.basePrice)}</div>
-                <div className="text-xs text-gray-500">
-                  {feeMode === 'PASS_TO_GUEST'
-                    ? `Taxa repassada ao convidado (${selectedFeePercent}%)`
-                    : `Taxa assumida pelo anfitriao (${selectedFeePercent}%)`}
-                </div>
+                <div className="text-2xl font-bold">{formatBRL(displayUnitPrice)}</div>
               </div>
             </div>
           </Card>
@@ -403,12 +402,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
             <div className="mt-6 rounded-lg border bg-white p-4">
               <div className="flex items-center justify-between text-sm">
                 <span>Subtotal</span>
-                <b>{formatBRL(totals.base)}</b>
-              </div>
-
-              <div className="flex items-center justify-between text-sm mt-2">
-                <span>Taxa ({selectedFeePercent}%)</span>
-                <b>{formatBRL(totals.fee)}</b>
+                <b>{formatBRL(totals.total)}</b>
               </div>
 
               <div className="flex items-center justify-between text-base mt-3 pt-3 border-t">
