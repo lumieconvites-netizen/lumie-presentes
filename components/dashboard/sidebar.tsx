@@ -42,8 +42,10 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              'flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors',
-              isActive ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'
+              'flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all',
+              isActive
+                ? 'bg-gradient-to-r from-terracota-500 to-terracota-700 text-white shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100'
             )}
           >
             <Icon className="w-5 h-5" />

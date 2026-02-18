@@ -272,6 +272,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       </p>
                       <Button
                         size="lg"
+                        className="transition-all duration-200 hover:brightness-110 hover:saturate-125"
                         style={{ backgroundColor: config.buttonBgColor || primaryColor, color: config.buttonTextColor || '#FFFFFF' }}
                         asChild
                       >
