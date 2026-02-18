@@ -209,58 +209,45 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-[#ead9cd] bg-gradient-to-b from-white to-[#f9f3ed] shadow-xl overflow-hidden relative">
-              <div className="bg-gradient-to-r from-[#9f3f24] to-[#c65a3a] text-white px-7 py-7">
-                <h4 className="font-display text-4xl">Presentes recebidos</h4>
-                <p className="text-sm text-white/90 mt-1">Visão do seu dashboard em tempo real</p>
+            <div className="relative rounded-[2rem] border border-[#e5d1c3] bg-gradient-to-b from-white to-[#f8f1ea] shadow-xl overflow-hidden">
+              <div className="absolute -top-16 -right-10 h-40 w-40 rounded-full bg-[#c65a3a]/10 blur-3xl" />
+              <div className="bg-gradient-to-r from-[#8e3d2c] to-[#c65a3a] text-white px-7 py-7">
+                <h4 className="font-display text-4xl">Lista de Presentes</h4>
+                <p className="text-sm text-white/90 mt-1">Mock de visual elegante da sua página</p>
               </div>
 
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-[#ead9cd] bg-white p-3">
-                    <p className="text-xs uppercase tracking-wide text-[#9b6b55]">Total arrecadado</p>
-                    <p className="text-2xl font-bold text-[#3d2f29] mt-1">R$ 1.250,00</p>
-                  </div>
-                  <div className="rounded-xl border border-[#ead9cd] bg-white p-3">
-                    <p className="text-xs uppercase tracking-wide text-[#9b6b55]">Pendentes</p>
-                    <p className="text-2xl font-bold text-[#3d2f29] mt-1">2 pagamentos</p>
-                  </div>
+              <div className="p-6">
+                <div className="rounded-2xl border border-[#ead9cd] bg-white p-4 space-y-3 shadow-sm">
+                  {showcaseGiftItems.map((item, index) => (
+                    <div
+                      key={item.id}
+                      className="gift-check-row flex items-center justify-between rounded-xl border border-[#f0e1d7] bg-[#fdfaf7] px-3 py-3"
+                      style={{ animationDelay: `${index * 120}ms` }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{item.emoji}</span>
+                        <div>
+                          <p className="font-semibold text-[#3d2f29] leading-tight">{item.title}</p>
+                          <p className="text-[#b05134] text-sm font-semibold">{item.value}</p>
+                        </div>
+                      </div>
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    </div>
+                  ))}
                 </div>
 
-                {showcaseGiftItems.map((item, index) => (
-                  <div
-                    key={item.title}
-                    className="gift-check-row rounded-2xl border border-[#ead9cd] bg-white px-4 py-3 flex items-center justify-between"
-                    style={{ animationDelay: `${index * 120}ms` }}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#f1d8c8] to-[#e7c0a9] text-[#8e3d2c] inline-flex items-center justify-center font-semibold">
-                        {item.guest.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[#3d2f29] truncate">{item.guest}</p>
-                        <p className="text-sm text-muted-foreground truncate">{item.title}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-[#b05134] font-semibold">{item.value}</p>
-                        <p className="text-xs text-muted-foreground">{item.date}</p>
-                    </div>
-                  </div>
-                ))}
-
-                <div className="rounded-2xl bg-gradient-to-r from-[#20b77c] to-[#30d88f] p-4 text-white flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-95">Status da lista</p>
-                    <p className="text-xl font-bold mt-1">Ativa e recebendo</p>
-                  </div>
-                  <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
-                    Online
-                  </span>
+                <div className="mt-4 rounded-2xl bg-gradient-to-r from-[#1fbf83] to-[#37d998] p-5 text-white shadow-sm">
+                  <p className="text-sm opacity-95">Total convertido em dinheiro</p>
+                  <p className="text-4xl font-bold mt-1">R$ 1.250,00</p>
                 </div>
 
-                <div className="h-2 rounded-full bg-[#ead9cd] overflow-hidden">
-                  <div className="h-full w-[78%] bg-gradient-to-r from-terracota-500 to-terracota-700 rounded-full" />
+                <div className="mt-5 flex gap-3">
+                  <div className="flex-1 rounded-xl bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white text-center py-3 font-semibold">
+                    Criar lista
+                  </div>
+                  <div className="flex-1 rounded-xl border border-[#d7b7a3] bg-white text-[#8e3d2c] text-center py-3 font-semibold">
+                    Ver opções
+                  </div>
                 </div>
               </div>
             </div>
