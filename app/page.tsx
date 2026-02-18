@@ -142,48 +142,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="relative py-28 bg-gradient-to-b from-[#f7efe7] via-[#f3e5d8] to-[#f7efe7] overflow-hidden">
-        <div className="pointer-events-none absolute -top-16 left-12 h-44 w-44 rounded-full bg-[#c65a3a]/10 blur-3xl" />
-        <div className="pointer-events-none absolute top-24 right-20 h-36 w-36 rounded-full bg-[#8e3d2c]/10 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-10 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-[#c65a3a]/8 blur-3xl" />
+      <section className="relative py-28 bg-[#f5ebe2] overflow-hidden">
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#c65a3a]/10 blur-3xl" />
 
         <div className="container mx-auto px-6">
-          <div className="max-w-5xl mx-auto text-center">
-            <h2 className="font-display text-4xl md:text-6xl leading-[1.05] text-foreground">
-              Crie o site do seu evento gratuitamente
-              <span className="block text-primary">e viva tudo em um só lugar.</span>
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="font-display text-5xl md:text-7xl leading-[1.02] text-foreground">
+              Crie o site do seu evento
+              <span className="block text-primary">gratuitamente.</span>
             </h2>
 
-            <p className="mt-8 text-lg md:text-2xl text-[#5e4b41] leading-relaxed max-w-4xl mx-auto">
-              A Lumiê reúne sofisticação e praticidade para quem quer celebrar com elegância.
-              Você centraliza toda a experiência do evento em uma plataforma bonita, intuitiva e profissional.
+            <p className="mt-8 text-lg md:text-2xl text-[#5b473e] leading-relaxed">
+              Presentes em dinheiro, confirmação de presença, álbum de fotos e recados,
+              com uma experiência premium para você e seus convidados.
             </p>
-          </div>
 
-          <div className="mt-14 max-w-5xl mx-auto grid md:grid-cols-2 gap-12">
-            <div className="border-l border-[#d9bca9] pl-6 space-y-4">
-              <p className="text-lg text-[#4f3f37] leading-relaxed">
-                Presentes convertidos em dinheiro, direto na sua conta.
-              </p>
-              <p className="text-lg text-[#4f3f37] leading-relaxed">
-                Confirmação de presença simples para você acompanhar cada convidado.
-              </p>
-              <p className="text-lg text-[#4f3f37] leading-relaxed">
-                Álbum de fotos e recados para registrar cada detalhe da celebração.
-              </p>
-            </div>
-
-            <div className="border-l border-[#d9bca9] pl-6 space-y-4">
-              <p className="text-lg text-[#4f3f37] leading-relaxed">
-                Página exclusiva com identidade do seu evento.
-              </p>
-              <p className="text-lg text-[#4f3f37] leading-relaxed">
-                Gestão completa, sem complexidade e sem custos para começar.
-              </p>
-              <p className="text-lg text-[#4f3f37] leading-relaxed">
-                Uma experiência premium para você e inesquecível para seus convidados.
-              </p>
-            </div>
+            <p className="mt-10 text-xs md:text-sm tracking-[0.24em] uppercase text-[#9f6a53]">
+              exclusivo • elegante • simples • completo
+            </p>
           </div>
         </div>
       </section>
