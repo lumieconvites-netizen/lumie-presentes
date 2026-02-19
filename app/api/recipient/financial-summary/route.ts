@@ -33,6 +33,7 @@ export async function GET() {
             waitingFunds: 0,
             pendingTransferAmount: 0,
             pendingTransferCount: 0,
+            completedTransferAmount: 0,
             latestPendingTransfer: null,
           },
         },
@@ -57,4 +58,3 @@ export async function GET() {
     );
   }
 }
-

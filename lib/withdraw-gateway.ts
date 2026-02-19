@@ -1,4 +1,4 @@
-import { createRecipientTransfer, getRecipientBalanceSummary } from "@/lib/pagarme";
+import { createRecipientTransfer, getRecipientBalanceSummary, listRecipientTransfers } from "@/lib/pagarme";
 
 type CreateTransferInput = {
   recipientId: string;
@@ -70,6 +70,7 @@ type RecipientFinancialSummary = {
   waitingFunds: number;
   pendingTransferAmount: number;
   pendingTransferCount: number;
+  completedTransferAmount: number;
   latestPendingTransfer: {
     id: string | null;
     status: string | null;
@@ -77,6 +78,37 @@ type RecipientFinancialSummary = {
     createdAt: string | null;
   } | null;
 };
+
+function readAmount(input: any): number {
+  if (Array.isArray(input)) return input.reduce((acc, item) => acc + readAmount(item), 0);
+  if (typeof input === "number" && Number.isFinite(input)) return input;
+  if (typeof input === "string") {
+    const parsed = Number(input);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  if (input && typeof input === "object" && "amount" in input) {
+    return readAmount((input as any).amount);
+  }
+  return 0;
+}
+
+function isPendingTransferStatus(status?: string | null): boolean {
+  const s = String(status ?? "").toLowerCase();
+  return [
+    "pending",
+    "processing",
+    "created",
+    "scheduled",
+    "waiting_transfer",
+    "pending_transfer",
+    "requested",
+  ].includes(s);
+}
+
+function isFailedTransferStatus(status?: string | null): boolean {
+  const s = String(status ?? "").toLowerCase();
+  return ["failed", "canceled", "cancelled", "error", "refused", "rejected", "reversed"].includes(s);
+}
 
 async function getSummaryViaGateway(recipientId: string): Promise<RecipientFinancialSummary> {
   const { baseUrl, token } = readGatewayConfig();
@@ -120,7 +152,26 @@ export async function getRecipientFinancialSummaryWithGateway(
 ): Promise<RecipientFinancialSummary> {
   const { baseUrl } = readGatewayConfig();
   if (baseUrl) {
-    return getSummaryViaGateway(recipientId);
+    const summary = await getSummaryViaGateway(recipientId);
+    try {
+      const transfers = await listRecipientTransfers(recipientId);
+      const completedTransferAmount = transfers
+        .filter((transfer) => {
+          const status = String(transfer?.status ?? "");
+          return !isPendingTransferStatus(status) && !isFailedTransferStatus(status);
+        })
+        .reduce((sum, transfer) => sum + readAmount(transfer?.amount), 0);
+
+      return {
+        ...summary,
+        completedTransferAmount,
+      };
+    } catch {
+      return {
+        ...summary,
+        completedTransferAmount: 0,
+      };
+    }
   }
 
   const { available, waitingFunds } = await getRecipientBalanceSummary(recipientId);
@@ -129,6 +180,7 @@ export async function getRecipientFinancialSummaryWithGateway(
     waitingFunds,
     pendingTransferAmount: 0,
     pendingTransferCount: 0,
+    completedTransferAmount: 0,
     latestPendingTransfer: null,
   };
 }

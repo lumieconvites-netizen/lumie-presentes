@@ -64,6 +64,7 @@ type FinancialSummary = {
   waitingFunds: number;
   pendingTransferAmount: number;
   pendingTransferCount: number;
+  completedTransferAmount: number;
   latestPendingTransfer: {
     id: string | null;
     status: string | null;
@@ -136,7 +137,8 @@ export default function DashboardPage() {
   const waitingFunds = Math.max(0, Number(financial?.waitingFunds ?? 0)) / 100;
   const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0)) / 100;
   const pendingTransferCount = Math.max(0, Number(financial?.pendingTransferCount ?? 0));
-  const collectedTotal = Math.max(0, totalPaid);
+  const completedTransferAmount = Math.max(0, Number(financial?.completedTransferAmount ?? 0)) / 100;
+  const collectedTotal = availableNow + completedTransferAmount;
 
   const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
   const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);
@@ -229,7 +231,7 @@ export default function DashboardPage() {
             <div className="text-2xl font-bold text-foreground">
               {collectedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Total recebido em pagamentos confirmados</p>
+            <p className="text-xs text-gray-500 mt-1">Saldo atual + saques concluidos</p>
             <p className="text-xs text-gray-500">Saldo atual: {availableNow.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
           </CardContent>
         </Card>

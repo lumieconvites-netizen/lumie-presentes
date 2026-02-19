@@ -133,6 +133,12 @@ type PagarmeRecipientBalance = {
   waiting_funds_amount?: number;
 };
 
+type PagarmeTransferListResponse = {
+  data?: any[];
+  transfers?: any[];
+  items?: any[];
+};
+
 function readAmount(input: any): number {
   if (Array.isArray(input)) {
     return input.reduce((acc, item) => acc + readAmount(item), 0);
@@ -174,6 +180,20 @@ export async function getRecipientBalanceSummary(recipientId: string): Promise<{
 export async function getRecipientAvailableBalance(recipientId: string): Promise<number> {
   const summary = await getRecipientBalanceSummary(recipientId);
   return summary.available;
+}
+
+export async function listRecipientTransfers(recipientId: string): Promise<any[]> {
+  const encodedId = encodeURIComponent(recipientId);
+  const payload = await pagarmeFetch<PagarmeTransferListResponse>(
+    `/transfers?recipient_id=${encodedId}&page=1&size=100`,
+    { method: "GET" }
+  );
+
+  if (Array.isArray(payload)) return payload as any[];
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.transfers)) return payload.transfers;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
 }
 
 type CreateTransferInput = {
