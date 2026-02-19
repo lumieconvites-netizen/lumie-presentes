@@ -415,7 +415,7 @@
   stroke-width: 1.1;
   stroke-linecap: round;
   stroke-dasharray: 2.8 1.8;
-  animation: mapRouteTravel 3s linear infinite;
+  animation: mapRouteTravel 8s linear infinite;
   opacity: 0.9;
 }
 
@@ -436,4 +436,83 @@
 
 .map-pin-pulse {
   animation: mapPinPulse 2s ease-out infinite;
+}
+
+.google-maps-logo {
+  position: relative;
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid #dbe7dc;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(34, 38, 35, 0.12);
+}
+
+.gm-dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+}
+
+.gm-blue {
+  left: 3px;
+  top: 3px;
+  background: #4285f4;
+}
+
+.gm-red {
+  right: 3px;
+  top: 3px;
+  background: #ea4335;
+}
+
+.gm-yellow {
+  left: 3px;
+  bottom: 3px;
+  background: #fbbc05;
+}
+
+.gm-green {
+  right: 3px;
+  bottom: 3px;
+  background: #34a853;
+}
+
+.waze-logo {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+}
+
+.waze-face {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 18px;
+  height: 14px;
+  border: 2px solid #35b7f3;
+  border-radius: 10px 10px 10px 12px;
+  background: #fff;
+}
+
+.waze-wheel {
+  position: absolute;
+  bottom: 1px;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: #35b7f3;
+}
+
+.waze-wheel-left {
+  left: 5px;
+}
+
+.waze-wheel-right {
+  right: 3px;
 }

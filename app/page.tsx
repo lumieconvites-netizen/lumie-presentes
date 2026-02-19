@@ -412,7 +412,7 @@ export default function HomePage() {
 
             <div className="mt-14 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
               <div className="relative rounded-[2rem] border border-[#e5d1c3] bg-white p-5 shadow-xl">
-                <div className="relative overflow-hidden rounded-[1.5rem] border border-[#d9e6d9] bg-[#edf5ea] h-[430px]">
+                <div className="relative overflow-hidden rounded-[1.5rem] border border-[#d9e6d9] bg-[#edf5ea] h-[480px] lg:h-[620px]">
                   <div className="absolute inset-0 map-grid" />
 
                   <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -423,10 +423,25 @@ export default function HomePage() {
                   </svg>
 
                   <div className="absolute left-[16%] top-[58%] rounded-2xl bg-white/95 px-4 py-3 shadow-md border border-[#dce7db]">
-                    <p className="text-sm font-semibold text-[#3d2f29]">Waze</p>
+                    <div className="flex items-center gap-2">
+                      <span className="waze-logo">
+                        <span className="waze-face" />
+                        <span className="waze-wheel waze-wheel-left" />
+                        <span className="waze-wheel waze-wheel-right" />
+                      </span>
+                      <p className="text-sm font-semibold text-[#3d2f29]">Waze</p>
+                    </div>
                   </div>
                   <div className="absolute left-[34%] top-[26%] rounded-2xl bg-white/95 px-4 py-3 shadow-md border border-[#dce7db]">
-                    <p className="text-sm font-semibold text-[#3d2f29]">Google Maps</p>
+                    <div className="flex items-center gap-2">
+                      <span className="google-maps-logo">
+                        <span className="gm-dot gm-blue" />
+                        <span className="gm-dot gm-red" />
+                        <span className="gm-dot gm-yellow" />
+                        <span className="gm-dot gm-green" />
+                      </span>
+                      <p className="text-sm font-semibold text-[#3d2f29]">Google Maps</p>
+                    </div>
                   </div>
 
                   <div className="absolute left-[58%] top-[12%]">
