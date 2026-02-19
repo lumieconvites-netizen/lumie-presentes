@@ -33,6 +33,10 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
   const theme = list.theme || {};
   const primaryColor = theme.primary_color || '#C86E52';
   const secondaryColor = theme.secondary_color || '#8E3D2C';
+  const captionColor = theme.caption_color || secondaryColor;
+  const dividerColor = theme.divider_color || secondaryColor;
+  const dividerEnabled = theme.divider_enabled !== false;
+  const dividerStyle = theme.divider_style || 'dot';
   const backgroundColor = theme.background_color || '#FAF4EF';
   const backgroundImage = theme.background_image || '';
   const fontTitle = theme.font_title || 'Cormorant Garamond';
@@ -146,8 +150,8 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
       {
         ["--list-font-title" as any]: `"${fontTitle}"`,
         ["--list-font-body" as any]: `"${fontBody}"`,
-        ["--lp-divider-color" as any]: toRgba(secondaryColor, 0.45),
-        ["--lp-blend-color" as any]: toRgba(secondaryColor, 0.34),
+        ["--lp-divider-color" as any]: toRgba(dividerColor, 0.42),
+        ["--lp-blend-color" as any]: toRgba(secondaryColor, 0.26),
         ...pageBackgroundStyle,
       } as React.CSSProperties
     }
@@ -157,10 +161,11 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
         const config = block.config || {};
         const blendAfterHero = index > 0 && enabledBlocks[index - 1]?.type === 'hero';
         const sectionClass = `lp-section${blendAfterHero ? ' lp-hero-blend' : ''}`;
+        const showDivider = dividerEnabled && index > 0 && enabledBlocks[index - 1]?.type !== 'hero';
 
         return (
           <div key={block.id}>
-            {index > 0 && <div className="lp-divider" aria-hidden="true" />}
+            {showDivider && <div className={`lp-divider lp-divider-${dividerStyle}`} aria-hidden="true" />}
             <div
               onClick={() => onSelectBlock(block)}
               className={`rounded-xl overflow-hidden cursor-pointer transition-all ${
@@ -338,25 +343,29 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: primaryColor, fontFamily: fontTitle }}>
                   {config.title || 'Galeria de Fotos'}
                 </h2>
-                <div className={`grid ${config.layout === 'masonry' ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'} gap-4 max-w-6xl mx-auto`}>
-                  {(config.images && config.images.length > 0) ? (
-                    config.images.map((img: string, i: number) => (
-                      <div key={i} className="aspect-square overflow-hidden rounded-xl">
-                        <img 
-                          src={img} 
-                          alt={`Foto ${i + 1}`}
-                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                {(config.images && config.images.length > 0) ? (
+                  <div className="gallery-slider-mask max-w-6xl mx-auto">
+                    <div className="gallery-slider-track" style={{ animationDuration: '90s' }}>
+                      {[...config.images, ...config.images].map((img: string, i: number) => (
+                        <div key={i} className="gallery-slide-item">
+                          <img
+                            src={img}
+                            alt={`Foto ${i + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                    {[1, 2, 3, 4].map((i) => (
                       <div key={i} className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
                         <ImageIcon className="w-10 h-10 text-gray-400" />
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -372,9 +381,9 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       <Calendar className="w-7 h-7" style={{ color: primaryColor }} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-xl mb-2 text-gray-900">
+                      <p className="font-medium text-base mb-2" style={{ color: captionColor }}>
                         Data e Hora
-                      </h3>
+                      </p>
                       <p className="text-gray-600 text-lg">
                         {config.datetime 
                           ? new Date(config.datetime).toLocaleString('pt-BR', { 
@@ -394,9 +403,9 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       <MapPin className="w-7 h-7" style={{ color: primaryColor }} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-xl mb-2 text-gray-900">
+                      <p className="font-medium text-base mb-2" style={{ color: captionColor }}>
                         {config.location || 'Local do Evento'}
-                      </h3>
+                      </p>
                       <p className="text-gray-600 mb-3">
                         {config.address || 'EndereÃ§o serÃ¡ informado em breve'}
                       </p>

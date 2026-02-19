@@ -209,15 +209,16 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: -58px;
-  height: 74px;
+  top: -72px;
+  height: 88px;
   pointer-events: none;
   background: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0) 0%,
-    var(--lp-blend-color, rgba(74, 58, 66, 0.26)) 45%,
-    var(--lp-blend-color, rgba(74, 58, 66, 0.38)) 100%
+    var(--lp-blend-color, rgba(74, 58, 66, 0.22)) 54%,
+    var(--lp-blend-color, rgba(74, 58, 66, 0.34)) 100%
   );
+  filter: blur(1px);
 }
 
 .list-font-scope .lp-divider {
@@ -252,11 +253,82 @@
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
+.list-font-scope .lp-divider-line::after {
+  display: none;
+}
+
+.list-font-scope .lp-divider-ornament::after {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--lp-divider-color, rgba(124, 93, 80, 0.45));
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
 @media (max-width: 768px) {
   .list-font-scope .lp-divider {
     height: 20px;
     width: min(280px, 68%);
     margin: 0 auto 8px;
+  }
+}
+
+@keyframes galleryMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.gallery-slider-mask {
+  overflow: hidden;
+  position: relative;
+}
+
+.gallery-slider-mask::before,
+.gallery-slider-mask::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 42px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.gallery-slider-mask::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.26), transparent);
+}
+
+.gallery-slider-mask::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.26), transparent);
+}
+
+.gallery-slider-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  animation: galleryMarquee 90s linear infinite;
+}
+
+.gallery-slide-item {
+  width: 220px;
+  height: 220px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .gallery-slide-item {
+    width: 260px;
+    height: 260px;
   }
 }
 

@@ -31,6 +31,10 @@ const BLOCK_TYPES: Array<{ id: BlockTypeId; name: string; icon: any }> = [
 type Theme = {
   primary_color?: string;
   secondary_color?: string;
+  caption_color?: string;
+  divider_color?: string;
+  divider_enabled?: boolean;
+  divider_style?: 'dot' | 'line' | 'ornament';
   background_color?: string;
   background_image?: string;
   font_title?: string;
@@ -98,6 +102,10 @@ export default function PageBuilder() {
   const [theme, setTheme] = useState<Theme>({
     primary_color: '#C86E52',
     secondary_color: '#8E3D2C',
+    caption_color: '#5F4A41',
+    divider_color: '#8E3D2C',
+    divider_enabled: true,
+    divider_style: 'dot',
     background_color: '#FAF4EF',
     font_title: 'Cormorant Garamond',
     font_body: 'Inter',
@@ -442,6 +450,42 @@ export default function PageBuilder() {
                 <div className="flex items-center gap-2">
                   <input type="color" value={theme.secondary_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, secondary_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
                   <Input value={theme.secondary_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, secondary_color: e.target.value })} className="flex-1" />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Cor das legendas</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={theme.caption_color || '#5F4A41'} onChange={(e) => updateTheme({ ...theme, caption_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
+                  <Input value={theme.caption_color || '#5F4A41'} onChange={(e) => updateTheme({ ...theme, caption_color: e.target.value })} className="flex-1" />
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-[#ead9cd] bg-white p-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Exibir divisores entre blocos</Label>
+                  <Switch
+                    checked={theme.divider_enabled !== false}
+                    onCheckedChange={(checked) => updateTheme({ ...theme, divider_enabled: checked })}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Cor do divisor</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={theme.divider_color || theme.secondary_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, divider_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
+                    <Input value={theme.divider_color || theme.secondary_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, divider_color: e.target.value })} className="flex-1" />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Estilo do divisor</Label>
+                  <Select value={theme.divider_style || 'dot'} onValueChange={(value: 'dot' | 'line' | 'ornament') => updateTheme({ ...theme, divider_style: value })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dot">Linha com ponto</SelectItem>
+                      <SelectItem value="line">Linha simples</SelectItem>
+                      <SelectItem value="ornament">Ornamental</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

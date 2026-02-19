@@ -66,6 +66,10 @@ function toExternalMapUrl(value: string) {
 export default function PublicPageView({ blocks, gifts, messages, settings, theme = {} }: PublicPageViewProps) {
   const primaryColor = theme.primary_color || '#C86E52';
   const secondaryColor = theme.secondary_color || '#8E3D2C';
+  const captionColor = theme.caption_color || secondaryColor;
+  const dividerColor = theme.divider_color || secondaryColor;
+  const dividerEnabled = theme.divider_enabled !== false;
+  const dividerStyle = theme.divider_style || 'dot';
   const backgroundColor = theme.background_color || '#FAF4EF';
   const backgroundImage = theme.background_image || '';
   const themeOverlay = toRgba(backgroundColor, 0.5);
@@ -148,8 +152,8 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
         {
           ['--list-font-title' as any]: `"${fontTitle}"`,
           ['--list-font-body' as any]: `"${fontBody}"`,
-          ['--lp-divider-color' as any]: toRgba(secondaryColor, 0.45),
-          ['--lp-blend-color' as any]: toRgba(secondaryColor, 0.34),
+          ['--lp-divider-color' as any]: toRgba(dividerColor, 0.42),
+          ['--lp-blend-color' as any]: toRgba(secondaryColor, 0.26),
           ...pageBackgroundStyle,
         } as React.CSSProperties
       }
@@ -217,10 +221,11 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
         const config = block.config || {};
         const blendAfterHero = index > 0 && enabledBlocks[index - 1]?.type === 'hero';
         const sectionClass = `lp-section${blendAfterHero ? ' lp-hero-blend' : ''}`;
+        const showDivider = dividerEnabled && index > 0 && enabledBlocks[index - 1]?.type !== 'hero';
 
         return (
           <div key={block.id}>
-            {index > 0 && <div className="lp-divider" aria-hidden="true" />}
+            {showDivider && <div className={`lp-divider lp-divider-${dividerStyle}`} aria-hidden="true" />}
             {block.type === 'hero' && (
               <div
                 className="relative min-h-[600px] flex items-center justify-center text-white"
@@ -352,12 +357,14 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: primaryColor }}>
                   {config.title || 'Galeria de Fotos'}
                 </h2>
-                <div className={`grid ${config.layout === 'masonry' ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'} gap-4 max-w-6xl mx-auto`}>
-                  {config.images.map((img: string, i: number) => (
-                    <div key={i} className="aspect-square overflow-hidden rounded-xl">
-                      <img src={img} alt={`Foto ${i + 1}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
-                    </div>
-                  ))}
+                <div className="gallery-slider-mask max-w-6xl mx-auto">
+                  <div className="gallery-slider-track" style={{ animationDuration: '90s' }}>
+                    {[...config.images, ...config.images].map((img: string, i: number) => (
+                      <div key={i} className="gallery-slide-item">
+                        <img src={img} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -374,7 +381,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                         <Calendar className="w-7 h-7" style={{ color: primaryColor }} />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-xl mb-2 text-gray-900">Data e Hora</h3>
+                        <p className="font-medium text-base mb-2" style={{ color: captionColor }}>Data e Hora</p>
                         <p className="text-gray-600 text-lg">
                           {new Date(config.datetime).toLocaleString('pt-BR', {
                             day: '2-digit',
@@ -394,7 +401,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                         <MapPin className="w-7 h-7" style={{ color: primaryColor }} />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-xl mb-2 text-gray-900">{config.location || 'Local do Evento'}</h3>
+                        <p className="font-medium text-base mb-2" style={{ color: captionColor }}>{config.location || 'Local do Evento'}</p>
                         <p className="text-gray-600 mb-3">{config.address}</p>
                         {config.mapLink && (
                           <a href={config.mapLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium hover:underline" style={{ color: primaryColor }}>
