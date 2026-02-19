@@ -571,7 +571,7 @@
 
 .map-chip-gmaps {
   left: 34%;
-  top: 26%;
+  top: 31%;
 }
 
 .map-chip-waze {
@@ -592,7 +592,7 @@
 @media (max-width: 768px) {
   .map-chip-gmaps {
     left: 42%;
-    top: 34%;
+    top: 39%;
   }
 
   .map-chip-waze {
