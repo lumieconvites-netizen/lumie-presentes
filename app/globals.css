@@ -393,3 +393,47 @@
 .note-chip-float {
   animation: noteChipFloat 3s ease-in-out infinite;
 }
+
+/* Arrival map showcase */
+.map-grid {
+  background-color: #edf5ea;
+  background-image:
+    linear-gradient(to right, rgba(177, 195, 177, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(177, 195, 177, 0.35) 1px, transparent 1px);
+  background-size: 22% 22%;
+}
+
+@keyframes mapRouteTravel {
+  to {
+    stroke-dashoffset: -120;
+  }
+}
+
+.map-route-line {
+  fill: none;
+  stroke: #be7a61;
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-dasharray: 2.8 1.8;
+  animation: mapRouteTravel 3s linear infinite;
+  opacity: 0.9;
+}
+
+@keyframes mapPinPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(198, 90, 58, 0.35);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 16px rgba(198, 90, 58, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(198, 90, 58, 0);
+  }
+}
+
+.map-pin-pulse {
+  animation: mapPinPulse 2s ease-out infinite;
+}

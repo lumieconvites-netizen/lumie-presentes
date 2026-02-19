@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
-import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Brush, ShoppingBag, Plane, Users, BellRing, FileSpreadsheet, UserPlus } from 'lucide-react';
+import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Brush, ShoppingBag, Plane, Users, BellRing, FileSpreadsheet, UserPlus, MapPin, Navigation2, CalendarDays, Smartphone } from 'lucide-react';
 
 const heroSlides = [
   { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
@@ -59,6 +59,32 @@ const showcaseReceived = { name: 'Isabella', value: 'R$ 350,00' };
 const showcaseRsvpGroups = [
   { id: 1, title: 'Deivid Wallace', qty: '+1 acompanhante' },
   { id: 2, title: 'William', qty: '+1 Acompanhante +1 Criança' },
+];
+const showcaseArrivalFeatures = [
+  {
+    id: 1,
+    title: 'Google Maps e Waze',
+    text: 'Seus convidados abrem a localização com um clique e chegam sem estresse.',
+    icon: Navigation2,
+  },
+  {
+    id: 2,
+    title: 'Agenda sincronizada',
+    text: 'Data e horário do evento já ficam prontos para salvar no calendário.',
+    icon: CalendarDays,
+  },
+  {
+    id: 3,
+    title: 'Rota inteligente',
+    text: 'Trajeto sugerido no seu site com visual elegante e atualização em tempo real.',
+    icon: MapPin,
+  },
+  {
+    id: 4,
+    title: '100% Mobile',
+    text: 'Tudo funciona perfeitamente no celular para facilitar o acesso dos convidados.',
+    icon: Smartphone,
+  },
 ];
 
 export default function HomePage() {
@@ -371,6 +397,70 @@ export default function HomePage() {
                   <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
                   <p className="text-lg text-[#4f3f37]">Integração direta com sua lista de convidados.</p>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-24">
+            <div className="text-center max-w-4xl mx-auto">
+              <h3 className="font-display text-5xl text-foreground leading-tight">Ajudando seus convidados a chegar</h3>
+              <p className="mt-4 text-xl text-muted-foreground leading-relaxed">
+                Local do evento no Google Maps ou Waze, agenda e rota no seu site.
+                Tudo para ninguem perder o grande dia.
+              </p>
+            </div>
+
+            <div className="mt-14 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+              <div className="relative rounded-[2rem] border border-[#e5d1c3] bg-white p-5 shadow-xl">
+                <div className="relative overflow-hidden rounded-[1.5rem] border border-[#d9e6d9] bg-[#edf5ea] h-[430px]">
+                  <div className="absolute inset-0 map-grid" />
+
+                  <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path
+                      d="M12 80 C 24 68, 34 58, 44 48 S 67 28, 83 20"
+                      className="map-route-line"
+                    />
+                  </svg>
+
+                  <div className="absolute left-[16%] top-[58%] rounded-2xl bg-white/95 px-4 py-3 shadow-md border border-[#dce7db]">
+                    <p className="text-sm font-semibold text-[#3d2f29]">Waze</p>
+                  </div>
+                  <div className="absolute left-[34%] top-[26%] rounded-2xl bg-white/95 px-4 py-3 shadow-md border border-[#dce7db]">
+                    <p className="text-sm font-semibold text-[#3d2f29]">Google Maps</p>
+                  </div>
+
+                  <div className="absolute left-[58%] top-[12%]">
+                    <div className="map-pin-pulse relative h-16 w-16 rounded-full bg-[#c65a3a]/20 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white flex items-center justify-center shadow-lg">
+                        <MapPin className="w-5 h-5" />
+                      </div>
+                    </div>
+                    <div className="mt-2 rounded-xl bg-white/95 border border-[#ecdccf] px-3 py-1.5 text-sm font-semibold text-[#5a473f] shadow-sm">
+                      Local do evento
+                    </div>
+                  </div>
+
+                  <div className="absolute left-[20%] bottom-6 rounded-xl bg-white/95 border border-[#ecdccf] px-3 py-2 text-xs text-[#6a564d] shadow-md note-chip-float">
+                    Rota atualizada agora
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                {showcaseArrivalFeatures.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.id} className="flex items-start gap-4 rounded-2xl border border-[#ead9cd] bg-white/80 p-5 shadow-sm">
+                      <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f8e7dd] text-[#b05134] shrink-0">
+                        <Icon className="w-6 h-6" />
+                      </span>
+                      <div>
+                        <p className="font-display text-3xl text-[#3d2f29] leading-tight">{item.title}</p>
+                        <p className="mt-2 text-lg text-[#6e5b52] leading-relaxed">{item.text}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
