@@ -6,6 +6,12 @@ type SendVerificationEmailInput = {
   name?: string;
 };
 
+type SendPasswordResetEmailInput = {
+  to: string;
+  code: string;
+  name?: string;
+};
+
 type SendRsvpNotificationInput = {
   to: string;
   eventTitle: string;
@@ -50,6 +56,49 @@ export async function sendVerificationCodeEmail(input: SendVerificationEmailInpu
   if (!response.ok) {
     const payload = await response.text().catch(() => "");
     throw new Error(`Falha ao enviar email: ${response.status} ${payload}`);
+  }
+
+  return { sent: true, provider: "resend" as const };
+}
+
+export async function sendPasswordResetCodeEmail(input: SendPasswordResetEmailInput) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM ?? "LUMIÊ <onboarding@resend.dev>";
+
+  const html = `
+    <div style="font-family: Inter, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
+      <h1 style="color: #8E3D2C; margin-bottom: 8px;">Recuperacao de senha - LUMIÊ</h1>
+      <p style="color: #333; margin-top: 0;">${input.name ? `Ola, ${input.name}.` : "Ola."} Use o codigo abaixo para criar uma nova senha:</p>
+      <div style="font-size: 32px; letter-spacing: 6px; font-weight: 700; color: #C65A3A; margin: 24px 0;">
+        ${input.code}
+      </div>
+      <p style="color: #666;">Este codigo expira em 15 minutos.</p>
+      <p style="color: #666;">Se voce nao solicitou esta acao, ignore este email.</p>
+    </div>
+  `;
+
+  if (!apiKey) {
+    console.log(`[email-dev] Codigo de reset para ${input.to}: ${input.code}`);
+    return { sent: false, provider: "console" as const };
+  }
+
+  const response = await fetch(RESEND_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      from,
+      to: [input.to],
+      subject: "Codigo de recuperacao de senha - LUMIÊ",
+      html,
+    }),
+  });
+
+  if (!response.ok) {
+    const payload = await response.text().catch(() => "");
+    throw new Error(`Falha ao enviar email de recuperacao: ${response.status} ${payload}`);
   }
 
   return { sent: true, provider: "resend" as const };
