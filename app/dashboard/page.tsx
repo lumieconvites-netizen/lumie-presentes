@@ -125,8 +125,10 @@ export default function DashboardPage() {
 
   const totalGifts = gifts.length;
   const activeGifts = gifts.filter((g) => g.availableQty > 0).length;
-  const paidOrders = orders.filter((o) => o.status === 'PAID' || o.status === 'AUTHORIZED');
-  const pendingOrders = orders.filter((o) => o.status === 'PENDING' && isCardPaymentMethod(o.paymentMethod));
+  const paidOrders = orders.filter((o) => o.status === 'PAID');
+  const pendingOrders = orders.filter(
+    (o) => (o.status === 'PENDING' || o.status === 'AUTHORIZED') && isCardPaymentMethod(o.paymentMethod)
+  );
   const totalPaid = paidOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
   const recentPayments = paidOrders.slice(0, 6);
   const recentMessages = messages.slice(0, 5);
