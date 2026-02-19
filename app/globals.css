@@ -643,12 +643,12 @@
 }
 
 .resource-card {
-  width: 390px;
+  width: 420px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-height: 174px;
+  gap: 16px;
+  min-height: 198px;
   transition: transform 260ms ease, box-shadow 260ms ease;
 }
 
@@ -658,9 +658,9 @@
 }
 
 .resource-card-mock {
-  width: 150px;
-  min-width: 150px;
-  height: 150px;
+  width: 168px;
+  min-width: 168px;
+  height: 168px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -723,15 +723,15 @@
 
 @media (max-width: 768px) {
   .resource-card {
-    width: 344px;
-    min-height: 156px;
-    gap: 10px;
+    width: 360px;
+    min-height: 176px;
+    gap: 12px;
   }
 
   .resource-card-mock {
-    width: 122px;
-    min-width: 122px;
-    height: 122px;
+    width: 132px;
+    min-width: 132px;
+    height: 132px;
   }
 
   .resource-card-copy h3 {

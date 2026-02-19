@@ -540,9 +540,19 @@ export default function HomePage() {
                       </div>
                     )}
                     {feature.id === 'templates' && (
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="h-12 rounded-lg border border-[#edd7ca] bg-gradient-to-b from-[#fff] to-[#f9efe8] resource-float-b" />
-                        <div className="h-12 rounded-lg border border-[#edd7ca] bg-gradient-to-b from-[#fff] to-[#efe5de] resource-float-a" />
+                      <div className="w-full h-full rounded-lg border border-[#ead7cb] bg-gradient-to-b from-[#fffaf5] to-[#f4e9e1] p-2.5 space-y-2">
+                        <div className="h-5 rounded-md bg-white/90 border border-[#eddccf] px-2 flex items-center justify-between">
+                          <span className="text-[10px] text-[#8b5f4c]">Templates</span>
+                          <span className="text-[10px] text-[#c65a3a]">01</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <div className="h-11 rounded-md border border-[#ebd7ca] bg-gradient-to-b from-[#fff] to-[#f6e9e0] resource-float-a" />
+                          <div className="h-11 rounded-md border border-[#ebd7ca] bg-gradient-to-b from-[#fff] to-[#eddcd2] resource-float-b" />
+                          <div className="h-11 rounded-md border border-[#ebd7ca] bg-gradient-to-b from-[#fff] to-[#f8eee6] resource-float-a" />
+                        </div>
+                        <div className="h-6 rounded-md bg-white/85 border border-[#eddccf] px-2 flex items-center">
+                          <span className="text-[10px] text-[#7b5a4d]">Elegante • Moderno • Classico</span>
+                        </div>
                       </div>
                     )}
                   </div>
