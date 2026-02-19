@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, User, DollarSign, Shield } from 'lucide-react';
+import { Camera, User, DollarSign, Shield, Copy } from 'lucide-react';
 import Image from 'next/image';
 
 export default function ConfiguracoesPage() {
@@ -36,6 +36,7 @@ export default function ConfiguracoesPage() {
   const [slugChecking, setSlugChecking] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [slugMessage, setSlugMessage] = useState('');
+  const [copyingUrl, setCopyingUrl] = useState(false);
 
   useEffect(() => {
     if (sessionImage) setPhoto(sessionImage);
@@ -243,6 +244,18 @@ export default function ConfiguracoesPage() {
     []
   );
   const previewSlug = slugInput.trim() || giftListSlug;
+  const publicUrl = `${publicBase}/site/${previewSlug || 'seu-slug'}`;
+
+  const handleCopyUrl = async () => {
+    try {
+      setCopyingUrl(true);
+      await navigator.clipboard.writeText(publicUrl);
+    } catch {
+      alert('Nao foi possivel copiar a URL agora.');
+    } finally {
+      setTimeout(() => setCopyingUrl(false), 900);
+    }
+  };
 
   if (status === 'loading') {
     return <div className="p-6">Carregando...</div>;
@@ -334,7 +347,17 @@ export default function ConfiguracoesPage() {
                 <p className={`text-xs mt-1 ${slugAvailable ? 'text-green-600' : 'text-gray-500'}`}>
                   {slugChecking ? 'Verificando disponibilidade...' : slugMessage || 'Defina a URL da sua lista.'}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Seu link: {publicBase}/site/{previewSlug || 'seu-slug'}</p>
+                <p className="text-xs text-gray-500 mt-1">Seu link: {publicUrl}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-2 border-[#e3cdbf] bg-white hover:bg-[#fff7f1]"
+                  onClick={handleCopyUrl}
+                  disabled={slugChecking || !previewSlug}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  {copyingUrl ? 'Copiado!' : 'Copiar URL'}
+                </Button>
               </div>
 
               <Button

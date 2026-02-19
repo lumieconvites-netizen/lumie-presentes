@@ -20,6 +20,10 @@ export default function DashboardHeader() {
   const { user } = useUser();
   const { data: session } = useSession();
   const router = useRouter();
+  const sessionImage = (session?.user as any)?.image as string | undefined;
+  const sessionName = session?.user?.name ?? user?.name ?? 'Usuário';
+  const sessionEmail = session?.user?.email ?? user?.email ?? '';
+  const avatarSrc = sessionImage || user?.photo;
 
   const getUserInitials = (name: string) => {
     return name
@@ -30,7 +34,7 @@ export default function DashboardHeader() {
       .slice(0, 2);
   };
 
-  const firstName = (user?.name || 'Usuário').split(' ')[0];
+  const firstName = sessionName.split(' ')[0];
   const role = (session?.user as any)?.role;
 
   return (
@@ -47,11 +51,11 @@ export default function DashboardHeader() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-10 w-10 rounded-full p-0 overflow-hidden ring-1 ring-border">
-              {user?.photo ? (
-                <Image src={user.photo} alt={user.name} width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+              {avatarSrc ? (
+                <Image src={avatarSrc} alt={sessionName} width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
               ) : (
                 <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-medium">
-                  {user ? getUserInitials(user.name) : 'U'}
+                  {getUserInitials(sessionName)}
                 </div>
               )}
             </Button>
@@ -59,8 +63,8 @@ export default function DashboardHeader() {
           <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user?.name}</p>
-                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                <p className="text-sm font-medium leading-none">{sessionName}</p>
+                <p className="text-xs leading-none text-muted-foreground">{sessionEmail}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
