@@ -349,6 +349,58 @@
   animation-name: heroChipBottomInOut;
 }
 
+@media (max-width: 640px) {
+  .hero-chip {
+    animation-duration: 4.2s;
+    border-radius: 14px !important;
+  }
+
+  .hero-chip-top {
+    top: 10px !important;
+    right: 10px !important;
+    padding: 8px 12px !important;
+  }
+
+  .hero-chip-bottom {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    padding: 10px 12px !important;
+  }
+
+  .hero-chip-top .w-9 {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .hero-chip-bottom .w-10 {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .hero-chip-top .text-sm,
+  .hero-chip-bottom .text-sm {
+    font-size: 0.95rem !important;
+    line-height: 1.15rem !important;
+  }
+
+  .hero-chip-bottom .text-xs {
+    font-size: 0.78rem !important;
+    line-height: 1rem !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-chip-bottom .text-xs {
+    display: none;
+  }
+
+  .hero-chip-bottom {
+    padding-top: 9px !important;
+    padding-bottom: 9px !important;
+  }
+}
+
 @keyframes giftRowFloatIn {
   0% {
     opacity: 0;
