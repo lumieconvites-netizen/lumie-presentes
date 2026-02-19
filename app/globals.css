@@ -726,6 +726,7 @@
     width: 382px;
     min-height: 186px;
     gap: 12px;
+    flex-direction: row-reverse;
   }
 
   .resource-card-mock {

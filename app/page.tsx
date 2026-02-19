@@ -217,7 +217,7 @@ export default function HomePage() {
 
           <div className="mt-16 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             <div>
-              <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-terracota-500 to-terracota-700 text-white shadow-lg">
+              <div className="inline-flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-terracota-500 to-terracota-700 text-white shadow-lg">
                 <Gift className="w-9 h-9" />
               </div>
 
@@ -376,7 +376,7 @@ export default function HomePage() {
             <div>
               <div className="flex items-center gap-4">
                 <h3 className="font-display text-4xl text-foreground">Confirmação de Presença (RSVP)</h3>
-                <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-[#17a26c] to-[#37d998] text-white shadow-lg">
+                <div className="inline-flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-[#17a26c] to-[#37d998] text-white shadow-lg">
                   <MessageCircleHeart className="w-9 h-9" />
                 </div>
               </div>
@@ -514,15 +514,15 @@ export default function HomePage() {
                     )}
                     {feature.id === 'messages' && (
                       <div className="space-y-2">
-                        <div className="h-7 rounded-lg bg-white border border-[#ecd9cc] px-2 flex items-center text-xs text-[#6a4e42] resource-slide-in">Isabella: lindo site!</div>
-                        <div className="h-7 rounded-lg bg-white border border-[#ecd9cc] px-2 flex items-center text-xs text-[#6a4e42] resource-slide-in-delayed">Rayan: parabéns ao casal!</div>
+                        <div className="h-8 rounded-lg bg-white border border-[#ecd9cc] px-2.5 flex items-center text-[11px] leading-tight text-[#6a4e42] resource-slide-in">Isabella: lindo site!</div>
+                        <div className="h-8 rounded-lg bg-white border border-[#ecd9cc] px-2.5 flex items-center text-[11px] leading-tight text-[#6a4e42] resource-slide-in-delayed">Rayan: parabéns ao casal!</div>
                       </div>
                     )}
                     {feature.id === 'countdown' && (
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 gap-2.5 w-full">
                         {['12', '08', '24', '49'].map((n) => (
-                          <div key={n} className="rounded-lg bg-[#fff3ec] border border-[#efcfbd] py-2 text-center">
-                            <p className="font-display text-lg text-[#b25134]">{n}</p>
+                          <div key={n} className="h-9 rounded-lg bg-[#fff3ec] border border-[#efcfbd] px-2 flex items-center justify-center">
+                            <p className="font-display text-lg leading-none text-[#b25134]">{n}</p>
                           </div>
                         ))}
                       </div>
@@ -551,14 +551,14 @@ export default function HomePage() {
                           <div className="h-11 rounded-md border border-[#ebd7ca] bg-gradient-to-b from-[#fff] to-[#f8eee6] resource-float-a" />
                         </div>
                         <div className="h-6 rounded-md bg-white/85 border border-[#eddccf] px-2 flex items-center">
-                          <span className="text-[10px] text-[#7b5a4d]">Elegante • Moderno • Classico</span>
+                          <span className="text-[10px] text-[#7b5a4d]">15 anos - casamento</span>
                         </div>
                       </div>
                     )}
                   </div>
 
                   <div className="resource-card-copy">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#ffe5d9] text-[#c65a3a] mb-2">
+                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ffe5d9] text-[#c65a3a] mb-2">
                       <Icon className="w-5 h-5" />
                     </span>
                     <h3 className="font-display text-[1.6rem] text-foreground mb-1.5 leading-tight">{feature.title}</h3>
