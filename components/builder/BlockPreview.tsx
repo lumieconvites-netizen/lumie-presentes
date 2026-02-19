@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Image as ImageIcon, Globe, Layout, Music2, Video } from 'lucide-react';
-import Link from 'next/link';
 
 interface BlockPreviewProps {
   list: any;
@@ -21,22 +20,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
   const backgroundColor = theme.background_color || '#FAF4EF';
   const fontTitle = theme.font_title || 'Cormorant Garamond';
   const fontBody = theme.font_body || 'Inter';
-  const header = theme.header || {};
-  const listSlug = list?.slug ? String(list.slug) : '';
-  const presentsHref = listSlug ? `/site/${encodeURIComponent(listSlug)}/presentes` : '/site/presentes';
-  const rsvpHref = listSlug ? `/site/${encodeURIComponent(listSlug)}/confirmar-presenca` : '#';
 
-  const toMapUrl = (value: string) => {
-    const url = (value || '').trim();
-    if (!url) return '';
-    if (/^https?:\/\//i.test(url)) return url;
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(url)}`;
-  };
-
-  const menuMeuSite = String(header.menuMeuSite || 'Meu Site').toUpperCase();
-  const menuGifts = String(header.menuGifts || 'Lista de Presentes').toUpperCase();
-  const menuRsvp = String(header.menuRsvp || 'Confirmar PresenÃ§a').toUpperCase();
-  const menuMap = String(header.menuMap || 'Como Chegar').toUpperCase();
 
   const toYoutubeEmbedUrl = (url: string) => {
     if (!url) return '';
@@ -138,48 +122,6 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
       } as React.CSSProperties
     }
   >
-
-      {header.enabled !== false && (
-        <header
-          className="sticky top-4 z-[60] border-b rounded-xl overflow-hidden shadow-sm"
-          style={{ backgroundColor: header.backgroundColor || '#0B0B0B', color: header.textColor || '#FFFFFF' }}
-        >
-          <div className="px-5 py-4 flex items-center justify-between">
-            <div className="font-semibold text-2xl" style={{ fontFamily: fontTitle }}>
-              {header.brandText || 'LUMIÊ'}
-            </div>
-            <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-wide">
-              {header.showMeuSite !== false && (
-                <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:opacity-80">
-                  {menuMeuSite}
-                </button>
-              )}
-              {header.showGifts !== false && (
-                <Link href={presentsHref} className="hover:opacity-80">
-                  {menuGifts}
-                </Link>
-              )}
-              {header.showRsvp !== false && (
-                <Link href={rsvpHref} className="hover:opacity-80">
-                  {menuRsvp}
-                </Link>
-              )}
-              {header.showMap !== false && (
-                toMapUrl(header.menuMapUrl || '') ? (
-                  <a href={toMapUrl(header.menuMapUrl || '')} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">
-                    {menuMap}
-                  </a>
-                ) : (
-                  <button type="button" className="hover:opacity-80">
-                    {menuMap}
-                  </button>
-                )
-              )}
-            </nav>
-          </div>
-        </header>
-      )}
-
       {enabledBlocks.map((block) => {
         const isSelected = selectedBlock?.id === block.id;
         const config = block.config || {};

@@ -689,12 +689,14 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       )}
 
       {/* Delete Button */}
-      <div className="pt-4 border-t">
-        <Button variant="destructive" className="w-full" onClick={onDelete} disabled={uploading}>
-          <Trash2 className="w-4 h-4 mr-2" />
-          Remover Bloco
-        </Button>
-      </div>
+      {block.type !== 'gifts' && (
+        <div className="pt-4 border-t">
+          <Button variant="destructive" className="w-full" onClick={onDelete} disabled={uploading}>
+            <Trash2 className="w-4 h-4 mr-2" />
+            Remover Bloco
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -55,9 +55,26 @@ type Theme = {
 };
 
 function sanitizeBlocks(blocks: PageBlock[] = []) {
-  return blocks
+  const cleaned = blocks
     .filter((block) => block.type !== 'map')
     .map((block, index) => ({ ...block, order: index + 1 }));
+
+  const hasGifts = cleaned.some((block) => block.type === 'gifts');
+  if (!hasGifts) {
+    cleaned.push({
+      id: crypto?.randomUUID?.() ?? `gifts-${Date.now().toString()}`,
+      type: 'gifts',
+      order: cleaned.length + 1,
+      enabled: true,
+      config: {},
+    } as PageBlock);
+  }
+
+  return cleaned.map((block, index) =>
+    block.type === 'gifts'
+      ? { ...block, order: index + 1, enabled: true }
+      : { ...block, order: index + 1 }
+  );
 }
 
 function mapGift(gift: any) {
@@ -222,7 +239,11 @@ export default function PageBuilder() {
 
   const toggleBlockVisibility = (blockId: string) => {
     const updated = pageBlocks.map((block) =>
-      block.id === blockId ? { ...block, enabled: !block.enabled } : block
+      block.id === blockId
+        ? block.type === 'gifts'
+          ? { ...block, enabled: true }
+          : { ...block, enabled: !block.enabled }
+        : block
     );
     updatePageBlocks(updated);
   };
@@ -239,6 +260,8 @@ export default function PageBuilder() {
   };
 
   const removeBlock = (blockId: string) => {
+    const target = pageBlocks.find((b) => b.id === blockId);
+    if (target?.type === 'gifts') return;
     const updated = pageBlocks.filter((b) => b.id !== blockId);
     updatePageBlocks(updated);
     if (selectedBlock?.id === blockId) setSelectedBlock(null);
@@ -352,7 +375,12 @@ export default function PageBuilder() {
                           <GripVertical className="w-4 h-4 text-gray-400" />
                           <Icon className="w-4 h-4 text-primary" />
                           <span className="flex-1 text-sm text-foreground truncate">{blockType?.name || block.type}</span>
-                          <Switch checked={block.enabled} onCheckedChange={() => toggleBlockVisibility(block.id)} onClick={(e) => e.stopPropagation()} />
+                          <Switch
+                            checked={block.enabled}
+                            disabled={block.type === 'gifts'}
+                            onCheckedChange={() => toggleBlockVisibility(block.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
                         </div>
                       </Reorder.Item>
                     );
