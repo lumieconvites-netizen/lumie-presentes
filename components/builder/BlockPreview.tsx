@@ -18,8 +18,18 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
   const primaryColor = theme.primary_color || '#C86E52';
   const secondaryColor = theme.secondary_color || '#8E3D2C';
   const backgroundColor = theme.background_color || '#FAF4EF';
+  const backgroundImage = theme.background_image || '';
   const fontTitle = theme.font_title || 'Cormorant Garamond';
   const fontBody = theme.font_body || 'Inter';
+  const nonHeroSectionStyle: React.CSSProperties = backgroundImage
+    ? {
+        backgroundColor,
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+      }
+    : { backgroundColor };
 
 
   const toYoutubeEmbedUrl = (url: string) => {
@@ -185,7 +195,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Message Block */}
             {block.type === 'message' && (
-              <div className="p-12 md:p-20 text-center bg-white">
+              <div className="p-12 md:p-20 text-center" style={nonHeroSectionStyle}>
                 <h2 
                   className="text-3xl md:text-4xl mb-6" 
                   style={{ color: primaryColor, fontFamily: fontTitle }}
@@ -203,7 +213,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Countdown Block */}
             {block.type === 'countdown' && (
-              <div className="p-12 md:p-16" style={{ background: backgroundColor }}>
+              <div className="p-12 md:p-16" style={nonHeroSectionStyle}>
                 <h3 
                   className="text-2xl md:text-3xl text-center mb-10" 
                   style={{ color: primaryColor, fontFamily: fontTitle }}
@@ -232,7 +242,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Gifts Block */}
             {block.type === 'gifts' && (
-              <div className="p-12 md:p-16 bg-white" id="lista-presentes-section">
+              <div className="p-12 md:p-16" id="lista-presentes-section" style={nonHeroSectionStyle}>
                 <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden border border-gray-200">
                   <div className="relative h-[320px] md:h-[420px]">
                     {config.coverImage ? (
@@ -266,7 +276,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Messages Feed Block */}
             {block.type === 'messages' && (
-              <div className="p-12 md:p-16" style={{ background: backgroundColor }}>
+              <div className="p-12 md:p-16" style={nonHeroSectionStyle}>
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: primaryColor, fontFamily: fontTitle }}>
                   {config.title || 'Recados Especiais'}
                 </h2>
@@ -301,7 +311,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Gallery Block */}
             {block.type === 'gallery' && (
-              <div className="p-12 md:p-16 bg-white">
+              <div className="p-12 md:p-16" style={nonHeroSectionStyle}>
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: primaryColor, fontFamily: fontTitle }}>
                   {config.title || 'Galeria de Fotos'}
                 </h2>
@@ -329,7 +339,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Event Info Block */}
             {block.type === 'event-info' && (
-              <div className="p-12 md:p-16" style={{ background: backgroundColor }}>
+              <div className="p-12 md:p-16" style={nonHeroSectionStyle}>
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: primaryColor, fontFamily: fontTitle }}>
                   {config.title || 'InformaÃ§Ãµes do Evento'}
                 </h2>
@@ -386,7 +396,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             )}
 
             {block.type === 'map' && (
-              <div className="p-10 md:p-14 bg-white">
+              <div className="p-10 md:p-14" style={nonHeroSectionStyle}>
                 <div className="max-w-5xl mx-auto">
                   <h2 className="text-3xl md:text-4xl mb-2" style={{ color: primaryColor, fontFamily: fontTitle }}>
                     {config.title || 'Como chegar'}
@@ -417,7 +427,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             )}
 
             {block.type === 'music' && (
-              <div className="p-10 md:p-14" style={{ background: backgroundColor }}>
+              <div className="p-10 md:p-14" style={nonHeroSectionStyle}>
                 <div className="max-w-4xl mx-auto">
                   <h2 className="text-3xl md:text-4xl mb-2" style={{ color: primaryColor, fontFamily: fontTitle }}>
                     {config.title || 'Nossa trilha sonora'}
@@ -452,7 +462,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             )}
 
             {block.type === 'video' && (
-              <div className="p-10 md:p-14 bg-white">
+              <div className="p-10 md:p-14" style={nonHeroSectionStyle}>
                 <div className="max-w-5xl mx-auto">
                   <h2 className="text-3xl md:text-4xl mb-2" style={{ color: primaryColor, fontFamily: fontTitle }}>
                     {config.title || 'Nosso video'}

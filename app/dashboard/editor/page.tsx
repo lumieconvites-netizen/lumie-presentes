@@ -32,6 +32,7 @@ type Theme = {
   primary_color?: string;
   secondary_color?: string;
   background_color?: string;
+  background_image?: string;
   font_title?: string;
   font_body?: string;
   header?: {
@@ -123,6 +124,7 @@ export default function PageBuilder() {
   const [themeVersion, setThemeVersion] = useState<number>(0);
   const [listGifts, setListGifts] = useState<any[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [uploadingThemeBg, setUploadingThemeBg] = useState(false);
 
   const saveTimer = useRef<any>(null);
 
@@ -220,6 +222,28 @@ export default function PageBuilder() {
     setTheme(nextTheme);
     setDirty(true);
     scheduleSave(pageBlocks, nextTheme);
+  };
+
+  const uploadThemeBackground = async (file?: File | null) => {
+    if (!file) return;
+    try {
+      setUploadingThemeBg(true);
+      const form = new FormData();
+      form.append('file', file);
+      form.append('folder', 'theme-background');
+
+      const res = await fetch('/api/upload/avatar', { method: 'POST', body: form });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.url) {
+        throw new Error(data?.error ?? 'Falha no upload da imagem de fundo');
+      }
+
+      updateTheme({ ...theme, background_image: data.url });
+    } catch (error: any) {
+      alert(error?.message ?? 'Erro no upload da imagem de fundo');
+    } finally {
+      setUploadingThemeBg(false);
+    }
   };
 
   const saveNow = async () => {
@@ -427,6 +451,57 @@ export default function PageBuilder() {
                   <input type="color" value={theme.background_color || '#FAF4EF'} onChange={(e) => updateTheme({ ...theme, background_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
                   <Input value={theme.background_color || '#FAF4EF'} onChange={(e) => updateTheme({ ...theme, background_color: e.target.value })} className="flex-1" />
                 </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Imagem de fundo (blocos, exceto hero)</Label>
+                {theme.background_image ? (
+                  <div className="space-y-3">
+                    <img
+                      src={theme.background_image}
+                      alt="Fundo do tema"
+                      className="w-full h-28 rounded-lg object-cover border border-[#ead9cd]"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => updateTheme({ ...theme, background_image: '' })}
+                        disabled={uploadingThemeBg}
+                      >
+                        Remover imagem
+                      </Button>
+                      <label className="inline-flex">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => uploadThemeBackground(e.target.files?.[0] || null)}
+                          disabled={uploadingThemeBg}
+                        />
+                        <span className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium cursor-pointer">
+                          {uploadingThemeBg ? 'Enviando...' : 'Trocar imagem'}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="inline-flex">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => uploadThemeBackground(e.target.files?.[0] || null)}
+                      disabled={uploadingThemeBg}
+                    />
+                    <span className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium cursor-pointer">
+                      {uploadingThemeBg ? 'Enviando...' : 'Enviar imagem de fundo'}
+                    </span>
+                  </label>
+                )}
+                <p className="mt-2 text-xs text-gray-500">
+                  A imagem do tema vale para todos os blocos, exceto o Hero. Se remover, fica a cor de fundo.
+                </p>
               </div>
 
               <div>
