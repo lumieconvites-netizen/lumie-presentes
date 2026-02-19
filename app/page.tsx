@@ -519,8 +519,8 @@ export default function HomePage() {
               {steps.map((step) => (
                 <div key={step.n} className="text-center rounded-3xl border border-[#ead3c3] bg-white/70 px-4 py-7 shadow-sm backdrop-blur-sm">
                   <div className="flex items-center justify-center gap-2 mb-4">
-                    <span className="font-display text-5xl text-[#e1bda9] leading-none">{String(step.n).padStart(2, '0')}</span>
-                    <span className="h-px w-8 bg-[#e8cfc1]" />
+                    <span className="font-display text-5xl text-[#c65a3a] leading-none">{String(step.n).padStart(2, '0')}</span>
+                    <span className="h-px w-8 bg-[#d88a6f]" />
                   </div>
                   <h3 className="font-display text-3xl text-[#3d2f29]">{step.title}</h3>
                   <p className="mt-2 text-sm text-[#6f5a50] max-w-[220px] mx-auto leading-relaxed">{step.desc}</p>
@@ -558,8 +558,8 @@ export default function HomePage() {
               Comece agora e transforme seus presentes em creditos.
               Rapido para criar, elegante para compartilhar.
             </p>
-            <Button asChild size="lg" className="mt-8 !bg-white !text-[#a5482d] hover:!bg-[#fff3ec] rounded-xl px-8 font-semibold shadow-lg">
-              <Link href="/cadastro">Criar Minha Lista Gratis</Link>
+            <Button asChild variant="outline" size="lg" className="mt-8 bg-white text-[#a5482d] border-white/70 hover:bg-[#fff3ec] hover:text-[#8f3c24] rounded-xl px-8 font-semibold shadow-lg">
+              <Link href="/cadastro" className="text-[#a5482d]">Criar Minha Lista Gratis</Link>
             </Button>
           </div>
         </div>
