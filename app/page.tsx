@@ -499,8 +499,8 @@ export default function HomePage() {
               {[...features, ...features].map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div key={`${feature.id}-${index}`} className="resource-card rounded-2xl border border-[#ead9cd] bg-white p-5 shadow-sm">
-                  <div className="resource-card-mock rounded-xl border border-[#f0e1d7] bg-[#fdfaf7] p-3 mb-4">
+                <div key={`${feature.id}-${index}`} className="resource-card rounded-2xl border border-[#ead9cd] bg-white p-4 shadow-sm">
+                  <div className={`resource-card-mock resource-mock-${feature.id} rounded-xl border border-[#f0e1d7] p-3`}>
                     {feature.id === 'gallery' && (
                       <div className="grid grid-cols-3 gap-2">
                         <div className="h-10 rounded-lg bg-gradient-to-br from-[#cf8f72] to-[#b45739] resource-float-a" />
@@ -543,11 +543,13 @@ export default function HomePage() {
                     )}
                   </div>
 
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#ffe5d9] text-[#c65a3a] mb-3">
-                    <Icon className="w-5 h-5" />
-                  </span>
-                  <h3 className="font-display text-2xl text-foreground mb-2 leading-tight">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{feature.text}</p>
+                  <div className="resource-card-copy">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#ffe5d9] text-[#c65a3a] mb-2">
+                      <Icon className="w-5 h-5" />
+                    </span>
+                    <h3 className="font-display text-[1.6rem] text-foreground mb-1.5 leading-tight">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.text}</p>
+                  </div>
                 </div>
               );
               })}

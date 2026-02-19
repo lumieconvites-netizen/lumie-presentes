@@ -636,19 +636,59 @@
 .resource-carousel-track {
   display: flex;
   gap: 18px;
+  align-items: stretch;
   width: max-content;
   animation: resourceMarquee 38s linear infinite;
 }
 
 .resource-card {
-  width: 270px;
+  width: 360px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 174px;
   transition: transform 260ms ease, box-shadow 260ms ease;
 }
 
 .resource-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 16px 28px rgba(104, 58, 39, 0.12);
+}
+
+.resource-card-mock {
+  width: 126px;
+  min-width: 126px;
+  height: 126px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.resource-card-copy {
+  flex: 1;
+  text-align: left;
+}
+
+.resource-mock-gallery {
+  background: radial-gradient(circle at 25% 25%, #ffe3d3 0%, #f6c8b1 30%, #eb9a79 100%);
+}
+
+.resource-mock-messages {
+  background: radial-gradient(circle at 30% 10%, #f2f8f5 0%, #dff0e7 40%, #c0dfce 100%);
+}
+
+.resource-mock-countdown {
+  background: linear-gradient(140deg, #fff6ee 0%, #ffe5d6 45%, #ffd8c2 100%);
+}
+
+.resource-mock-playlist {
+  background: radial-gradient(circle at 50% -10%, #fff8f3 0%, #f2e4db 38%, #e2d5ce 100%);
+}
+
+.resource-mock-templates {
+  background: linear-gradient(145deg, #fff7f1 0%, #faeee7 40%, #ecdcd2 100%);
 }
 
 @keyframes resourceMarquee {
@@ -682,7 +722,23 @@
 
 @media (max-width: 768px) {
   .resource-card {
-    width: 240px;
+    width: 320px;
+    min-height: 156px;
+    gap: 10px;
+  }
+
+  .resource-card-mock {
+    width: 104px;
+    min-width: 104px;
+    height: 104px;
+  }
+
+  .resource-card-copy h3 {
+    font-size: 1.35rem;
+  }
+
+  .resource-card-copy p {
+    font-size: 0.82rem;
   }
 
   .resource-carousel-track {
