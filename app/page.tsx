@@ -412,7 +412,7 @@ export default function HomePage() {
 
             <div className="mt-14 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
               <div className="relative rounded-[2rem] border border-[#e5d1c3] bg-white p-5 shadow-xl">
-                <div className="relative overflow-hidden rounded-[1.5rem] border border-[#d9e6d9] bg-[#edf5ea] h-[480px] lg:h-[620px]">
+                <div className="relative overflow-hidden rounded-[1.5rem] border border-[#d9e6d9] bg-[#edf5ea] h-[420px] sm:h-[500px] lg:h-[620px]">
                   <div className="absolute inset-0 map-grid" />
 
                   <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -422,17 +422,17 @@ export default function HomePage() {
                     />
                   </svg>
 
-                  <div className="absolute left-[16%] top-[58%] rounded-2xl bg-white/95 px-4 py-3 shadow-md border border-[#dce7db]">
+                  <div className="absolute map-chip-waze rounded-2xl bg-white/95 px-3 py-2 sm:px-4 sm:py-3 shadow-md border border-[#dce7db]">
                     <div className="flex items-center gap-2">
                       <span className="waze-logo">
                         <span className="waze-face" />
                         <span className="waze-wheel waze-wheel-left" />
                         <span className="waze-wheel waze-wheel-right" />
                       </span>
-                      <p className="text-sm font-semibold text-[#3d2f29]">Waze</p>
+                      <p className="text-xs sm:text-sm font-semibold text-[#3d2f29]">Waze</p>
                     </div>
                   </div>
-                  <div className="absolute left-[34%] top-[26%] rounded-2xl bg-white/95 px-4 py-3 shadow-md border border-[#dce7db]">
+                  <div className="absolute map-chip-gmaps rounded-2xl bg-white/95 px-3 py-2 sm:px-4 sm:py-3 shadow-md border border-[#dce7db]">
                     <div className="flex items-center gap-2">
                       <span className="google-maps-logo">
                         <span className="gm-dot gm-blue" />
@@ -440,12 +440,12 @@ export default function HomePage() {
                         <span className="gm-dot gm-yellow" />
                         <span className="gm-dot gm-green" />
                       </span>
-                      <p className="text-sm font-semibold text-[#3d2f29]">Google Maps</p>
+                      <p className="text-xs sm:text-sm font-semibold text-[#3d2f29]">Google Maps</p>
                     </div>
                   </div>
 
-                  <div className="absolute left-[58%] top-[12%]">
-                    <div className="mb-2 rounded-xl bg-white/95 border border-[#ecdccf] px-3 py-1.5 text-sm font-semibold text-[#5a473f] shadow-sm">
+                  <div className="absolute map-pin-wrap">
+                    <div className="mb-2 rounded-xl bg-white/95 border border-[#ecdccf] px-3 py-1.5 text-xs sm:text-sm font-semibold text-[#5a473f] shadow-sm">
                       Local do evento
                     </div>
                     <div className="map-pin-pulse relative h-16 w-16 rounded-full bg-[#c65a3a]/20 flex items-center justify-center">
@@ -455,7 +455,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="absolute left-[20%] bottom-6 rounded-xl bg-white/95 border border-[#ecdccf] px-3 py-2 text-xs text-[#6a564d] shadow-md note-chip-float">
+                  <div className="absolute map-route-note rounded-xl bg-white/95 border border-[#ecdccf] px-3 py-2 text-xs text-[#6a564d] shadow-md note-chip-float">
                     Rota atualizada agora
                   </div>
                 </div>
@@ -506,27 +506,59 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-24 bg-[#fffaf6] relative overflow-hidden">
-        <div className="absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#c65a3a]/10 blur-3xl pointer-events-none" />
-        <div className="container mx-auto px-6 text-center">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-4xl md:text-6xl text-foreground mb-3">Como funciona?</h2>
-            <p className="text-lg text-muted-foreground">Uma jornada simples, elegante e sem fricção.</p>
-          </div>
+      <section className="bg-[#fffaf6]">
+        <div className="py-24 relative overflow-hidden">
+          <div className="absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#c65a3a]/10 blur-3xl pointer-events-none" />
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-14">
+              <h2 className="font-display text-4xl md:text-6xl text-foreground">Como funciona</h2>
+              <p className="mt-3 text-lg text-muted-foreground">Em 4 passos simples</p>
+            </div>
 
-          <div className="relative max-w-6xl mx-auto">
-            <div className="hidden md:block absolute left-10 right-10 top-8 h-px bg-gradient-to-r from-[#e5c9b8] via-[#c65a3a]/50 to-[#e5c9b8]" />
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 max-w-6xl mx-auto">
               {steps.map((step) => (
-                <div key={step.n} className="relative rounded-3xl border border-[#ead9cd] bg-white/95 p-7 text-left shadow-sm hover:shadow-lg hover:-translate-y-1 transition">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white font-bold text-lg shadow-md mb-5 relative z-10">
-                    {step.n}
+                <div key={step.n} className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <span className="font-display text-5xl text-[#e1bda9] leading-none">{String(step.n).padStart(2, '0')}</span>
+                    <span className="h-px w-8 bg-[#e8cfc1]" />
                   </div>
-                  <h3 className="font-display text-3xl text-foreground mb-2">{step.title}</h3>
-                  <p className="text-[#6f5a50] text-base leading-relaxed">{step.desc}</p>
+                  <h3 className="font-display text-3xl text-[#3d2f29]">{step.title}</h3>
+                  <p className="mt-2 text-sm text-[#6f5a50] max-w-[220px] mx-auto leading-relaxed">{step.desc}</p>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-[#2e2424] via-[#1f1a1c] to-[#2d2422] py-14">
+          <div className="container mx-auto px-6">
+            <div className="grid sm:grid-cols-3 gap-8 max-w-5xl mx-auto text-center">
+              <div>
+                <p className="font-display text-5xl text-[#d76d4a]">R$ 2M+</p>
+                <p className="mt-2 text-[#e3d9d3]">em presentes convertidos</p>
+              </div>
+              <div>
+                <p className="font-display text-5xl text-[#f0b477]">2.500+</p>
+                <p className="mt-2 text-[#e3d9d3]">listas criadas</p>
+              </div>
+              <div>
+                <p className="font-display text-5xl text-[#f0b477]">98%</p>
+                <p className="mt-2 text-[#e3d9d3]">clientes satisfeitos</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-[#a5482d] to-[#c65a3a] py-16">
+          <div className="container mx-auto px-6 text-center">
+            <h3 className="font-display text-4xl md:text-5xl text-white">Pronto para criar sua lista?</h3>
+            <p className="mt-4 text-white/90 max-w-2xl mx-auto text-lg">
+              Comece agora e transforme seus presentes em creditos.
+              Rapido para criar, elegante para compartilhar.
+            </p>
+            <Button asChild size="lg" className="mt-8 bg-white text-[#a5482d] hover:bg-[#fff3ec] rounded-xl px-8">
+              <Link href="/cadastro">Criar Minha Lista Gratis</Link>
+            </Button>
           </div>
         </div>
       </section>

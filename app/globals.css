@@ -516,3 +516,45 @@
 .waze-wheel-right {
   right: 3px;
 }
+
+.map-chip-gmaps {
+  left: 34%;
+  top: 26%;
+}
+
+.map-chip-waze {
+  left: 16%;
+  top: 58%;
+}
+
+.map-pin-wrap {
+  left: 58%;
+  top: 12%;
+}
+
+.map-route-note {
+  left: 20%;
+  bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .map-chip-gmaps {
+    left: 42%;
+    top: 34%;
+  }
+
+  .map-chip-waze {
+    left: 16%;
+    top: 64%;
+  }
+
+  .map-pin-wrap {
+    left: 60%;
+    top: 16%;
+  }
+
+  .map-route-note {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
