@@ -200,24 +200,8 @@
   font-family: var(--list-font-title, 'Playfair Display'), serif !important;
 }
 
-.list-font-scope h1 {
-  font-size: clamp(2.2rem, 6vw, 5.2rem);
-  line-height: 1.08;
-}
-
-.list-font-scope h2 {
-  font-size: clamp(1.8rem, 4.2vw, 3.5rem);
-  line-height: 1.12;
-}
-
-.list-font-scope h3 {
-  font-size: clamp(1.5rem, 3.3vw, 2.6rem);
-  line-height: 1.16;
-}
-
 .list-font-scope .lp-section {
   position: relative;
-  padding: 12px;
 }
 
 .list-font-scope .lp-section + .lp-section::before {
@@ -231,22 +215,15 @@
   background: linear-gradient(90deg, transparent, rgba(142, 61, 44, 0.42), transparent);
 }
 
-.list-font-scope .lp-surface {
-  border-radius: 26px;
-  border: 1px solid rgba(234, 217, 205, 0.95);
-  background: linear-gradient(170deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.72));
-  box-shadow: 0 18px 45px rgba(81, 48, 36, 0.12);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+.list-font-scope .lp-section + .lp-section {
+  margin-top: 12px;
+  padding-top: 18px;
 }
 
 @media (max-width: 768px) {
-  .list-font-scope .lp-section {
-    padding: 8px;
-  }
-
-  .list-font-scope .lp-surface {
-    border-radius: 18px;
+  .list-font-scope .lp-section + .lp-section {
+    margin-top: 8px;
+    padding-top: 14px;
   }
 }
 
