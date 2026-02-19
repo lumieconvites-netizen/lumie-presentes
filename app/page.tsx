@@ -482,27 +482,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">Como funciona?</h2>
-            <p className="text-lg text-muted-foreground">Simples em apenas 4 passos</p>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            {steps.map((step) => (
-              <div key={step.n} className="bg-[#fcfaf8] border border-[#ead9cd] rounded-2xl p-8">
-                <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xl mb-6">
-                  {step.n}
-                </div>
-                <h3 className="font-display text-2xl font-bold text-foreground mb-3">{step.title}</h3>
-                <p className="text-muted-foreground">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="py-20 bg-[#f7f2ed]">
         <div className="container mx-auto px-6">
           <div className="text-center mb-14">
@@ -527,21 +506,27 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-[#fffaf6] relative overflow-hidden">
+        <div className="absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#c65a3a]/10 blur-3xl pointer-events-none" />
         <div className="container mx-auto px-6 text-center">
-          <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-8">Preço justo e transparente</h2>
-          <div className="max-w-lg mx-auto bg-gradient-to-br from-primary/10 to-primary/5 rounded-3xl p-12 shadow-lg border border-[#ead9cd]">
-            <div className="text-6xl font-display font-bold text-primary mb-4">11,99%</div>
-            <p className="text-xl text-foreground mb-8">Taxa única por presente recebido</p>
-            <div className="space-y-3 text-left mb-8 text-foreground">
-              <p>Sem mensalidade</p>
-              <p>Sem taxa de cadastro</p>
-              <p>Você escolhe quem paga a taxa</p>
-              <p>Até 100 presentes por lista</p>
+          <div className="text-center mb-16">
+            <h2 className="font-display text-4xl md:text-6xl text-foreground mb-3">Como funciona?</h2>
+            <p className="text-lg text-muted-foreground">Uma jornada simples, elegante e sem fricção.</p>
+          </div>
+
+          <div className="relative max-w-6xl mx-auto">
+            <div className="hidden md:block absolute left-10 right-10 top-8 h-px bg-gradient-to-r from-[#e5c9b8] via-[#c65a3a]/50 to-[#e5c9b8]" />
+            <div className="grid md:grid-cols-4 gap-6">
+              {steps.map((step) => (
+                <div key={step.n} className="relative rounded-3xl border border-[#ead9cd] bg-white/95 p-7 text-left shadow-sm hover:shadow-lg hover:-translate-y-1 transition">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white font-bold text-lg shadow-md mb-5 relative z-10">
+                    {step.n}
+                  </div>
+                  <h3 className="font-display text-3xl text-foreground mb-2">{step.title}</h3>
+                  <p className="text-[#6f5a50] text-base leading-relaxed">{step.desc}</p>
+                </div>
+              ))}
             </div>
-            <Button asChild size="lg" className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm rounded-xl px-8">
-              <Link href="/cadastro">Começar agora</Link>
-            </Button>
           </div>
         </div>
       </section>
