@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateTotal } from '@/lib/utils';
-import { createCreditCardOrder, createPixOrder } from '@/lib/pagarme';
+import { createCreditCardOrder, createPixOrder, getOrder } from '@/lib/pagarme';
 import { z } from 'zod';
 
 const orderSchema = z.object({
@@ -90,9 +90,18 @@ function roundCents(value: number) {
   return Math.round(value);
 }
 
+function looksLikeSuccessReason(reason?: string | null) {
+  if (!reason) return false;
+  return /(aprovad|approved|sucesso|capturad|captured)/i.test(reason);
+}
+
 function isInvalidRequestError(error: any) {
   const raw = String(error?.message ?? "");
   return /Pagar\.me error 400/i.test(raw) && /request is invalid/i.test(raw);
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function calculateCommissionSplit(params: {
@@ -386,30 +395,64 @@ export async function POST(request: Request) {
           effectiveSplitReason = 'split_invalid_fallback';
         }
 
-        const charge = pagarmeOrder?.charges?.[0];
-        const transaction = charge?.last_transaction;
-        const chargeStatus = String(charge?.status ?? '').toLowerCase();
-        const transactionStatus = String(transaction?.status ?? '').toLowerCase();
-        const isFailed =
+        let latestOrder = pagarmeOrder;
+        let charge = latestOrder?.charges?.[0];
+        let transaction = charge?.last_transaction;
+        let chargeStatus = String(charge?.status ?? '').toLowerCase();
+        let transactionStatus = String(transaction?.status ?? '').toLowerCase();
+        let isFailed =
           chargeStatus === 'failed' ||
           chargeStatus === 'canceled' ||
           chargeStatus === 'refused' ||
           transactionStatus === 'failed' ||
           transactionStatus === 'canceled' ||
-          transactionStatus === 'refused';
+          transactionStatus === 'refused' ||
+          transactionStatus === 'not_authorized';
+
+        const hasSuspiciousSuccessSignals =
+          looksLikeSuccessReason(transaction?.acquirer_message) ||
+          String(transaction?.acquirer_return_code ?? '') === '0000';
+
+        if (isFailed && hasSuspiciousSuccessSignals && latestOrder?.id) {
+          // Evita falso negativo em respostas transientes do gateway.
+          for (let attempt = 0; attempt < 2; attempt += 1) {
+            await wait(1200);
+            const refreshedOrder = await getOrder(String(latestOrder.id));
+            latestOrder = refreshedOrder;
+            charge = refreshedOrder?.charges?.[0];
+            transaction = charge?.last_transaction;
+            chargeStatus = String(charge?.status ?? '').toLowerCase();
+            transactionStatus = String(transaction?.status ?? '').toLowerCase();
+            isFailed =
+              chargeStatus === 'failed' ||
+              chargeStatus === 'canceled' ||
+              chargeStatus === 'refused' ||
+              transactionStatus === 'failed' ||
+              transactionStatus === 'canceled' ||
+              transactionStatus === 'refused' ||
+              transactionStatus === 'not_authorized';
+            if (!isFailed) break;
+          }
+        }
+
+        const failureReasons = [
+          transaction?.status_reason,
+          transaction?.gateway_response?.errors?.[0]?.message,
+          transaction?.acquirer_message,
+          charge?.last_transaction?.status_reason,
+        ].filter((value): value is string => Boolean(value && String(value).trim()));
+
+        const nonSuccessReasons = failureReasons.filter((reason) => !looksLikeSuccessReason(reason));
+        const firstGatewayReason = failureReasons[0] ?? null;
 
         const failReason =
-          transaction?.status_reason ||
-          transaction?.acquirer_message ||
-          charge?.last_transaction?.status_reason ||
-          transaction?.gateway_response?.errors?.[0]?.message ||
-          charge?.status ||
-          'Pagamento recusado pelo gateway';
+          nonSuccessReasons[0] ||
+          `Pagamento recusado pelo gateway (charge=${chargeStatus || 'unknown'}, transaction=${transactionStatus || 'unknown'})`;
 
         await prisma.order.update({
           where: { id: order.id },
           data: {
-            pagarmeOrderId: pagarmeOrder?.id ?? null,
+            pagarmeOrderId: latestOrder?.id ?? null,
             pagarmeChargeId: charge?.id ?? null,
             paymentMethod: data.paymentMethod === 'CREDIT_CARD' ? 'credit_card' : 'pix',
             ...(isFailed ? { status: 'REFUSED' as const } : {}),
@@ -417,10 +460,22 @@ export async function POST(request: Request) {
         });
 
         if (isFailed) {
+          console.warn('Pagamento recusado pela Pagar.me', {
+            orderId: order.id,
+            chargeStatus: charge?.status ?? null,
+            transactionStatus: transaction?.status ?? null,
+            transactionStatusReason: transaction?.status_reason ?? null,
+            acquirerMessage: transaction?.acquirer_message ?? null,
+            gatewayErrorMessage: transaction?.gateway_response?.errors?.[0]?.message ?? null,
+          });
+
           return NextResponse.json(
             {
               error: 'Pagamento recusado pela Pagar.me.',
               details: failReason,
+              gatewayReason: firstGatewayReason,
+              acquirerReturnCode: transaction?.acquirer_return_code ?? null,
+              acquirerName: transaction?.acquirer_name ?? null,
               chargeStatus: charge?.status ?? null,
               transactionStatus: transaction?.status ?? null,
               orderId: order.id,

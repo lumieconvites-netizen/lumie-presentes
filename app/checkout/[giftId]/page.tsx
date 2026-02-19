@@ -66,6 +66,17 @@ async function parseJsonSafe(res: Response) {
   }
 }
 
+function buildCheckoutErrorMessage(data: any) {
+  const baseError = data?.error ?? 'Erro ao processar pedido';
+  const orderId = data?.orderId ? ` Pedido: ${data.orderId}.` : '';
+  const statusHint =
+    data?.transactionStatus === 'not_authorized'
+      ? ' Cartao nao autorizado pelo emissor. Tente outro cartao ou PIX.'
+      : '';
+  const detail = data?.details ? ` ${data.details}` : '';
+  return `${baseError}${detail}${statusHint}${orderId}`.trim();
+}
+
 export default function CheckoutPage({ params }: { params: { giftId: string } }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -196,7 +207,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
 
       const data = await parseJsonSafe(res);
       if (!res.ok) {
-        throw new Error(data?.details ? `${data?.error ?? 'Erro ao processar pedido'} ${data.details}` : (data?.error ?? 'Erro ao processar pedido'));
+        throw new Error(buildCheckoutErrorMessage(data));
       }
 
       if (data?.mode === 'pagarme_pix') {
