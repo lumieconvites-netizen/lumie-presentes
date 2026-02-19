@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
+import {
+  buildGiftListSlug,
+  isLegacyGiftListSlug,
+  normalizeGiftListSlugInput,
+  validateGiftListSlug,
+} from "@/lib/gift-list-slug";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,6 +86,27 @@ export async function PATCH(req: Request) {
     if (typeof body?.isPublished === "boolean") data.isPublished = body.isPublished;
     if (typeof body?.title === "string") data.title = body.title.trim() || "Minha Lista de Presentes";
     if (typeof body?.description === "string") data.description = body.description.trim() || null;
+    if (typeof body?.slug === "string") {
+      const normalizedSlug = normalizeGiftListSlugInput(body.slug);
+      const validation = validateGiftListSlug(normalizedSlug);
+      if (!validation.ok) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+      }
+
+      const conflict = await prisma.giftList.findFirst({
+        where: {
+          slug: normalizedSlug,
+          NOT: { id: giftList.id },
+        },
+        select: { id: true },
+      });
+
+      if (conflict) {
+        return NextResponse.json({ error: "Essa URL ja esta em uso. Tente outra." }, { status: 409 });
+      }
+
+      data.slug = normalizedSlug;
+    }
 
     if (Object.keys(data).length === 0 && !nextFeeMode) {
       return NextResponse.json({ error: "Nenhum campo valido para atualizar" }, { status: 400 });

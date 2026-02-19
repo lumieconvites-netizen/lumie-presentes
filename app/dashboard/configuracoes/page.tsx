@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useUser } from '@/contexts/user-context';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,12 +15,10 @@ export default function ConfiguracoesPage() {
   const { user, updateUser, settings, updateSettings } = useUser();
   const { data: session, status, update } = useSession();
 
-  // Fonte de verdade: session
   const sessionName = session?.user?.name ?? '';
   const sessionEmail = session?.user?.email ?? '';
   const sessionImage = (session?.user as any)?.image as string | undefined;
 
-  // Estados do form
   const [photo, setPhoto] = useState<string | undefined>(sessionImage || user?.photo);
   const [name, setName] = useState(sessionName || user?.name || '');
   const [email, setEmail] = useState(sessionEmail || user?.email || '');
@@ -30,9 +28,15 @@ export default function ConfiguracoesPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [uploading, setUploading] = useState(false);
   const [savingFeeMode, setSavingFeeMode] = useState(false);
-  const [giftListId, setGiftListId] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
 
-  // Sempre que session atualizar, sincroniza a UI
+  const [giftListId, setGiftListId] = useState('');
+  const [giftListSlug, setGiftListSlug] = useState('');
+  const [slugInput, setSlugInput] = useState('');
+  const [slugChecking, setSlugChecking] = useState(false);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [slugMessage, setSlugMessage] = useState('');
+
   useEffect(() => {
     if (sessionImage) setPhoto(sessionImage);
     if (sessionName) setName(sessionName);
@@ -48,10 +52,17 @@ export default function ConfiguracoesPage() {
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
-        if (data?.id) setGiftListId(data.id);
+
+        if (typeof data?.id === 'string') setGiftListId(data.id);
+        if (typeof data?.slug === 'string') {
+          setGiftListSlug(data.slug);
+          setSlugInput(data.slug);
+          setSlugAvailable(true);
+          setSlugMessage('URL disponivel.');
+        }
         updateSettings({ feePassedToGuest: data?.feeMode === 'PASS_TO_GUEST' });
       } catch {
-        // sem bloqueio de tela em caso de falha de leitura
+        // non-blocking
       }
     })();
 
@@ -60,6 +71,46 @@ export default function ConfiguracoesPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const raw = slugInput.trim();
+    if (!raw) {
+      setSlugAvailable(false);
+      setSlugMessage('Informe uma URL para sua lista.');
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setSlugChecking(true);
+        const res = await fetch(`/api/gift-lists/slug-availability?slug=${encodeURIComponent(raw)}`, {
+          cache: 'no-store',
+        });
+        const data = await res.json().catch(() => ({}));
+
+        const normalized = String(data?.normalizedSlug ?? '').trim();
+        if (normalized && normalized !== slugInput) {
+          setSlugInput(normalized);
+        }
+
+        if (!res.ok) {
+          setSlugAvailable(false);
+          setSlugMessage(data?.error ?? 'Nao foi possivel validar a URL.');
+          return;
+        }
+
+        setSlugAvailable(Boolean(data?.available));
+        setSlugMessage(data?.available ? 'URL disponivel.' : data?.error || 'Essa URL ja esta em uso.');
+      } catch {
+        setSlugAvailable(false);
+        setSlugMessage('Nao foi possivel validar a URL.');
+      } finally {
+        setSlugChecking(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [slugInput]);
 
   const handleFeeModeToggle = async (checked: boolean) => {
     const previous = settings.feePassedToGuest;
@@ -94,7 +145,6 @@ export default function ConfiguracoesPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // preview imediato (local)
     const previewUrl = URL.createObjectURL(file);
     setPhoto(previewUrl);
     setUploading(true);
@@ -111,67 +161,74 @@ export default function ConfiguracoesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        console.error('upload error:', data);
         alert(data?.error ?? 'Falha ao enviar foto.');
         setPhoto(sessionImage || user?.photo);
         return;
       }
 
-      // URL pública do Supabase (persistida no banco)
       setPhoto(data.url);
-
-      // mantém compat com seu context (se algum lugar usa user.photo)
       updateUser({ photo: data.url });
-
-      // MUITO IMPORTANTE: força NextAuth buscar novamente a session (callbacks)
       await update();
-
-      // opcional: limpa o blob antigo do preview
       URL.revokeObjectURL(previewUrl);
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert('Erro inesperado no upload.');
       setPhoto(sessionImage || user?.photo);
     } finally {
       setUploading(false);
-      // permite reenviar o mesmo arquivo
       e.target.value = '';
     }
   };
 
   const handleSaveProfile = async () => {
     try {
-      // Salva no banco (e session vai refletir depois do update())
-      const res = await fetch('/api/me', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
+      setSavingProfile(true);
 
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data?.error ?? 'Falha ao salvar perfil.');
+      const [profileRes, slugRes] = await Promise.all([
+        fetch('/api/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
+        }),
+        fetch('/api/gift-lists/my-list', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            giftListId: giftListId || undefined,
+            slug: slugInput,
+          }),
+        }),
+      ]);
+
+      const profileData = await profileRes.json().catch(() => ({}));
+      const slugData = await slugRes.json().catch(() => ({}));
+
+      if (!profileRes.ok) {
+        alert(profileData?.error ?? 'Falha ao salvar perfil.');
+        return;
+      }
+      if (!slugRes.ok) {
+        alert(slugData?.error ?? 'Falha ao salvar URL da lista.');
         return;
       }
 
-      // atualiza a session com o novo nome
+      if (typeof slugData?.slug === 'string') {
+        setGiftListSlug(slugData.slug);
+        setSlugInput(slugData.slug);
+      }
+
       await update();
-
-      // mantém compat com seu context
       updateUser({ name });
-
       alert('Perfil atualizado com sucesso!');
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert('Erro inesperado ao salvar.');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
   const handleChangePassword = () => {
-    // Aqui você ainda não implementou backend de senha,
-    // então por enquanto mantemos o comportamento atual:
     if (newPassword !== confirmPassword) {
-      alert('As senhas não coincidem!');
+      alert('As senhas nao coincidem!');
       return;
     }
 
@@ -181,7 +238,12 @@ export default function ConfiguracoesPage() {
     setConfirmPassword('');
   };
 
-  // Evita render esquisito enquanto session carrega
+  const publicBase = useMemo(
+    () => (typeof window !== 'undefined' ? window.location.origin : 'https://lumieeventos.com'),
+    []
+  );
+  const previewSlug = slugInput.trim() || giftListSlug;
+
   if (status === 'loading') {
     return <div className="p-6">Carregando...</div>;
   }
@@ -189,8 +251,8 @@ export default function ConfiguracoesPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-display text-foreground mb-2">Configurações</h1>
-        <p className="text-gray-500">Gerencie suas preferências e dados da conta</p>
+        <h1 className="text-3xl font-display text-foreground mb-2">Configuracoes</h1>
+        <p className="text-gray-500">Gerencie suas preferencias e dados da conta</p>
       </div>
 
       <Tabs defaultValue="perfil" className="space-y-6">
@@ -209,7 +271,6 @@ export default function ConfiguracoesPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* PERFIL */}
         <TabsContent value="perfil" className="space-y-6">
           <Card>
             <CardHeader>
@@ -220,13 +281,7 @@ export default function ConfiguracoesPage() {
                 <div className="relative">
                   {photo ? (
                     <div className="relative w-24 h-24 rounded-full overflow-hidden">
-                      <Image
-                        src={photo}
-                        alt="Foto de perfil"
-                        fill
-                        className="object-cover"
-                        sizes="96px"
-                      />
+                      <Image src={photo} alt="Foto de perfil" fill className="object-cover" sizes="96px" />
                     </div>
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-display">
@@ -241,20 +296,13 @@ export default function ConfiguracoesPage() {
                     title={uploading ? 'Enviando...' : 'Alterar foto'}
                   >
                     <Camera className="w-4 h-4 text-white" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handlePhotoUpload}
-                    />
+                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
                   </label>
                 </div>
 
                 <div>
-                  <p className="font-medium text-foreground mb-1">
-                    Alterar foto {uploading ? '(enviando...)' : ''}
-                  </p>
-                  <p className="text-sm text-gray-500">JPG, PNG ou GIF. Máx 5MB.</p>
+                  <p className="font-medium text-foreground mb-1">Alterar foto {uploading ? '(enviando...)' : ''}</p>
+                  <p className="text-sm text-gray-500">JPG, PNG ou GIF. Max 5MB.</p>
                 </div>
               </div>
             </CardContent>
@@ -262,7 +310,7 @@ export default function ConfiguracoesPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Informações Pessoais</CardTitle>
+              <CardTitle>Informacoes Pessoais</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -276,15 +324,24 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Usuário (URL)</label>
-                <Input value={user?.username || ''} disabled />
-                <p className="text-xs text-gray-500 mt-1">
-                  Seu link: lumie.com/lista/{user?.username}
+                <label className="text-sm font-medium mb-2 block">Usuario (URL)</label>
+                <Input
+                  value={slugInput}
+                  onChange={(e) => setSlugInput(e.target.value)}
+                  placeholder="seu-url-da-lista"
+                  disabled={savingProfile}
+                />
+                <p className={`text-xs mt-1 ${slugAvailable ? 'text-green-600' : 'text-gray-500'}`}>
+                  {slugChecking ? 'Verificando disponibilidade...' : slugMessage || 'Defina a URL da sua lista.'}
                 </p>
+                <p className="text-xs text-gray-500 mt-1">Seu link: {publicBase}/site/{previewSlug || 'seu-slug'}</p>
               </div>
 
-              <Button onClick={handleSaveProfile} disabled={!name || uploading}>
-                Salvar Alterações
+              <Button
+                onClick={handleSaveProfile}
+                disabled={!name || uploading || savingProfile || slugChecking || !slugAvailable}
+              >
+                {savingProfile ? 'Salvando...' : 'Salvar Alteracoes'}
               </Button>
             </CardContent>
           </Card>
@@ -296,52 +353,35 @@ export default function ConfiguracoesPage() {
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Senha Atual</label>
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                />
+                <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
               </div>
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Nova Senha</label>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
+                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
               </div>
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Confirmar Nova Senha</label>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
+                <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
               </div>
 
-              <Button onClick={handleChangePassword}>
-                Alterar Senha
-              </Button>
+              <Button onClick={handleChangePassword}>Alterar Senha</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* TAXAS */}
         <TabsContent value="taxas">
           <Card>
             <CardHeader>
-              <CardTitle>Configuração de Taxa</CardTitle>
+              <CardTitle>Configuracao de Taxa</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="font-medium text-foreground">Repassar taxa ao convidado</h3>
-                    <p className="text-sm text-gray-500">
-                      Quando ativo, o convidado paga o valor do presente + 11,99%
-                    </p>
+                    <p className="text-sm text-gray-500">Quando ativo, o convidado paga o valor do presente + 11,99%</p>
                   </div>
 
                   <Switch
@@ -356,13 +396,13 @@ export default function ConfiguracoesPage() {
 
                   {settings.feePassedToGuest ? (
                     <div className="text-sm space-y-1">
-                      <p>• Convidado paga: <strong className="text-primary">R$ 111,99</strong></p>
-                      <p>• Você recebe: <strong className="text-green-600">R$ 100,00</strong></p>
+                      <p>- Convidado paga: <strong className="text-primary">R$ 111,99</strong></p>
+                      <p>- Voce recebe: <strong className="text-green-600">R$ 100,00</strong></p>
                     </div>
                   ) : (
                     <div className="text-sm space-y-1">
-                      <p>• Convidado paga: <strong className="text-primary">R$ 100,00</strong></p>
-                      <p>• Você recebe: <strong className="text-green-600">R$ 88,01</strong></p>
+                      <p>- Convidado paga: <strong className="text-primary">R$ 100,00</strong></p>
+                      <p>- Voce recebe: <strong className="text-green-600">R$ 88,01</strong></p>
                       <p className="text-xs text-gray-500">Taxa de R$ 11,99 descontada</p>
                     </div>
                   )}
@@ -372,19 +412,16 @@ export default function ConfiguracoesPage() {
           </Card>
         </TabsContent>
 
-        {/* PRIVACIDADE */}
         <TabsContent value="privacidade">
           <Card>
             <CardHeader>
               <CardTitle>Privacidade e Visibilidade</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-<div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-foreground">Recados Públicos</h3>
-                  <p className="text-sm text-gray-500">
-                    Exibir recados na página pública da lista
-                  </p>
+                  <h3 className="font-medium text-foreground">Recados Publicos</h3>
+                  <p className="text-sm text-gray-500">Exibir recados na pagina publica da lista</p>
                 </div>
 
                 <Switch
