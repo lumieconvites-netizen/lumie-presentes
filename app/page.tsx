@@ -37,7 +37,7 @@ const features = [
   {
     id: 'countdown',
     title: 'Contagem Regressiva',
-    text: 'Contador animado para destacar a emoção do grande dia.',
+    text: 'Contador para destacar a emoção do grande dia.',
     icon: TimerReset,
   },
   {
@@ -49,7 +49,7 @@ const features = [
   {
     id: 'templates',
     title: 'Templates Elegantes',
-    text: 'Modelos premium e personalizáveis para cada estilo de festa.',
+    text: 'Modelos premium e personalizáveis para seu evento.',
     icon: LayoutTemplate,
   },
 ];
@@ -519,9 +519,9 @@ export default function HomePage() {
                       </div>
                     )}
                     {feature.id === 'countdown' && (
-                      <div className="grid grid-cols-2 gap-2.5 w-full">
-                        {['12', '08', '24', '49'].map((n) => (
-                          <div key={n} className="h-9 rounded-lg bg-[#fff3ec] border border-[#efcfbd] px-2 flex items-center justify-center">
+                      <div className="grid grid-cols-3 gap-2.5 w-full">
+                        {['12', '08', '24'].map((n) => (
+                          <div key={n} className="h-9 rounded-lg bg-[#fff3ec] border border-[#efcfbd] px-2.5 flex items-center justify-center">
                             <p className="font-display text-lg leading-none text-[#b25134]">{n}</p>
                           </div>
                         ))}
@@ -529,13 +529,13 @@ export default function HomePage() {
                     )}
                     {feature.id === 'playlist' && (
                       <div className="space-y-2">
-                        <div className="rounded-lg bg-white border border-[#ecd9cc] px-2 py-2 flex items-center justify-between">
+                        <div className="rounded-lg bg-white border border-[#ecd9cc] px-2.5 py-2 flex items-center justify-between gap-2">
                           <span className="text-xs text-[#3d2f29]">Spotify</span>
-                          <PlayCircle className="w-4 h-4 text-[#1DB954]" />
+                          <PlayCircle className="w-4 h-4 shrink-0 text-[#1DB954]" />
                         </div>
-                        <div className="rounded-lg bg-white border border-[#ecd9cc] px-2 py-2 flex items-center justify-between">
+                        <div className="rounded-lg bg-white border border-[#ecd9cc] px-2.5 py-2 flex items-center justify-between gap-2">
                           <span className="text-xs text-[#3d2f29]">YouTube Music</span>
-                          <PlayCircle className="w-4 h-4 text-[#FF0000]" />
+                          <PlayCircle className="w-4 h-4 shrink-0 text-[#FF0000]" />
                         </div>
                       </div>
                     )}
@@ -562,7 +562,7 @@ export default function HomePage() {
                       <Icon className="w-5 h-5" />
                     </span>
                     <h3 className="font-display text-[1.6rem] text-foreground mb-1.5 leading-tight">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.text}</p>
+                    <p className={`text-sm text-muted-foreground leading-relaxed ${feature.id === 'templates' ? 'max-w-[24ch]' : ''}`}>{feature.text}</p>
                   </div>
                 </div>
               );
