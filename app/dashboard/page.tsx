@@ -134,7 +134,7 @@ export default function DashboardPage() {
   const waitingFunds = Math.max(0, Number(financial?.waitingFunds ?? 0)) / 100;
   const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0)) / 100;
   const pendingTransferCount = Math.max(0, Number(financial?.pendingTransferCount ?? 0));
-  const releasedTotal = availableNow + pendingTransferAmount;
+  const collectedTotal = Math.max(0, totalPaid);
 
   const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
   const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);
@@ -225,9 +225,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {releasedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              {collectedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Valor ja liberado pela Pagar.me</p>
+            <p className="text-xs text-gray-500 mt-1">Total recebido em pagamentos confirmados</p>
             <p className="text-xs text-gray-500">Saldo atual: {availableNow.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
           </CardContent>
         </Card>
