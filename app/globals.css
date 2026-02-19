@@ -356,37 +356,37 @@
   }
 
   .hero-chip-top {
-    top: 10px !important;
-    right: 10px !important;
-    padding: 8px 12px !important;
+    top: -14px !important;
+    right: 8px !important;
+    padding: 6px 10px !important;
   }
 
   .hero-chip-bottom {
-    left: 10px !important;
-    right: 10px !important;
-    bottom: 10px !important;
-    padding: 10px 12px !important;
+    left: 8px !important;
+    right: auto !important;
+    bottom: -14px !important;
+    padding: 8px 10px !important;
+    max-width: 230px !important;
   }
 
   .hero-chip-top .w-9 {
-    width: 30px !important;
-    height: 30px !important;
+    width: 24px !important;
+    height: 24px !important;
   }
 
   .hero-chip-bottom .w-10 {
-    width: 32px !important;
-    height: 32px !important;
+    width: 26px !important;
+    height: 26px !important;
   }
 
   .hero-chip-top .text-sm,
   .hero-chip-bottom .text-sm {
-    font-size: 0.95rem !important;
-    line-height: 1.15rem !important;
+    font-size: 0.78rem !important;
+    line-height: 1rem !important;
   }
 
   .hero-chip-bottom .text-xs {
-    font-size: 0.78rem !important;
-    line-height: 1rem !important;
+    display: none;
   }
 }
 
