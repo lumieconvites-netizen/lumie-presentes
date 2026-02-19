@@ -506,18 +506,22 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#fffaf6]">
-        <div className="py-24 relative overflow-hidden">
-          <div className="absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#c65a3a]/10 blur-3xl pointer-events-none" />
+      <section className="relative bg-[#f5ebe2] overflow-hidden">
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#c65a3a]/12 blur-3xl" />
+        <div className="py-24 relative">
           <div className="container mx-auto px-6">
-            <div className="text-center mb-14">
-              <h2 className="font-display text-4xl md:text-6xl text-foreground">Como funciona</h2>
-              <p className="mt-3 text-lg text-muted-foreground">Em 4 passos simples</p>
+            <div className="text-center mb-14 max-w-4xl mx-auto">
+              <h2 className="font-display text-5xl md:text-7xl leading-[1.02] text-foreground">
+                Como funciona
+                <span className="block text-primary">de forma elegante</span>
+              </h2>
+              <p className="mt-6 text-lg md:text-2xl text-[#5b473e] leading-relaxed">Em 4 passos simples, com uma experiência premium para você e seus convidados.</p>
+              <p className="mt-8 text-xs md:text-sm tracking-[0.22em] uppercase text-[#9f6a53]">simples • rapido • premium</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 max-w-6xl mx-auto">
               {steps.map((step) => (
-                <div key={step.n} className="text-center">
+                <div key={step.n} className="text-center rounded-3xl border border-[#ead3c3] bg-white/70 px-4 py-7 shadow-sm backdrop-blur-sm">
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <span className="font-display text-5xl text-[#e1bda9] leading-none">{String(step.n).padStart(2, '0')}</span>
                     <span className="h-px w-8 bg-[#e8cfc1]" />
@@ -556,7 +560,7 @@ export default function HomePage() {
               Comece agora e transforme seus presentes em creditos.
               Rapido para criar, elegante para compartilhar.
             </p>
-            <Button asChild size="lg" className="mt-8 bg-white text-[#a5482d] hover:bg-[#fff3ec] rounded-xl px-8">
+            <Button asChild size="lg" className="mt-8 !bg-white !text-[#a5482d] hover:!bg-[#fff3ec] rounded-xl px-8 font-semibold shadow-lg">
               <Link href="/cadastro">Criar Minha Lista Gratis</Link>
             </Button>
           </div>
