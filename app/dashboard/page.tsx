@@ -65,6 +65,8 @@ type FinancialSummary = {
   pendingTransferAmount: number;
   pendingTransferCount: number;
   completedTransferAmount: number;
+  nonFailedTransferAmount: number;
+  nonFailedTransferCount: number;
   latestPendingTransfer: {
     id: string | null;
     status: string | null;
@@ -137,8 +139,10 @@ export default function DashboardPage() {
   const waitingFunds = Math.max(0, Number(financial?.waitingFunds ?? 0)) / 100;
   const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0)) / 100;
   const pendingTransferCount = Math.max(0, Number(financial?.pendingTransferCount ?? 0));
-  const completedTransferAmount = Math.max(0, Number(financial?.completedTransferAmount ?? 0)) / 100;
-  const collectedTotal = availableNow + completedTransferAmount;
+  const nonFailedTransferAmount = Math.max(0, Number(financial?.nonFailedTransferAmount ?? 0)) / 100;
+  const nonFailedTransferCount = Math.max(0, Number(financial?.nonFailedTransferCount ?? 0));
+  const withdrawFee = WITHDRAW_FEE_CENTS / 100;
+  const collectedTotal = availableNow + nonFailedTransferAmount + nonFailedTransferCount * withdrawFee;
 
   const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
   const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);
@@ -231,7 +235,7 @@ export default function DashboardPage() {
             <div className="text-2xl font-bold text-foreground">
               {collectedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Saldo atual + saques concluidos</p>
+            <p className="text-xs text-gray-500 mt-1">Saldo atual + saques solicitados (com taxa)</p>
             <p className="text-xs text-gray-500">Saldo atual: {availableNow.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
           </CardContent>
         </Card>

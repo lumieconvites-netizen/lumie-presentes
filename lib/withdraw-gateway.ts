@@ -71,6 +71,8 @@ type RecipientFinancialSummary = {
   pendingTransferAmount: number;
   pendingTransferCount: number;
   completedTransferAmount: number;
+  nonFailedTransferAmount: number;
+  nonFailedTransferCount: number;
   latestPendingTransfer: {
     id: string | null;
     status: string | null;
@@ -161,15 +163,24 @@ export async function getRecipientFinancialSummaryWithGateway(
           return !isPendingTransferStatus(status) && !isFailedTransferStatus(status);
         })
         .reduce((sum, transfer) => sum + readAmount(transfer?.amount), 0);
+      const nonFailedTransfers = transfers.filter((transfer) => !isFailedTransferStatus(String(transfer?.status ?? "")));
+      const nonFailedTransferAmount = nonFailedTransfers.reduce(
+        (sum, transfer) => sum + readAmount(transfer?.amount),
+        0
+      );
 
       return {
         ...summary,
         completedTransferAmount,
+        nonFailedTransferAmount,
+        nonFailedTransferCount: nonFailedTransfers.length,
       };
     } catch {
       return {
         ...summary,
         completedTransferAmount: 0,
+        nonFailedTransferAmount: 0,
+        nonFailedTransferCount: 0,
       };
     }
   }
@@ -181,6 +192,8 @@ export async function getRecipientFinancialSummaryWithGateway(
     pendingTransferAmount: 0,
     pendingTransferCount: 0,
     completedTransferAmount: 0,
+    nonFailedTransferAmount: 0,
+    nonFailedTransferCount: 0,
     latestPendingTransfer: null,
   };
 }

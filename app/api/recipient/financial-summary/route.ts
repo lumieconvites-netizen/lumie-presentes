@@ -34,6 +34,8 @@ export async function GET() {
             pendingTransferAmount: 0,
             pendingTransferCount: 0,
             completedTransferAmount: 0,
+            nonFailedTransferAmount: 0,
+            nonFailedTransferCount: 0,
             latestPendingTransfer: null,
           },
         },
