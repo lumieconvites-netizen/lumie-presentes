@@ -511,12 +511,9 @@ export default function HomePage() {
         <div className="py-24 relative">
           <div className="container mx-auto px-6">
             <div className="text-center mb-14 max-w-4xl mx-auto">
-              <h2 className="font-display text-5xl md:text-7xl leading-[1.02] text-foreground">
-                Como funciona
-                <span className="block text-primary">de forma elegante</span>
-              </h2>
-              <p className="mt-6 text-lg md:text-2xl text-[#5b473e] leading-relaxed">Em 4 passos simples, com uma experiência premium para você e seus convidados.</p>
-              <p className="mt-8 text-xs md:text-sm tracking-[0.22em] uppercase text-[#9f6a53]">simples • rapido • premium</p>
+              <h2 className="font-display text-5xl md:text-7xl leading-[1.02] text-foreground">Como funciona</h2>
+              <p className="mt-6 text-lg md:text-2xl text-[#5b473e] leading-relaxed">Em 4 passos simples.</p>
+              <p className="mt-8 text-xs md:text-sm tracking-[0.22em] uppercase text-[#9f6a53]">simples • rapido • seguro</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 max-w-6xl mx-auto">
