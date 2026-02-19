@@ -274,14 +274,11 @@ export default function HomePage() {
 
           <div className="mt-20 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             <div className="relative rounded-[2rem] border border-[#d9ece1] bg-gradient-to-b from-white to-[#f3faf6] shadow-xl overflow-visible">
-              <div className="absolute -top-9 right-4 z-40 rounded-2xl bg-gradient-to-r from-[#1fbf83] to-[#37d998] text-white px-4 py-3 shadow-md">
+              <div className="absolute -top-10 right-6 z-40 rounded-xl bg-white/95 backdrop-blur px-3 py-2 border border-[#d9ece1] shadow-md text-xs note-chip-float">
                 <div className="flex items-center gap-2">
-                  <MessageCircleHeart className="w-4 h-4" />
-                  <p className="text-sm font-semibold">Olá! Você confirmou presença?</p>
+                  <p className="font-semibold text-[#3d2f29]">Davi Lucas confirmou a presença</p>
+                  <span className="text-[#17a26c]">✓</span>
                 </div>
-              </div>
-              <div className="absolute top-16 right-5 z-40 rounded-2xl bg-white/95 backdrop-blur px-4 py-3 border border-[#d9ece1] shadow-md text-sm text-[#4f3f37]">
-                Sim! Estarei lá com certeza.
               </div>
               <div className="absolute -bottom-6 left-6 z-40 rounded-xl bg-white/95 backdrop-blur px-4 py-2 border border-[#d9ece1] shadow-md text-sm font-semibold text-[#198f61]">
                 <span className="inline-flex items-center gap-2">
@@ -302,11 +299,11 @@ export default function HomePage() {
                       <p className="text-sm text-[#5d6b63]">Confirmados</p>
                     </div>
                     <div className="rounded-xl border border-[#e2efe8] bg-[#fbfffd] p-4 text-center">
-                      <p className="text-3xl font-bold text-[#179f6a]">330</p>
+                      <p className="text-3xl font-bold text-[#3d2f29]">330</p>
                       <p className="text-sm text-[#5d6b63]">Convidados</p>
                     </div>
                     <div className="rounded-xl border border-[#e2efe8] bg-[#fbfffd] p-4 text-center">
-                      <p className="text-3xl font-bold text-[#179f6a]">110</p>
+                      <p className="text-3xl font-bold text-[#d4a017]">110</p>
                       <p className="text-sm text-[#5d6b63]">Pendentes</p>
                     </div>
                   </div>
@@ -314,14 +311,14 @@ export default function HomePage() {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white px-4 py-2 text-sm font-semibold">
                       <UserPlus className="w-4 h-4" />
-                      Adicionar convite
+                      Adicionar convidado
                     </span>
                     <span className="rounded-xl border border-[#d6e6dd] bg-white text-[#5c4a42] px-4 py-2 text-sm">
-                      Confirmações
+                      Check-in
                     </span>
                     <span className="inline-flex items-center gap-2 rounded-xl border border-[#d6e6dd] bg-white text-[#5c4a42] px-4 py-2 text-sm">
                       <BellRing className="w-4 h-4" />
-                      Lembretes
+                      Configurações
                     </span>
                   </div>
 
