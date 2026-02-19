@@ -9,7 +9,7 @@ import {
 
 import "./globals.css";
 import { Providers } from "@/components/providers/providers";
-import { Footer } from "@/components/layout/footer";
+import { FooterGate } from "@/components/layout/footer-gate";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -113,7 +113,7 @@ export default function RootLayout({
           <main className="flex-1">
             <Providers>{children}</Providers>
           </main>
-          <Footer />
+          <FooterGate />
         </div>
       </body>
     </html>

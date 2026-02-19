@@ -80,3 +80,19 @@ export function Footer() {
     </footer>
   );
 }
+
+export function CompactFooter() {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="border-t border-[#e9d9cd] bg-[#fffaf6]">
+      <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col items-center text-center gap-2">
+        <div className="relative w-16 h-8">
+          <Image src="/logo.png" alt="LUMIE" fill className="object-contain" />
+        </div>
+        <p className="text-sm text-[#6b5a52]">Transforme seus presentes em sonhos realizados.</p>
+        <p className="text-xs text-[#8a786f]">© {currentYear} LUMIE. Todos os direitos reservados.</p>
+      </div>
+    </footer>
+  );
+}
