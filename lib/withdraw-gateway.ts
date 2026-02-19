@@ -112,6 +112,16 @@ function isFailedTransferStatus(status?: string | null): boolean {
   return ["failed", "canceled", "cancelled", "error", "refused", "rejected", "reversed"].includes(s);
 }
 
+function isDashboardWithdrawTransfer(transfer: any): boolean {
+  const source = String(
+    transfer?.metadata?.source ??
+      transfer?.metadata?.origin ??
+      transfer?.source ??
+      ""
+  ).toLowerCase();
+  return source === "lumie_dashboard_withdraw";
+}
+
 async function getSummaryViaGateway(recipientId: string): Promise<RecipientFinancialSummary> {
   const { baseUrl, token } = readGatewayConfig();
   if (!baseUrl) throw new Error("WITHDRAW_GATEWAY_URL nao configurada");
@@ -156,7 +166,9 @@ export async function getRecipientFinancialSummaryWithGateway(
   if (baseUrl) {
     const summary = await getSummaryViaGateway(recipientId);
     try {
-      const transfers = await listRecipientTransfers(recipientId);
+      const transfers = (await listRecipientTransfers(recipientId)).filter((transfer) =>
+        isDashboardWithdrawTransfer(transfer)
+      );
       const pendingTransfers = transfers.filter((transfer) =>
         isPendingTransferStatus(String(transfer?.status ?? ""))
       );

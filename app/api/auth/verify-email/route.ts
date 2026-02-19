@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { getTemplatePresetBySlug } from "@/lib/template-presets";
 import { ensureDefaultReferralCodesForUser, resolveReferralForSignup } from "@/lib/referrals";
+import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
 
 const verifySchema = z.object({
   email: z.string().email("Email invalido"),
@@ -77,19 +78,31 @@ export async function POST(request: Request) {
         role: user.role,
       }, tx);
 
-      const giftList = await tx.giftList.upsert({
-        where: { slug: `lista-${user.id}` },
-        update: {
-          title: selectedTemplate?.defaultTitle ?? "Minha Lista de Presentes",
-          description: selectedTemplate?.defaultDescription ?? "Ajude a realizar nossos sonhos!",
-        },
-        create: {
-          userId: user.id,
-          slug: `lista-${user.id}`,
-          title: selectedTemplate?.defaultTitle ?? "Minha Lista de Presentes",
-          description: selectedTemplate?.defaultDescription ?? "Ajude a realizar nossos sonhos!",
-        },
+      const existingGiftList = await tx.giftList.findFirst({
+        where: { userId: user.id },
+        orderBy: { updatedAt: "desc" },
       });
+      const defaultTitle = selectedTemplate?.defaultTitle ?? "Minha Lista de Presentes";
+      const defaultDescription = selectedTemplate?.defaultDescription ?? "Ajude a realizar nossos sonhos!";
+      const nextSlug = buildGiftListSlug(user.name, user.id);
+
+      const giftList = existingGiftList
+        ? await tx.giftList.update({
+            where: { id: existingGiftList.id },
+            data: {
+              title: defaultTitle,
+              description: defaultDescription,
+              ...(isLegacyGiftListSlug(existingGiftList.slug) ? { slug: nextSlug } : {}),
+            },
+          })
+        : await tx.giftList.create({
+            data: {
+              userId: user.id,
+              slug: nextSlug,
+              title: defaultTitle,
+              description: defaultDescription,
+            },
+          });
 
       if (selectedTemplate) {
         await tx.pageLayout.upsert({

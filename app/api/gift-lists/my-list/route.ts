@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,14 +21,24 @@ export async function GET() {
     });
 
     if (!giftList) {
+      const nextSlug = buildGiftListSlug(session.user.name, session.user.id);
       giftList = await prisma.giftList.create({
         data: {
           userId: session.user.id,
-          slug: `lista-${session.user.id}`,
+          slug: nextSlug,
           title: "Minha Lista de Presentes",
           description: "Ajude a realizar nossos sonhos!",
         },
       });
+    } else if (isLegacyGiftListSlug(giftList.slug)) {
+      // Migra automaticamente slugs antigos para formato legivel + id curto unico.
+      const nextSlug = buildGiftListSlug(session.user.name, session.user.id);
+      if (nextSlug !== giftList.slug) {
+        giftList = await prisma.giftList.update({
+          where: { id: giftList.id },
+          data: { slug: nextSlug },
+        });
+      }
     }
 
     return NextResponse.json(giftList);

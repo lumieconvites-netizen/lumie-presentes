@@ -97,6 +97,16 @@ function isTransferPending(status) {
   ].includes(s);
 }
 
+function isDashboardWithdrawTransfer(transfer) {
+  const source = String(
+    transfer?.metadata?.source ||
+      transfer?.metadata?.origin ||
+      transfer?.source ||
+      ""
+  ).toLowerCase();
+  return source === "lumie_dashboard_withdraw";
+}
+
 function transferTimestamp(transfer) {
   const value = transfer?.updated_at || transfer?.updatedAt || transfer?.created_at || transfer?.createdAt;
   const ts = new Date(value || 0).getTime();
@@ -233,7 +243,9 @@ app.get("/recipient-summary/:recipientId", async (req, res) => {
         )
       : [];
 
-    const transfers = mergeTransfers(byRecipient, byQuery, fromAll);
+    const transfers = mergeTransfers(byRecipient, byQuery, fromAll).filter((transfer) =>
+      isDashboardWithdrawTransfer(transfer)
+    );
     const pendingTransfers = transfers.filter((t) => isTransferPending(t?.status));
     const pendingTransferAmount = pendingTransfers.reduce((sum, t) => sum + readAmount(t?.amount), 0);
     const latestPendingTransfer = pendingTransfers
