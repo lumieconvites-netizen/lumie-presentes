@@ -97,12 +97,38 @@ function isTransferPending(status) {
   ].includes(s);
 }
 
+function transferTimestamp(transfer) {
+  const value = transfer?.updated_at || transfer?.updatedAt || transfer?.created_at || transfer?.createdAt;
+  const ts = new Date(value || 0).getTime();
+  return Number.isFinite(ts) ? ts : 0;
+}
+
+function pickTransferSnapshot(current, next) {
+  if (!current) return next;
+  if (!next) return current;
+
+  const currentPending = isTransferPending(current?.status);
+  const nextPending = isTransferPending(next?.status);
+  if (currentPending !== nextPending) {
+    return currentPending ? next : current;
+  }
+
+  const currentTs = transferTimestamp(current);
+  const nextTs = transferTimestamp(next);
+  if (nextTs > currentTs) return next;
+  if (currentTs > nextTs) return current;
+
+  const currentKeys = Object.keys(current || {}).length;
+  const nextKeys = Object.keys(next || {}).length;
+  return nextKeys >= currentKeys ? next : current;
+}
+
 function mergeTransfers(...lists) {
   const map = new Map();
   for (const list of lists) {
     for (const item of list || []) {
       const key = String(item?.id || "") || JSON.stringify(item);
-      if (!map.has(key)) map.set(key, item);
+      map.set(key, pickTransferSnapshot(map.get(key), item));
     }
   }
   return Array.from(map.values());

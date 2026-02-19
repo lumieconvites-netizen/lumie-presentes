@@ -157,6 +157,20 @@ export async function getRecipientFinancialSummaryWithGateway(
     const summary = await getSummaryViaGateway(recipientId);
     try {
       const transfers = await listRecipientTransfers(recipientId);
+      const pendingTransfers = transfers.filter((transfer) =>
+        isPendingTransferStatus(String(transfer?.status ?? ""))
+      );
+      const pendingTransferAmount = pendingTransfers.reduce(
+        (sum, transfer) => sum + readAmount(transfer?.amount),
+        0
+      );
+      const latestPendingTransfer = pendingTransfers
+        .slice()
+        .sort((a, b) => {
+          const da = new Date(a?.created_at || a?.createdAt || 0).getTime();
+          const db = new Date(b?.created_at || b?.createdAt || 0).getTime();
+          return db - da;
+        })[0];
       const completedTransferAmount = transfers
         .filter((transfer) => {
           const status = String(transfer?.status ?? "");
@@ -171,9 +185,19 @@ export async function getRecipientFinancialSummaryWithGateway(
 
       return {
         ...summary,
+        pendingTransferAmount,
+        pendingTransferCount: pendingTransfers.length,
         completedTransferAmount,
         nonFailedTransferAmount,
         nonFailedTransferCount: nonFailedTransfers.length,
+        latestPendingTransfer: latestPendingTransfer
+          ? {
+              id: latestPendingTransfer?.id ?? null,
+              status: latestPendingTransfer?.status ?? null,
+              amount: readAmount(latestPendingTransfer?.amount),
+              createdAt: latestPendingTransfer?.created_at || latestPendingTransfer?.createdAt || null,
+            }
+          : null,
       };
     } catch {
       return {
