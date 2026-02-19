@@ -722,11 +722,24 @@
 .resource-slide-in-delayed { animation: resourceSlideIn 3s ease-in-out 0.7s infinite; }
 
 @media (max-width: 768px) {
+  .rsvp-showcase {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rsvp-showcase-copy {
+    order: 1;
+  }
+
+  .rsvp-showcase-mock {
+    order: 2;
+  }
+
   .resource-card {
     width: 382px;
     min-height: 186px;
     gap: 12px;
-    flex-direction: row;
+    flex-direction: row-reverse;
   }
 
   .resource-card-mock {

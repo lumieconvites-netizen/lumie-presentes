@@ -21,7 +21,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
-          throw new Error("Email ou senha invalidos");
+          throw new Error("Usuário não cadastrado");
         }
 
         if (user.isBlocked) {
@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
 
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) {
-          throw new Error("Email ou senha invalidos");
+          throw new Error("Senha incorreta");
         }
 
         return {

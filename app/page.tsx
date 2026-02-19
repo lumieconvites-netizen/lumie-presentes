@@ -303,8 +303,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="mt-20 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-            <div className="relative rounded-[2rem] border border-[#d9ece1] bg-gradient-to-b from-white to-[#f3faf6] shadow-xl overflow-visible">
+          <div className="mt-20 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto rsvp-showcase">
+            <div className="rsvp-showcase-mock relative rounded-[2rem] border border-[#d9ece1] bg-gradient-to-b from-white to-[#f3faf6] shadow-xl overflow-visible">
               <div className="absolute -top-6 right-6 z-40 rounded-xl bg-white/95 backdrop-blur px-3 py-2 border border-[#d9ece1] shadow-md text-xs note-chip-float">
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-[#3d2f29]">Davi Lucas confirmou a presença</p>
@@ -373,7 +373,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div>
+            <div className="rsvp-showcase-copy">
               <div className="inline-flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-[#17a26c] to-[#37d998] text-white shadow-lg">
                 <MessageCircleHeart className="w-9 h-9" />
               </div>

@@ -1,23 +1,185 @@
-﻿export default function PrivacidadePage() {
+import { Shield, Database, Lock, Users, FileCheck, Mail } from 'lucide-react';
+
+export default function PrivacidadePage() {
   return (
-    <main className="max-w-4xl mx-auto px-6 py-12 space-y-6">
-      <h1 className="font-display text-4xl text-[#8E3D2C]">Politica de Privacidade</h1>
-      <p className="text-gray-600">
-        Esta politica explica como coletamos, usamos e protegemos seus dados pessoais na LUMIÊ.
-      </p>
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Dados coletados</h2>
-        <p className="text-gray-600">Coletamos dados de cadastro, uso da plataforma e transacoes.</p>
+    <main className="bg-[#f7f2ed] text-[#2b2422]">
+      <section className="border-y border-[#ead6c8] bg-gradient-to-b from-[#f7f2ed] to-[#f2e6dc]">
+        <div className="container mx-auto px-6 py-16 md:py-20 text-center">
+          <h1 className="font-display text-4xl md:text-6xl text-primary leading-tight">Política de Privacidade</h1>
+          <p className="mx-auto mt-5 max-w-4xl text-lg md:text-xl text-[#5f4b42] leading-relaxed">
+            Esta Política explica como a Lumie coleta, utiliza, compartilha e protege seus dados pessoais no uso da
+            plataforma.
+          </p>
+          <p className="mt-5 text-sm text-[#7a665c]">Última atualização: 19 de fevereiro de 2026</p>
+        </div>
       </section>
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Finalidade</h2>
-        <p className="text-gray-600">Usamos os dados para operacao da conta, pagamentos e suporte.</p>
+
+      <section className="py-12 md:py-16">
+        <div className="container mx-auto px-6">
+          <div className="mx-auto max-w-5xl rounded-[2rem] border border-[#e8d3c5] bg-white p-7 md:p-10 shadow-[0_14px_36px_rgba(85,55,40,0.08)]">
+            <h2 className="font-display text-3xl text-primary">1. Quem somos</h2>
+            <div className="mt-4 space-y-2 text-[#5f4b42] leading-relaxed">
+              <p>
+                A <strong>Lumiê Convites</strong>, inscrita no CNPJ <strong>62.076.127/0001-41</strong>, é a responsável
+                pelo tratamento dos dados pessoais no contexto da plataforma Lumie.
+              </p>
+              <p>
+                Contato: <strong>contato@lumie.com.br</strong> e <strong>(16) 98187-3064</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Compartilhamento</h2>
-        <p className="text-gray-600">
-          Compartilhamos apenas com provedores necessarios para pagamento, armazenamento e seguranca.
-        </p>
+
+      <section className="pb-20">
+        <div className="container mx-auto px-6">
+          <div className="mx-auto max-w-5xl space-y-6">
+            <article className="rounded-3xl border border-[#e8d3c5] bg-white p-7 md:p-8">
+              <div className="flex items-start gap-3">
+                <Database className="mt-1 h-6 w-6 text-[#c65a3a]" />
+                <div>
+                  <h2 className="font-display text-3xl text-primary">2. Dados que coletamos</h2>
+                  <div className="mt-3 space-y-2 text-[#5f4b42] leading-relaxed">
+                    <p>Podemos coletar, conforme o uso da plataforma:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Dados de cadastro: nome, e-mail, telefone, CPF e informações de conta.</li>
+                      <li>Dados da lista: textos, imagens, recados e configurações do evento.</li>
+                      <li>Dados transacionais: informações necessárias para processar pagamentos e saques.</li>
+                      <li>Dados técnicos: IP, navegador, dispositivo, cookies e registros de acesso.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-[#e8d3c5] bg-white p-7 md:p-8">
+              <div className="flex items-start gap-3">
+                <FileCheck className="mt-1 h-6 w-6 text-[#c65a3a]" />
+                <div>
+                  <h2 className="font-display text-3xl text-primary">3. Para que usamos os dados (finalidades)</h2>
+                  <div className="mt-3 space-y-2 text-[#5f4b42] leading-relaxed">
+                    <p>Tratamos dados para:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Criar e manter sua conta e sua lista de presentes.</li>
+                      <li>Processar pagamentos, saques e validações antifraude.</li>
+                      <li>Permitir suporte, comunicação e segurança da plataforma.</li>
+                      <li>Cumprir obrigações legais, regulatórias e fiscais.</li>
+                      <li>Melhorar a experiência, desempenho e estabilidade dos serviços.</li>
+                    </ul>
+                    <p>
+                      As bases legais aplicáveis incluem execução de contrato, cumprimento de obrigação legal, legítimo
+                      interesse e, quando aplicável, consentimento.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-[#e8d3c5] bg-white p-7 md:p-8">
+              <div className="flex items-start gap-3">
+                <Users className="mt-1 h-6 w-6 text-[#c65a3a]" />
+                <div>
+                  <h2 className="font-display text-3xl text-primary">4. Compartilhamento de dados</h2>
+                  <div className="mt-3 space-y-2 text-[#5f4b42] leading-relaxed">
+                    <p>
+                      Compartilhamos dados apenas com parceiros necessários para a operação do serviço, sempre com
+                      critério de necessidade e segurança.
+                    </p>
+                    <p>
+                      Em especial, utilizamos a <strong>Pagar.me</strong> para processamento de pagamentos, análise
+                      antifraude, liquidação e repasses financeiros. Nessas hipóteses, os dados necessários para a
+                      transação podem ser tratados por essa parceira conforme regras próprias e legislação aplicável.
+                    </p>
+                    <p>
+                      Também podemos compartilhar dados quando exigido por lei, ordem judicial ou autoridade competente.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-[#e8d3c5] bg-white p-7 md:p-8">
+              <div className="flex items-start gap-3">
+                <Lock className="mt-1 h-6 w-6 text-[#c65a3a]" />
+                <div>
+                  <h2 className="font-display text-3xl text-primary">5. Cookies e coleta automática</h2>
+                  <div className="mt-3 space-y-2 text-[#5f4b42] leading-relaxed">
+                    <p>
+                      Utilizamos cookies e tecnologias similares para autenticação, segurança, desempenho, análise de
+                      uso e personalização da experiência.
+                    </p>
+                    <p>
+                      Você pode ajustar as permissões de cookies no navegador. Porém, a desativação de determinados
+                      cookies pode limitar o funcionamento da plataforma.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-[#e8d3c5] bg-white p-7 md:p-8">
+              <div className="flex items-start gap-3">
+                <Shield className="mt-1 h-6 w-6 text-[#c65a3a]" />
+                <div>
+                  <h2 className="font-display text-3xl text-primary">6. Armazenamento, retenção e exclusão</h2>
+                  <div className="mt-3 space-y-2 text-[#5f4b42] leading-relaxed">
+                    <p>
+                      Aplicamos medidas técnicas e organizacionais para proteger dados pessoais contra acesso não
+                      autorizado, perda, alteração ou uso indevido.
+                    </p>
+                    <p>
+                      A conta e os dados operacionais da lista permanecem ativos por até <strong>90 dias</strong> após o
+                      último dia do evento informado. Após esse prazo, a conta poderá ser excluída da base ativa.
+                    </p>
+                    <p>
+                      Dados que precisem ser preservados para cumprimento legal, regulatório ou defesa de direitos podem
+                      ser mantidos pelo prazo necessário.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-[#e8d3c5] bg-white p-7 md:p-8">
+              <div className="flex items-start gap-3">
+                <FileCheck className="mt-1 h-6 w-6 text-[#c65a3a]" />
+                <div>
+                  <h2 className="font-display text-3xl text-primary">7. Direitos do titular (LGPD)</h2>
+                  <div className="mt-3 space-y-2 text-[#5f4b42] leading-relaxed">
+                    <p>Nos termos da LGPD, você pode solicitar, quando aplicável:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Confirmação de tratamento e acesso aos dados.</li>
+                      <li>Correção de dados incompletos, inexatos ou desatualizados.</li>
+                      <li>Anonimização, bloqueio ou eliminação de dados desnecessários.</li>
+                      <li>Portabilidade, revogação de consentimento e informações sobre compartilhamento.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-[#e8d3c5] bg-white p-7 md:p-8">
+              <div className="flex items-start gap-3">
+                <Mail className="mt-1 h-6 w-6 text-[#c65a3a]" />
+                <div>
+                  <h2 className="font-display text-3xl text-primary">8. Contato e encarregado</h2>
+                  <p className="mt-3 text-[#5f4b42] leading-relaxed">
+                    Para exercer direitos previstos na LGPD, tirar dúvidas ou reportar incidente de privacidade, entre
+                    em contato com nosso canal: <strong>contato@lumie.com.br</strong>.
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-[#e8d3c5] bg-[#fff8f3] p-7 md:p-8">
+              <h2 className="font-display text-3xl text-primary">9. Atualizações desta Política</h2>
+              <p className="mt-3 text-[#5f4b42] leading-relaxed">
+                Esta Política pode ser atualizada para refletir melhorias de serviço, exigências legais e ajustes
+                operacionais. A versão vigente será sempre disponibilizada nesta página com data de atualização.
+              </p>
+            </article>
+          </div>
+        </div>
       </section>
     </main>
   );
