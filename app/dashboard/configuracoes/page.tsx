@@ -33,6 +33,7 @@ export default function ConfiguracoesPage() {
   const [giftListId, setGiftListId] = useState('');
   const [giftListSlug, setGiftListSlug] = useState('');
   const [slugInput, setSlugInput] = useState('');
+  const [savedSlug, setSavedSlug] = useState('');
   const [slugChecking, setSlugChecking] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [slugMessage, setSlugMessage] = useState('');
@@ -58,8 +59,9 @@ export default function ConfiguracoesPage() {
         if (typeof data?.slug === 'string') {
           setGiftListSlug(data.slug);
           setSlugInput(data.slug);
+          setSavedSlug(data.slug);
           setSlugAvailable(true);
-          setSlugMessage('URL disponivel.');
+          setSlugMessage('URL atual.');
         }
         updateSettings({ feePassedToGuest: data?.feeMode === 'PASS_TO_GUEST' });
       } catch {
@@ -78,6 +80,13 @@ export default function ConfiguracoesPage() {
     if (!raw) {
       setSlugAvailable(false);
       setSlugMessage('Informe uma URL para sua lista.');
+      return;
+    }
+
+    if (savedSlug && raw === savedSlug) {
+      setSlugChecking(false);
+      setSlugAvailable(true);
+      setSlugMessage('URL atual.');
       return;
     }
 
@@ -111,7 +120,7 @@ export default function ConfiguracoesPage() {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [slugInput]);
+  }, [slugInput, savedSlug]);
 
   const handleFeeModeToggle = async (checked: boolean) => {
     const previous = settings.feePassedToGuest;
@@ -167,6 +176,18 @@ export default function ConfiguracoesPage() {
         return;
       }
 
+      const saveRes = await fetch('/api/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: data.url }),
+      });
+      const saveJson = await saveRes.json().catch(() => ({}));
+      if (!saveRes.ok) {
+        alert(saveJson?.error ?? 'Falha ao salvar foto no perfil.');
+        setPhoto(sessionImage || user?.photo);
+        return;
+      }
+
       setPhoto(data.url);
       updateUser({ photo: data.url });
       await update();
@@ -215,6 +236,7 @@ export default function ConfiguracoesPage() {
       if (typeof slugData?.slug === 'string') {
         setGiftListSlug(slugData.slug);
         setSlugInput(slugData.slug);
+        setSavedSlug(slugData.slug);
       }
 
       await update();
