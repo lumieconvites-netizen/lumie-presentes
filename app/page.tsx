@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
-import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Brush, ShoppingBag, Plane, Users, BellRing, FileSpreadsheet, UserPlus, MapPin, Navigation2, CalendarDays, Smartphone } from 'lucide-react';
+import { ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Brush, ShoppingBag, Plane, Users, BellRing, FileSpreadsheet, UserPlus, MapPin, Navigation2, CalendarDays, Smartphone, ListMusic, LayoutTemplate, PlayCircle } from 'lucide-react';
 
 const heroSlides = [
   { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
@@ -23,29 +23,34 @@ const steps = [
 
 const features = [
   {
-    title: 'RSVP Inteligente',
-    text: 'Confirmação de presença organizada para acompanhar quem vai ao evento.',
-    icon: CalendarCheck2,
-  },
-  {
+    id: 'gallery',
     title: 'Galeria de Fotos',
-    text: 'Monte uma página linda com fotos do evento e momentos especiais.',
+    text: 'Álbum dinâmico com transições suaves e visual sofisticado.',
     icon: ImageIcon,
   },
   {
+    id: 'messages',
     title: 'Mural de Recados',
-    text: 'Receba mensagens carinhosas dos convidados junto com os presentes.',
+    text: 'Mensagens dos convidados em um mural elegante e vivo.',
     icon: MessageCircleHeart,
   },
   {
+    id: 'countdown',
     title: 'Contagem Regressiva',
-    text: 'Destaque o grande dia com contador dinâmico e visual elegante.',
+    text: 'Contador animado para destacar a emoção do grande dia.',
     icon: TimerReset,
   },
   {
-    title: 'Muito Mais',
-    text: 'Editor por blocos, temas personalizados, checkout PIX e gestão completa.',
-    icon: Sparkles,
+    id: 'playlist',
+    title: 'Playlist Integrada',
+    text: 'Spotify e YouTube Music com trilha do evento no seu site.',
+    icon: ListMusic,
+  },
+  {
+    id: 'templates',
+    title: 'Templates Elegantes',
+    text: 'Modelos premium e personalizáveis para cada estilo de festa.',
+    icon: LayoutTemplate,
   },
 ];
 
@@ -486,22 +491,67 @@ export default function HomePage() {
         <div className="container mx-auto px-6">
           <div className="text-center mb-14">
             <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-3">Recursos Exclusivos</h2>
-            <p className="text-lg text-muted-foreground">Uma experiência completa para você e seus convidados.</p>
+            <p className="text-lg text-muted-foreground">Uma experiência única para você e seus convidados:</p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5 max-w-7xl mx-auto">
-            {features.map((feature) => {
+          <div className="relative overflow-hidden resource-carousel-wrap max-w-7xl mx-auto">
+            <div className="resource-carousel-track">
+              {[...features, ...features].map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div key={feature.title} className="rounded-2xl border border-[#ead9cd] bg-white p-6">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#ffe5d9] text-[#c65a3a] mb-4">
+                <div key={`${feature.id}-${index}`} className="resource-card rounded-2xl border border-[#ead9cd] bg-white p-5 shadow-sm">
+                  <div className="resource-card-mock rounded-xl border border-[#f0e1d7] bg-[#fdfaf7] p-3 mb-4">
+                    {feature.id === 'gallery' && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="h-10 rounded-lg bg-gradient-to-br from-[#cf8f72] to-[#b45739] resource-float-a" />
+                        <div className="h-10 rounded-lg bg-gradient-to-br from-[#f2cab5] to-[#ce7d5e] resource-float-b" />
+                        <div className="h-10 rounded-lg bg-gradient-to-br from-[#d4a58d] to-[#ba5f41] resource-float-a" />
+                      </div>
+                    )}
+                    {feature.id === 'messages' && (
+                      <div className="space-y-2">
+                        <div className="h-7 rounded-lg bg-white border border-[#ecd9cc] px-2 flex items-center text-xs text-[#6a4e42] resource-slide-in">Isabella: lindo site!</div>
+                        <div className="h-7 rounded-lg bg-white border border-[#ecd9cc] px-2 flex items-center text-xs text-[#6a4e42] resource-slide-in-delayed">Rayan: parabéns ao casal!</div>
+                      </div>
+                    )}
+                    {feature.id === 'countdown' && (
+                      <div className="grid grid-cols-4 gap-2">
+                        {['12', '08', '24', '49'].map((n) => (
+                          <div key={n} className="rounded-lg bg-[#fff3ec] border border-[#efcfbd] py-2 text-center">
+                            <p className="font-display text-lg text-[#b25134]">{n}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {feature.id === 'playlist' && (
+                      <div className="space-y-2">
+                        <div className="rounded-lg bg-white border border-[#ecd9cc] px-2 py-2 flex items-center justify-between">
+                          <span className="text-xs text-[#3d2f29]">Spotify</span>
+                          <PlayCircle className="w-4 h-4 text-[#1DB954]" />
+                        </div>
+                        <div className="rounded-lg bg-white border border-[#ecd9cc] px-2 py-2 flex items-center justify-between">
+                          <span className="text-xs text-[#3d2f29]">YouTube Music</span>
+                          <PlayCircle className="w-4 h-4 text-[#FF0000]" />
+                        </div>
+                      </div>
+                    )}
+                    {feature.id === 'templates' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="h-12 rounded-lg border border-[#edd7ca] bg-gradient-to-b from-[#fff] to-[#f9efe8] resource-float-b" />
+                        <div className="h-12 rounded-lg border border-[#edd7ca] bg-gradient-to-b from-[#fff] to-[#efe5de] resource-float-a" />
+                      </div>
+                    )}
+                  </div>
+
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#ffe5d9] text-[#c65a3a] mb-3">
                     <Icon className="w-5 h-5" />
                   </span>
-                  <h3 className="font-display text-2xl text-foreground mb-2">{feature.title}</h3>
+                  <h3 className="font-display text-2xl text-foreground mb-2 leading-tight">{feature.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{feature.text}</p>
                 </div>
               );
-            })}
+              })}
+            </div>
           </div>
         </div>
       </section>
