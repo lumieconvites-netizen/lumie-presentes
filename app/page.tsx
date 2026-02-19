@@ -57,8 +57,8 @@ const showcaseGiftItems = [
 
 const showcaseReceived = { name: 'Isabella', value: 'R$ 350,00' };
 const showcaseRsvpGroups = [
-  { id: 1, title: 'Colegas de trabalho', qty: '12 pessoas' },
-  { id: 2, title: 'Colegas da faculdade', qty: '8 pessoas' },
+  { id: 1, title: 'Deivid Wallace', qty: '+1 acompanhante' },
+  { id: 2, title: 'William', qty: '+1 Acompanhante +1 Criança' },
 ];
 
 export default function HomePage() {
@@ -274,7 +274,7 @@ export default function HomePage() {
 
           <div className="mt-20 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             <div className="relative rounded-[2rem] border border-[#d9ece1] bg-gradient-to-b from-white to-[#f3faf6] shadow-xl overflow-visible">
-              <div className="absolute -top-10 right-6 z-40 rounded-xl bg-white/95 backdrop-blur px-3 py-2 border border-[#d9ece1] shadow-md text-xs note-chip-float">
+              <div className="absolute -top-6 right-6 z-40 rounded-xl bg-white/95 backdrop-blur px-3 py-2 border border-[#d9ece1] shadow-md text-xs note-chip-float">
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-[#3d2f29]">Davi Lucas confirmou a presença</p>
                   <span className="text-[#17a26c]">✓</span>
@@ -347,7 +347,7 @@ export default function HomePage() {
                 <MessageCircleHeart className="w-9 h-9" />
               </div>
 
-              <h3 className="mt-8 font-display text-4xl text-foreground">Confirmação de Presença via WhatsApp (RSVP)</h3>
+              <h3 className="mt-8 font-display text-4xl text-foreground">Confirmação de Presença (RSVP)</h3>
               <p className="mt-5 text-xl text-muted-foreground leading-relaxed max-w-xl">
                 Automatize confirmações e envie lembretes para seus convidados em poucos cliques.
                 Tudo integrado à sua lista para acompanhar presença em tempo real.
@@ -360,7 +360,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
-                  <p className="text-lg text-[#4f3f37]">Lembretes automáticos via WhatsApp.</p>
+                  <p className="text-lg text-[#4f3f37]">Notificações por email em tempo real.</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
