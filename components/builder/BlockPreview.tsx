@@ -13,6 +13,22 @@ interface BlockPreviewProps {
   gifts: any[];
 }
 
+function toRgba(color: string, alpha: number) {
+  const value = (color || '').trim();
+  if (!value.startsWith('#')) return `rgba(250,244,239,${alpha})`;
+  const hex = value.slice(1);
+  const normalized =
+    hex.length === 3
+      ? hex.split('').map((c) => c + c).join('')
+      : hex.length === 6
+      ? hex
+      : 'FAF4EF';
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export default function BlockPreview({ list, blocks, selectedBlock, onSelectBlock, gifts }: BlockPreviewProps) {
   const theme = list.theme || {};
   const primaryColor = theme.primary_color || '#C86E52';
@@ -21,10 +37,11 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
   const backgroundImage = theme.background_image || '';
   const fontTitle = theme.font_title || 'Cormorant Garamond';
   const fontBody = theme.font_body || 'Inter';
+  const themeOverlay = toRgba(backgroundColor, 0.5);
   const pageBackgroundStyle: React.CSSProperties = backgroundImage
     ? {
         backgroundColor,
-        backgroundImage: `url(${backgroundImage})`,
+        backgroundImage: `linear-gradient(${themeOverlay}, ${themeOverlay}), url(${backgroundImage})`,
         backgroundPosition: 'center',
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',

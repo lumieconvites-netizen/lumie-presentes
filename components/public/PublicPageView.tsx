@@ -14,6 +14,22 @@ interface PublicPageViewProps {
   theme?: any;
 }
 
+function toRgba(color: string, alpha: number) {
+  const value = (color || '').trim();
+  if (!value.startsWith('#')) return `rgba(250,244,239,${alpha})`;
+  const hex = value.slice(1);
+  const normalized =
+    hex.length === 3
+      ? hex.split('').map((c) => c + c).join('')
+      : hex.length === 6
+      ? hex
+      : 'FAF4EF';
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
@@ -52,13 +68,14 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
   const secondaryColor = theme.secondary_color || '#8E3D2C';
   const backgroundColor = theme.background_color || '#FAF4EF';
   const backgroundImage = theme.background_image || '';
+  const themeOverlay = toRgba(backgroundColor, 0.5);
   const fontTitle = theme.font_title || 'Cormorant Garamond';
   const fontBody = theme.font_body || 'Inter';
   const header = theme.header || {};
   const pageBackgroundStyle: React.CSSProperties = backgroundImage
     ? {
         backgroundColor,
-        backgroundImage: `url(${backgroundImage})`,
+        backgroundImage: `linear-gradient(${themeOverlay}, ${themeOverlay}), url(${backgroundImage})`,
         backgroundPosition: 'center',
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
