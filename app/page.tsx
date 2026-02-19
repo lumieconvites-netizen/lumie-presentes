@@ -374,12 +374,10 @@ export default function HomePage() {
             </div>
 
             <div>
-              <div className="flex items-center gap-4">
-                <h3 className="font-display text-4xl text-foreground">Confirmação de Presença (RSVP)</h3>
-                <div className="inline-flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-[#17a26c] to-[#37d998] text-white shadow-lg">
-                  <MessageCircleHeart className="w-9 h-9" />
-                </div>
+              <div className="inline-flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-[#17a26c] to-[#37d998] text-white shadow-lg">
+                <MessageCircleHeart className="w-9 h-9" />
               </div>
+              <h3 className="mt-8 font-display text-4xl text-foreground">Confirmação de Presença (RSVP)</h3>
               <p className="mt-5 text-xl text-muted-foreground leading-relaxed max-w-xl">
                 Automatize as confirmações dos seus convidados em poucos cliques.
                 Tudo integrado à sua lista para acompanhar presença em tempo real.
