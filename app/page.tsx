@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
-import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Brush, ShoppingBag, Plane } from 'lucide-react';
+import { CalendarCheck2, ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Brush, ShoppingBag, Plane, Users, BellRing, FileSpreadsheet, UserPlus } from 'lucide-react';
 
 const heroSlides = [
   { src: '/hero-slides/15-anos-01.jpg', alt: 'Festa de 15 anos 1' },
@@ -56,6 +56,10 @@ const showcaseGiftItems = [
 ];
 
 const showcaseReceived = { name: 'Isabella', value: 'R$ 350,00' };
+const showcaseRsvpGroups = [
+  { id: 1, title: 'Colegas de trabalho', qty: '12 pessoas' },
+  { id: 2, title: 'Colegas da faculdade', qty: '8 pessoas' },
+];
 
 export default function HomePage() {
   return (
@@ -264,6 +268,111 @@ export default function HomePage() {
                   </Link>
                 </div>
               </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-20 grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div className="relative rounded-[2rem] border border-[#d9ece1] bg-gradient-to-b from-white to-[#f3faf6] shadow-xl overflow-visible">
+              <div className="absolute -top-9 right-4 z-40 rounded-2xl bg-gradient-to-r from-[#1fbf83] to-[#37d998] text-white px-4 py-3 shadow-md">
+                <div className="flex items-center gap-2">
+                  <MessageCircleHeart className="w-4 h-4" />
+                  <p className="text-sm font-semibold">Olá! Você confirmou presença?</p>
+                </div>
+              </div>
+              <div className="absolute top-16 right-5 z-40 rounded-2xl bg-white/95 backdrop-blur px-4 py-3 border border-[#d9ece1] shadow-md text-sm text-[#4f3f37]">
+                Sim! Estarei lá com certeza.
+              </div>
+              <div className="absolute -bottom-6 left-6 z-40 rounded-xl bg-white/95 backdrop-blur px-4 py-2 border border-[#d9ece1] shadow-md text-sm font-semibold text-[#198f61]">
+                <span className="inline-flex items-center gap-2">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Importe via Excel
+                </span>
+              </div>
+              <div className="rounded-[2rem] overflow-hidden">
+                <div className="bg-gradient-to-r from-[#17a26c] to-[#37d998] text-white px-7 py-6">
+                  <h4 className="font-display text-4xl">Gerenciamento de Convidados</h4>
+                  <p className="text-sm text-white/90 mt-1">RSVP inteligente para seu evento</p>
+                </div>
+
+                <div className="p-6">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-xl border border-[#e2efe8] bg-[#fbfffd] p-4 text-center">
+                      <p className="text-3xl font-bold text-[#179f6a]">220</p>
+                      <p className="text-sm text-[#5d6b63]">Confirmados</p>
+                    </div>
+                    <div className="rounded-xl border border-[#e2efe8] bg-[#fbfffd] p-4 text-center">
+                      <p className="text-3xl font-bold text-[#179f6a]">330</p>
+                      <p className="text-sm text-[#5d6b63]">Convidados</p>
+                    </div>
+                    <div className="rounded-xl border border-[#e2efe8] bg-[#fbfffd] p-4 text-center">
+                      <p className="text-3xl font-bold text-[#179f6a]">110</p>
+                      <p className="text-sm text-[#5d6b63]">Pendentes</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white px-4 py-2 text-sm font-semibold">
+                      <UserPlus className="w-4 h-4" />
+                      Adicionar convite
+                    </span>
+                    <span className="rounded-xl border border-[#d6e6dd] bg-white text-[#5c4a42] px-4 py-2 text-sm">
+                      Confirmações
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-xl border border-[#d6e6dd] bg-white text-[#5c4a42] px-4 py-2 text-sm">
+                      <BellRing className="w-4 h-4" />
+                      Lembretes
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {showcaseRsvpGroups.map((group) => (
+                      <div key={group.id} className="rounded-xl border border-[#e2efe8] bg-[#fbfffd] px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-[#ffe5d9] text-[#a5482d] inline-flex items-center justify-center">
+                            <Users className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-[#3d2f29]">{group.title}</p>
+                            <p className="text-sm text-[#6e5b52]">{group.qty}</p>
+                          </div>
+                        </div>
+                        <CheckCircle2 className="w-6 h-6 text-[#1fa05a]" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-[#17a26c] to-[#37d998] text-white shadow-lg">
+                <MessageCircleHeart className="w-9 h-9" />
+              </div>
+
+              <h3 className="mt-8 font-display text-4xl text-foreground">Confirmação de Presença via WhatsApp (RSVP)</h3>
+              <p className="mt-5 text-xl text-muted-foreground leading-relaxed max-w-xl">
+                Automatize confirmações e envie lembretes para seus convidados em poucos cliques.
+                Tudo integrado à sua lista para acompanhar presença em tempo real.
+              </p>
+
+              <div className="mt-8 space-y-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
+                  <p className="text-lg text-[#4f3f37]">Confirmação com um clique, sem complicação.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
+                  <p className="text-lg text-[#4f3f37]">Lembretes automáticos via WhatsApp.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
+                  <p className="text-lg text-[#4f3f37]">Controle ao vivo de confirmados e pendentes.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-[#1fa05a] mt-0.5" />
+                  <p className="text-lg text-[#4f3f37]">Integração direta com sua lista de convidados.</p>
+                </div>
               </div>
             </div>
           </div>
