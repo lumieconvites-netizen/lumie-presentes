@@ -146,22 +146,24 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
       {
         ["--list-font-title" as any]: `"${fontTitle}"`,
         ["--list-font-body" as any]: `"${fontBody}"`,
+        ["--lp-divider-color" as any]: toRgba(secondaryColor, 0.45),
         ...pageBackgroundStyle,
       } as React.CSSProperties
     }
   >
-      {enabledBlocks.map((block) => {
+      {enabledBlocks.map((block, index) => {
         const isSelected = selectedBlock?.id === block.id;
         const config = block.config || {};
 
         return (
-          <div
-            key={block.id}
-            onClick={() => onSelectBlock(block)}
-            className={`rounded-xl overflow-hidden cursor-pointer transition-all ${
-              isSelected ? 'ring-4 ring-primary ring-offset-2' : 'hover:ring-2 hover:ring-gray-300'
-            }`}
-          >
+          <div key={block.id}>
+            {index > 0 && <div className="lp-divider" aria-hidden="true" />}
+            <div
+              onClick={() => onSelectBlock(block)}
+              className={`rounded-xl overflow-hidden cursor-pointer transition-all ${
+                isSelected ? 'ring-4 ring-primary ring-offset-2' : 'hover:ring-2 hover:ring-gray-300'
+              }`}
+            >
             {/* Hero Block */}
             {block.type === 'hero' && (
               <div
@@ -504,6 +506,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                 </div>
               </div>
             )}
+            </div>
           </div>
         );
       })}

@@ -204,39 +204,43 @@
   position: relative;
 }
 
-.list-font-scope .lp-section + .lp-section::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: -1px;
-  width: min(320px, 58%);
-  height: 1px;
-  transform: translateX(-50%);
-  background: linear-gradient(90deg, transparent, rgba(124, 93, 80, 0.42), transparent);
+.list-font-scope .lp-divider {
+  position: relative;
+  height: 24px;
+  margin: 2px auto 10px;
+  width: min(360px, 62%);
+  pointer-events: none;
 }
 
-.list-font-scope .lp-section + .lp-section::after {
+.list-font-scope .lp-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, var(--lp-divider-color, rgba(124, 93, 80, 0.45)), transparent);
+}
+
+.list-font-scope .lp-divider::after {
   content: '';
   position: absolute;
   left: 50%;
-  top: -4px;
+  top: 50%;
   width: 8px;
   height: 8px;
   border-radius: 9999px;
-  transform: translateX(-50%);
-  background: rgba(124, 93, 80, 0.32);
-}
-
-.list-font-scope .lp-section + .lp-section {
-  margin-top: 12px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(124, 93, 80, 0.14);
+  transform: translate(-50%, -50%);
+  background: var(--lp-divider-color, rgba(124, 93, 80, 0.45));
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
 @media (max-width: 768px) {
-  .list-font-scope .lp-section + .lp-section {
-    margin-top: 8px;
-    padding-top: 14px;
+  .list-font-scope .lp-divider {
+    height: 20px;
+    width: min(280px, 68%);
+    margin: 0 auto 8px;
   }
 }
 

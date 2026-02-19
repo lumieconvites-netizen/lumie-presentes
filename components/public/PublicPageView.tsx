@@ -148,6 +148,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
         {
           ['--list-font-title' as any]: `"${fontTitle}"`,
           ['--list-font-body' as any]: `"${fontBody}"`,
+          ['--lp-divider-color' as any]: toRgba(secondaryColor, 0.45),
           ...pageBackgroundStyle,
         } as React.CSSProperties
       }
@@ -211,11 +212,12 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
         </header>
       )}
 
-      {enabledBlocks.map((block) => {
+      {enabledBlocks.map((block, index) => {
         const config = block.config || {};
 
         return (
           <div key={block.id}>
+            {index > 0 && <div className="lp-divider" aria-hidden="true" />}
             {block.type === 'hero' && (
               <div
                 className="relative min-h-[600px] flex items-center justify-center text-white"
