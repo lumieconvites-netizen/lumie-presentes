@@ -638,11 +638,12 @@
   gap: 18px;
   align-items: stretch;
   width: max-content;
+  padding-inline: 12px;
   animation: resourceMarquee 38s linear infinite;
 }
 
 .resource-card {
-  width: 360px;
+  width: 390px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -657,9 +658,9 @@
 }
 
 .resource-card-mock {
-  width: 126px;
-  min-width: 126px;
-  height: 126px;
+  width: 150px;
+  min-width: 150px;
+  height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -722,15 +723,15 @@
 
 @media (max-width: 768px) {
   .resource-card {
-    width: 320px;
+    width: 344px;
     min-height: 156px;
     gap: 10px;
   }
 
   .resource-card-mock {
-    width: 104px;
-    min-width: 104px;
-    height: 104px;
+    width: 122px;
+    min-width: 122px;
+    height: 122px;
   }
 
   .resource-card-copy h3 {

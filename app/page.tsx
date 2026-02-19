@@ -502,10 +502,14 @@ export default function HomePage() {
                 <div key={`${feature.id}-${index}`} className="resource-card rounded-2xl border border-[#ead9cd] bg-white p-4 shadow-sm">
                   <div className={`resource-card-mock resource-mock-${feature.id} rounded-xl border border-[#f0e1d7] p-3`}>
                     {feature.id === 'gallery' && (
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="h-10 rounded-lg bg-gradient-to-br from-[#cf8f72] to-[#b45739] resource-float-a" />
-                        <div className="h-10 rounded-lg bg-gradient-to-br from-[#f2cab5] to-[#ce7d5e] resource-float-b" />
-                        <div className="h-10 rounded-lg bg-gradient-to-br from-[#d4a58d] to-[#ba5f41] resource-float-a" />
+                      <div className="relative w-full h-full rounded-lg overflow-hidden resource-float-a">
+                        <Image
+                          src="/hero-slides/casamento-01.jpg"
+                          alt="Galeria do evento"
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                       </div>
                     )}
                     {feature.id === 'messages' && (
