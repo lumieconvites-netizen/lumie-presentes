@@ -55,7 +55,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
   const fontTitle = theme.font_title || 'Cormorant Garamond';
   const fontBody = theme.font_body || 'Inter';
   const header = theme.header || {};
-  const nonHeroSectionStyle: React.CSSProperties = backgroundImage
+  const pageBackgroundStyle: React.CSSProperties = backgroundImage
     ? {
         backgroundColor,
         backgroundImage: `url(${backgroundImage})`,
@@ -131,6 +131,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
         {
           ['--list-font-title' as any]: `"${fontTitle}"`,
           ['--list-font-body' as any]: `"${fontBody}"`,
+          ...pageBackgroundStyle,
         } as React.CSSProperties
       }
     >
@@ -229,7 +230,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'message' && (
-              <div className="p-12 md:p-20 text-center" style={nonHeroSectionStyle}>
+              <div className="p-12 md:p-20 text-center">
                 <h2 className="text-3xl md:text-4xl mb-6" style={{ fontFamily: fontTitle, color: primaryColor }}>
                   {config.title || 'Nossa Historia'}
                 </h2>
@@ -241,7 +242,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'countdown' && config.eventDate && (
-              <div className="p-12 md:p-16" style={nonHeroSectionStyle}>
+              <div className="p-12 md:p-16">
                 <h3 className="text-2xl md:text-3xl text-center mb-10" style={{ fontFamily: fontTitle, color: primaryColor }}>
                   {config.title || 'Contagem Regressiva'}
                 </h3>
@@ -264,7 +265,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'gifts' && (
-              <div id="lista-presentes-section" className="p-12 md:p-16" style={nonHeroSectionStyle}>
+              <div id="lista-presentes-section" className="p-12 md:p-16">
                 <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden border border-gray-200">
                   <div className="relative h-[320px] md:h-[420px]">
                     {config.coverImage ? (
@@ -297,7 +298,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'messages' && config.showPublicly !== false && (
-              <div className="p-12 md:p-16" style={nonHeroSectionStyle}>
+              <div className="p-12 md:p-16">
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: primaryColor }}>
                   {config.title || 'Recados Especiais'}
                 </h2>
@@ -325,7 +326,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'gallery' && config.images && config.images.length > 0 && (
-              <div className="p-12 md:p-16" style={nonHeroSectionStyle}>
+              <div className="p-12 md:p-16">
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: primaryColor }}>
                   {config.title || 'Galeria de Fotos'}
                 </h2>
@@ -340,7 +341,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'event-info' && (
-              <div id="como-chegar-section" className="p-12 md:p-16" style={nonHeroSectionStyle}>
+              <div id="como-chegar-section" className="p-12 md:p-16">
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: primaryColor }}>
                   {config.title || 'Informacoes do Evento'}
                 </h2>
@@ -387,7 +388,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'map' && (
-              <div id="como-chegar-section" className="p-12 md:p-16" style={nonHeroSectionStyle}>
+              <div id="como-chegar-section" className="p-12 md:p-16">
                 <div className="max-w-5xl mx-auto">
                   <h2 className="text-3xl md:text-4xl mb-2" style={{ fontFamily: fontTitle, color: primaryColor }}>
                     {config.title || 'Como chegar'}
@@ -418,7 +419,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'music' && (
-              <div className="p-12 md:p-16" style={nonHeroSectionStyle}>
+              <div className="p-12 md:p-16">
                 <div className="max-w-4xl mx-auto">
                   <h2 className="text-3xl md:text-4xl mb-2" style={{ fontFamily: fontTitle, color: primaryColor }}>
                     {config.title || 'Nossa trilha sonora'}
@@ -438,7 +439,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'video' && (
-              <div className="p-12 md:p-16" style={nonHeroSectionStyle}>
+              <div className="p-12 md:p-16">
                 <div className="max-w-5xl mx-auto">
                   <h2 className="text-3xl md:text-4xl mb-2" style={{ fontFamily: fontTitle, color: primaryColor }}>
                     {config.title || 'Nosso video'}
