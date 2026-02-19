@@ -376,7 +376,7 @@ export default function HomePage() {
                 </div>
               </div>
               <p className="mt-5 text-xl text-muted-foreground leading-relaxed max-w-xl">
-                Automatize confirmações e envie lembretes para seus convidados em poucos cliques.
+                Automatize as confirmações dos seus convidados em poucos cliques.
                 Tudo integrado à sua lista para acompanhar presença em tempo real.
               </p>
 
@@ -445,13 +445,13 @@ export default function HomePage() {
                   </div>
 
                   <div className="absolute left-[58%] top-[12%]">
+                    <div className="mb-2 rounded-xl bg-white/95 border border-[#ecdccf] px-3 py-1.5 text-sm font-semibold text-[#5a473f] shadow-sm">
+                      Local do evento
+                    </div>
                     <div className="map-pin-pulse relative h-16 w-16 rounded-full bg-[#c65a3a]/20 flex items-center justify-center">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white flex items-center justify-center shadow-lg">
                         <MapPin className="w-5 h-5" />
                       </div>
-                    </div>
-                    <div className="mt-2 rounded-xl bg-white/95 border border-[#ecdccf] px-3 py-1.5 text-sm font-semibold text-[#5a473f] shadow-sm">
-                      Local do evento
                     </div>
                   </div>
 
