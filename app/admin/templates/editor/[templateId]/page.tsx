@@ -172,7 +172,7 @@ export default function AdminTemplateEditorPage() {
     category: search.get('category') || '',
     description: '',
     thumbnail: '',
-    isActive: true,
+    isActive: false,
   });
 
   const [blocks, setBlocks] = useState<any[]>(sanitizeTemplateBlocks(defaultBlocks));
@@ -446,11 +446,11 @@ export default function AdminTemplateEditorPage() {
       <div className="flex h-[calc(100vh-5rem)]">
         <div className="w-72 bg-[#fffaf7] border-r border-[#ead9cd] overflow-y-auto">
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="p-4">
-            <TabsList className="w-full grid grid-cols-4 mb-4">
-              <TabsTrigger value="blocks">Blocos</TabsTrigger>
-              <TabsTrigger value="theme">Tema</TabsTrigger>
-              <TabsTrigger value="header">Cabeçalho</TabsTrigger>
-              <TabsTrigger value="template">Template</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 mb-4 gap-1 h-auto">
+              <TabsTrigger value="blocks" className="text-xs md:text-sm">Blocos</TabsTrigger>
+              <TabsTrigger value="theme" className="text-xs md:text-sm">Tema</TabsTrigger>
+              <TabsTrigger value="header" className="text-xs md:text-sm">Cabecalho</TabsTrigger>
+              <TabsTrigger value="template" className="text-xs md:text-sm">Template</TabsTrigger>
             </TabsList>
 
             <TabsContent value="blocks" className="space-y-4">
