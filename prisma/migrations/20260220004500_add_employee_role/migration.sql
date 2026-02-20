@@ -1,0 +1,2 @@
+-- Add EMPLOYEE role to users
+ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'EMPLOYEE';

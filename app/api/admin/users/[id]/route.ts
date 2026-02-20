@@ -5,7 +5,7 @@ import { z } from "zod";
 import { ensureDefaultReferralCodesForUser } from "@/lib/referrals";
 
 const patchSchema = z.object({
-  role: z.enum(["ADMIN", "CLIENT", "PARTNER", "AMBASSADOR"]).optional(),
+  role: z.enum(["ADMIN", "CLIENT", "PARTNER", "AMBASSADOR", "EMPLOYEE"]).optional(),
   isBlocked: z.boolean().optional(),
   name: z.string().min(2).max(120).optional(),
   email: z.string().email().optional(),

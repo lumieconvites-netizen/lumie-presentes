@@ -8,15 +8,15 @@ import { Input } from '@/components/ui/input';
 import { LayoutTemplate, Shield, Users } from 'lucide-react';
 
 type Overview = {
-  usersCount: number; adminsCount: number; clientsCount: number; partnersCount: number; ambassadorsCount: number;
+  usersCount: number; adminsCount: number; clientsCount: number; partnersCount: number; ambassadorsCount: number; employeesCount: number;
   publishedListsCount: number; activeTemplatesCount: number; paidTotal: number;
 };
-type AdminUser = { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR'; isBlocked: boolean; _count: { giftLists: number } };
+type AdminUser = { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE'; isBlocked: boolean; _count: { giftLists: number } };
 type AdminGiftList = { id: string; title: string; slug: string; isPublished: boolean; user: { email: string; name: string | null }; _count: { gifts: number; orders: number; messages: number } };
 type AdminTemplate = { id: string; name: string; slug: string; category: string; isActive: boolean };
 type ImpersonationState = {
   isImpersonating: boolean;
-  effectiveUser?: { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' };
+  effectiveUser?: { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE' };
 };
 
 const slugify = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120);
@@ -129,14 +129,18 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9]">
-        <CardHeader><CardTitle className="text-3xl font-display">Admin LUMIE</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 text-sm">
+      <Card className="border-[#e7d8cb] bg-gradient-to-r from-[#fff3eb] via-[#fffaf6] to-[#fffdf9]">
+        <CardHeader>
+          <CardTitle className="text-3xl font-display">Admin LUMIE</CardTitle>
+          <p className="text-sm text-[#8E3D2C]/80">Visao geral da operacao da plataforma.</p>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 md:grid-cols-5 xl:grid-cols-9 gap-3 text-sm">
           <Stat icon={<Users className="w-4 h-4" />} label="Usuarios" value={overview?.usersCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Admins" value={overview?.adminsCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Clientes" value={overview?.clientsCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Parceiros" value={overview?.partnersCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Embaixadores" value={overview?.ambassadorsCount || 0} />
+          <Stat icon={<Shield className="w-4 h-4" />} label="Funcionarios" value={overview?.employeesCount || 0} />
           <Stat icon={<Users className="w-4 h-4" />} label="Listas pub." value={overview?.publishedListsCount || 0} />
           <Stat icon={<LayoutTemplate className="w-4 h-4" />} label="Templates ativos" value={overview?.activeTemplatesCount || 0} />
           <div className="rounded-xl border p-3 bg-white"><p className="text-xs text-gray-500">Arrecadado</p><p className="text-base font-semibold">{brl(overview?.paidTotal || 0)}</p></div>
@@ -160,7 +164,7 @@ export default function AdminPage() {
           <Input placeholder="Buscar usuario por nome/email" value={qUser} onChange={(e) => setQUser(e.target.value)} />
           <div className="overflow-auto rounded-lg border">
             <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Usuario</th><th className="p-2 text-left">Papel</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
-              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p></td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { isBlocked: !u.isBlocked }).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button>{u.role !== 'ADMIN' ? <Button size="sm" onClick={() => startImpersonation(u.id).catch((e) => alert(e.message))}>Acessar painel</Button> : <span className="text-xs text-gray-500">Admin</span>}</div></td></tr>)}
+              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p></td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'EMPLOYEE' }).catch((e) => alert(e.message))}>Virar funcionario</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { isBlocked: !u.isBlocked }).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button>{u.role !== 'ADMIN' ? <Button size="sm" onClick={() => startImpersonation(u.id).catch((e) => alert(e.message))}>Acessar painel</Button> : <span className="text-xs text-gray-500">Admin</span>}</div></td></tr>)}
             </tbody></table>
           </div>
         </CardContent>

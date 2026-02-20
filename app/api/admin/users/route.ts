@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const q = (searchParams.get("q") ?? "").trim();
   const role = searchParams.get("role");
   const blocked = searchParams.get("blocked");
-  const validRoles = new Set(["ADMIN", "CLIENT", "PARTNER", "AMBASSADOR"]);
+  const validRoles = new Set(["ADMIN", "CLIENT", "PARTNER", "AMBASSADOR", "EMPLOYEE"]);
 
   const users = await prisma.user.findMany({
     where: {

@@ -9,12 +9,12 @@ type SafeUser = {
   id: string;
   name: string | null;
   email: string;
-  role: "ADMIN" | "CLIENT" | "PARTNER" | "AMBASSADOR";
+  role: "ADMIN" | "CLIENT" | "PARTNER" | "AMBASSADOR" | "EMPLOYEE";
 };
 
 export type ActingUserContext = {
   sessionUserId: string;
-  sessionUserRole: "ADMIN" | "CLIENT" | "PARTNER" | "AMBASSADOR";
+  sessionUserRole: "ADMIN" | "CLIENT" | "PARTNER" | "AMBASSADOR" | "EMPLOYEE";
   effectiveUserId: string;
   effectiveUser: SafeUser;
   isImpersonating: boolean;
