@@ -7,6 +7,27 @@ const CARD_METHODS = ["credit_card", "CREDIT_CARD", "card", "CARD"];
 const PIX_METHODS = ["pix", "PIX"];
 const PAGARME_PIX_PERCENT = 1.09;
 const PAGARME_CARD_PERCENT = 3.29;
+const CARD_LIQUIDATION_WINDOW_DAYS = 45;
+
+function cardPaymentMethodWhere() {
+  return {
+    OR: [
+      { paymentMethod: { in: CARD_METHODS } },
+      { paymentMethod: { contains: "credit", mode: "insensitive" as const } },
+      { paymentMethod: { contains: "card", mode: "insensitive" as const } },
+      { paymentMethod: { contains: "cartao", mode: "insensitive" as const } },
+    ],
+  };
+}
+
+function pixPaymentMethodWhere() {
+  return {
+    OR: [
+      { paymentMethod: { in: PIX_METHODS } },
+      { paymentMethod: { contains: "pix", mode: "insensitive" as const } },
+    ],
+  };
+}
 
 function readPercent(name: string, fallback: number) {
   const raw = process.env[name];
@@ -120,11 +141,7 @@ export async function GET(request: Request) {
   const validMethod: MethodFilter = ["all", "card", "pix"].includes(method) ? method : "all";
 
   const paymentMethodFilter =
-    validMethod === "card"
-      ? { in: CARD_METHODS }
-      : validMethod === "pix"
-        ? { in: PIX_METHODS }
-        : undefined;
+    validMethod === "card" ? cardPaymentMethodWhere() : validMethod === "pix" ? pixPaymentMethodWhere() : undefined;
 
   const relationFilters: any[] = [];
   if (clientId) relationFilters.push({ giftList: { userId: clientId } });
@@ -133,14 +150,24 @@ export async function GET(request: Request) {
 
   const orderWhere: any = {
     status: "PAID",
-    ...(paymentMethodFilter ? { paymentMethod: paymentMethodFilter } : {}),
+    ...(paymentMethodFilter || {}),
     ...(relationFilters.length ? { AND: relationFilters } : {}),
   };
 
+  const cardLiquidationCutoff = new Date();
+  cardLiquidationCutoff.setDate(cardLiquidationCutoff.getDate() - CARD_LIQUIDATION_WINDOW_DAYS);
+
   const pendingCardWhere: any = {
-    status: { in: ["PENDING", "AUTHORIZED"] },
-    paymentMethod: { in: CARD_METHODS },
-    ...(relationFilters.length ? { AND: relationFilters } : {}),
+    AND: [
+      cardPaymentMethodWhere(),
+      {
+        OR: [
+          { status: { in: ["PENDING", "AUTHORIZED"] } },
+          { status: "PAID", paidAt: { gte: cardLiquidationCutoff } },
+        ],
+      },
+      ...(relationFilters.length ? relationFilters : []),
+    ],
   };
 
   const [orders, pendingCardOrders, clients, partners, ambassadors] = await Promise.all([

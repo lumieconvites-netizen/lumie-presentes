@@ -355,6 +355,9 @@ export default function AdminFinanceiroPage() {
       <Card className="border-[#e7d8cb]">
         <CardHeader>
           <CardTitle>Cartoes de credito pendentes</CardTitle>
+          <p className="text-xs text-gray-500">
+            Considera pedidos em status pendente/autorizado e cartoes pagos ainda em janela de liquidacao (ate 45 dias).
+          </p>
         </CardHeader>
         <CardContent>
           <div className="overflow-auto rounded-lg border">
