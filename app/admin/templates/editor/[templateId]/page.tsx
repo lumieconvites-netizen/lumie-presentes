@@ -193,6 +193,7 @@ export default function AdminTemplateEditorPage() {
   const previewList = useMemo(() => ({ theme }), [theme]);
   const previewSlug = useMemo(() => slugify(form.slug || form.name || ''), [form.slug, form.name]);
   const previewHref = previewSlug ? `/templates/${encodeURIComponent(previewSlug)}` : '/templates';
+  const previewGiftsHref = previewSlug ? `/templates/${encodeURIComponent(previewSlug)}/presentes` : '/templates';
   const previewGifts = useMemo(
     () =>
       normalizeTemplateGiftItems(templateGifts).map((gift, index) => ({
@@ -447,6 +448,11 @@ export default function AdminTemplateEditorPage() {
                 Visualizar
               </Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link href={previewGiftsHref} target="_blank">
+                Visualizar presentes
+              </Link>
+            </Button>
             <Button
               variant="outline"
               onClick={() => {
@@ -698,6 +704,9 @@ export default function AdminTemplateEditorPage() {
               <div className="space-y-1">
                 <Label>Thumbnail</Label>
                 <Input value={form.thumbnail} onChange={(e) => { setForm((prev) => ({ ...prev, thumbnail: e.target.value })); setDirty(true); }} placeholder="URL da thumbnail" />
+                {form.thumbnail ? (
+                  <img src={form.thumbnail} alt="Thumbnail do template" className="mt-2 h-24 w-full rounded-lg object-cover border border-[#ead9cd]" />
+                ) : null}
                 <label className="inline-flex mt-2">
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleThumbnailUpload(e.target.files?.[0] || null)} disabled={uploadingThumbnail} />
                   <span className="inline-flex h-9 items-center justify-center rounded-md border px-3 text-sm font-medium cursor-pointer">

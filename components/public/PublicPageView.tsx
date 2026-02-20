@@ -156,7 +156,11 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
 
   const listSlug = settings?.slug ? String(settings.slug) : '';
   const isTemplatePreview = Boolean(settings?.isTemplatePreview);
+  const templatePreviewSlug = settings?.templatePreviewSlug ? String(settings.templatePreviewSlug) : '';
   const presentsHref = listSlug ? `/site/${encodeURIComponent(listSlug)}/presentes` : '/site/presentes';
+  const templatePresentsPreviewHref = templatePreviewSlug
+    ? `/templates/${encodeURIComponent(templatePreviewSlug)}/presentes`
+    : '/templates';
   const rsvpHref = listSlug ? `/site/${encodeURIComponent(listSlug)}/confirmar-presenca` : '#';
   const meuSiteHref = header.menuMeuSiteUrl || '';
   const giftsMenuHref = header.menuGiftsUrl || '';
@@ -402,12 +406,8 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                         {config.description || 'Esta e nossa lista de presentes. Ficamos felizes em compartilhar esse momento com voce.'}
                       </p>
                       {isTemplatePreview ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const el = document.getElementById('template-gifts-preview-list');
-                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }}
+                        <Link
+                          href={templatePresentsPreviewHref}
                           className="inline-flex h-11 items-center justify-center rounded-md px-8 text-sm font-medium shadow-sm transition-all duration-200 hover:brightness-110 hover:saturate-125"
                           style={{
                             backgroundColor: config.buttonBgColor || primaryColor,
@@ -415,7 +415,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                           }}
                         >
                           {config.buttonText || 'Presentear'}
-                        </button>
+                        </Link>
                       ) : (
                         <Link
                           href={presentsHref}
@@ -431,32 +431,6 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                     </div>
                   </div>
                 </div>
-                {isTemplatePreview ? (
-                  <div id="template-gifts-preview-list" className="max-w-5xl mx-auto mt-6 md:mt-10">
-                    <h3 className="text-2xl md:text-3xl mb-4 md:mb-6" style={{ fontFamily: fontTitle, color: titleColor }}>
-                      Presentes deste modelo
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {gifts.map((gift: any) => (
-                        <Card key={gift.id} className="overflow-hidden border border-[#e8dbcf]">
-                          {gift.photo ? (
-                            <img src={gift.photo} alt={gift.title} className="h-36 w-full object-cover" />
-                          ) : (
-                            <div className="h-36 w-full bg-gradient-to-br from-[#f6ece4] to-[#efe1d7]" />
-                          )}
-                          <div className="p-4 space-y-2">
-                            <h4 className="font-semibold text-base text-[#2c2c2c]">{gift.title}</h4>
-                            {gift.description ? <p className="text-sm text-gray-600 line-clamp-2">{gift.description}</p> : null}
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="font-semibold" style={{ color: primaryColor }}>{formatBRL(Number(gift.value || 0))}</span>
-                              <span className="text-gray-500">Qtd: {Number(gift.quantityAvailable || gift.quantity || 1)}</span>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
               </div>
             )}
 

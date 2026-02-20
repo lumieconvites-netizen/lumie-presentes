@@ -60,7 +60,7 @@ export default async function TemplatePreviewPage({ params }: { params: { slug: 
               href={`/auth/cadastro?template=${encodeURIComponent(template.slug)}`}
               className="inline-flex h-9 items-center rounded-md bg-[#C65A3A] px-3 text-sm text-white hover:bg-[#8E3D2C]"
             >
-              Usar modelo aqui
+              Usar modelo
             </Link>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default async function TemplatePreviewPage({ params }: { params: { slug: 
         blocks={blocks}
         gifts={gifts}
         messages={[]}
-        settings={{ slug: `template-${template.slug}`, isTemplatePreview: true }}
+        settings={{ slug: `template-${template.slug}`, isTemplatePreview: true, templatePreviewSlug: template.slug }}
         theme={(template.defaultTheme as any) || {}}
       />
     </div>
