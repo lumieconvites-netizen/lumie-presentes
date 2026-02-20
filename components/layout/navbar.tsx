@@ -6,6 +6,11 @@ import { cn } from '@/lib/utils';
 
 export function Navbar() {
   const pathname = usePathname();
+  const hideOnTemplatePreview = /^\/templates\/[^/]+(?:\/presentes)?$/.test(pathname ?? '');
+
+  if (hideOnTemplatePreview) {
+    return null;
+  }
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : (pathname ?? '').startsWith(href);

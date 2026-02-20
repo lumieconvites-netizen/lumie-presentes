@@ -14,6 +14,10 @@ export function FooterGate() {
     return null;
   }
 
+  if (/^\/templates\/[^/]+(?:\/presentes)?$/.test(pathname)) {
+    return null;
+  }
+
   const isPublishedSitePath =
     /^\/site\/[^/]+(?:\/.*)?$/.test(pathname) && !pathname.startsWith('/site/presentes');
 
