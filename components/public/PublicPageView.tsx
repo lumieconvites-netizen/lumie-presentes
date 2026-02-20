@@ -241,6 +241,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
               {header.brandText || 'LUMIÊ'}
             </div>
 
+            {!isTemplatePreview ? (
             <nav className="hidden md:flex items-center gap-8 text-sm uppercase tracking-wide">
               {showMeuSite && (
                 resolvedMeuSiteHref.startsWith('#') ? (
@@ -259,13 +260,16 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                 )
               )}
             </nav>
+            ) : <div />}
 
-            <button className="md:hidden" onClick={() => setMobileMenuOpen((v) => !v)} aria-label="Abrir menu">
-              {mobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
-            </button>
+            {!isTemplatePreview ? (
+              <button className="md:hidden" onClick={() => setMobileMenuOpen((v) => !v)} aria-label="Abrir menu">
+                {mobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+              </button>
+            ) : <div />}
           </div>
 
-          {mobileMenuOpen && (
+          {!isTemplatePreview && mobileMenuOpen && (
             <div className="md:hidden border-t" style={{ borderColor: 'rgba(255,255,255,0.12)' }}>
               <div className="px-4 py-3 flex flex-col gap-3 text-sm uppercase tracking-wide">
                 {showMeuSite && (
