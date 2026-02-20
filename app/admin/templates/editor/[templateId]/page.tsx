@@ -191,6 +191,8 @@ export default function AdminTemplateEditorPage() {
   );
 
   const previewList = useMemo(() => ({ theme }), [theme]);
+  const previewSlug = useMemo(() => slugify(form.slug || form.name || ''), [form.slug, form.name]);
+  const previewHref = previewSlug ? `/templates/${encodeURIComponent(previewSlug)}` : '/templates';
   const previewGifts = useMemo(
     () =>
       normalizeTemplateGiftItems(templateGifts).map((gift, index) => ({
@@ -330,7 +332,7 @@ export default function AdminTemplateEditorPage() {
       thumbnail: form.thumbnail.trim() || null,
       defaultBlocks: writeTemplateGiftsToBlocks(blocks, templateGifts),
       defaultTheme: theme,
-      isActive: typeof overrideIsActive === 'boolean' ? overrideIsActive : form.isActive,
+      isActive: typeof overrideIsActive === 'boolean' ? overrideIsActive : true,
     };
 
     setSaving(true);
@@ -343,6 +345,13 @@ export default function AdminTemplateEditorPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || 'Erro ao salvar template');
       setDirty(false);
+      if (json?.template) {
+        setForm((prev) => ({
+          ...prev,
+          slug: json.template.slug || prev.slug,
+          isActive: Boolean(json.template.isActive),
+        }));
+      }
       if (isNew && json?.template?.id) {
         router.replace(`/admin/templates/editor/${json.template.id}`);
       }
@@ -434,7 +443,7 @@ export default function AdminTemplateEditorPage() {
               <Link href="/admin/templates">Voltar</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href={form.category ? `/templates?categoria=${encodeURIComponent(form.category)}` : '/templates'} target="_blank">
+              <Link href={previewHref} target="_blank">
                 Visualizar
               </Link>
             </Button>
@@ -450,7 +459,7 @@ export default function AdminTemplateEditorPage() {
               Adicionar presentes
             </Button>
             <Button onClick={() => saveTemplate().catch(() => null)} disabled={saving || !dirty}>
-              {saving ? 'Salvando...' : 'Salvar template'}
+              {saving ? 'Salvando...' : 'Salvar e publicar'}
             </Button>
             <Button
               className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800"

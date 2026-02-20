@@ -138,11 +138,12 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
 
         {visibleCategories.map((category) => {
           const cards = grouped.get(category.slug) || [];
+          const cardsToRender = selectedCategory ? cards : cards.slice(0, 4);
           return (
             <section key={category.slug} className="space-y-4">
               <h2 className="font-display text-3xl text-[#8E3D2C]">{category.name}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {cards.map((template) => (
+                {cardsToRender.map((template) => (
                   <article key={template.slug} className="bg-white border rounded-2xl overflow-hidden shadow-sm">
                     <div className="h-40" style={{ background: template.preview }} />
                     <div className="p-5 space-y-3">
@@ -152,9 +153,14 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
                       </div>
                       <p className="text-sm text-gray-600 min-h-[40px]">{template.description}</p>
 
-                      <Button asChild className="w-full bg-[#C65A3A] hover:bg-[#8E3D2C] text-white">
-                        <Link href={chooseHref(template.slug)}>Escolher template</Link>
-                      </Button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button asChild variant="outline" className="border-[#d7b7a3] text-[#8E3D2C] hover:bg-[#fff7f1]">
+                          <Link href={`/templates/${encodeURIComponent(template.slug)}`}>Ver</Link>
+                        </Button>
+                        <Button asChild className="bg-[#C65A3A] hover:bg-[#8E3D2C] text-white">
+                          <Link href={chooseHref(template.slug)}>Escolher</Link>
+                        </Button>
+                      </div>
                     </div>
                   </article>
                 ))}
@@ -164,6 +170,13 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
                   </div>
                 ) : null}
               </div>
+              {!selectedCategory && cards.length > 4 ? (
+                <div>
+                  <Button asChild variant="outline" className="border-[#d7b7a3] text-[#8E3D2C] hover:bg-[#fff7f1]">
+                    <Link href={`/templates?categoria=${encodeURIComponent(category.slug)}`}>Ver mais</Link>
+                  </Button>
+                </div>
+              ) : null}
             </section>
           );
         })}
