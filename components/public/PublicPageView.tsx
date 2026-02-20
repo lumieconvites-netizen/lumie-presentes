@@ -112,6 +112,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
 
   const enabledBlocks = blocks.filter((block) => block.enabled).sort((a, b) => a.order - b.order);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showAllMessages, setShowAllMessages] = useState(false);
 
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
@@ -312,14 +313,14 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                 <h3 className="text-2xl md:text-3xl text-center mb-6 md:mb-10" style={{ fontFamily: fontTitle, color: titleColor }}>
                   {config.title || 'Contagem Regressiva'}
                 </h3>
-                <div className="grid grid-cols-4 gap-2 md:gap-4 max-w-3xl mx-auto">
+                <div className="flex flex-nowrap gap-2 md:gap-4 max-w-3xl mx-auto">
                   {[
                     { value: countdown.days, label: 'Dias' },
                     { value: countdown.hours, label: 'Horas' },
                     { value: countdown.minutes, label: 'Minutos' },
                     { value: countdown.seconds, label: 'Segundos' },
                   ].map((item, i) => (
-                    <div key={i} className="text-center p-2 md:p-6 bg-white rounded-xl md:rounded-2xl shadow-sm">
+                    <div key={i} className="flex-1 min-w-0 text-center p-2 md:p-6 bg-white rounded-xl md:rounded-2xl shadow-sm">
                       <div className="text-2xl md:text-5xl font-bold mb-1 md:mb-2" style={{ color: primaryColor }}>
                         {String(item.value).padStart(2, '0')}
                       </div>
@@ -371,7 +372,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-5xl mx-auto">
                   {messages
                     .filter((m) => m.isPublic)
-                    .slice(0, 4)
+                    .slice(0, showAllMessages ? undefined : 3)
                     .map((msg, i) => (
                       <Card key={i} className="p-4 md:p-6 bg-white">
                         <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
@@ -388,6 +389,18 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       </Card>
                     ))}
                 </div>
+                {messages.filter((m) => m.isPublic).length > 3 && (
+                  <div className="mt-4 text-center md:hidden">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9 px-4 text-sm"
+                      onClick={() => setShowAllMessages((v) => !v)}
+                    >
+                      {showAllMessages ? 'Ver menos' : 'Ver mais'}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 

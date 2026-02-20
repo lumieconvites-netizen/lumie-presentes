@@ -94,6 +94,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
   // Countdown state
   const [countdown, setCountdown] = useState({ days: 30, hours: 12, minutes: 45, seconds: 20 });
+  const [showAllMessages, setShowAllMessages] = useState(false);
 
   const enabledBlocks = useMemo(() => 
     blocks
@@ -280,14 +281,14 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                 >
                   {config.title || 'Contagem Regressiva'}
                 </h3>
-                <div className="grid grid-cols-4 gap-2 md:gap-4 max-w-3xl mx-auto">
+                <div className="flex flex-nowrap gap-2 md:gap-4 max-w-3xl mx-auto">
                   {[
                     { value: String(countdown.days).padStart(2, '0'), label: 'Dias' },
                     { value: String(countdown.hours).padStart(2, '0'), label: 'Horas' },
                     { value: String(countdown.minutes).padStart(2, '0'), label: 'Minutos' },
                     { value: String(countdown.seconds).padStart(2, '0'), label: 'Segundos' }
                   ].map((item, i) => (
-                    <div key={i} className="text-center p-2 md:p-6 bg-white rounded-xl md:rounded-2xl shadow-sm">
+                    <div key={i} className="flex-1 min-w-0 text-center p-2 md:p-6 bg-white rounded-xl md:rounded-2xl shadow-sm">
                       <div className="text-2xl md:text-5xl font-bold mb-1 md:mb-2" style={{ color: primaryColor }}>
                         {item.value}
                       </div>
@@ -341,12 +342,18 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                   {config.title || 'Recados Especiais'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-5xl mx-auto">
-                  {[
-                    { name: 'Maria Silva', message: 'ParabÃ©ns! Que esse dia seja repleto de alegrias e momentos inesquecÃ­veis. ðŸŽ‰', time: '2 dias atrÃ¡s' },
-                    { name: 'JoÃ£o Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrÃ¡s' },
-                    { name: 'Ana Costa', message: 'Muitas bÃªnÃ§Ã£os e sucesso! VocÃª merece toda a felicidade do mundo. â¤ï¸', time: '5 dias atrÃ¡s' },
-                    { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atrÃ¡s' }
-                  ].map((msg, i) => (
+                  {(showAllMessages
+                    ? [
+                        { name: 'Maria Silva', message: 'ParabÃ©ns! Que esse dia seja repleto de alegrias e momentos inesquecÃ­veis. ðŸŽ‰', time: '2 dias atrÃ¡s' },
+                        { name: 'JoÃ£o Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrÃ¡s' },
+                        { name: 'Ana Costa', message: 'Muitas bÃªnÃ§Ã£os e sucesso! VocÃª merece toda a felicidade do mundo. â¤ï¸', time: '5 dias atrÃ¡s' },
+                        { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atrÃ¡s' }
+                      ]
+                    : [
+                        { name: 'Maria Silva', message: 'ParabÃ©ns! Que esse dia seja repleto de alegrias e momentos inesquecÃ­veis. ðŸŽ‰', time: '2 dias atrÃ¡s' },
+                        { name: 'JoÃ£o Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrÃ¡s' },
+                        { name: 'Ana Costa', message: 'Muitas bÃªnÃ§Ã£os e sucesso! VocÃª merece toda a felicidade do mundo. â¤ï¸', time: '5 dias atrÃ¡s' }
+                      ]).map((msg, i) => (
                     <Card key={i} className="p-4 md:p-6 bg-white">
                       <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
                         <div
@@ -365,6 +372,16 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       </p>
                     </Card>
                   ))}
+                </div>
+                <div className="mt-4 text-center md:hidden">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9 px-4 text-sm"
+                    onClick={() => setShowAllMessages((v) => !v)}
+                  >
+                    {showAllMessages ? 'Ver menos' : 'Ver mais'}
+                  </Button>
                 </div>
               </div>
             )}
