@@ -318,7 +318,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                     </p>
                   )}
                   <h1
-                    className="text-4xl md:text-7xl font-bold text-center whitespace-pre-wrap leading-[1.05] max-w-[90%] md:max-w-[80%]"
+                    className="text-4xl md:text-7xl font-bold text-center whitespace-pre leading-[1.05] max-w-none"
                     style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle }}
                   >
                     {config.title || 'Meu Evento Especial'}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -446,16 +446,16 @@ export default function AdminTemplateEditorPage() {
       <div className="flex h-[calc(100vh-5rem)]">
         <div className="w-72 bg-[#fffaf7] border-r border-[#ead9cd] overflow-y-auto">
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="p-4">
-            <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 mb-4 gap-1 h-auto">
-              <TabsTrigger value="blocks" className="text-[11px] md:text-sm px-2">Blocos</TabsTrigger>
-              <TabsTrigger value="theme" className="text-[11px] md:text-sm px-2">Tema</TabsTrigger>
-              <TabsTrigger value="header" className="text-[11px] md:text-sm px-2">Cab.</TabsTrigger>
-              <TabsTrigger value="template" className="text-[11px] md:text-sm px-2">Tpl.</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-4 mb-4 gap-1 h-auto rounded-lg p-1">
+              <TabsTrigger value="blocks" className="min-w-0 overflow-hidden text-ellipsis px-1 text-[10px] sm:text-xs">Blocos</TabsTrigger>
+              <TabsTrigger value="theme" className="min-w-0 overflow-hidden text-ellipsis px-1 text-[10px] sm:text-xs">Tema</TabsTrigger>
+              <TabsTrigger value="header" className="min-w-0 overflow-hidden text-ellipsis px-1 text-[10px] sm:text-xs">Cab.</TabsTrigger>
+              <TabsTrigger value="template" className="min-w-0 overflow-hidden text-ellipsis px-1 text-[10px] sm:text-xs">Tpl.</TabsTrigger>
             </TabsList>
 
             <TabsContent value="blocks" className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Blocos da Página</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Blocos da PÃ¡gina</h3>
                 <Reorder.Group axis="y" values={blocks} onReorder={handleReorderBlocks} className="space-y-2">
                   {blocks.map((block) => {
                     const blockType = BLOCK_TYPES.find((item) => item.id === block.type);
@@ -498,35 +498,35 @@ export default function AdminTemplateEditorPage() {
 
             <TabsContent value="theme" className="space-y-4">
               <div className="space-y-1">
-                <Label>Cor dos ícones</Label>
+                <Label>Cor dos Ã­cones</Label>
                 <div className="flex items-center gap-2">
-                  <input type="color" value={theme.primary_color || '#C65A3A'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, primary_color: e.target.value })); setDirty(true); }} className="w-9 h-9 rounded border cursor-pointer" />
+                  <input type="color" value={theme.primary_color || '#C65A3A'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, primary_color: e.target.value })); setDirty(true); }} className="h-9 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer" />
                   <Input value={theme.primary_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, primary_color: e.target.value })); setDirty(true); }} />
                 </div>
               </div>
               <div className="space-y-1">
-                <Label>Cor dos títulos</Label>
+                <Label>Cor dos tÃ­tulos</Label>
                 <div className="flex items-center gap-2">
-                  <input type="color" value={theme.title_color || '#8E3D2C'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, title_color: e.target.value })); setDirty(true); }} className="w-9 h-9 rounded border cursor-pointer" />
+                  <input type="color" value={theme.title_color || '#8E3D2C'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, title_color: e.target.value })); setDirty(true); }} className="h-9 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer" />
                   <Input value={theme.title_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, title_color: e.target.value })); setDirty(true); }} />
                 </div>
               </div>
               <div className="space-y-1">
                 <Label>Cor das legendas</Label>
                 <div className="flex items-center gap-2">
-                  <input type="color" value={theme.caption_color || '#5F4A41'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, caption_color: e.target.value })); setDirty(true); }} className="w-9 h-9 rounded border cursor-pointer" />
+                  <input type="color" value={theme.caption_color || '#5F4A41'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, caption_color: e.target.value })); setDirty(true); }} className="h-9 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer" />
                   <Input value={theme.caption_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, caption_color: e.target.value })); setDirty(true); }} />
                 </div>
               </div>
               <div className="space-y-1">
                 <Label>Cor de fundo</Label>
                 <div className="flex items-center gap-2">
-                  <input type="color" value={theme.background_color || '#FAF4EF'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_color: e.target.value })); setDirty(true); }} className="w-9 h-9 rounded border cursor-pointer" />
+                  <input type="color" value={theme.background_color || '#FAF4EF'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_color: e.target.value })); setDirty(true); }} className="h-9 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer" />
                   <Input value={theme.background_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_color: e.target.value })); setDirty(true); }} />
                 </div>
               </div>
               <div className="space-y-1">
-                <Label>Fonte do título</Label>
+                <Label>Fonte do tÃ­tulo</Label>
                 <Select value={theme.font_title || 'Playfair Display'} onValueChange={(value) => { setTheme((prev: any) => ({ ...prev, font_title: value })); setDirty(true); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -559,7 +559,7 @@ export default function AdminTemplateEditorPage() {
 
             <TabsContent value="header" className="space-y-4">
               <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                <Label>Exibir cabeçalho</Label>
+                <Label>Exibir cabeÃ§alho</Label>
                 <Switch checked={theme?.header?.enabled !== false} onCheckedChange={(value) => { setTheme((prev: any) => ({ ...prev, header: { ...(prev?.header || {}), enabled: value } })); setDirty(true); }} />
               </div>
               <div className="space-y-1">
@@ -589,7 +589,7 @@ export default function AdminTemplateEditorPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>Descrição</Label>
+                <Label>DescriÃ§Ã£o</Label>
                 <Input value={form.description} onChange={(e) => { setForm((prev) => ({ ...prev, description: e.target.value })); setDirty(true); }} />
               </div>
               <div className="space-y-1">
@@ -604,11 +604,11 @@ export default function AdminTemplateEditorPage() {
                 </label>
               </div>
               <div className="space-y-2 border-t pt-3">
-                <p className="text-sm font-medium">Presentes padrão</p>
+                <p className="text-sm font-medium">Presentes padrÃ£o</p>
                 {templateGifts.map((gift, index) => (
                   <div key={`gift-${index}`} className="rounded-md border p-2 space-y-2">
                     <Input placeholder="Nome do presente" value={gift.name} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, name: e.target.value } : row))); setDirty(true); }} />
-                    <Input placeholder="Descrição" value={gift.description} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, description: e.target.value } : row))); setDirty(true); }} />
+                    <Input placeholder="DescriÃ§Ã£o" value={gift.description} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, description: e.target.value } : row))); setDirty(true); }} />
                     <Input placeholder="Imagem URL (opcional)" value={gift.imageUrl} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, imageUrl: e.target.value } : row))); setDirty(true); }} />
                     <div className="flex items-center gap-2">
                       <label className="inline-flex">
@@ -625,7 +625,7 @@ export default function AdminTemplateEditorPage() {
                       ) : null}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input type="number" min={0.01} step={0.01} placeholder="Preço" value={gift.basePrice} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, basePrice: Number(e.target.value || 0) } : row))); setDirty(true); }} />
+                      <Input type="number" min={0.01} step={0.01} placeholder="PreÃ§o" value={gift.basePrice} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, basePrice: Number(e.target.value || 0) } : row))); setDirty(true); }} />
                       <Input type="number" min={1} step={1} placeholder="Quantidade" value={gift.totalQuantity} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, totalQuantity: Number(e.target.value || 1) } : row))); setDirty(true); }} />
                     </div>
                     <Button type="button" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => { setTemplateGifts((prev) => prev.filter((_, i) => i !== index)); setDirty(true); }}>
@@ -634,7 +634,7 @@ export default function AdminTemplateEditorPage() {
                   </div>
                 ))}
                 <Button type="button" variant="outline" onClick={() => { setTemplateGifts((prev) => [...prev, { name: '', description: '', imageUrl: '', basePrice: 100, totalQuantity: 1 }]); setDirty(true); }}>
-                  Adicionar presente padrão
+                  Adicionar presente padrÃ£o
                 </Button>
               </div>
             </TabsContent>
@@ -650,7 +650,7 @@ export default function AdminTemplateEditorPage() {
         {selectedBlock ? (
           <div className="w-80 bg-white border-l border-[#ead9cd] p-4 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium text-foreground">Configurações</h3>
+              <h3 className="font-medium text-foreground">ConfiguraÃ§Ãµes</h3>
               <Button variant="ghost" size="icon" onClick={() => setSelectedBlockId(null)} className="h-8 w-8">
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -662,3 +662,4 @@ export default function AdminTemplateEditorPage() {
     </div>
   );
 }
+

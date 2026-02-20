@@ -253,7 +253,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                     type="color"
                     value={config.overlayColor || '#000000'}
                     onChange={(e) => handleChange('overlayColor', e.target.value)}
-                    className="w-10 h-10 rounded border"
+                    className="h-10 w-12 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
                   />
                   <Input
                     value={config.overlayColor || '#000000'}
@@ -774,7 +774,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                 type="color"
                 value={config.titleColor || '#FFFFFF'}
                 onChange={(e) => handleChange('titleColor', e.target.value)}
-                className="w-10 h-10 rounded border"
+                className="h-10 w-12 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
               />
               <Input value={config.titleColor || '#FFFFFF'} onChange={(e) => handleChange('titleColor', e.target.value)} />
             </div>
@@ -787,7 +787,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                 type="color"
                 value={config.descriptionColor || '#F5F5F5'}
                 onChange={(e) => handleChange('descriptionColor', e.target.value)}
-                className="w-10 h-10 rounded border"
+                className="h-10 w-12 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
               />
               <Input value={config.descriptionColor || '#F5F5F5'} onChange={(e) => handleChange('descriptionColor', e.target.value)} />
             </div>
@@ -800,7 +800,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                 type="color"
                 value={config.buttonBgColor || '#C86E52'}
                 onChange={(e) => handleChange('buttonBgColor', e.target.value)}
-                className="w-10 h-10 rounded border"
+                className="h-10 w-12 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
               />
               <Input value={config.buttonBgColor || '#C86E52'} onChange={(e) => handleChange('buttonBgColor', e.target.value)} />
             </div>
@@ -813,7 +813,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                 type="color"
                 value={config.buttonTextColor || '#FFFFFF'}
                 onChange={(e) => handleChange('buttonTextColor', e.target.value)}
-                className="w-10 h-10 rounded border"
+                className="h-10 w-12 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
               />
               <Input value={config.buttonTextColor || '#FFFFFF'} onChange={(e) => handleChange('buttonTextColor', e.target.value)} />
             </div>
@@ -834,5 +834,6 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     </div>
   );
 }
+
 
 
