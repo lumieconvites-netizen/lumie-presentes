@@ -77,6 +77,21 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
     return `https://www.google.com/maps?q=${place}&output=embed`;
   };
 
+  const getHeroPosition = (position: string) => {
+    const map: Record<string, { justify: React.CSSProperties['justifyContent']; align: React.CSSProperties['alignItems']; text: React.CSSProperties['textAlign'] }> = {
+      center: { justify: 'center', align: 'center', text: 'center' },
+      'top-left': { justify: 'flex-start', align: 'flex-start', text: 'left' },
+      'top-center': { justify: 'flex-start', align: 'center', text: 'center' },
+      'top-right': { justify: 'flex-start', align: 'flex-end', text: 'right' },
+      'middle-left': { justify: 'center', align: 'flex-start', text: 'left' },
+      'middle-right': { justify: 'center', align: 'flex-end', text: 'right' },
+      'bottom-left': { justify: 'flex-end', align: 'flex-start', text: 'left' },
+      'bottom-center': { justify: 'flex-end', align: 'center', text: 'center' },
+      'bottom-right': { justify: 'flex-end', align: 'flex-end', text: 'right' },
+    };
+    return map[position] || map.center;
+  };
+
   // Countdown state
   const [countdown, setCountdown] = useState({ days: 30, hours: 12, minutes: 45, seconds: 20 });
 
@@ -174,14 +189,19 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {/* Hero Block */}
             {block.type === 'hero' && (
               <div
-                className="relative h-[500px] flex items-center justify-center text-white"
+                className="relative h-[500px] text-white"
                 style={{
                   background: config.backgroundImage
                     ? `url(${config.backgroundImage}) center/cover`
                     : `linear-gradient(135deg, ${titleColor} 0%, ${primaryColor} 100%)`
                 }}
               >
-                <div className="absolute inset-0 bg-black/20" />
+                {config.overlayEnabled !== false && (
+                  <div
+                    className="absolute inset-0"
+                    style={{ backgroundColor: toRgba(config.overlayColor || '#000000', Math.min(100, Math.max(0, Number(config.overlayOpacity ?? 20))) / 100) }}
+                  />
+                )}
                 
                 {/* Logo */}
                 {config.logo && (
@@ -194,28 +214,41 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                   </div>
                 )}
                 
-                <div className="relative text-center z-10 px-6 max-w-4xl">
+                <div
+                  className="absolute inset-0 z-10 flex p-6 md:p-10"
+                  style={{
+                    justifyContent: getHeroPosition(config.contentPosition || 'center').justify,
+                    alignItems: getHeroPosition(config.contentPosition || 'center').align,
+                    textAlign: getHeroPosition(config.contentPosition || 'center').text,
+                  }}
+                >
+                <div className="w-full max-w-4xl">
                   {config.label && (
                     <p className="text-sm mb-3 opacity-90 tracking-[0.3em] uppercase">
                       {config.label}
                     </p>
                   )}
-                  <h1 
-                    className="text-5xl md:text-7xl mb-4 font-bold"
-                    style={{ fontFamily: fontTitle }}
-                  >
-                    {config.title || 'Meu Evento Especial'}
-                  </h1>
-                  {config.subtitle && (
-                    <p className="text-xl md:text-2xl mb-8 opacity-90">
-                      {config.subtitle}
-                    </p>
+                  {config.inlineTitleSubtitle && config.subtitle ? (
+                    <div className="md:flex md:items-end md:gap-4 md:justify-start">
+                      <h1 className="text-4xl md:text-7xl mb-2 md:mb-4 font-bold" style={{ fontFamily: fontTitle }}>
+                        {config.title || 'Meu Evento Especial'}
+                      </h1>
+                      <p className="text-lg md:text-2xl mb-6 md:mb-4 opacity-90">{config.subtitle}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <h1 className="text-5xl md:text-7xl mb-4 font-bold" style={{ fontFamily: fontTitle }}>
+                        {config.title || 'Meu Evento Especial'}
+                      </h1>
+                      {config.subtitle && <p className="text-xl md:text-2xl mb-8 opacity-90">{config.subtitle}</p>}
+                    </>
                   )}
                   {config.buttonText && (
                     <Button size="lg" className="bg-white hover:bg-gray-100" style={{ color: primaryColor }}>
                       {config.buttonText}
                     </Button>
                   )}
+                </div>
                 </div>
               </div>
             )}
@@ -247,15 +280,15 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                 >
                   {config.title || 'Contagem Regressiva'}
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-3xl mx-auto">
+                <div className="grid grid-cols-4 gap-2 md:gap-4 max-w-3xl mx-auto">
                   {[
                     { value: String(countdown.days).padStart(2, '0'), label: 'Dias' },
                     { value: String(countdown.hours).padStart(2, '0'), label: 'Horas' },
                     { value: String(countdown.minutes).padStart(2, '0'), label: 'Minutos' },
                     { value: String(countdown.seconds).padStart(2, '0'), label: 'Segundos' }
                   ].map((item, i) => (
-                    <div key={i} className="text-center p-3 md:p-6 bg-white rounded-xl md:rounded-2xl shadow-sm">
-                      <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2" style={{ color: primaryColor }}>
+                    <div key={i} className="text-center p-2 md:p-6 bg-white rounded-xl md:rounded-2xl shadow-sm">
+                      <div className="text-2xl md:text-5xl font-bold mb-1 md:mb-2" style={{ color: primaryColor }}>
                         {item.value}
                       </div>
                       <div className="text-xs md:text-sm uppercase tracking-wider" style={{ color: captionColor }}>

@@ -159,6 +159,76 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             />
           </div>
 
+          <div>
+            <Label className="text-sm font-medium">Posição do conteúdo</Label>
+            <select
+              value={config.contentPosition || 'center'}
+              onChange={(e) => handleChange('contentPosition', e.target.value)}
+              className="mt-2 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="center">Centro</option>
+              <option value="top-left">Topo esquerda</option>
+              <option value="top-center">Topo centro</option>
+              <option value="top-right">Topo direita</option>
+              <option value="middle-left">Meio esquerda</option>
+              <option value="middle-right">Meio direita</option>
+              <option value="bottom-left">Base esquerda</option>
+              <option value="bottom-center">Base centro</option>
+              <option value="bottom-right">Base direita</option>
+            </select>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-[#ead9cd] bg-white px-3 py-2">
+            <span className="text-sm text-gray-700">Título e subtítulo lado a lado</span>
+            <Switch
+              checked={config.inlineTitleSubtitle === true}
+              onCheckedChange={(checked) => handleChange('inlineTitleSubtitle', checked)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-[#ead9cd] bg-white px-3 py-2">
+            <span className="text-sm text-gray-700">Overlay sobre a imagem</span>
+            <Switch
+              checked={config.overlayEnabled !== false}
+              onCheckedChange={(checked) => handleChange('overlayEnabled', checked)}
+            />
+          </div>
+
+          {config.overlayEnabled !== false && (
+            <>
+              <div>
+                <Label className="text-sm font-medium">Cor do overlay</Label>
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={config.overlayColor || '#000000'}
+                    onChange={(e) => handleChange('overlayColor', e.target.value)}
+                    className="w-10 h-10 rounded border"
+                  />
+                  <Input
+                    value={config.overlayColor || '#000000'}
+                    onChange={(e) => handleChange('overlayColor', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">
+                  Transparência do overlay ({Math.min(100, Math.max(0, Number(config.overlayOpacity ?? 20)))}%)
+                </Label>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={Math.min(100, Math.max(0, Number(config.overlayOpacity ?? 20)))}
+                  onChange={(e) => handleChange('overlayOpacity', Number(e.target.value))}
+                  className="mt-2 w-full"
+                />
+              </div>
+            </>
+          )}
+
           {/* Logo Upload */}
           <div>
             <Label className="text-sm font-medium">Logo (opcional)</Label>
