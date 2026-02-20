@@ -63,19 +63,72 @@ function toExternalMapUrl(value: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(url)}`;
 }
 
-function getHeroPosition(position: string) {
-  const map: Record<string, { justify: React.CSSProperties['justifyContent']; align: React.CSSProperties['alignItems']; text: React.CSSProperties['textAlign'] }> = {
-    center: { justify: 'center', align: 'center', text: 'center' },
-    'top-left': { justify: 'flex-start', align: 'flex-start', text: 'left' },
-    'top-center': { justify: 'flex-start', align: 'center', text: 'center' },
-    'top-right': { justify: 'flex-start', align: 'flex-end', text: 'right' },
-    'middle-left': { justify: 'center', align: 'flex-start', text: 'left' },
-    'middle-right': { justify: 'center', align: 'flex-end', text: 'right' },
-    'bottom-left': { justify: 'flex-end', align: 'flex-start', text: 'left' },
-    'bottom-center': { justify: 'flex-end', align: 'center', text: 'center' },
-    'bottom-right': { justify: 'flex-end', align: 'flex-end', text: 'right' },
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getLegacyBasePoint(position: string) {
+  const map: Record<string, { x: number; y: number }> = {
+    center: { x: 50, y: 50 },
+    'top-left': { x: 18, y: 24 },
+    'top-center': { x: 50, y: 24 },
+    'top-right': { x: 82, y: 24 },
+    'middle-left': { x: 18, y: 50 },
+    'middle-right': { x: 82, y: 50 },
+    'bottom-left': { x: 18, y: 76 },
+    'bottom-center': { x: 50, y: 76 },
+    'bottom-right': { x: 82, y: 76 },
   };
   return map[position] || map.center;
+}
+
+function getHeroPoint(config: any, key: 'label' | 'title' | 'subtitle' | 'button') {
+  const legacy = getLegacyBasePoint(config.contentPosition || 'center');
+  const defaults: Record<'label' | 'title' | 'subtitle' | 'button', { x: number; y: number }> = {
+    label: { x: legacy.x, y: clamp(legacy.y - 14, 6, 94) },
+    title: { x: legacy.x, y: clamp(legacy.y - 2, 8, 92) },
+    subtitle: { x: legacy.x, y: clamp(legacy.y + 10, 10, 94) },
+    button: { x: legacy.x, y: clamp(legacy.y + 22, 14, 95) },
+  };
+  const xKey = `${key}X`;
+  const yKey = `${key}Y`;
+  return {
+    x: clamp(Number(config?.[xKey] ?? defaults[key].x), 0, 100),
+    y: clamp(Number(config?.[yKey] ?? defaults[key].y), 0, 100),
+  };
+}
+
+function getHeroOverlayStyle(config: any): React.CSSProperties | null {
+  if (config?.overlayEnabled === false) return null;
+  const color = config?.overlayColor || '#000000';
+  const alpha = clamp(Number(config?.overlayOpacity ?? 20), 0, 100) / 100;
+  const rgba = toRgba(color, alpha);
+  const mode = config?.overlayMode || 'full';
+  if (mode !== 'gradient') {
+    return { backgroundColor: rgba };
+  }
+
+  const coverage = clamp(Number(config?.overlayCoverage ?? 55), 10, 100);
+  const direction = config?.overlayDirection || 'bottom';
+  if (direction === 'top') {
+    return { background: `linear-gradient(to bottom, ${rgba} 0%, ${rgba} ${coverage}%, transparent 100%)` };
+  }
+  if (direction === 'left') {
+    return { background: `linear-gradient(to right, ${rgba} 0%, ${rgba} ${coverage}%, transparent 100%)` };
+  }
+  if (direction === 'right') {
+    return { background: `linear-gradient(to left, ${rgba} 0%, ${rgba} ${coverage}%, transparent 100%)` };
+  }
+  return { background: `linear-gradient(to top, ${rgba} 0%, ${rgba} ${coverage}%, transparent 100%)` };
+}
+
+function heroElementStyle(point: { x: number; y: number }): React.CSSProperties {
+  return {
+    position: 'absolute',
+    left: `${point.x}%`,
+    top: `${point.y}%`,
+    transform: 'translate(-50%, -50%)',
+  };
 }
 
 export default function PublicPageView({ blocks, gifts, messages, settings, theme = {} }: PublicPageViewProps) {
@@ -250,48 +303,42 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                     : `linear-gradient(135deg, ${titleColor} 0%, ${primaryColor} 100%)`,
                 }}
               >
-                {config.overlayEnabled !== false && (
-                  <div
-                    className="absolute inset-0"
-                    style={{ backgroundColor: toRgba(config.overlayColor || '#000000', Math.min(100, Math.max(0, Number(config.overlayOpacity ?? 20))) / 100) }}
-                  />
-                )}
+                {getHeroOverlayStyle(config) && <div className="absolute inset-0" style={getHeroOverlayStyle(config) as React.CSSProperties} />}
                 {config.logo && (
                   <div className="absolute top-8 left-8 z-10">
                     <img src={config.logo} alt="Logo" className="h-16 w-auto object-contain drop-shadow-lg" />
                   </div>
                 )}
-                <div
-                  className="absolute inset-0 z-10 flex p-6 md:p-10"
-                  style={{
-                    justifyContent: getHeroPosition(config.contentPosition || 'center').justify,
-                    alignItems: getHeroPosition(config.contentPosition || 'center').align,
-                    textAlign: getHeroPosition(config.contentPosition || 'center').text,
-                  }}
-                >
-                <div className="w-full max-w-4xl">
-                  {config.label && <p className="text-sm mb-3 opacity-90 tracking-[0.3em] uppercase">{config.label}</p>}
-                  {config.inlineTitleSubtitle && config.subtitle ? (
-                    <div className="md:flex md:items-end md:gap-4 md:justify-start">
-                      <h1 className="text-4xl md:text-7xl mb-2 md:mb-4 font-bold" style={{ fontFamily: fontTitle }}>
-                        {config.title || 'Meu Evento Especial'}
-                      </h1>
-                      <p className="text-lg md:text-2xl mb-6 md:mb-4 opacity-90">{config.subtitle}</p>
-                    </div>
-                  ) : (
-                    <>
-                      <h1 className="text-5xl md:text-7xl mb-4 font-bold" style={{ fontFamily: fontTitle }}>
-                        {config.title || 'Meu Evento Especial'}
-                      </h1>
-                      {config.subtitle && <p className="text-xl md:text-2xl mb-8 opacity-90">{config.subtitle}</p>}
-                    </>
+                <div className="absolute inset-0 z-10 p-6 md:p-10">
+                  {config.label && (
+                    <p
+                      className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
+                      style={heroElementStyle(getHeroPoint(config, 'label'))}
+                    >
+                      {config.label}
+                    </p>
+                  )}
+                  <h1
+                    className="text-4xl md:text-7xl font-bold text-center whitespace-pre-wrap leading-[1.05] max-w-[90%] md:max-w-[80%]"
+                    style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle }}
+                  >
+                    {config.title || 'Meu Evento Especial'}
+                  </h1>
+                  {config.subtitle && (
+                    <p
+                      className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
+                      style={heroElementStyle(getHeroPoint(config, 'subtitle'))}
+                    >
+                      {config.subtitle}
+                    </p>
                   )}
                   {config.buttonText && (
-                    <Button size="lg" className="bg-white hover:bg-gray-100" style={{ color: primaryColor }} onClick={() => scrollTo('lista-presentes-section')}>
-                      {config.buttonText}
-                    </Button>
+                    <div style={heroElementStyle(getHeroPoint(config, 'button'))}>
+                      <Button size="lg" className="bg-white hover:bg-gray-100" style={{ color: primaryColor }} onClick={() => scrollTo('lista-presentes-section')}>
+                        {config.buttonText}
+                      </Button>
+                    </div>
                   )}
-                </div>
                 </div>
               </div>
             )}
