@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 
 type MethodFilter = "all" | "card" | "pix";
+const CARD_METHODS = ["credit_card", "CREDIT_CARD", "card", "CARD"];
+const PIX_METHODS = ["pix", "PIX"];
+const PAGARME_PIX_PERCENT = 1.09;
+const PAGARME_CARD_PERCENT = 3.29;
 
 function readPercent(name: string, fallback: number) {
   const raw = process.env[name];
@@ -117,20 +121,29 @@ export async function GET(request: Request) {
 
   const paymentMethodFilter =
     validMethod === "card"
-      ? { in: ["credit_card", "CREDIT_CARD", "card", "CARD"] }
+      ? { in: CARD_METHODS }
       : validMethod === "pix"
-        ? { in: ["pix", "PIX"] }
+        ? { in: PIX_METHODS }
         : undefined;
+
+  const relationFilters: any[] = [];
+  if (clientId) relationFilters.push({ giftList: { userId: clientId } });
+  if (partnerId) relationFilters.push({ giftList: { user: { referredByPartnerId: partnerId } } });
+  if (ambassadorId) relationFilters.push({ giftList: { user: { referredByAmbassadorId: ambassadorId } } });
 
   const orderWhere: any = {
     status: "PAID",
     ...(paymentMethodFilter ? { paymentMethod: paymentMethodFilter } : {}),
-    ...(clientId ? { giftList: { userId: clientId } } : {}),
-    ...(partnerId ? { giftList: { user: { referredByPartnerId: partnerId } } } : {}),
-    ...(ambassadorId ? { giftList: { user: { referredByAmbassadorId: ambassadorId } } } : {}),
+    ...(relationFilters.length ? { AND: relationFilters } : {}),
   };
 
-  const [orders, clients, partners, ambassadors] = await Promise.all([
+  const pendingCardWhere: any = {
+    status: { in: ["PENDING", "AUTHORIZED"] },
+    paymentMethod: { in: CARD_METHODS },
+    ...(relationFilters.length ? { AND: relationFilters } : {}),
+  };
+
+  const [orders, pendingCardOrders, clients, partners, ambassadors] = await Promise.all([
     prisma.order.findMany({
       where: orderWhere,
       orderBy: { createdAt: "desc" },
@@ -176,6 +189,32 @@ export async function GET(request: Request) {
         },
       },
     }),
+    prisma.order.findMany({
+      where: pendingCardWhere,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        status: true,
+        paymentMethod: true,
+        totalAmount: true,
+        createdAt: true,
+        giftList: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      take: 100,
+    }),
     prisma.user.findMany({
       where: { role: "CLIENT" },
       orderBy: { createdAt: "desc" },
@@ -199,6 +238,8 @@ export async function GET(request: Request) {
   let totalPaidAmount = 0;
   let totalClientReceived = 0;
   let totalPlatformReceived = 0;
+  let totalLumieNetReceived = 0;
+  let totalPagarmeReceived = 0;
   let totalPartnerReceived = 0;
   let totalAmbassadorReceived = 0;
   let cardAmount = 0;
@@ -232,12 +273,17 @@ export async function GET(request: Request) {
 
     const clientReceived = split.clientInCents / 100;
     const platformReceived = split.platformInCents / 100;
+    const pagarmePercent = paymentMethod === "card" ? PAGARME_CARD_PERCENT : paymentMethod === "pix" ? PAGARME_PIX_PERCENT : 0;
+    const pagarmeFee = totalAmount * (pagarmePercent / 100);
+    const lumieNetReceived = Math.max(platformReceived - pagarmeFee, 0);
     const partnerReceived = split.partnerInCents / 100;
     const ambassadorReceived = split.ambassadorInCents / 100;
 
     totalPaidAmount += totalAmount;
     totalClientReceived += clientReceived;
     totalPlatformReceived += platformReceived;
+    totalLumieNetReceived += lumieNetReceived;
+    totalPagarmeReceived += pagarmeFee;
     totalPartnerReceived += partnerReceived;
     totalAmbassadorReceived += ambassadorReceived;
 
@@ -324,11 +370,31 @@ export async function GET(request: Request) {
       split: {
         clientReceived,
         platformReceived,
+        lumieNetReceived,
+        pagarmeFee,
         partnerReceived,
         ambassadorReceived,
       },
     };
   });
+
+  const pendingCardAmount = pendingCardOrders.reduce((acc, order) => acc + Number(order.totalAmount), 0);
+  const normalizedPendingCards = pendingCardOrders.map((order) => ({
+    id: order.id,
+    status: order.status,
+    totalAmount: Number(order.totalAmount),
+    createdAt: order.createdAt,
+    giftList: {
+      id: order.giftList.id,
+      title: order.giftList.title,
+      slug: order.giftList.slug,
+    },
+    client: {
+      id: order.giftList.user.id,
+      name: order.giftList.user.name || "Sem nome",
+      email: order.giftList.user.email,
+    },
+  }));
 
   const sortByAmountDesc = <T extends { amount: number }>(a: T, b: T) => b.amount - a.amount;
 
@@ -349,18 +415,23 @@ export async function GET(request: Request) {
       totalPaidAmount,
       totalClientReceived,
       totalPlatformReceived,
+      totalLumieNetReceived,
+      totalPagarmeReceived,
       totalPartnerReceived,
       totalAmbassadorReceived,
       cardAmount,
       cardCount,
       pixAmount,
       pixCount,
+      pendingCardCount: pendingCardOrders.length,
+      pendingCardAmount,
     },
     breakdown: {
       clients: Array.from(clientTotals.values()).sort(sortByAmountDesc).slice(0, 30),
       partners: Array.from(partnerTotals.values()).sort(sortByAmountDesc).slice(0, 30),
       ambassadors: Array.from(ambassadorTotals.values()).sort(sortByAmountDesc).slice(0, 30),
     },
+    pendingCards: normalizedPendingCards,
     orders: normalizedOrders.slice(0, 200),
   });
 }

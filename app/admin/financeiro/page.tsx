@@ -24,12 +24,16 @@ type FinanceResponse = {
     totalPaidAmount: number;
     totalClientReceived: number;
     totalPlatformReceived: number;
+    totalLumieNetReceived: number;
+    totalPagarmeReceived: number;
     totalPartnerReceived: number;
     totalAmbassadorReceived: number;
     cardAmount: number;
     cardCount: number;
     pixAmount: number;
     pixCount: number;
+    pendingCardCount: number;
+    pendingCardAmount: number;
   };
   breakdown: {
     clients: Array<{ id: string; name: string; email: string; amount: number; orders: number }>;
@@ -49,9 +53,19 @@ type FinanceResponse = {
     split: {
       clientReceived: number;
       platformReceived: number;
+      lumieNetReceived: number;
+      pagarmeFee: number;
       partnerReceived: number;
       ambassadorReceived: number;
     };
+  }>;
+  pendingCards: Array<{
+    id: string;
+    status: string;
+    totalAmount: number;
+    createdAt: string;
+    giftList: { id: string; title: string; slug: string };
+    client: { id: string; name: string; email: string };
   }>;
 };
 
@@ -180,24 +194,29 @@ export default function AdminFinanceiroPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <StatCard label="Total de presentes" value={brl(data?.summary.totalPaidAmount || 0)} />
-        <StatCard label="Total recebido LUMIE" value={brl(data?.summary.totalPlatformReceived || 0)} />
+        <StatCard label="Total recebido Pagar.me" value={brl(data?.summary.totalPagarmeReceived || 0)} />
+        <StatCard label="Total recebido LUMIE (liquido)" value={brl(data?.summary.totalLumieNetReceived || 0)} />
         <StatCard label="Total recebido clientes" value={brl(data?.summary.totalClientReceived || 0)} />
         <StatCard label="Total recebido parceiros" value={brl(data?.summary.totalPartnerReceived || 0)} />
         <StatCard label="Total recebido embaixadores" value={brl(data?.summary.totalAmbassadorReceived || 0)} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <StatCard
           label="Cartao"
-          value={`${data?.summary.cardCount || 0} pedidos • ${brl(data?.summary.cardAmount || 0)}`}
+          value={`${data?.summary.cardCount || 0} pedidos - ${brl(data?.summary.cardAmount || 0)}`}
         />
         <StatCard
           label="PIX"
-          value={`${data?.summary.pixCount || 0} pedidos • ${brl(data?.summary.pixAmount || 0)}`}
+          value={`${data?.summary.pixCount || 0} pedidos - ${brl(data?.summary.pixAmount || 0)}`}
         />
         <StatCard label="Pedidos pagos" value={String(data?.summary.ordersCount || 0)} />
+        <StatCard
+          label="Cartao pendente"
+          value={`${data?.summary.pendingCardCount || 0} pedidos - ${brl(data?.summary.pendingCardAmount || 0)}`}
+        />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -292,7 +311,8 @@ export default function AdminFinanceiroPage() {
                   <th className="p-2 text-left">Lista</th>
                   <th className="p-2 text-left">Cliente</th>
                   <th className="p-2 text-left">Total</th>
-                  <th className="p-2 text-left">LUMIE</th>
+                  <th className="p-2 text-left">Pagar.me</th>
+                  <th className="p-2 text-left">LUMIE (liquido)</th>
                   <th className="p-2 text-left">Cliente</th>
                   <th className="p-2 text-left">Parceiro</th>
                   <th className="p-2 text-left">Embaixador</th>
@@ -312,7 +332,8 @@ export default function AdminFinanceiroPage() {
                       <p className="text-xs text-gray-500">{order.client.email}</p>
                     </td>
                     <td className="p-2">{brl(order.totalAmount)}</td>
-                    <td className="p-2">{brl(order.split.platformReceived)}</td>
+                    <td className="p-2">{brl(order.split.pagarmeFee)}</td>
+                    <td className="p-2">{brl(order.split.lumieNetReceived)}</td>
                     <td className="p-2">{brl(order.split.clientReceived)}</td>
                     <td className="p-2">{brl(order.split.partnerReceived)}</td>
                     <td className="p-2">{brl(order.split.ambassadorReceived)}</td>
@@ -320,8 +341,53 @@ export default function AdminFinanceiroPage() {
                 ))}
                 {(data?.orders || []).length === 0 ? (
                   <tr>
-                    <td className="p-3 text-gray-500 text-sm" colSpan={9}>
+                    <td className="p-3 text-gray-500 text-sm" colSpan={10}>
                       Nenhum pagamento encontrado para os filtros selecionados.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-[#e7d8cb]">
+        <CardHeader>
+          <CardTitle>Cartoes de credito pendentes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead className="bg-[#faf3ee]">
+                <tr>
+                  <th className="p-2 text-left">Data</th>
+                  <th className="p-2 text-left">Status</th>
+                  <th className="p-2 text-left">Lista</th>
+                  <th className="p-2 text-left">Cliente</th>
+                  <th className="p-2 text-left">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data?.pendingCards || []).map((order) => (
+                  <tr key={order.id} className="border-t">
+                    <td className="p-2">{dateBr(order.createdAt)}</td>
+                    <td className="p-2">{order.status}</td>
+                    <td className="p-2">
+                      <p className="font-medium">{order.giftList.title}</p>
+                      <p className="text-xs text-gray-500">/{order.giftList.slug}</p>
+                    </td>
+                    <td className="p-2">
+                      <p>{order.client.name}</p>
+                      <p className="text-xs text-gray-500">{order.client.email}</p>
+                    </td>
+                    <td className="p-2">{brl(order.totalAmount)}</td>
+                  </tr>
+                ))}
+                {(data?.pendingCards || []).length === 0 ? (
+                  <tr>
+                    <td className="p-3 text-gray-500 text-sm" colSpan={5}>
+                      Nenhum cartao pendente para os filtros selecionados.
                     </td>
                   </tr>
                 ) : null}
