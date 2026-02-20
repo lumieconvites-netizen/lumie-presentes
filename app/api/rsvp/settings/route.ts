@@ -44,6 +44,10 @@ export async function PATCH(req: Request) {
 
     const body = await req.json();
     const payload = settingsSchema.parse(body);
+    const currentSettings = await prisma.rsvpSettings.findUnique({
+      where: { giftListId: giftList.id },
+      select: { checkInSlug: true },
+    });
     const defaultCheckInSlug = normalizeCheckInSlug(giftList.slug) || giftList.id;
 
     const data: any = {};
@@ -62,16 +66,37 @@ export async function PATCH(req: Request) {
       data.checkInSlug = normalized || null;
     }
 
-    if (typeof data.checkInSlug === "string" && data.checkInSlug) {
-      const conflict = await prisma.rsvpSettings.findFirst({
+    const effectiveCheckInSlug =
+      typeof data.checkInSlug !== "undefined"
+        ? data.checkInSlug || defaultCheckInSlug
+        : currentSettings?.checkInSlug || defaultCheckInSlug;
+
+    if (effectiveCheckInSlug) {
+      const explicitSlugConflict = await prisma.rsvpSettings.findFirst({
         where: {
-          checkInSlug: data.checkInSlug,
+          checkInSlug: effectiveCheckInSlug,
           NOT: { giftListId: giftList.id },
         },
         select: { id: true },
       });
 
-      if (conflict) {
+      if (explicitSlugConflict) {
+        return NextResponse.json({ error: "Este slug de check-in ja esta em uso." }, { status: 409 });
+      }
+
+      const fallbackSlugConflict = await prisma.giftList.findFirst({
+        where: {
+          id: { not: giftList.id },
+          slug: effectiveCheckInSlug,
+          OR: [
+            { rsvpSettings: { is: null } },
+            { rsvpSettings: { is: { checkInSlug: null } } },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (fallbackSlugConflict) {
         return NextResponse.json({ error: "Este slug de check-in ja esta em uso." }, { status: 409 });
       }
     }
