@@ -19,6 +19,7 @@ interface BlockEditorProps {
 export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorProps) {
   const config = block.config || {};
   const [uploading, setUploading] = useState(false);
+  const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
 
   const handleChange = (key: string, value: any) => {
     onUpdate({ [key]: value });
@@ -112,6 +113,15 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
   const removeImage = (index: number) => {
     const images = [...(config.images || [])];
     images.splice(index, 1);
+    handleChange('images', images);
+  };
+
+  const reorderGalleryImages = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    const images = [...(config.images || [])];
+    if (!images[fromIndex] || !images[toIndex]) return;
+    const [moved] = images.splice(fromIndex, 1);
+    images.splice(toIndex, 0, moved);
     handleChange('images', images);
   };
 
@@ -420,6 +430,18 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
               className="mt-2"
             />
           </div>
+          <div>
+            <Label className="text-sm font-medium">Alinhamento da assinatura</Label>
+            <select
+              value={config.signatureAlign || 'center'}
+              onChange={(e) => handleChange('signatureAlign', e.target.value)}
+              className="mt-2 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="left">Esquerda</option>
+              <option value="center">Centro</option>
+              <option value="right">Direita</option>
+            </select>
+          </div>
         </>
       )}
 
@@ -459,7 +481,19 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
 
             <div className="mt-2 grid grid-cols-3 gap-2">
               {(config.images || []).map((img: string, index: number) => (
-                <div key={index} className="relative group">
+                <div
+                  key={index}
+                  className={`relative group ${dragImageIndex === index ? 'opacity-60' : ''}`}
+                  draggable
+                  onDragStart={() => setDragImageIndex(index)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => {
+                    if (dragImageIndex === null) return;
+                    reorderGalleryImages(dragImageIndex, index);
+                    setDragImageIndex(null);
+                  }}
+                  onDragEnd={() => setDragImageIndex(null)}
+                >
                   <img
                     src={img}
                     alt={`Foto ${index + 1}`}

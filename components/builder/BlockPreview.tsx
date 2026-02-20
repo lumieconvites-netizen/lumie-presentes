@@ -295,6 +295,16 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {/* Message Block */}
             {block.type === 'message' && (
               <div className={`${sectionClass} p-12 md:p-20 text-center`}>
+                {(() => {
+                  const signatureAlign = config.signatureAlign || 'center';
+                  const signatureClass =
+                    signatureAlign === 'left'
+                      ? 'text-left'
+                      : signatureAlign === 'right'
+                      ? 'text-right'
+                      : 'text-center';
+                  return (
+                    <>
                 <h2 
                   className="text-3xl md:text-4xl mb-6" 
                   style={{ color: titleColor, fontFamily: fontTitle }}
@@ -305,8 +315,11 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                   {config.message || 'Escreva aqui uma mensagem especial para seus convidados. Conte sua histÃ³ria, compartilhe seus sonhos e torne este momento ainda mais especial.'}
                 </p>
                 {config.signature && (
-                  <p className="italic mt-8 text-lg" style={{ color: captionColor }}>{config.signature}</p>
+                  <p className={`italic mt-8 text-lg ${signatureClass}`} style={{ color: captionColor }}>{config.signature}</p>
                 )}
+                    </>
+                  );
+                })()}
               </div>
             )}
 

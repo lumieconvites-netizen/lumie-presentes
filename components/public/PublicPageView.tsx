@@ -337,13 +337,26 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
 
             {block.type === 'message' && (
               <div className={`${sectionClass} p-12 md:p-20 text-center`}>
-                <h2 className="text-3xl md:text-4xl mb-6" style={{ fontFamily: fontTitle, color: titleColor }}>
-                  {config.title || 'Nossa Historia'}
-                </h2>
-                <p className="text-base md:text-lg mb-4 max-w-3xl mx-auto leading-relaxed whitespace-pre-wrap" style={{ color: captionColor }}>
-                  {config.message || 'Escreva aqui uma mensagem especial para seus convidados.'}
-                </p>
-                {config.signature && <p className="italic mt-8 text-lg" style={{ color: captionColor }}>{config.signature}</p>}
+                {(() => {
+                  const signatureAlign = config.signatureAlign || 'center';
+                  const signatureClass =
+                    signatureAlign === 'left'
+                      ? 'text-left'
+                      : signatureAlign === 'right'
+                      ? 'text-right'
+                      : 'text-center';
+                  return (
+                    <>
+                  <h2 className="text-3xl md:text-4xl mb-6" style={{ fontFamily: fontTitle, color: titleColor }}>
+                    {config.title || 'Nossa Historia'}
+                  </h2>
+                  <p className="text-base md:text-lg mb-4 max-w-3xl mx-auto leading-relaxed whitespace-pre-wrap" style={{ color: captionColor }}>
+                    {config.message || 'Escreva aqui uma mensagem especial para seus convidados.'}
+                  </p>
+                  {config.signature && <p className={`italic mt-8 text-lg ${signatureClass}`} style={{ color: captionColor }}>{config.signature}</p>}
+                    </>
+                  );
+                })()}
               </div>
             )}
 
