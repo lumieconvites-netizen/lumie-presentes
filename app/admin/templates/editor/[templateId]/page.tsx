@@ -4,14 +4,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BlockEditor from '@/components/builder/BlockEditor';
 import BlockPreview from '@/components/builder/BlockPreview';
-import { Image as ImageIcon, Layout, Music2, Sparkles, Type, Video, Globe, Plus } from 'lucide-react';
+import { GripVertical, ChevronRight, Image as ImageIcon, Layout, Music2, Sparkles, Type, Video, Globe, Plus, Upload, X } from 'lucide-react';
+import { Reorder } from 'framer-motion';
 import { normalizeTemplateGiftItems } from '@/lib/template-gifts';
 
 type CategoryItem = { slug: string; name: string; templatesCount: number; activeTemplatesCount: number };
@@ -161,6 +162,9 @@ export default function AdminTemplateEditorPage() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'blocks' | 'theme' | 'header' | 'template'>('blocks');
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [uploadingGiftIndex, setUploadingGiftIndex] = useState<number | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -182,11 +186,18 @@ export default function AdminTemplateEditorPage() {
 
   const previewList = useMemo(() => ({ theme }), [theme]);
   const previewGifts = useMemo(
-    () => [
-      { id: 'g1', title: 'Presente exemplo', value: 150, quantity: 1, quantityAvailable: 1, status: 'active' },
-      { id: 'g2', title: 'Presente premium', value: 450, quantity: 1, quantityAvailable: 1, status: 'active' },
-    ],
-    []
+    () =>
+      normalizeTemplateGiftItems(templateGifts).map((gift, index) => ({
+        id: `tg-${index}`,
+        title: gift.name,
+        description: gift.description || '',
+        value: Number(gift.basePrice || 0),
+        photo: gift.imageUrl || '',
+        quantity: Number(gift.totalQuantity || 1),
+        quantityAvailable: Number(gift.totalQuantity || 1),
+        status: 'active',
+      })),
+    [templateGifts]
   );
 
   useEffect(() => {
@@ -253,6 +264,24 @@ export default function AdminTemplateEditorPage() {
     setBlocks((prev) => sanitizeTemplateBlocks([...prev, next]));
     setDirty(true);
     setSelectedBlockId(next.id);
+  }
+
+  function toggleBlockVisibility(blockId: string) {
+    setBlocks((prev) =>
+      prev.map((block) =>
+        block.id === blockId
+          ? block.type === 'gifts'
+            ? { ...block, enabled: true }
+            : { ...block, enabled: !block.enabled }
+          : block
+      )
+    );
+    setDirty(true);
+  }
+
+  function handleReorderBlocks(newBlocks: any[]) {
+    setBlocks(newBlocks.map((block, index) => ({ ...block, order: index + 1 })));
+    setDirty(true);
   }
 
   function updateBlock(blockId: string, patch: any) {
@@ -330,227 +359,293 @@ export default function AdminTemplateEditorPage() {
     alert(next ? 'Template publicado.' : 'Template despublicado.');
   }
 
+  async function uploadFile(file: File, folder: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+    const response = await fetch('/api/upload/avatar', { method: 'POST', body: formData });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.url) throw new Error(data?.error || 'Falha no upload');
+    return String(data.url);
+  }
+
+  async function handleThumbnailUpload(file?: File | null) {
+    if (!file) return;
+    try {
+      setUploadingThumbnail(true);
+      const url = await uploadFile(file, 'template-thumbnail');
+      setForm((prev) => ({ ...prev, thumbnail: url }));
+      setDirty(true);
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao enviar thumbnail');
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  }
+
+  async function handleGiftImageUpload(index: number, file?: File | null) {
+    if (!file) return;
+    try {
+      setUploadingGiftIndex(index);
+      const url = await uploadFile(file, 'template-gifts');
+      setTemplateGifts((prev) => prev.map((gift, i) => (i === index ? { ...gift, imageUrl: url } : gift)));
+      setDirty(true);
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao enviar imagem do presente');
+    } finally {
+      setUploadingGiftIndex(null);
+    }
+  }
+
   if (loading) return <div className="p-6">Carregando editor de template...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display text-[#8E3D2C]">{isNew ? 'Novo template' : 'Editar template'}</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/admin/templates">Voltar</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href={form.category ? `/templates?categoria=${encodeURIComponent(form.category)}` : '/templates'} target="_blank">
-              Visualizar
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setTemplateGifts((prev) => [...prev, { name: '', description: '', imageUrl: '', basePrice: 100, totalQuantity: 1 }]);
-              setDirty(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Adicionar presentes
-          </Button>
-          <Button onClick={() => saveTemplate().catch(() => null)} disabled={saving}>
-            {saving ? 'Salvando...' : 'Salvar template'}
-          </Button>
-          <Button
-            className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800"
-            onClick={() => togglePublished().catch(() => null)}
-            disabled={saving}
-          >
-            {form.isActive ? 'Despublicar template' : 'Publicar template'}
-          </Button>
+    <div className="h-full bg-[#fbf8f5]">
+      <div className="sticky top-0 z-40 bg-[#fbf8f5] border-b border-[#ead9cd] px-4 md:px-6 py-4">
+        <div className="flex items-center justify-between rounded-2xl border border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9] px-4 py-3">
+          <div className="flex items-center gap-4">
+            <h1 className="font-display text-2xl text-foreground">{isNew ? 'Novo template' : 'Editor de Template'}</h1>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${form.isActive ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+              {form.isActive ? 'Publicado' : 'Rascunho'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/admin/templates">Voltar</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={form.category ? `/templates?categoria=${encodeURIComponent(form.category)}` : '/templates'} target="_blank">
+                Visualizar
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setActiveTab('template');
+                setTemplateGifts((prev) => [...prev, { name: '', description: '', imageUrl: '', basePrice: 100, totalQuantity: 1 }]);
+                setDirty(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Adicionar presentes
+            </Button>
+            <Button onClick={() => saveTemplate().catch(() => null)} disabled={saving || !dirty}>
+              {saving ? 'Salvando...' : 'Salvar template'}
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800"
+              onClick={() => togglePublished().catch(() => null)}
+              disabled={saving}
+            >
+              {form.isActive ? 'Despublicar template' : 'Publicar template'}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-4">
-        <Card className="border-[#e7d8cb]">
-          <CardHeader>
-            <CardTitle>Configuracoes do template</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <Label>Nome</Label>
-              <Input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <Label>Slug</Label>
-              <Input value={form.slug} onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))} placeholder="automatico se vazio" />
-            </div>
-            <div className="space-y-1">
-              <Label>Tipo de evento</Label>
-              <Select value={form.category} onValueChange={(value) => setForm((prev) => ({ ...prev, category: value }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.slug} value={category.slug}>{category.name}</SelectItem>
+      <div className="flex h-[calc(100vh-5rem)]">
+        <div className="w-72 bg-[#fffaf7] border-r border-[#ead9cd] overflow-y-auto">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="p-4">
+            <TabsList className="w-full grid grid-cols-4 mb-4">
+              <TabsTrigger value="blocks">Blocos</TabsTrigger>
+              <TabsTrigger value="theme">Tema</TabsTrigger>
+              <TabsTrigger value="header">Cabeçalho</TabsTrigger>
+              <TabsTrigger value="template">Template</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="blocks" className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Blocos da Página</h3>
+                <Reorder.Group axis="y" values={blocks} onReorder={handleReorderBlocks} className="space-y-2">
+                  {blocks.map((block) => {
+                    const blockType = BLOCK_TYPES.find((item) => item.id === block.type);
+                    const Icon = blockType?.icon || Layout;
+                    return (
+                      <Reorder.Item key={block.id} value={block}>
+                        <div
+                          className={`p-3 rounded-lg border flex items-center gap-3 cursor-move transition-all ${
+                            selectedBlockId === block.id ? 'border-primary bg-primary/5' : 'border-[#ead9cd] bg-white hover:border-primary/50'
+                          }`}
+                          onClick={() => setSelectedBlockId(block.id)}
+                        >
+                          <GripVertical className="w-4 h-4 text-gray-400" />
+                          <Icon className="w-4 h-4 text-primary" />
+                          <span className="flex-1 text-sm text-foreground truncate">{blockType?.name || block.type}</span>
+                          <Switch
+                            checked={Boolean(block.enabled)}
+                            disabled={block.type === 'gifts'}
+                            onCheckedChange={() => toggleBlockVisibility(block.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </Reorder.Item>
+                    );
+                  })}
+                </Reorder.Group>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Adicionar bloco</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {BLOCK_TYPES.filter((type) => !blocks.some((b) => b.type === type.id)).map((type) => (
+                    <Button key={type.id} type="button" variant="outline" size="sm" onClick={() => addBlock(type.id)}>
+                      {type.name}
+                    </Button>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Descricao</Label>
-              <Input value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <Label>Thumbnail (URL)</Label>
-              <Input value={form.thumbnail} onChange={(e) => setForm((prev) => ({ ...prev, thumbnail: e.target.value }))} />
-            </div>
-            <div className="flex items-center justify-between rounded-md border px-3 py-2">
-              <Label>Publicado</Label>
-              <Switch checked={form.isActive} onCheckedChange={(value) => setForm((prev) => ({ ...prev, isActive: value }))} />
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Tema</p>
-              <div className="grid grid-cols-2 gap-2">
-                <Input value={theme.primary_color || ''} onChange={(e) => setTheme((prev: any) => ({ ...prev, primary_color: e.target.value }))} placeholder="primary" />
-                <Input value={theme.secondary_color || ''} onChange={(e) => setTheme((prev: any) => ({ ...prev, secondary_color: e.target.value }))} placeholder="secondary" />
-                <Input value={theme.background_color || ''} onChange={(e) => setTheme((prev: any) => ({ ...prev, background_color: e.target.value }))} placeholder="background" />
-                <Input value={theme.title_color || ''} onChange={(e) => setTheme((prev: any) => ({ ...prev, title_color: e.target.value }))} placeholder="title" />
+                </div>
               </div>
-            </div>
+            </TabsContent>
 
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Blocos</p>
-              <div className="grid grid-cols-2 gap-2">
-                {BLOCK_TYPES.map((blockType) => (
-                  <Button key={blockType.id} type="button" variant="outline" size="sm" onClick={() => addBlock(blockType.id)}>
-                    {blockType.name}
-                  </Button>
-                ))}
+            <TabsContent value="theme" className="space-y-4">
+              <div className="space-y-1">
+                <Label>Cor dos ícones</Label>
+                <Input value={theme.primary_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, primary_color: e.target.value })); setDirty(true); }} />
               </div>
-
-              <div className="rounded-lg border divide-y">
-                {blocks.map((block) => (
-                  <button
-                    key={block.id}
-                    type="button"
-                    className={`w-full text-left px-3 py-2 text-sm ${selectedBlockId === block.id ? 'bg-[#fff6ef]' : 'bg-white'}`}
-                    onClick={() => setSelectedBlockId(block.id)}
-                  >
-                    {block.type} {block.enabled === false ? '(oculto)' : ''}
-                  </button>
-                ))}
+              <div className="space-y-1">
+                <Label>Cor dos títulos</Label>
+                <Input value={theme.title_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, title_color: e.target.value })); setDirty(true); }} />
               </div>
-            </div>
-
-            {selectedBlock ? (
-              <div className="border-t pt-3">
-                <BlockEditor
-                  block={selectedBlock}
-                  onUpdate={(patch) => updateBlock(selectedBlock.id, patch)}
-                  onDelete={() => deleteBlock(selectedBlock.id)}
-                  list={{}}
-                />
+              <div className="space-y-1">
+                <Label>Cor das legendas</Label>
+                <Input value={theme.caption_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, caption_color: e.target.value })); setDirty(true); }} />
               </div>
-            ) : null}
+              <div className="space-y-1">
+                <Label>Cor de fundo</Label>
+                <Input value={theme.background_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_color: e.target.value })); setDirty(true); }} />
+              </div>
+              <div className="space-y-1">
+                <Label>Fonte do título</Label>
+                <Select value={theme.font_title || 'Playfair Display'} onValueChange={(value) => { setTheme((prev: any) => ({ ...prev, font_title: value })); setDirty(true); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Playfair Display">Playfair Display</SelectItem>
+                    <SelectItem value="Cormorant Garamond">Cormorant Garamond</SelectItem>
+                    <SelectItem value="Great Vibes">Great Vibes</SelectItem>
+                    <SelectItem value="Dancing Script">Dancing Script</SelectItem>
+                    <SelectItem value="Allura">Allura</SelectItem>
+                    <SelectItem value="Poppins">Poppins</SelectItem>
+                    <SelectItem value="Montserrat">Montserrat</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Fonte do corpo</Label>
+                <Select value={theme.font_body || 'Inter'} onValueChange={(value) => { setTheme((prev: any) => ({ ...prev, font_body: value })); setDirty(true); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Inter">Inter</SelectItem>
+                    <SelectItem value="Lato">Lato</SelectItem>
+                    <SelectItem value="Open Sans">Open Sans</SelectItem>
+                    <SelectItem value="Roboto">Roboto</SelectItem>
+                    <SelectItem value="Nunito">Nunito</SelectItem>
+                    <SelectItem value="Work Sans">Work Sans</SelectItem>
+                    <SelectItem value="Raleway">Raleway</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </TabsContent>
 
-            <div className="space-y-2 border-t pt-3">
-              <p className="text-sm font-medium">Presentes padrao do template</p>
-              <p className="text-xs text-gray-500">Esses presentes entram automaticamente quando o cliente escolhe o template.</p>
+            <TabsContent value="header" className="space-y-4">
+              <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                <Label>Exibir cabeçalho</Label>
+                <Switch checked={theme?.header?.enabled !== false} onCheckedChange={(value) => { setTheme((prev: any) => ({ ...prev, header: { ...(prev?.header || {}), enabled: value } })); setDirty(true); }} />
+              </div>
+              <div className="space-y-1">
+                <Label>Texto da marca</Label>
+                <Input value={theme?.header?.brandText || 'LUMIE'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, header: { ...(prev?.header || {}), brandText: e.target.value } })); setDirty(true); }} />
+              </div>
+            </TabsContent>
 
-              <div className="space-y-2">
+            <TabsContent value="template" className="space-y-4">
+              <div className="space-y-1">
+                <Label>Nome</Label>
+                <Input value={form.name} onChange={(e) => { setForm((prev) => ({ ...prev, name: e.target.value })); setDirty(true); }} />
+              </div>
+              <div className="space-y-1">
+                <Label>Slug</Label>
+                <Input value={form.slug} onChange={(e) => { setForm((prev) => ({ ...prev, slug: e.target.value })); setDirty(true); }} placeholder="automatico se vazio" />
+              </div>
+              <div className="space-y-1">
+                <Label>Tipo de evento</Label>
+                <Select value={form.category} onValueChange={(value) => { setForm((prev) => ({ ...prev, category: value })); setDirty(true); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.slug} value={category.slug}>{category.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Descrição</Label>
+                <Input value={form.description} onChange={(e) => { setForm((prev) => ({ ...prev, description: e.target.value })); setDirty(true); }} />
+              </div>
+              <div className="space-y-1">
+                <Label>Thumbnail</Label>
+                <Input value={form.thumbnail} onChange={(e) => { setForm((prev) => ({ ...prev, thumbnail: e.target.value })); setDirty(true); }} placeholder="URL da thumbnail" />
+                <label className="inline-flex mt-2">
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleThumbnailUpload(e.target.files?.[0] || null)} disabled={uploadingThumbnail} />
+                  <span className="inline-flex h-9 items-center justify-center rounded-md border px-3 text-sm font-medium cursor-pointer">
+                    <Upload className="w-4 h-4 mr-1" />
+                    {uploadingThumbnail ? 'Enviando...' : 'Upload da thumbnail'}
+                  </span>
+                </label>
+              </div>
+              <div className="space-y-2 border-t pt-3">
+                <p className="text-sm font-medium">Presentes padrão</p>
                 {templateGifts.map((gift, index) => (
                   <div key={`gift-${index}`} className="rounded-md border p-2 space-y-2">
-                    <Input
-                      placeholder="Nome do presente"
-                      value={gift.name}
-                      onChange={(e) =>
-                        setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, name: e.target.value } : row)))
-                      }
-                    />
-                    <Input
-                      placeholder="Descricao (opcional)"
-                      value={gift.description}
-                      onChange={(e) =>
-                        setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, description: e.target.value } : row)))
-                      }
-                    />
-                    <Input
-                      placeholder="Imagem URL (opcional)"
-                      value={gift.imageUrl}
-                      onChange={(e) =>
-                        setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, imageUrl: e.target.value } : row)))
-                      }
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        type="number"
-                        min={0.01}
-                        step={0.01}
-                        placeholder="Preco"
-                        value={gift.basePrice}
-                        onChange={(e) =>
-                          setTemplateGifts((prev) =>
-                            prev.map((row, i) =>
-                              i === index ? { ...row, basePrice: Number(e.target.value || 0) } : row
-                            )
-                          )
-                        }
-                      />
-                      <Input
-                        type="number"
-                        min={1}
-                        step={1}
-                        placeholder="Quantidade"
-                        value={gift.totalQuantity}
-                        onChange={(e) =>
-                          setTemplateGifts((prev) =>
-                            prev.map((row, i) =>
-                              i === index ? { ...row, totalQuantity: Number(e.target.value || 1) } : row
-                            )
-                          )
-                        }
-                      />
+                    <Input placeholder="Nome do presente" value={gift.name} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, name: e.target.value } : row))); setDirty(true); }} />
+                    <Input placeholder="Descrição" value={gift.description} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, description: e.target.value } : row))); setDirty(true); }} />
+                    <Input placeholder="Imagem URL (opcional)" value={gift.imageUrl} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, imageUrl: e.target.value } : row))); setDirty(true); }} />
+                    <div className="flex items-center gap-2">
+                      <label className="inline-flex">
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleGiftImageUpload(index, e.target.files?.[0] || null)} disabled={uploadingGiftIndex === index} />
+                        <span className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-medium cursor-pointer">
+                          {uploadingGiftIndex === index ? 'Enviando...' : 'Upload imagem'}
+                        </span>
+                      </label>
+                      {gift.imageUrl ? (
+                        <Button type="button" size="sm" variant="outline" onClick={() => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, imageUrl: '' } : row))); setDirty(true); }}>
+                          <X className="w-3 h-3 mr-1" />
+                          Remover imagem
+                        </Button>
+                      ) : null}
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="text-red-600 border-red-300 hover:bg-red-50"
-                      onClick={() => setTemplateGifts((prev) => prev.filter((_, i) => i !== index))}
-                    >
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input type="number" min={0.01} step={0.01} placeholder="Preço" value={gift.basePrice} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, basePrice: Number(e.target.value || 0) } : row))); setDirty(true); }} />
+                      <Input type="number" min={1} step={1} placeholder="Quantidade" value={gift.totalQuantity} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, totalQuantity: Number(e.target.value || 1) } : row))); setDirty(true); }} />
+                    </div>
+                    <Button type="button" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => { setTemplateGifts((prev) => prev.filter((_, i) => i !== index)); setDirty(true); }}>
                       Remover presente
                     </Button>
                   </div>
                 ))}
+                <Button type="button" variant="outline" onClick={() => { setTemplateGifts((prev) => [...prev, { name: '', description: '', imageUrl: '', basePrice: 100, totalQuantity: 1 }]); setDirty(true); }}>
+                  Adicionar presente padrão
+                </Button>
               </div>
+            </TabsContent>
+          </Tabs>
+        </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setTemplateGifts((prev) => [
-                    ...prev,
-                    { name: '', description: '', imageUrl: '', basePrice: 100, totalQuantity: 1 },
-                  ])
-                }
-              >
-                Adicionar presente padrao
+        <div className="flex-1 overflow-y-auto bg-[#f7efe8]">
+          <div className="max-w-5xl mx-auto px-6 pb-6">
+            <BlockPreview list={previewList} blocks={blocks} selectedBlock={selectedBlock} onSelectBlock={(block) => setSelectedBlockId(block.id)} gifts={previewGifts} />
+          </div>
+        </div>
+
+        {selectedBlock ? (
+          <div className="w-80 bg-white border-l border-[#ead9cd] p-4 overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-foreground">Configurações</h3>
+              <Button variant="ghost" size="icon" onClick={() => setSelectedBlockId(null)} className="h-8 w-8">
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-[#e7d8cb]">
-          <CardHeader>
-            <CardTitle>Preview do template</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BlockPreview
-              list={previewList}
-              blocks={blocks}
-              selectedBlock={selectedBlock}
-              onSelectBlock={(block) => setSelectedBlockId(block.id)}
-              gifts={previewGifts}
-            />
-          </CardContent>
-        </Card>
+            <BlockEditor block={selectedBlock} onUpdate={(patch) => updateBlock(selectedBlock.id, patch)} onDelete={() => deleteBlock(selectedBlock.id)} list={{ theme }} />
+          </div>
+        ) : null}
       </div>
     </div>
   );
