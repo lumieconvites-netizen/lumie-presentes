@@ -189,6 +189,34 @@ export default function PageBuilder() {
               setPageBlocks(nextBlocks);
               setTheme(nextTheme);
               await saveLayout(nextBlocks, nextTheme);
+
+              const templateGiftItems = Array.isArray(selected.giftItems) ? selected.giftItems : [];
+              if (templateGiftItems.length > 0 && Array.isArray(gifts) && gifts.length === 0) {
+                for (const giftItem of templateGiftItems) {
+                  await fetch('/api/gifts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      giftListId: gl.id,
+                      name: giftItem.name,
+                      description: giftItem.description || '',
+                      imageUrl: giftItem.imageUrl || '',
+                      basePrice: Number(giftItem.basePrice || 0),
+                      totalQuantity: Number(giftItem.totalQuantity || 1),
+                    }),
+                  });
+                }
+
+                try {
+                  const refreshedGiftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' });
+                  const refreshedGifts = await refreshedGiftsRes.json().catch(() => []);
+                  if (Array.isArray(refreshedGifts)) {
+                    setListGifts(refreshedGifts.map(mapGift));
+                  }
+                } catch (error) {
+                  console.error('Erro ao recarregar presentes apos aplicar template', error);
+                }
+              }
             }
           } catch (error) {
             console.error('Erro ao aplicar template por URL', error);

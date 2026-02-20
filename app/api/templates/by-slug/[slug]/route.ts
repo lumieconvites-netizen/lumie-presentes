@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getTemplatePresetBySlug } from "@/lib/template-presets";
 import { isCategoryMetaTemplate } from "@/lib/template-categories";
+import { extractTemplateGiftItemsFromBlocks } from "@/lib/template-gifts";
 
 export async function GET(_request: Request, { params }: { params: { slug: string } }) {
   const slug = String(params.slug || "").trim().toLowerCase();
@@ -21,6 +21,7 @@ export async function GET(_request: Request, { params }: { params: { slug: strin
   });
 
   if (dbTemplate && dbTemplate.isActive && !isCategoryMetaTemplate(dbTemplate)) {
+    const blocks = Array.isArray(dbTemplate.defaultBlocks) ? dbTemplate.defaultBlocks : [];
     return NextResponse.json({
       template: {
         source: "db",
@@ -28,23 +29,9 @@ export async function GET(_request: Request, { params }: { params: { slug: strin
         slug: dbTemplate.slug,
         name: dbTemplate.name,
         description: dbTemplate.description,
-        blocks: Array.isArray(dbTemplate.defaultBlocks) ? dbTemplate.defaultBlocks : [],
+        blocks,
         theme: dbTemplate.defaultTheme || {},
-      },
-    });
-  }
-
-  const preset = getTemplatePresetBySlug(slug);
-  if (preset) {
-    return NextResponse.json({
-      template: {
-        source: "preset",
-        id: null,
-        slug: preset.slug,
-        name: preset.name,
-        description: preset.description,
-        blocks: preset.blocks,
-        theme: preset.theme,
+        giftItems: extractTemplateGiftItemsFromBlocks(blocks),
       },
     });
   }

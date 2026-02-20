@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getTemplatePresetBySlug } from "@/lib/template-presets";
 import { isCategoryMetaTemplate } from "@/lib/template-categories";
+import { extractTemplateGiftItemsFromBlocks, type TemplateGiftItem } from "@/lib/template-gifts";
 
 export type ResolvedSignupTemplate = {
   source: "db" | "preset";
@@ -10,6 +11,7 @@ export type ResolvedSignupTemplate = {
   defaultDescription: string;
   blocks: any[];
   theme: Record<string, any>;
+  giftItems: TemplateGiftItem[];
 } | null;
 
 export async function resolveSignupTemplateBySlug(slug?: string | null): Promise<ResolvedSignupTemplate> {
@@ -30,14 +32,16 @@ export async function resolveSignupTemplateBySlug(slug?: string | null): Promise
   });
 
   if (dbTemplate && !isCategoryMetaTemplate(dbTemplate)) {
+    const blocks = Array.isArray(dbTemplate.defaultBlocks) ? (dbTemplate.defaultBlocks as any[]) : [];
     return {
       source: "db",
       slug: dbTemplate.slug,
       templateId: dbTemplate.id,
       defaultTitle: dbTemplate.name || "Minha Lista de Presentes",
       defaultDescription: dbTemplate.description || "Ajude a realizar nossos sonhos!",
-      blocks: Array.isArray(dbTemplate.defaultBlocks) ? (dbTemplate.defaultBlocks as any[]) : [],
+      blocks,
       theme: (dbTemplate.defaultTheme as Record<string, any>) || {},
+      giftItems: extractTemplateGiftItemsFromBlocks(blocks),
     };
   }
 
@@ -52,5 +56,6 @@ export async function resolveSignupTemplateBySlug(slug?: string | null): Promise
     defaultDescription: preset.defaultDescription ?? "Ajude a realizar nossos sonhos!",
     blocks: preset.blocks as any[],
     theme: preset.theme as Record<string, any>,
+    giftItems: [],
   };
 }

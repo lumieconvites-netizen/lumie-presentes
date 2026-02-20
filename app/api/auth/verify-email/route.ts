@@ -119,6 +119,25 @@ export async function POST(request: Request) {
             theme: selectedTemplate.theme as any,
           },
         });
+
+        if (selectedTemplate.giftItems.length > 0) {
+          const giftCount = await tx.giftItem.count({ where: { giftListId: giftList.id } });
+          if (giftCount === 0) {
+            await tx.giftItem.createMany({
+              data: selectedTemplate.giftItems.map((gift, index) => ({
+                giftListId: giftList.id,
+                name: gift.name,
+                description: gift.description || null,
+                imageUrl: gift.imageUrl || null,
+                basePrice: gift.basePrice,
+                totalQuantity: gift.totalQuantity,
+                availableQty: gift.totalQuantity,
+                isActive: true,
+                order: index,
+              })),
+            });
+          }
+        }
       }
 
       await tx.emailVerificationCode.update({

@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { Button } from '@/components/ui/button';
-import { TEMPLATE_PRESETS } from '@/lib/template-presets';
 import { isCategoryMetaTemplate, normalizeCategorySlug, parseCategoryMarkerName, prettyCategoryName } from '@/lib/template-categories';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -52,27 +51,17 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
 
   const dbTemplates = rawTemplates.filter((template) => !isCategoryMetaTemplate(template));
 
-  const templateCards: TemplateCard[] =
-    dbTemplates.length > 0
-      ? dbTemplates.map((template) => {
-          const category = normalizeCategorySlug(template.category || 'geral') || 'geral';
-          return {
-            slug: template.slug,
-            name: template.name,
-            category,
-            categoryLabel: prettyCategoryName(category),
-            description: template.description || 'Template pronto para sua lista de presentes.',
-            preview: buildPreview(template),
-          };
-        })
-      : TEMPLATE_PRESETS.map((template) => ({
-          slug: template.slug,
-          name: template.name,
-          category: normalizeCategorySlug(template.category) || 'geral',
-          categoryLabel: prettyCategoryName(template.category),
-          description: template.description,
-          preview: template.preview,
-        }));
+  const templateCards: TemplateCard[] = dbTemplates.map((template) => {
+    const category = normalizeCategorySlug(template.category || 'geral') || 'geral';
+    return {
+      slug: template.slug,
+      name: template.name,
+      category,
+      categoryLabel: prettyCategoryName(category),
+      description: template.description || 'Template pronto para sua lista de presentes.',
+      preview: buildPreview(template),
+    };
+  });
 
   const markerTemplates = await prisma.template.findMany({
     where: {
@@ -106,18 +95,6 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
-  // Include categories created in admin even when there are no public templates yet.
-  for (const marker of markerTemplates) {
-    const slug = normalizeCategorySlug(marker.category || '');
-    if (!slug) continue;
-    if (!categories.some((category) => category.slug === slug)) {
-      categories.push({
-        slug,
-        name: categoryNameMap.get(slug) || prettyCategoryName(slug),
-        count: 0,
-      });
-    }
-  }
   categories.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
   const visibleCategories = selectedCategory
@@ -152,6 +129,12 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
             </Link>
           ))}
         </div>
+
+        {templateCards.length === 0 ? (
+          <section className="rounded-2xl border border-dashed border-[#d9b9a4] bg-white p-8 text-center text-[#8E3D2C]">
+            Nenhum template publicado ainda.
+          </section>
+        ) : null}
 
         {visibleCategories.map((category) => {
           const cards = grouped.get(category.slug) || [];

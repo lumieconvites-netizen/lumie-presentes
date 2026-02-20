@@ -12,8 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import BlockEditor from '@/components/builder/BlockEditor';
 import BlockPreview from '@/components/builder/BlockPreview';
 import { Image as ImageIcon, Layout, Music2, Sparkles, Type, Video, Globe } from 'lucide-react';
+import { normalizeTemplateGiftItems } from '@/lib/template-gifts';
 
 type CategoryItem = { slug: string; name: string; templatesCount: number; activeTemplatesCount: number };
+type TemplateGiftFormItem = { name: string; description: string; imageUrl: string; basePrice: number; totalQuantity: number };
 
 const BLOCK_TYPES = [
   { id: 'hero', name: 'Capa (Hero)', icon: ImageIcon },
@@ -71,6 +73,42 @@ function slugify(v: string) {
     .slice(0, 120);
 }
 
+function readTemplateGiftsFromBlocks(blocks: any[]): TemplateGiftFormItem[] {
+  const giftsBlock = blocks.find((block) => block.type === 'gifts');
+  const normalized = normalizeTemplateGiftItems(giftsBlock?.config?.templateGiftItems);
+  return normalized.map((gift) => ({
+    name: gift.name,
+    description: gift.description || '',
+    imageUrl: gift.imageUrl || '',
+    basePrice: Number(gift.basePrice || 0),
+    totalQuantity: Number(gift.totalQuantity || 1),
+  }));
+}
+
+function writeTemplateGiftsToBlocks(blocks: any[], giftItems: TemplateGiftFormItem[]) {
+  const normalizedGifts = normalizeTemplateGiftItems(giftItems);
+  const hasGiftsBlock = blocks.some((block) => block.type === 'gifts');
+  const nextBlocks = hasGiftsBlock
+    ? blocks
+    : [
+        ...blocks,
+        { id: `gifts-${Date.now()}`, type: 'gifts', order: blocks.length + 1, enabled: true, config: {} },
+      ];
+
+  return nextBlocks.map((block, index) => {
+    if (block.type !== 'gifts') return { ...block, order: index + 1 };
+    return {
+      ...block,
+      order: index + 1,
+      enabled: true,
+      config: {
+        ...(block.config || {}),
+        templateGiftItems: normalizedGifts,
+      },
+    };
+  });
+}
+
 export default function AdminTemplateEditorPage() {
   const params = useParams<{ templateId: string }>();
   const search = useSearchParams();
@@ -94,6 +132,7 @@ export default function AdminTemplateEditorPage() {
 
   const [blocks, setBlocks] = useState<any[]>(defaultBlocks);
   const [theme, setTheme] = useState<any>(defaultTheme);
+  const [templateGifts, setTemplateGifts] = useState<TemplateGiftFormItem[]>([]);
 
   const selectedBlock = useMemo(
     () => blocks.find((block) => block.id === selectedBlockId) || null,
@@ -138,6 +177,7 @@ export default function AdminTemplateEditorPage() {
             });
             setBlocks(Array.isArray(template.defaultBlocks) && template.defaultBlocks.length ? template.defaultBlocks : defaultBlocks);
             setTheme(template.defaultTheme || defaultTheme);
+            setTemplateGifts(readTemplateGiftsFromBlocks(Array.isArray(template.defaultBlocks) ? template.defaultBlocks : defaultBlocks));
           }
         }
       } catch (error: any) {
@@ -197,7 +237,7 @@ export default function AdminTemplateEditorPage() {
       category: form.category,
       description: form.description.trim() || null,
       thumbnail: form.thumbnail.trim() || null,
-      defaultBlocks: blocks,
+      defaultBlocks: writeTemplateGiftsToBlocks(blocks, templateGifts),
       defaultTheme: theme,
       isActive: form.isActive,
     };
@@ -318,6 +358,90 @@ export default function AdminTemplateEditorPage() {
                 />
               </div>
             ) : null}
+
+            <div className="space-y-2 border-t pt-3">
+              <p className="text-sm font-medium">Presentes padrao do template</p>
+              <p className="text-xs text-gray-500">Esses presentes entram automaticamente quando o cliente escolhe o template.</p>
+
+              <div className="space-y-2">
+                {templateGifts.map((gift, index) => (
+                  <div key={`gift-${index}`} className="rounded-md border p-2 space-y-2">
+                    <Input
+                      placeholder="Nome do presente"
+                      value={gift.name}
+                      onChange={(e) =>
+                        setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, name: e.target.value } : row)))
+                      }
+                    />
+                    <Input
+                      placeholder="Descricao (opcional)"
+                      value={gift.description}
+                      onChange={(e) =>
+                        setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, description: e.target.value } : row)))
+                      }
+                    />
+                    <Input
+                      placeholder="Imagem URL (opcional)"
+                      value={gift.imageUrl}
+                      onChange={(e) =>
+                        setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, imageUrl: e.target.value } : row)))
+                      }
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        type="number"
+                        min={0.01}
+                        step={0.01}
+                        placeholder="Preco"
+                        value={gift.basePrice}
+                        onChange={(e) =>
+                          setTemplateGifts((prev) =>
+                            prev.map((row, i) =>
+                              i === index ? { ...row, basePrice: Number(e.target.value || 0) } : row
+                            )
+                          )
+                        }
+                      />
+                      <Input
+                        type="number"
+                        min={1}
+                        step={1}
+                        placeholder="Quantidade"
+                        value={gift.totalQuantity}
+                        onChange={(e) =>
+                          setTemplateGifts((prev) =>
+                            prev.map((row, i) =>
+                              i === index ? { ...row, totalQuantity: Number(e.target.value || 1) } : row
+                            )
+                          )
+                        }
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="text-red-600 border-red-300 hover:bg-red-50"
+                      onClick={() => setTemplateGifts((prev) => prev.filter((_, i) => i !== index))}
+                    >
+                      Remover presente
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setTemplateGifts((prev) => [
+                    ...prev,
+                    { name: '', description: '', imageUrl: '', basePrice: 100, totalQuantity: 1 },
+                  ])
+                }
+              >
+                Adicionar presente padrao
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
