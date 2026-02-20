@@ -86,3 +86,43 @@ export async function PATCH(
     return NextResponse.json({ error: "Erro ao atualizar lista" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await requireAdminSession();
+  if (!session) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+
+  try {
+    const giftList = await prisma.giftList.findUnique({
+      where: { id: params.id },
+      select: {
+        id: true,
+        _count: {
+          select: {
+            gifts: true,
+            orders: true,
+            messages: true,
+          },
+        },
+      },
+    });
+
+    if (!giftList) {
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+    }
+
+    if (giftList._count.gifts > 0 || giftList._count.orders > 0 || giftList._count.messages > 0) {
+      return NextResponse.json(
+        { error: "So e permitido excluir lista sem presentes, pedidos e recados." },
+        { status: 400 }
+      );
+    }
+
+    await prisma.giftList.delete({ where: { id: params.id } });
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "Erro ao excluir lista" }, { status: 500 });
+  }
+}

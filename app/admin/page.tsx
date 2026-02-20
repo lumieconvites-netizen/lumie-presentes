@@ -1,7 +1,6 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -62,24 +61,15 @@ export default function AdminPage() {
   useEffect(() => { loadAll().catch(() => null); }, []);
   useEffect(() => { loadAll().catch(() => null); }, [userQuery, listQuery]);
 
-  async function patchUser(id: string, payload: any) {
-    const res = await fetch(`/api/admin/users/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar usuario'); await loadAll();
-  }
   async function patchList(id: string, payload: any) {
     const res = await fetch(`/api/admin/gift-lists/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar lista'); await loadAll();
   }
-  async function createListForUser(userId: string) {
-    const title = window.prompt('Titulo da nova lista', 'Minha Lista de Presentes');
-    const res = await fetch('/api/admin/gift-lists', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, title: title?.trim() || undefined }),
-    });
+  async function removeList(id: string) {
+    if (!window.confirm('Excluir essa lista zerada?')) return;
+    const res = await fetch(`/api/admin/gift-lists/${id}`, { method: 'DELETE' });
     const j = await res.json();
-    if (!res.ok) throw new Error(j?.error || 'Erro ao criar lista');
-    setQList(j?.giftList?.user?.email || '');
+    if (!res.ok) throw new Error(j?.error || 'Erro ao excluir lista');
     await loadAll();
   }
   async function createTemplate() {
@@ -165,7 +155,7 @@ export default function AdminPage() {
           <Input placeholder="Buscar usuario por nome/email" value={qUser} onChange={(e) => setQUser(e.target.value)} />
           <div className="overflow-auto rounded-lg border">
             <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Usuario</th><th className="p-2 text-left">Papel</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
-              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p></td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { isBlocked: !u.isBlocked }).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button><Button size="sm" variant="outline" onClick={() => { const n = window.prompt('Nome do usuario', u.name || ''); const e = window.prompt('Email do usuario', u.email || ''); if ((n && n.trim()) || (e && e.trim())) patchUser(u.id, { ...(n ? { name: n.trim() } : {}), ...(e ? { email: e.trim().toLowerCase() } : {}) }).catch((err) => alert(err.message)); }}>Editar conta</Button><Button size="sm" variant="outline" onClick={() => setQList(u.email)}>Ver listas</Button><Button size="sm" variant="outline" onClick={() => createListForUser(u.id).catch((e) => alert(e.message))}>Criar lista</Button>{u.role !== 'ADMIN' ? <Button size="sm" onClick={() => startImpersonation(u.id).catch((e) => alert(e.message))}>Acessar painel</Button> : null}</div></td></tr>)}
+              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p></td><td className="p-2">{u.role}</td><td className="p-2"><div className="flex flex-wrap gap-1">{u.role !== 'ADMIN' ? <Button size="sm" onClick={() => startImpersonation(u.id).catch((e) => alert(e.message))}>Acessar painel</Button> : <span className="text-xs text-gray-500">Admin</span>}</div></td></tr>)}
             </tbody></table>
           </div>
         </CardContent>
@@ -177,7 +167,7 @@ export default function AdminPage() {
           <Input placeholder="Buscar lista por titulo/slug/email" value={qList} onChange={(e) => setQList(e.target.value)} />
           <div className="overflow-auto rounded-lg border">
             <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Lista</th><th className="p-2 text-left">Dono</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
-              {lists.map((l) => <tr key={l.id} className="border-t"><td className="p-2"><p className="font-medium">{l.title}</p><p className="text-xs text-gray-500">/{l.slug} • {l._count.gifts} presentes</p></td><td className="p-2"><p>{l.user.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{l.user.email}</p></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchList(l.id, { isPublished: !l.isPublished }).catch((e) => alert(e.message))}>{l.isPublished ? 'Despublicar' : 'Publicar'}</Button><Button size="sm" variant="outline" onClick={() => { const t = window.prompt('Novo titulo', l.title); if (t && t.trim()) patchList(l.id, { title: t.trim() }).catch((e) => alert(e.message)); }}>Editar titulo</Button><Button size="sm" variant="outline" onClick={() => { const s = window.prompt('Novo slug', l.slug); if (s && s.trim()) patchList(l.id, { slug: slugify(s) }).catch((e) => alert(e.message)); }}>Editar slug</Button><a href={`/site/${l.slug}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline">Abrir</Button></a></div></td></tr>)}
+              {lists.map((l) => <tr key={l.id} className="border-t"><td className="p-2"><p className="font-medium">{l.title}</p><p className="text-xs text-gray-500">/{l.slug} • {l._count.gifts} presentes</p></td><td className="p-2"><p>{l.user.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{l.user.email}</p></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchList(l.id, { isPublished: !l.isPublished }).catch((e) => alert(e.message))}>{l.isPublished ? 'Despublicar' : 'Publicar'}</Button><Button size="sm" variant="outline" onClick={() => { const t = window.prompt('Novo titulo', l.title); if (t && t.trim()) patchList(l.id, { title: t.trim() }).catch((e) => alert(e.message)); }}>Editar titulo</Button><Button size="sm" variant="outline" onClick={() => { const s = window.prompt('Novo slug', l.slug); if (s && s.trim()) patchList(l.id, { slug: slugify(s) }).catch((e) => alert(e.message)); }}>Editar slug</Button><a href={`/site/${l.slug}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline">Abrir</Button></a>{l._count.gifts === 0 && l._count.orders === 0 && l._count.messages === 0 ? <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => removeList(l.id).catch((e) => alert(e.message))}>Excluir</Button> : null}</div></td></tr>)}
             </tbody></table>
           </div>
         </CardContent>
