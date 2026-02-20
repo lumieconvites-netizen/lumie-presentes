@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "users"
+ADD COLUMN IF NOT EXISTS "blockReason" TEXT,
+ADD COLUMN IF NOT EXISTS "blockedAt" TIMESTAMP(3);

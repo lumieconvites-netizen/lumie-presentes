@@ -7,6 +7,7 @@ import { ensureDefaultReferralCodesForUser } from "@/lib/referrals";
 const patchSchema = z.object({
   role: z.enum(["ADMIN", "CLIENT", "PARTNER", "AMBASSADOR", "EMPLOYEE"]).optional(),
   isBlocked: z.boolean().optional(),
+  blockReason: z.string().max(400).optional().nullable(),
   name: z.string().min(2).max(120).optional(),
   email: z.string().email().optional(),
 });
@@ -47,25 +48,63 @@ export async function PATCH(
       }
     }
 
+    const isBlockedToggle = typeof data.isBlocked === "boolean";
+    const shouldSetBlockedMeta = isBlockedToggle ? data.isBlocked : undefined;
+
     const updateData: any = {
       ...(typeof data.role === "string" ? { role: data.role } : {}),
       ...(typeof data.isBlocked === "boolean" ? { isBlocked: data.isBlocked } : {}),
+      ...(typeof data.blockReason !== "undefined"
+        ? { blockReason: data.blockReason?.trim() || null }
+        : {}),
+      ...(typeof shouldSetBlockedMeta === "boolean"
+        ? {
+            blockedAt: shouldSetBlockedMeta ? new Date() : null,
+            ...(shouldSetBlockedMeta
+              ? {}
+              : { blockReason: typeof data.blockReason === "undefined" ? null : data.blockReason?.trim() || null }),
+          }
+        : {}),
       ...(typeof data.name === "string" ? { name: data.name.trim() } : {}),
       ...(typeof data.email === "string" ? { email: data.email.trim().toLowerCase() } : {}),
     };
 
     const updated = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.update({
-        where: { id: params.id },
-        data: updateData,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          isBlocked: true,
-        },
-      });
+      let user: any;
+      try {
+        user = await tx.user.update({
+          where: { id: params.id },
+          data: updateData,
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            isBlocked: true,
+            blockReason: true,
+            blockedAt: true,
+          },
+        });
+      } catch {
+        // Backward compatibility while blockReason columns are not present in DB.
+        user = await tx.user.update({
+          where: { id: params.id },
+          data: {
+            ...(typeof data.role === "string" ? { role: data.role } : {}),
+            ...(typeof data.isBlocked === "boolean" ? { isBlocked: data.isBlocked } : {}),
+            ...(typeof data.name === "string" ? { name: data.name.trim() } : {}),
+            ...(typeof data.email === "string" ? { email: data.email.trim().toLowerCase() } : {}),
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            isBlocked: true,
+          },
+        });
+        user = { ...user, blockReason: null, blockedAt: null };
+      }
 
       await ensureDefaultReferralCodesForUser({ id: user.id, role: user.role }, tx);
       return user;

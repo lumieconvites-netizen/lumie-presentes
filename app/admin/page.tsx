@@ -11,7 +11,16 @@ type Overview = {
   usersCount: number; adminsCount: number; clientsCount: number; partnersCount: number; ambassadorsCount: number; employeesCount: number;
   publishedListsCount: number; activeTemplatesCount: number; paidTotal: number;
 };
-type AdminUser = { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE'; isBlocked: boolean; _count: { giftLists: number } };
+type AdminUser = {
+  id: string;
+  name: string | null;
+  email: string;
+  role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
+  isBlocked: boolean;
+  blockReason?: string | null;
+  blockedAt?: string | null;
+  _count: { giftLists: number };
+};
 type AdminGiftList = { id: string; title: string; slug: string; isPublished: boolean; user: { email: string; name: string | null }; _count: { gifts: number; orders: number; messages: number } };
 type AdminTemplate = { id: string; name: string; slug: string; category: string; isActive: boolean };
 type ImpersonationState = {
@@ -79,6 +88,21 @@ export default function AdminPage() {
   async function patchUser(id: string, payload: any) {
     const res = await fetch(`/api/admin/users/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar usuario'); await loadAll();
+  }
+  async function toggleBlockUser(user: AdminUser) {
+    if (user.isBlocked) {
+      await patchUser(user.id, { isBlocked: false, blockReason: null });
+      return;
+    }
+
+    const reason = window.prompt('Motivo do bloqueio (obrigatorio):', user.blockReason || '');
+    if (reason === null) return;
+    const normalized = reason.trim();
+    if (!normalized) {
+      alert('Informe o motivo para bloquear o usuario.');
+      return;
+    }
+    await patchUser(user.id, { isBlocked: true, blockReason: normalized });
   }
   async function removeList(id: string) {
     if (!window.confirm('Excluir essa lista zerada?')) return;
@@ -174,7 +198,7 @@ export default function AdminPage() {
           <Input placeholder="Buscar usuario por nome/email" value={qUser} onChange={(e) => setQUser(e.target.value)} />
           <div className="overflow-auto rounded-lg border">
             <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Usuario</th><th className="p-2 text-left">Papel</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
-              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p></td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'EMPLOYEE' }).catch((e) => alert(e.message))}>Virar funcionario</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { isBlocked: !u.isBlocked }).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button>{u.role !== 'ADMIN' ? <Button size="sm" onClick={() => startImpersonation(u.id).catch((e) => alert(e.message))}>Acessar painel</Button> : <span className="text-xs text-gray-500">Admin</span>}</div></td></tr>)}
+              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p>{u.isBlocked && u.blockReason ? <p className="text-xs text-red-600 mt-1">Motivo: {u.blockReason}</p> : null}</td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'EMPLOYEE' }).catch((e) => alert(e.message))}>Virar funcionario</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => toggleBlockUser(u).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button>{u.role !== 'ADMIN' ? <Button size="sm" onClick={() => startImpersonation(u.id).catch((e) => alert(e.message))}>Acessar painel</Button> : <span className="text-xs text-gray-500">Admin</span>}</div></td></tr>)}
             </tbody></table>
           </div>
         </CardContent>

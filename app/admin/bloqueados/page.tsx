@@ -11,6 +11,8 @@ type AdminUser = {
   email: string;
   role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
   isBlocked: boolean;
+  blockReason?: string | null;
+  blockedAt?: string | null;
 };
 
 export default function AdminBloqueadosPage() {
@@ -42,6 +44,17 @@ export default function AdminBloqueadosPage() {
     await loadUsers();
   }
 
+  async function editBlockReason(user: AdminUser) {
+    const reason = window.prompt('Editar motivo do bloqueio:', user.blockReason || '');
+    if (reason === null) return;
+    const normalized = reason.trim();
+    if (!normalized) {
+      alert('Motivo nao pode ficar vazio.');
+      return;
+    }
+    await patchUser(user.id, { isBlocked: true, blockReason: normalized });
+  }
+
   useEffect(() => {
     loadUsers().catch((error) => alert(error.message));
   }, [query]);
@@ -59,6 +72,8 @@ export default function AdminBloqueadosPage() {
               <tr>
                 <th className="p-2 text-left">Usuario</th>
                 <th className="p-2 text-left">Papel</th>
+                <th className="p-2 text-left">Motivo</th>
+                <th className="p-2 text-left">Bloqueado em</th>
                 <th className="p-2 text-left">Acoes</th>
               </tr>
             </thead>
@@ -70,20 +85,31 @@ export default function AdminBloqueadosPage() {
                     <p className="text-xs text-gray-500">{user.email}</p>
                   </td>
                   <td className="p-2">{user.role}</td>
+                  <td className="p-2">{user.blockReason?.trim() || 'Sem motivo informado'}</td>
+                  <td className="p-2">{user.blockedAt ? new Date(user.blockedAt).toLocaleDateString('pt-BR') : '-'}</td>
                   <td className="p-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => patchUser(user.id, { isBlocked: false }).catch((error) => alert(error.message))}
-                    >
-                      Desbloquear
-                    </Button>
+                    <div className="flex flex-wrap gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => editBlockReason(user).catch((error) => alert(error.message))}
+                      >
+                        Editar motivo
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => patchUser(user.id, { isBlocked: false, blockReason: null }).catch((error) => alert(error.message))}
+                      >
+                        Desbloquear
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
               {users.length === 0 ? (
                 <tr>
-                  <td className="p-3 text-sm text-gray-500" colSpan={3}>
+                  <td className="p-3 text-sm text-gray-500" colSpan={5}>
                     Nenhum usuario bloqueado.
                   </td>
                 </tr>

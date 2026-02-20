@@ -18,6 +18,8 @@ model User {
   image                  String?
   role                   UserRole          @default(CLIENT)
   isBlocked              Boolean           @default(false)
+  blockReason            String?
+  blockedAt              DateTime?
   partnerAmbassadorId    String?
   referredByPartnerId    String?
   referredByAmbassadorId String?
