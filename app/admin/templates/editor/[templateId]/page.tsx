@@ -447,10 +447,10 @@ export default function AdminTemplateEditorPage() {
         <div className="w-72 bg-[#fffaf7] border-r border-[#ead9cd] overflow-y-auto">
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="p-4">
             <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 mb-4 gap-1 h-auto">
-              <TabsTrigger value="blocks" className="text-xs md:text-sm">Blocos</TabsTrigger>
-              <TabsTrigger value="theme" className="text-xs md:text-sm">Tema</TabsTrigger>
-              <TabsTrigger value="header" className="text-xs md:text-sm">Cabecalho</TabsTrigger>
-              <TabsTrigger value="template" className="text-xs md:text-sm">Template</TabsTrigger>
+              <TabsTrigger value="blocks" className="text-[11px] md:text-sm px-2">Blocos</TabsTrigger>
+              <TabsTrigger value="theme" className="text-[11px] md:text-sm px-2">Tema</TabsTrigger>
+              <TabsTrigger value="header" className="text-[11px] md:text-sm px-2">Cab.</TabsTrigger>
+              <TabsTrigger value="template" className="text-[11px] md:text-sm px-2">Tpl.</TabsTrigger>
             </TabsList>
 
             <TabsContent value="blocks" className="space-y-4">
@@ -499,19 +499,31 @@ export default function AdminTemplateEditorPage() {
             <TabsContent value="theme" className="space-y-4">
               <div className="space-y-1">
                 <Label>Cor dos ícones</Label>
-                <Input value={theme.primary_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, primary_color: e.target.value })); setDirty(true); }} />
+                <div className="flex items-center gap-2">
+                  <input type="color" value={theme.primary_color || '#C65A3A'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, primary_color: e.target.value })); setDirty(true); }} className="w-9 h-9 rounded border cursor-pointer" />
+                  <Input value={theme.primary_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, primary_color: e.target.value })); setDirty(true); }} />
+                </div>
               </div>
               <div className="space-y-1">
                 <Label>Cor dos títulos</Label>
-                <Input value={theme.title_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, title_color: e.target.value })); setDirty(true); }} />
+                <div className="flex items-center gap-2">
+                  <input type="color" value={theme.title_color || '#8E3D2C'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, title_color: e.target.value })); setDirty(true); }} className="w-9 h-9 rounded border cursor-pointer" />
+                  <Input value={theme.title_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, title_color: e.target.value })); setDirty(true); }} />
+                </div>
               </div>
               <div className="space-y-1">
                 <Label>Cor das legendas</Label>
-                <Input value={theme.caption_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, caption_color: e.target.value })); setDirty(true); }} />
+                <div className="flex items-center gap-2">
+                  <input type="color" value={theme.caption_color || '#5F4A41'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, caption_color: e.target.value })); setDirty(true); }} className="w-9 h-9 rounded border cursor-pointer" />
+                  <Input value={theme.caption_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, caption_color: e.target.value })); setDirty(true); }} />
+                </div>
               </div>
               <div className="space-y-1">
                 <Label>Cor de fundo</Label>
-                <Input value={theme.background_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_color: e.target.value })); setDirty(true); }} />
+                <div className="flex items-center gap-2">
+                  <input type="color" value={theme.background_color || '#FAF4EF'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_color: e.target.value })); setDirty(true); }} className="w-9 h-9 rounded border cursor-pointer" />
+                  <Input value={theme.background_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_color: e.target.value })); setDirty(true); }} />
+                </div>
               </div>
               <div className="space-y-1">
                 <Label>Fonte do título</Label>
