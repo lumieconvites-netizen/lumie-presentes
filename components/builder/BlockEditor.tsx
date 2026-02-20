@@ -150,15 +150,6 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             />
           </div>
 
-          <div>
-            <Label className="text-sm font-medium">Texto do BotÃ£o</Label>
-            <Input
-              value={config.buttonText || 'Ver Lista de Presentes'}
-              onChange={(e) => handleChange('buttonText', e.target.value)}
-              className="mt-2"
-            />
-          </div>
-
           <div className="space-y-4 rounded-lg border border-[#ead9cd] bg-white p-3">
             <p className="text-sm font-medium">Posicao individual dos textos</p>
 
@@ -231,28 +222,6 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
               />
             </div>
 
-            <div>
-              <Label className="text-xs text-gray-600">Botao horizontal ({Math.min(100, Math.max(0, Number(config.buttonX ?? 50)))}%)</Label>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={Math.min(100, Math.max(0, Number(config.buttonX ?? 50)))}
-                onChange={(e) => handleChange('buttonX', Number(e.target.value))}
-                className="mt-1 w-full"
-              />
-              <Label className="text-xs text-gray-600">Botao vertical ({Math.min(100, Math.max(0, Number(config.buttonY ?? 68)))}%)</Label>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={Math.min(100, Math.max(0, Number(config.buttonY ?? 68)))}
-                onChange={(e) => handleChange('buttonY', Number(e.target.value))}
-                className="mt-1 w-full"
-              />
-            </div>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-[#ead9cd] bg-white px-3 py-2">

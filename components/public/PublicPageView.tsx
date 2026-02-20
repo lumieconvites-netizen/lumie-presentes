@@ -82,13 +82,12 @@ function getLegacyBasePoint(position: string) {
   return map[position] || map.center;
 }
 
-function getHeroPoint(config: any, key: 'label' | 'title' | 'subtitle' | 'button') {
+function getHeroPoint(config: any, key: 'label' | 'title' | 'subtitle') {
   const legacy = getLegacyBasePoint(config.contentPosition || 'center');
-  const defaults: Record<'label' | 'title' | 'subtitle' | 'button', { x: number; y: number }> = {
+  const defaults: Record<'label' | 'title' | 'subtitle', { x: number; y: number }> = {
     label: { x: legacy.x, y: clamp(legacy.y - 14, 6, 94) },
     title: { x: legacy.x, y: clamp(legacy.y - 2, 8, 92) },
     subtitle: { x: legacy.x, y: clamp(legacy.y + 10, 10, 94) },
-    button: { x: legacy.x, y: clamp(legacy.y + 22, 14, 95) },
   };
   const xKey = `${key}X`;
   const yKey = `${key}Y`;
@@ -332,13 +331,6 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       {config.subtitle}
                     </p>
                   )}
-                  {config.buttonText && (
-                    <div style={heroElementStyle(getHeroPoint(config, 'button'))}>
-                      <Button size="lg" className="bg-white hover:bg-gray-100" style={{ color: primaryColor }} onClick={() => scrollTo('lista-presentes-section')}>
-                        {config.buttonText}
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
@@ -416,10 +408,10 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                 <h2 className="text-2xl md:text-4xl text-center mb-6 md:mb-12" style={{ fontFamily: fontTitle, color: titleColor }}>
                   {config.title || 'Recados Especiais'}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-5xl mx-auto">
+                <div className="grid grid-cols-1 gap-3 md:gap-6 max-w-5xl mx-auto">
                   {messages
                     .filter((m) => m.isPublic)
-                    .slice(0, showAllMessages ? undefined : 3)
+                    .slice(0, showAllMessages ? undefined : 4)
                     .map((msg, i) => (
                       <Card key={i} className="p-4 md:p-6 bg-white">
                         <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
@@ -436,8 +428,8 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       </Card>
                     ))}
                 </div>
-                {messages.filter((m) => m.isPublic).length > 3 && (
-                  <div className="mt-4 text-center md:hidden">
+                {messages.filter((m) => m.isPublic).length > 4 && (
+                  <div className="mt-4 text-center">
                     <Button
                       type="button"
                       variant="outline"

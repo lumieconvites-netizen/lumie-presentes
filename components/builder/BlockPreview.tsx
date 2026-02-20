@@ -48,13 +48,12 @@ function getLegacyBasePoint(position: string) {
   return map[position] || map.center;
 }
 
-function getHeroPoint(config: any, key: 'label' | 'title' | 'subtitle' | 'button') {
+function getHeroPoint(config: any, key: 'label' | 'title' | 'subtitle') {
   const legacy = getLegacyBasePoint(config.contentPosition || 'center');
-  const defaults: Record<'label' | 'title' | 'subtitle' | 'button', { x: number; y: number }> = {
+  const defaults: Record<'label' | 'title' | 'subtitle', { x: number; y: number }> = {
     label: { x: legacy.x, y: clamp(legacy.y - 14, 6, 94) },
     title: { x: legacy.x, y: clamp(legacy.y - 2, 8, 92) },
     subtitle: { x: legacy.x, y: clamp(legacy.y + 10, 10, 94) },
-    button: { x: legacy.x, y: clamp(legacy.y + 22, 14, 95) },
   };
   const xKey = `${key}X`;
   const yKey = `${key}Y`;
@@ -289,13 +288,6 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                     </p>
                   )}
 
-                  {config.buttonText && (
-                    <div style={heroElementStyle(getHeroPoint(config, 'button'))}>
-                      <Button size="lg" className="bg-white hover:bg-gray-100" style={{ color: primaryColor }}>
-                        {config.buttonText}
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
@@ -387,18 +379,21 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                 <h2 className="text-2xl md:text-4xl text-center mb-6 md:mb-12" style={{ color: titleColor, fontFamily: fontTitle }}>
                   {config.title || 'Recados Especiais'}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-5xl mx-auto">
+                <div className="grid grid-cols-1 gap-3 md:gap-6 max-w-5xl mx-auto">
                   {(showAllMessages
                     ? [
-                        { name: 'Maria Silva', message: 'ParabÃ©ns! Que esse dia seja repleto de alegrias e momentos inesquecÃ­veis. ðŸŽ‰', time: '2 dias atrÃ¡s' },
-                        { name: 'JoÃ£o Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrÃ¡s' },
-                        { name: 'Ana Costa', message: 'Muitas bÃªnÃ§Ã£os e sucesso! VocÃª merece toda a felicidade do mundo. â¤ï¸', time: '5 dias atrÃ¡s' },
-                        { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atrÃ¡s' }
+                        { name: 'Maria Silva', message: 'Parabens! Que esse dia seja repleto de alegrias e momentos inesqueciveis.', time: '2 dias atras' },
+                        { name: 'Joao Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atras' },
+                        { name: 'Ana Costa', message: 'Muitas bencaos e sucesso! Voce merece toda a felicidade do mundo.', time: '5 dias atras' },
+                        { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atras' },
+                        { name: 'Carla Souza', message: 'Que o evento seja inesquecivel e cheio de luz.', time: '1 semana atras' },
+                        { name: 'Bruno Alves', message: 'Parabens! Muita felicidade nessa nova etapa.', time: '2 semanas atras' }
                       ]
                     : [
-                        { name: 'Maria Silva', message: 'ParabÃ©ns! Que esse dia seja repleto de alegrias e momentos inesquecÃ­veis. ðŸŽ‰', time: '2 dias atrÃ¡s' },
-                        { name: 'JoÃ£o Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrÃ¡s' },
-                        { name: 'Ana Costa', message: 'Muitas bÃªnÃ§Ã£os e sucesso! VocÃª merece toda a felicidade do mundo. â¤ï¸', time: '5 dias atrÃ¡s' }
+                        { name: 'Maria Silva', message: 'Parabens! Que esse dia seja repleto de alegrias e momentos inesqueciveis.', time: '2 dias atras' },
+                        { name: 'Joao Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atras' },
+                        { name: 'Ana Costa', message: 'Muitas bencaos e sucesso! Voce merece toda a felicidade do mundo.', time: '5 dias atras' },
+                        { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atras' }
                       ]).map((msg, i) => (
                     <Card key={i} className="p-4 md:p-6 bg-white">
                       <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
@@ -419,7 +414,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                     </Card>
                   ))}
                 </div>
-                <div className="mt-4 text-center md:hidden">
+                <div className="mt-4 text-center">
                   <Button
                     type="button"
                     variant="outline"
