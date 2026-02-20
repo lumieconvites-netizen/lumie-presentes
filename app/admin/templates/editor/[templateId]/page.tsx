@@ -722,6 +722,13 @@ export default function AdminTemplateEditorPage() {
                     <Input placeholder="Nome do presente" value={gift.name} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, name: e.target.value } : row))); setDirty(true); }} />
                     <Input placeholder="DescriÃ§Ã£o" value={gift.description} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, description: e.target.value } : row))); setDirty(true); }} />
                     <Input placeholder="Imagem URL (opcional)" value={gift.imageUrl} onChange={(e) => { setTemplateGifts((prev) => prev.map((row, i) => (i === index ? { ...row, imageUrl: e.target.value } : row))); setDirty(true); }} />
+                    {gift.imageUrl ? (
+                      <img
+                        src={gift.imageUrl}
+                        alt={gift.name || `Imagem do presente ${index + 1}`}
+                        className="h-24 w-full rounded-md object-cover border border-[#ead9cd]"
+                      />
+                    ) : null}
                     <div className="flex items-center gap-2">
                       <label className="inline-flex">
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => handleGiftImageUpload(index, e.target.files?.[0] || null)} disabled={uploadingGiftIndex === index} />
