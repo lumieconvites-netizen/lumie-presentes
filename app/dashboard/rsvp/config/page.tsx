@@ -49,6 +49,11 @@ type GuestInput = {
   childLimit?: number;
 };
 
+type SlugCheckState = {
+  status: 'idle' | 'checking' | 'current' | 'available' | 'taken' | 'invalid' | 'error';
+  message: string;
+};
+
 const statusLabels: Record<RsvpGuest['status'], string> = {
   PENDING: 'Pendente',
   CONFIRMED: 'Confirmado',
@@ -203,6 +208,8 @@ export default function RsvpConfigPage() {
 
   const [importText, setImportText] = useState('');
   const [importGuestsPreview, setImportGuestsPreview] = useState<GuestInput[]>([]);
+  const [savedCheckInSlug, setSavedCheckInSlug] = useState('');
+  const [slugCheck, setSlugCheck] = useState<SlugCheckState>({ status: 'idle', message: '' });
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -247,6 +254,9 @@ export default function RsvpConfigPage() {
         checkInEnabled: json.settings.checkInEnabled !== false,
         checkInSlug: json.settings.checkInSlug || json.list.slug,
       });
+      const currentSlug = json.settings.checkInSlug || json.list.slug;
+      setSavedCheckInSlug(currentSlug);
+      setSlugCheck({ status: 'current', message: 'Slug atual do seu link de check-in.' });
     } catch (error: any) {
       alert(error?.message || 'Erro ao carregar RSVP');
     } finally {
@@ -258,8 +268,64 @@ export default function RsvpConfigPage() {
     loadOverview();
   }, []);
 
+  useEffect(() => {
+    const raw = settings.checkInSlug.trim();
+    if (!raw) {
+      setSlugCheck({ status: 'invalid', message: 'Informe um slug valido.' });
+      return;
+    }
+
+    if (raw === savedCheckInSlug) {
+      setSlugCheck({ status: 'current', message: 'Slug atual do seu link de check-in.' });
+      return;
+    }
+
+    setSlugCheck({ status: 'checking', message: 'Verificando disponibilidade...' });
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/rsvp/checkin-slug-availability?slug=${encodeURIComponent(raw)}`, {
+          signal: controller.signal,
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error || 'Erro ao validar slug');
+
+        if (!json?.normalized) {
+          setSlugCheck({ status: 'invalid', message: 'Informe um slug valido.' });
+          return;
+        }
+
+        if (json.available) {
+          setSlugCheck({ status: 'available', message: 'Slug disponivel para uso.' });
+        } else {
+          setSlugCheck({ status: 'taken', message: json?.message || 'Este slug ja esta em uso.' });
+        }
+      } catch (error: any) {
+        if (error?.name !== 'AbortError') {
+          setSlugCheck({ status: 'error', message: 'Nao foi possivel validar o slug agora.' });
+        }
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [savedCheckInSlug, settings.checkInSlug]);
+
   async function saveSettings(e?: FormEvent) {
     e?.preventDefault();
+
+    if (slugCheck.status === 'taken' || slugCheck.status === 'invalid' || slugCheck.status === 'error') {
+      alert('Ajuste o slug do check-in antes de salvar.');
+      return;
+    }
+    if (slugCheck.status === 'checking') {
+      alert('Aguarde a validacao do slug terminar.');
+      return;
+    }
+
     setSavingSettings(true);
     try {
       const res = await fetch('/api/rsvp/settings', {
@@ -417,6 +483,23 @@ export default function RsvpConfigPage() {
     return <div className="p-6">Não foi possível carregar o RSVP.</div>;
   }
 
+  const slugInputClassName =
+    slugCheck.status === 'taken' || slugCheck.status === 'invalid' || slugCheck.status === 'error'
+      ? 'border-red-400 focus-visible:ring-red-400'
+      : slugCheck.status === 'available' || slugCheck.status === 'current'
+        ? 'border-green-500 focus-visible:ring-green-500'
+        : '';
+  const slugInfoClassName =
+    slugCheck.status === 'taken' || slugCheck.status === 'invalid' || slugCheck.status === 'error'
+      ? 'text-red-600'
+      : slugCheck.status === 'available' || slugCheck.status === 'current'
+        ? 'text-green-700'
+        : 'text-gray-500';
+  const linkClassName =
+    slugCheck.status === 'taken' || slugCheck.status === 'invalid' || slugCheck.status === 'error'
+      ? 'text-xs text-red-600 underline'
+      : 'text-xs text-green-700 underline';
+
   return (
     <div className="p-6 space-y-6 bg-[#fbf8f5] min-h-screen">
       <Card className="border-[#e7d8cb]">
@@ -433,7 +516,17 @@ export default function RsvpConfigPage() {
                 <Download className="w-4 h-4 mr-2" /> Exportar lista
               </a>
             </Button>
-            <Button className="bg-[#c65a3a] hover:bg-[#b55033] text-white" onClick={saveSettings} disabled={savingSettings}>
+            <Button
+              className="bg-[#c65a3a] hover:bg-[#b55033] text-white"
+              onClick={saveSettings}
+              disabled={
+                savingSettings ||
+                slugCheck.status === 'checking' ||
+                slugCheck.status === 'taken' ||
+                slugCheck.status === 'invalid' ||
+                slugCheck.status === 'error'
+              }
+            >
               {savingSettings ? 'Salvando...' : 'Salvar configurações'}
             </Button>
           </div>
@@ -472,12 +565,14 @@ export default function RsvpConfigPage() {
                 value={settings.checkInSlug}
                 onChange={(e) => setSettings((s) => ({ ...s, checkInSlug: e.target.value }))}
                 placeholder="ex: portaria-casamento-isabella"
+                className={slugInputClassName}
               />
-              <p className="text-xs text-gray-500">
+              <p className={`text-xs ${slugInfoClassName}`}>
                 Link: {previewCheckInUrl}
               </p>
+              <p className={`text-xs ${slugInfoClassName}`}>{slugCheck.message}</p>
               {previewCheckInUrl ? (
-                <a href={previewCheckInUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#8e3d2c] underline">
+                <a href={previewCheckInUrl} target="_blank" rel="noopener noreferrer" className={linkClassName}>
                   Abrir pagina publica de check-in
                 </a>
               ) : null}
