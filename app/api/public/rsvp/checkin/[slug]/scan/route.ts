@@ -1,43 +1,33 @@
-﻿import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { extractTokenOrCode } from "@/lib/rsvp-checkin";
+﻿import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { extractTokenOrCode, findGiftListByCheckInSlug } from '@/lib/rsvp-checkin';
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-async function getGiftListId(userId: string) {
-  const giftList = await prisma.giftList.findFirst({
-    where: { userId },
-    select: { id: true },
-  });
-  return giftList?.id || null;
-}
-
-export async function POST(req: Request) {
+export async function POST(req: Request, { params }: { params: { slug: string } }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    const giftList = await findGiftListByCheckInSlug(params.slug);
+
+    if (!giftList || !giftList.isPublished) {
+      return NextResponse.json({ error: 'Link de check-in nao encontrado' }, { status: 404 });
     }
 
-    const giftListId = await getGiftListId(session.user.id);
-    if (!giftListId) {
-      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+    if (!giftList.rsvpSettings?.enabled || !giftList.rsvpSettings.checkInEnabled) {
+      return NextResponse.json({ error: 'Check-in nao esta disponivel para este evento' }, { status: 403 });
     }
 
     const body = await req.json().catch(() => ({}));
-    const value = String(body?.value || "");
+    const value = String(body?.value || '');
     if (!value.trim()) {
-      return NextResponse.json({ error: "Codigo/QR invalido" }, { status: 400 });
+      return NextResponse.json({ error: 'Codigo/QR invalido' }, { status: 400 });
     }
 
     const { token, code } = extractTokenOrCode(value);
 
     const guest = await prisma.rsvpGuest.findFirst({
       where: {
-        giftListId,
+        giftListId: giftList.id,
         OR: [
           ...(token ? [{ qrToken: token }] : []),
           ...(code ? [{ checkInCode: code }] : []),
@@ -54,7 +44,7 @@ export async function POST(req: Request) {
     });
 
     if (!guest) {
-      return NextResponse.json({ error: "Convidado nao encontrado para este QR/codigo" }, { status: 404 });
+      return NextResponse.json({ error: 'Convidado nao encontrado para este QR/codigo' }, { status: 404 });
     }
 
     if (guest.checkedInAt) {
@@ -76,8 +66,8 @@ export async function POST(req: Request) {
       where: { id: guest.id },
       data: {
         checkedInAt: new Date(),
-        status: guest.status === "PENDING" ? "CONFIRMED" : undefined,
-        confirmedAt: guest.status === "PENDING" ? new Date() : undefined,
+        status: guest.status === 'PENDING' ? 'CONFIRMED' : undefined,
+        confirmedAt: guest.status === 'PENDING' ? new Date() : undefined,
       },
       select: {
         id: true,
@@ -102,8 +92,8 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    console.error("Erro no scanner de check-in RSVP:", error);
-    return NextResponse.json({ error: "Erro ao processar check-in" }, { status: 500 });
+    console.error('Erro no scanner publico de check-in RSVP:', error);
+    return NextResponse.json({ error: 'Erro ao processar check-in' }, { status: 500 });
   }
 }
 

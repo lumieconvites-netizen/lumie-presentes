@@ -18,14 +18,16 @@ type OverviewResponse = {
     checkedIn: number;
   };
   publicRsvpUrl: string;
+  publicCheckInUrl?: string;
 };
 
 export default function DashboardRsvpPage() {
   const [data, setData] = useState<OverviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function load() {
-    setLoading(true);
+  async function load(options?: { silent?: boolean }) {
+    const silent = options?.silent === true;
+    if (!silent) setLoading(true);
     try {
       const res = await fetch('/api/rsvp/overview', { cache: 'no-store' });
       const json = await res.json();
@@ -34,12 +36,19 @@ export default function DashboardRsvpPage() {
     } catch (error: any) {
       alert(error?.message || 'Erro ao carregar RSVP');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
   useEffect(() => {
     load();
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      load({ silent: true });
+    }, 5000);
+    return () => window.clearInterval(timer);
   }, []);
 
   if (loading) {
@@ -143,6 +152,7 @@ export default function DashboardRsvpPage() {
         </CardHeader>
         <CardContent className="text-sm text-gray-600 space-y-2">
           <p>URL de confirmação: <span className="font-medium text-gray-900">{data.publicRsvpUrl}</span></p>
+          <p>URL do check-in publico: <span className="font-medium text-gray-900">{data.publicCheckInUrl || 'Nao disponivel'}</span></p>
           <p>Email de notificações: <span className="font-medium text-gray-900">{data.settings.notificationEmail || 'Nao configurado'}</span></p>
         </CardContent>
       </Card>

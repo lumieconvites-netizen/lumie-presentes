@@ -316,6 +316,7 @@ model RsvpSettings {
   publicDescription String?
   searchPlaceholder String?
   checkInEnabled    Boolean  @default(true)
+  checkInSlug       String?  @unique
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

@@ -32,3 +32,18 @@ export function getQrPayload(token: string, slug: string) {
 export function getQrImageUrl(payload: string, size = 280) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(payload)}`;
 }
+
+export function normalizeCheckInSlug(value: string) {
+  return (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+export function getPublicCheckInUrl(checkInSlug: string) {
+  return `${getPublicBaseUrl()}/rsvp/checkin/${encodeURIComponent(checkInSlug)}`;
+}

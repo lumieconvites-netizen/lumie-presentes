@@ -10,6 +10,10 @@ export function FooterGate() {
     return null;
   }
 
+  if (pathname.startsWith('/rsvp/checkin/')) {
+    return null;
+  }
+
   const isPublishedSitePath =
     /^\/site\/[^/]+(?:\/.*)?$/.test(pathname) && !pathname.startsWith('/site/presentes');
 
@@ -19,4 +23,3 @@ export function FooterGate() {
 
   return <Footer />;
 }
-

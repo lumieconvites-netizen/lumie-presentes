@@ -2,7 +2,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getPublicBaseUrl } from "@/lib/rsvp";
+import { getPublicBaseUrl, getPublicCheckInUrl, normalizeCheckInSlug } from "@/lib/rsvp";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,23 +41,28 @@ export async function GET() {
     const declined = guests.filter((g) => g.status === "DECLINED").length;
     const pending = guests.filter((g) => g.status === "PENDING").length;
     const checkedIn = guests.filter((g) => !!g.checkedInAt).length;
+    const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
 
     return NextResponse.json({
       list: giftList,
       publicBaseUrl: getPublicBaseUrl(),
       publicRsvpUrl: `${getPublicBaseUrl()}/site/${encodeURIComponent(giftList.slug)}/confirmar-presenca`,
-      settings: settings ?? {
-        enabled: false,
-        notificationEmail: session.user.email ?? null,
-        eventTitle: giftList.title,
-        eventDateLabel: null,
-        eventLocation: null,
-        coverImageUrl: null,
-        publicTitle: "Confirmar Presenca",
-        publicDescription: "Confirme sua presença no evento.",
-        searchPlaceholder: "Digite seu nome completo",
-        checkInEnabled: true,
-      },
+      publicCheckInUrl: getPublicCheckInUrl(resolvedCheckInSlug),
+      settings: settings
+        ? { ...settings, checkInSlug: settings.checkInSlug || resolvedCheckInSlug }
+        : {
+            enabled: false,
+            notificationEmail: session.user.email ?? null,
+            eventTitle: giftList.title,
+            eventDateLabel: null,
+            eventLocation: null,
+            coverImageUrl: null,
+            publicTitle: "Confirmar Presenca",
+            publicDescription: "Confirme sua presença no evento.",
+            searchPlaceholder: "Digite seu nome completo",
+            checkInEnabled: true,
+            checkInSlug: resolvedCheckInSlug,
+          },
       metrics: {
         totalGuests,
         confirmed,

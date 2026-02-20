@@ -37,8 +37,10 @@ type Overview = {
     publicDescription: string | null;
     searchPlaceholder: string | null;
     checkInEnabled: boolean;
+    checkInSlug: string | null;
   };
   guests: RsvpGuest[];
+  publicCheckInUrl?: string;
 };
 
 type GuestInput = {
@@ -189,6 +191,7 @@ export default function RsvpConfigPage() {
     publicDescription: '',
     searchPlaceholder: '',
     checkInEnabled: true,
+    checkInSlug: '',
   });
 
   const [guestForm, setGuestForm] = useState({
@@ -212,6 +215,14 @@ export default function RsvpConfigPage() {
     if (!qrPayload) return '';
     return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrPayload)}`;
   }, [qrPayload]);
+  const previewCheckInUrl = useMemo(() => {
+    const suffix = encodeURIComponent(settings.checkInSlug || data?.list.slug || '');
+    if (!suffix) return '';
+    if (typeof window === 'undefined') {
+      return data?.publicCheckInUrl || '';
+    }
+    return `${window.location.origin}/rsvp/checkin/${suffix}`;
+  }, [data?.list.slug, data?.publicCheckInUrl, settings.checkInSlug]);
 
   async function loadOverview() {
     setLoading(true);
@@ -234,6 +245,7 @@ export default function RsvpConfigPage() {
             ? 'Ex: Isabella'
             : json.settings.searchPlaceholder || 'Ex: Isabella',
         checkInEnabled: json.settings.checkInEnabled !== false,
+        checkInSlug: json.settings.checkInSlug || json.list.slug,
       });
     } catch (error: any) {
       alert(error?.message || 'Erro ao carregar RSVP');
@@ -452,6 +464,23 @@ export default function RsvpConfigPage() {
                 />
                 <span className="text-sm text-gray-600">Controlar entrada dos convidados no evento</span>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Slug da pagina publica de check-in</label>
+              <Input
+                value={settings.checkInSlug}
+                onChange={(e) => setSettings((s) => ({ ...s, checkInSlug: e.target.value }))}
+                placeholder="ex: portaria-casamento-isabella"
+              />
+              <p className="text-xs text-gray-500">
+                Link: {previewCheckInUrl}
+              </p>
+              {previewCheckInUrl ? (
+                <a href={previewCheckInUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#8e3d2c] underline">
+                  Abrir pagina publica de check-in
+                </a>
+              ) : null}
             </div>
 
             <div className="space-y-2">

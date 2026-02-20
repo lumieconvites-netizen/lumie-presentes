@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { normalizeCheckInSlug } from "@/lib/rsvp";
 
 const settingsSchema = z.object({
   enabled: z.boolean().optional(),
@@ -15,6 +16,7 @@ const settingsSchema = z.object({
   publicDescription: z.string().max(500).optional().or(z.literal("")),
   searchPlaceholder: z.string().max(120).optional().or(z.literal("")),
   checkInEnabled: z.boolean().optional(),
+  checkInSlug: z.string().max(120).optional().or(z.literal("")),
 });
 
 function sanitizeEmail(value?: string | null) {
@@ -35,13 +37,14 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const giftList = await prisma.giftList.findFirst({ where: { userId: session.user.id }, select: { id: true, title: true } });
+    const giftList = await prisma.giftList.findFirst({ where: { userId: session.user.id }, select: { id: true, title: true, slug: true } });
     if (!giftList) {
       return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
     }
 
     const body = await req.json();
     const payload = settingsSchema.parse(body);
+    const defaultCheckInSlug = normalizeCheckInSlug(giftList.slug) || giftList.id;
 
     const data: any = {};
     if (typeof payload.enabled === "boolean") data.enabled = payload.enabled;
@@ -54,6 +57,24 @@ export async function PATCH(req: Request) {
     if (typeof payload.publicTitle === "string") data.publicTitle = payload.publicTitle.trim() || null;
     if (typeof payload.publicDescription === "string") data.publicDescription = payload.publicDescription.trim() || null;
     if (typeof payload.searchPlaceholder === "string") data.searchPlaceholder = payload.searchPlaceholder.trim() || null;
+    if (typeof payload.checkInSlug === "string") {
+      const normalized = normalizeCheckInSlug(payload.checkInSlug);
+      data.checkInSlug = normalized || null;
+    }
+
+    if (typeof data.checkInSlug === "string" && data.checkInSlug) {
+      const conflict = await prisma.rsvpSettings.findFirst({
+        where: {
+          checkInSlug: data.checkInSlug,
+          NOT: { giftListId: giftList.id },
+        },
+        select: { id: true },
+      });
+
+      if (conflict) {
+        return NextResponse.json({ error: "Este slug de check-in ja esta em uso." }, { status: 409 });
+      }
+    }
 
     const settings = await prisma.rsvpSettings.upsert({
       where: { giftListId: giftList.id },
@@ -69,6 +90,7 @@ export async function PATCH(req: Request) {
         publicDescription: data.publicDescription ?? "Confirme sua presença no evento.",
         searchPlaceholder: data.searchPlaceholder ?? "Ex: Isabella",
         checkInEnabled: data.checkInEnabled ?? true,
+        checkInSlug: data.checkInSlug ?? defaultCheckInSlug,
       },
       update: data,
     });
