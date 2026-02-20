@@ -1,370 +1,160 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { LayoutTemplate, Shield, Users } from 'lucide-react';
 
 type Overview = {
-  usersCount: number;
-  adminsCount: number;
-  blockedUsersCount: number;
-  listsCount: number;
-  publishedListsCount: number;
-  ordersCount: number;
-  paidTotal: number;
+  usersCount: number; adminsCount: number; clientsCount: number; partnersCount: number; ambassadorsCount: number;
+  publishedListsCount: number; activeTemplatesCount: number; paidTotal: number;
 };
+type AdminUser = { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR'; isBlocked: boolean; _count: { giftLists: number } };
+type AdminGiftList = { id: string; title: string; slug: string; isPublished: boolean; user: { email: string; name: string | null }; _count: { gifts: number; orders: number; messages: number } };
+type AdminTemplate = { id: string; name: string; slug: string; category: string; isActive: boolean };
 
-type AdminUser = {
-  id: string;
-  name: string | null;
-  email: string;
-  role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR';
-  isBlocked: boolean;
-  emailVerified: string | null;
-  createdAt: string;
-  _count: { giftLists: number };
-};
-
-type AdminGiftList = {
-  id: string;
-  title: string;
-  slug: string;
-  isPublished: boolean;
-  feeMode: 'PASS_TO_GUEST' | 'ABSORB';
-  createdAt: string;
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-  };
-  _count: {
-    gifts: number;
-    orders: number;
-    messages: number;
-  };
-};
-
-function formatCurrency(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
+const slugify = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120);
+const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function AdminPage() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [giftLists, setGiftLists] = useState<AdminGiftList[]>([]);
+  const [lists, setLists] = useState<AdminGiftList[]>([]);
+  const [templates, setTemplates] = useState<AdminTemplate[]>([]);
+  const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
+  const [qUser, setQUser] = useState('');
+  const [qList, setQList] = useState('');
+  const [newTemplate, setNewTemplate] = useState({ name: '', slug: '', category: 'casamento' });
 
-  const [userQuery, setUserQuery] = useState('');
-  const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR'>('ALL');
-  const [userBlockedFilter, setUserBlockedFilter] = useState<'ALL' | 'BLOCKED' | 'ACTIVE'>('ALL');
-
-  const [listQuery, setListQuery] = useState('');
-  const [listPublishedFilter, setListPublishedFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT'>('ALL');
-
-  const [loading, setLoading] = useState(true);
-  const [busyUserId, setBusyUserId] = useState<string | null>(null);
-  const [busyListId, setBusyListId] = useState<string | null>(null);
-
-  const userQueryString = useMemo(() => {
-    const params = new URLSearchParams();
-    if (userQuery.trim()) params.set('q', userQuery.trim());
-    if (userRoleFilter !== 'ALL') params.set('role', userRoleFilter);
-    if (userBlockedFilter === 'BLOCKED') params.set('blocked', 'true');
-    if (userBlockedFilter === 'ACTIVE') params.set('blocked', 'false');
-    return params.toString();
-  }, [userBlockedFilter, userQuery, userRoleFilter]);
-
-  const listQueryString = useMemo(() => {
-    const params = new URLSearchParams();
-    if (listQuery.trim()) params.set('q', listQuery.trim());
-    if (listPublishedFilter === 'PUBLISHED') params.set('published', 'true');
-    if (listPublishedFilter === 'DRAFT') params.set('published', 'false');
-    return params.toString();
-  }, [listPublishedFilter, listQuery]);
-
-  async function loadOverview() {
-    const res = await fetch('/api/admin/overview', { cache: 'no-store' });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error ?? 'Erro ao carregar overview');
-    setOverview(data);
-  }
-
-  async function loadUsers() {
-    const res = await fetch(`/api/admin/users?${userQueryString}`, { cache: 'no-store' });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error ?? 'Erro ao carregar usuarios');
-    setUsers(data.users ?? []);
-  }
-
-  async function loadGiftLists() {
-    const res = await fetch(`/api/admin/gift-lists?${listQueryString}`, { cache: 'no-store' });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error ?? 'Erro ao carregar listas');
-    setGiftLists(data.giftLists ?? []);
-  }
+  const userQuery = useMemo(() => {
+    const p = new URLSearchParams();
+    if (qUser.trim()) p.set('q', qUser.trim());
+    return p.toString();
+  }, [qUser]);
+  const listQuery = useMemo(() => {
+    const p = new URLSearchParams();
+    if (qList.trim()) p.set('q', qList.trim());
+    return p.toString();
+  }, [qList]);
 
   async function loadAll() {
-    setLoading(true);
-    try {
-      await Promise.all([loadOverview(), loadUsers(), loadGiftLists()]);
-    } catch (error: any) {
-      alert(error?.message ?? 'Erro ao carregar painel admin');
-    } finally {
-      setLoading(false);
-    }
+    const [o, u, l, t] = await Promise.all([
+      fetch('/api/admin/overview', { cache: 'no-store' }).then((r) => r.json()),
+      fetch(`/api/admin/users?${userQuery}`, { cache: 'no-store' }).then((r) => r.json()),
+      fetch(`/api/admin/gift-lists?${listQuery}`, { cache: 'no-store' }).then((r) => r.json()),
+      fetch('/api/admin/templates', { cache: 'no-store' }).then((r) => r.json()),
+    ]);
+    setOverview(o);
+    setUsers(u.users || []);
+    setLists(l.giftLists || []);
+    setTemplates(t.templates || []);
   }
 
-  useEffect(() => {
-    loadAll();
-  }, []);
+  useEffect(() => { loadAll().catch(() => null); }, []);
+  useEffect(() => { loadAll().catch(() => null); }, [userQuery, listQuery]);
 
-  useEffect(() => {
-    loadUsers().catch(() => null);
-  }, [userQueryString]);
-
-  useEffect(() => {
-    loadGiftLists().catch(() => null);
-  }, [listQueryString]);
-
-  async function updateUser(
-    userId: string,
-    payload: { role?: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR'; isBlocked?: boolean }
-  ) {
-    setBusyUserId(userId);
+  async function patchUser(id: string, payload: any) {
+    const res = await fetch(`/api/admin/users/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar usuario'); await loadAll();
+  }
+  async function patchList(id: string, payload: any) {
+    const res = await fetch(`/api/admin/gift-lists/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar lista'); await loadAll();
+  }
+  async function createTemplate() {
+    const slug = slugify(newTemplate.slug || newTemplate.name);
+    const res = await fetch('/api/admin/templates', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: newTemplate.name, slug, category: newTemplate.category, description: null, thumbnail: null,
+        defaultTheme: { primary_color: '#C65A3A', secondary_color: '#8E3D2C', background_color: '#FAF4EF', font_title: 'Playfair Display', font_body: 'Inter' },
+        defaultBlocks: [{ id: 'hero-1', type: 'hero', order: 1, enabled: true, config: { title: newTemplate.name || 'Novo template', subtitle: 'Seu evento especial', backgroundColor: '#8E3D2C' } }],
+      }),
+    });
+    const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao criar template');
+    setNewTemplate({ name: '', slug: '', category: 'casamento' }); await loadAll();
+  }
+  async function patchTemplate(id: string, payload: any) {
+    setBusyTemplateId(id);
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error ?? 'Erro ao atualizar usuario');
-      await Promise.all([loadOverview(), loadUsers()]);
-    } catch (error: any) {
-      alert(error?.message ?? 'Erro ao atualizar usuario');
+      const res = await fetch(`/api/admin/templates/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar template'); await loadAll();
     } finally {
-      setBusyUserId(null);
+      setBusyTemplateId(null);
     }
   }
-
-  async function updateGiftList(giftListId: string, isPublished: boolean) {
-    setBusyListId(giftListId);
+  async function removeTemplate(id: string) {
+    setBusyTemplateId(id);
     try {
-      const res = await fetch(`/api/admin/gift-lists/${giftListId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublished }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error ?? 'Erro ao atualizar lista');
-      await Promise.all([loadOverview(), loadGiftLists()]);
-    } catch (error: any) {
-      alert(error?.message ?? 'Erro ao atualizar lista');
+      const res = await fetch(`/api/admin/templates/${id}`, { method: 'DELETE' });
+      const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao excluir template'); await loadAll();
     } finally {
-      setBusyListId(null);
+      setBusyTemplateId(null);
     }
-  }
-
-  if (loading && !overview) {
-    return <div className="p-4">Carregando painel admin...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <div className="bg-white border rounded-xl p-4">
-          <p className="text-xs text-gray-500">Usuarios</p>
-          <p className="text-2xl font-semibold">{overview?.usersCount ?? 0}</p>
-        </div>
-        <div className="bg-white border rounded-xl p-4">
-          <p className="text-xs text-gray-500">Admins</p>
-          <p className="text-2xl font-semibold">{overview?.adminsCount ?? 0}</p>
-        </div>
-        <div className="bg-white border rounded-xl p-4">
-          <p className="text-xs text-gray-500">Bloqueados</p>
-          <p className="text-2xl font-semibold">{overview?.blockedUsersCount ?? 0}</p>
-        </div>
-        <div className="bg-white border rounded-xl p-4">
-          <p className="text-xs text-gray-500">Listas</p>
-          <p className="text-2xl font-semibold">{overview?.listsCount ?? 0}</p>
-        </div>
-        <div className="bg-white border rounded-xl p-4">
-          <p className="text-xs text-gray-500">Publicadas</p>
-          <p className="text-2xl font-semibold">{overview?.publishedListsCount ?? 0}</p>
-        </div>
-        <div className="bg-white border rounded-xl p-4">
-          <p className="text-xs text-gray-500">Arrecadacao paga</p>
-          <p className="text-xl font-semibold">{formatCurrency(overview?.paidTotal ?? 0)}</p>
-        </div>
-      </section>
+      <Card className="border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9]">
+        <CardHeader><CardTitle className="text-3xl font-display">Admin LUMIE</CardTitle></CardHeader>
+        <CardContent className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 text-sm">
+          <Stat icon={<Users className="w-4 h-4" />} label="Usuarios" value={overview?.usersCount || 0} />
+          <Stat icon={<Shield className="w-4 h-4" />} label="Admins" value={overview?.adminsCount || 0} />
+          <Stat icon={<Shield className="w-4 h-4" />} label="Clientes" value={overview?.clientsCount || 0} />
+          <Stat icon={<Shield className="w-4 h-4" />} label="Parceiros" value={overview?.partnersCount || 0} />
+          <Stat icon={<Shield className="w-4 h-4" />} label="Embaixadores" value={overview?.ambassadorsCount || 0} />
+          <Stat icon={<Users className="w-4 h-4" />} label="Listas pub." value={overview?.publishedListsCount || 0} />
+          <Stat icon={<LayoutTemplate className="w-4 h-4" />} label="Templates ativos" value={overview?.activeTemplatesCount || 0} />
+          <div className="rounded-xl border p-3 bg-white"><p className="text-xs text-gray-500">Arrecadado</p><p className="text-base font-semibold">{brl(overview?.paidTotal || 0)}</p></div>
+        </CardContent>
+      </Card>
 
-      <section className="bg-white border rounded-xl p-4 space-y-4">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-semibold">Gestao de Usuarios</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-            <input
-              className="border rounded-md h-10 px-3 text-sm"
-              placeholder="Buscar por nome ou email"
-              value={userQuery}
-              onChange={(e) => setUserQuery(e.target.value)}
-            />
-            <select
-              className="border rounded-md h-10 px-3 text-sm"
-              value={userRoleFilter}
-              onChange={(e) => setUserRoleFilter(e.target.value as any)}
-            >
-              <option value="ALL">Todos os papeis</option>
-              <option value="ADMIN">Admins</option>
-              <option value="CLIENT">Clientes</option>
-              <option value="PARTNER">Parceiros</option>
-              <option value="AMBASSADOR">Embaixadores</option>
-            </select>
-            <select
-              className="border rounded-md h-10 px-3 text-sm"
-              value={userBlockedFilter}
-              onChange={(e) => setUserBlockedFilter(e.target.value as any)}
-            >
-              <option value="ALL">Todos os status</option>
-              <option value="ACTIVE">Ativos</option>
-              <option value="BLOCKED">Bloqueados</option>
-            </select>
+      <Card className="border-[#e7d8cb]">
+        <CardHeader><CardTitle>Usuarios (clientes, parceiros e embaixadores)</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          <Input placeholder="Buscar usuario por nome/email" value={qUser} onChange={(e) => setQUser(e.target.value)} />
+          <div className="overflow-auto rounded-lg border">
+            <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Usuario</th><th className="p-2 text-left">Papel</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
+              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p></td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { isBlocked: !u.isBlocked }).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button><Button size="sm" variant="outline" onClick={() => setQList(u.email)}>Ver listas</Button></div></td></tr>)}
+            </tbody></table>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left border-b">
-                <th className="py-2">Usuario</th>
-                <th className="py-2">Papel</th>
-                <th className="py-2">Status</th>
-                <th className="py-2">Listas</th>
-                <th className="py-2">Cadastro</th>
-                <th className="py-2">Acoes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b align-top">
-                  <td className="py-2">
-                    <p className="font-medium">{user.name ?? 'Sem nome'}</p>
-                    <p className="text-gray-500">{user.email}</p>
-                  </td>
-                  <td className="py-2">{user.role}</td>
-                  <td className="py-2">{user.isBlocked ? 'Bloqueado' : 'Ativo'}</td>
-                  <td className="py-2">{user._count.giftLists}</td>
-                  <td className="py-2">{new Date(user.createdAt).toLocaleDateString('pt-BR')}</td>
-                  <td className="py-2">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        className="px-3 h-8 rounded-md border"
-                        disabled={busyUserId === user.id}
-                        onClick={() =>
-                          updateUser(user.id, { role: user.role === 'ADMIN' ? 'CLIENT' : 'ADMIN' })
-                        }
-                      >
-                        {user.role === 'ADMIN' ? 'Tornar Cliente' : 'Tornar Admin'}
-                      </button>
-                      <button
-                        className="px-3 h-8 rounded-md border"
-                        disabled={busyUserId === user.id}
-                        onClick={() => updateUser(user.id, { isBlocked: !user.isBlocked })}
-                      >
-                        {user.isBlocked ? 'Desbloquear' : 'Bloquear'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-4 text-center text-gray-500">
-                    Nenhum usuario encontrado.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="bg-white border rounded-xl p-4 space-y-4">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-semibold">Gestao de Listas</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-            <input
-              className="border rounded-md h-10 px-3 text-sm"
-              placeholder="Buscar por titulo, slug, nome ou email"
-              value={listQuery}
-              onChange={(e) => setListQuery(e.target.value)}
-            />
-            <select
-              className="border rounded-md h-10 px-3 text-sm"
-              value={listPublishedFilter}
-              onChange={(e) => setListPublishedFilter(e.target.value as any)}
-            >
-              <option value="ALL">Todas</option>
-              <option value="PUBLISHED">Publicadas</option>
-              <option value="DRAFT">Rascunho</option>
-            </select>
+      <Card className="border-[#e7d8cb]">
+        <CardHeader><CardTitle>Listas (edicao admin)</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          <Input placeholder="Buscar lista por titulo/slug/email" value={qList} onChange={(e) => setQList(e.target.value)} />
+          <div className="overflow-auto rounded-lg border">
+            <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Lista</th><th className="p-2 text-left">Dono</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
+              {lists.map((l) => <tr key={l.id} className="border-t"><td className="p-2"><p className="font-medium">{l.title}</p><p className="text-xs text-gray-500">/{l.slug} • {l._count.gifts} presentes</p></td><td className="p-2"><p>{l.user.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{l.user.email}</p></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchList(l.id, { isPublished: !l.isPublished }).catch((e) => alert(e.message))}>{l.isPublished ? 'Despublicar' : 'Publicar'}</Button><Button size="sm" variant="outline" onClick={() => { const t = window.prompt('Novo titulo', l.title); if (t && t.trim()) patchList(l.id, { title: t.trim() }).catch((e) => alert(e.message)); }}>Editar titulo</Button><Button size="sm" variant="outline" onClick={() => { const s = window.prompt('Novo slug', l.slug); if (s && s.trim()) patchList(l.id, { slug: slugify(s) }).catch((e) => alert(e.message)); }}>Editar slug</Button><a href={`/site/${l.slug}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline">Abrir</Button></a></div></td></tr>)}
+            </tbody></table>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left border-b">
-                <th className="py-2">Lista</th>
-                <th className="py-2">Dono</th>
-                <th className="py-2">Status</th>
-                <th className="py-2">Itens</th>
-                <th className="py-2">Pedidos</th>
-                <th className="py-2">Acoes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {giftLists.map((giftList) => (
-                <tr key={giftList.id} className="border-b align-top">
-                  <td className="py-2">
-                    <p className="font-medium">{giftList.title}</p>
-                    <p className="text-gray-500">/{giftList.slug}</p>
-                  </td>
-                  <td className="py-2">
-                    <p>{giftList.user.name ?? 'Sem nome'}</p>
-                    <p className="text-gray-500">{giftList.user.email}</p>
-                  </td>
-                  <td className="py-2">{giftList.isPublished ? 'Publicada' : 'Rascunho'}</td>
-                  <td className="py-2">{giftList._count.gifts}</td>
-                  <td className="py-2">{giftList._count.orders}</td>
-                  <td className="py-2">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        className="px-3 h-8 rounded-md border"
-                        disabled={busyListId === giftList.id}
-                        onClick={() => updateGiftList(giftList.id, !giftList.isPublished)}
-                      >
-                        {giftList.isPublished ? 'Despublicar' : 'Publicar'}
-                      </button>
-                      <a
-                        className="px-3 h-8 rounded-md border inline-flex items-center"
-                        href={`/site/${giftList.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Abrir pagina
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {giftLists.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-4 text-center text-gray-500">
-                    Nenhuma lista encontrada.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <Card className="border-[#e7d8cb]">
+        <CardHeader><CardTitle>Templates (publicacao imediata)</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <Input placeholder="Nome do template" value={newTemplate.name} onChange={(e) => setNewTemplate((p) => ({ ...p, name: e.target.value }))} />
+            <Input placeholder="Slug" value={newTemplate.slug} onChange={(e) => setNewTemplate((p) => ({ ...p, slug: e.target.value }))} />
+            <Input placeholder="Categoria" value={newTemplate.category} onChange={(e) => setNewTemplate((p) => ({ ...p, category: e.target.value }))} />
+            <Button onClick={() => createTemplate().catch((e) => alert(e.message))}>Criar e publicar</Button>
+          </div>
+          <div className="overflow-auto rounded-lg border">
+            <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Template</th><th className="p-2 text-left">Categoria</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
+              {templates.map((t) => <tr key={t.id} className="border-t"><td className="p-2"><p className="font-medium">{t.name}</p><p className="text-xs text-gray-500">/{t.slug}</p></td><td className="p-2">{t.category}</td><td className="p-2"><div className="flex gap-1"><Button size="sm" variant="outline" disabled={busyTemplateId === t.id} onClick={() => patchTemplate(t.id, { isActive: !t.isActive }).catch((e) => alert(e.message))}>{t.isActive ? 'Despublicar' : 'Publicar'}</Button><Button size="sm" variant="outline" disabled={busyTemplateId === t.id} onClick={() => { if (confirm('Excluir template?')) removeTemplate(t.id).catch((e) => alert(e.message)); }}>Excluir</Button></div></td></tr>)}
+            </tbody></table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
+}
+
+function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return <div className="rounded-xl border p-3 bg-white"><div className="flex items-center justify-between text-xs text-gray-500"><span>{label}</span><span>{icon}</span></div><p className="text-2xl font-semibold mt-1">{value}</p></div>;
 }
