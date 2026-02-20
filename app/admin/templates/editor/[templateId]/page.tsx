@@ -675,6 +675,60 @@ export default function AdminTemplateEditorPage() {
                 <Label>Texto da marca</Label>
                 <Input value={theme?.header?.brandText || 'LUMIE'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, header: { ...(prev?.header || {}), brandText: e.target.value } })); setDirty(true); }} />
               </div>
+              <div className="space-y-1">
+                <Label>Cor de fundo</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={theme?.header?.backgroundColor || '#0B0B0B'}
+                    onChange={(e) => {
+                      setTheme((prev: any) => ({
+                        ...prev,
+                        header: { ...(prev?.header || {}), backgroundColor: e.target.value },
+                      }));
+                      setDirty(true);
+                    }}
+                    className="h-9 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
+                  />
+                  <Input
+                    value={theme?.header?.backgroundColor || '#0B0B0B'}
+                    onChange={(e) => {
+                      setTheme((prev: any) => ({
+                        ...prev,
+                        header: { ...(prev?.header || {}), backgroundColor: e.target.value },
+                      }));
+                      setDirty(true);
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Cor do texto</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={theme?.header?.textColor || '#FFFFFF'}
+                    onChange={(e) => {
+                      setTheme((prev: any) => ({
+                        ...prev,
+                        header: { ...(prev?.header || {}), textColor: e.target.value },
+                      }));
+                      setDirty(true);
+                    }}
+                    className="h-9 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
+                  />
+                  <Input
+                    value={theme?.header?.textColor || '#FFFFFF'}
+                    onChange={(e) => {
+                      setTheme((prev: any) => ({
+                        ...prev,
+                        header: { ...(prev?.header || {}), textColor: e.target.value },
+                      }));
+                      setDirty(true);
+                    }}
+                  />
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="template" className="space-y-4">
