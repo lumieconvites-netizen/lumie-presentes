@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BlockEditor from '@/components/builder/BlockEditor';
 import BlockPreview from '@/components/builder/BlockPreview';
-import { Image as ImageIcon, Layout, Music2, Sparkles, Type, Video, Globe } from 'lucide-react';
+import { Image as ImageIcon, Layout, Music2, Sparkles, Type, Video, Globe, Plus } from 'lucide-react';
 import { normalizeTemplateGiftItems } from '@/lib/template-gifts';
 
 type CategoryItem = { slug: string; name: string; templatesCount: number; activeTemplatesCount: number };
@@ -73,6 +73,45 @@ function slugify(v: string) {
     .slice(0, 120);
 }
 
+function sanitizeTemplateBlocks(input: any[]) {
+  const seen = new Set<string>();
+  const known = new Set(BLOCK_TYPES.map((item) => item.id));
+  const cleaned: any[] = [];
+
+  for (const block of Array.isArray(input) ? input : []) {
+    if (!block || !known.has(block.type)) continue;
+    if (seen.has(block.type)) continue;
+    seen.add(block.type);
+    cleaned.push({
+      ...block,
+      enabled: block.type === 'gifts' ? true : block.enabled !== false,
+      order: cleaned.length + 1,
+    });
+  }
+
+  if (!cleaned.some((block) => block.type === 'hero')) {
+    cleaned.unshift({
+      id: `hero-${Date.now()}`,
+      type: 'hero',
+      order: 1,
+      enabled: true,
+      config: {},
+    });
+  }
+
+  if (!cleaned.some((block) => block.type === 'gifts')) {
+    cleaned.push({
+      id: `gifts-${Date.now()}`,
+      type: 'gifts',
+      order: cleaned.length + 1,
+      enabled: true,
+      config: {},
+    });
+  }
+
+  return cleaned.map((block, index) => ({ ...block, order: index + 1 }));
+}
+
 function readTemplateGiftsFromBlocks(blocks: any[]): TemplateGiftFormItem[] {
   const giftsBlock = blocks.find((block) => block.type === 'gifts');
   const normalized = normalizeTemplateGiftItems(giftsBlock?.config?.templateGiftItems);
@@ -87,12 +126,13 @@ function readTemplateGiftsFromBlocks(blocks: any[]): TemplateGiftFormItem[] {
 
 function writeTemplateGiftsToBlocks(blocks: any[], giftItems: TemplateGiftFormItem[]) {
   const normalizedGifts = normalizeTemplateGiftItems(giftItems);
-  const hasGiftsBlock = blocks.some((block) => block.type === 'gifts');
+  const safeBlocks = sanitizeTemplateBlocks(blocks);
+  const hasGiftsBlock = safeBlocks.some((block) => block.type === 'gifts');
   const nextBlocks = hasGiftsBlock
-    ? blocks
+    ? safeBlocks
     : [
-        ...blocks,
-        { id: `gifts-${Date.now()}`, type: 'gifts', order: blocks.length + 1, enabled: true, config: {} },
+        ...safeBlocks,
+        { id: `gifts-${Date.now()}`, type: 'gifts', order: safeBlocks.length + 1, enabled: true, config: {} },
       ];
 
   return nextBlocks.map((block, index) => {
@@ -119,6 +159,7 @@ export default function AdminTemplateEditorPage() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
@@ -130,7 +171,7 @@ export default function AdminTemplateEditorPage() {
     isActive: true,
   });
 
-  const [blocks, setBlocks] = useState<any[]>(defaultBlocks);
+  const [blocks, setBlocks] = useState<any[]>(sanitizeTemplateBlocks(defaultBlocks));
   const [theme, setTheme] = useState<any>(defaultTheme);
   const [templateGifts, setTemplateGifts] = useState<TemplateGiftFormItem[]>([]);
 
@@ -161,6 +202,12 @@ export default function AdminTemplateEditorPage() {
           }
         }
 
+        if (isNew && !cancelled) {
+          const cleanDefault = sanitizeTemplateBlocks(defaultBlocks);
+          setBlocks(cleanDefault);
+          setTemplateGifts(readTemplateGiftsFromBlocks(cleanDefault));
+        }
+
         if (!isNew) {
           const templateRes = await fetch(`/api/admin/templates/${templateId}`, { cache: 'no-store' });
           const templateJson = await templateRes.json();
@@ -175,9 +222,12 @@ export default function AdminTemplateEditorPage() {
               thumbnail: template.thumbnail || '',
               isActive: Boolean(template.isActive),
             });
-            setBlocks(Array.isArray(template.defaultBlocks) && template.defaultBlocks.length ? template.defaultBlocks : defaultBlocks);
+            const cleanBlocks = sanitizeTemplateBlocks(
+              Array.isArray(template.defaultBlocks) && template.defaultBlocks.length ? template.defaultBlocks : defaultBlocks
+            );
+            setBlocks(cleanBlocks);
             setTheme(template.defaultTheme || defaultTheme);
-            setTemplateGifts(readTemplateGiftsFromBlocks(Array.isArray(template.defaultBlocks) ? template.defaultBlocks : defaultBlocks));
+            setTemplateGifts(readTemplateGiftsFromBlocks(cleanBlocks));
           }
         }
       } catch (error: any) {
@@ -192,6 +242,7 @@ export default function AdminTemplateEditorPage() {
   }, [templateId]);
 
   function addBlock(type: string) {
+    if (blocks.some((block) => block.type === type)) return;
     const next = {
       id: `${type}-${Date.now()}`,
       type,
@@ -199,7 +250,8 @@ export default function AdminTemplateEditorPage() {
       enabled: true,
       config: {},
     };
-    setBlocks((prev) => [...prev, next]);
+    setBlocks((prev) => sanitizeTemplateBlocks([...prev, next]));
+    setDirty(true);
     setSelectedBlockId(next.id);
   }
 
@@ -214,14 +266,18 @@ export default function AdminTemplateEditorPage() {
           : block
       )
     );
+    setDirty(true);
   }
 
   function deleteBlock(blockId: string) {
-    setBlocks((prev) => prev.filter((block) => block.id !== blockId).map((block, index) => ({ ...block, order: index + 1 })));
+    const target = blocks.find((block) => block.id === blockId);
+    if (target?.type === 'gifts') return;
+    setBlocks((prev) => sanitizeTemplateBlocks(prev.filter((block) => block.id !== blockId)));
+    setDirty(true);
     if (selectedBlockId === blockId) setSelectedBlockId(null);
   }
 
-  async function saveTemplate() {
+  async function saveTemplate(overrideIsActive?: boolean) {
     if (!form.name.trim()) {
       alert('Informe o nome do template.');
       return;
@@ -239,7 +295,7 @@ export default function AdminTemplateEditorPage() {
       thumbnail: form.thumbnail.trim() || null,
       defaultBlocks: writeTemplateGiftsToBlocks(blocks, templateGifts),
       defaultTheme: theme,
-      isActive: form.isActive,
+      isActive: typeof overrideIsActive === 'boolean' ? overrideIsActive : form.isActive,
     };
 
     setSaving(true);
@@ -251,13 +307,27 @@ export default function AdminTemplateEditorPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || 'Erro ao salvar template');
-      alert('Template salvo com sucesso.');
-      router.push(`/admin/templates?category=${encodeURIComponent(payload.category)}`);
+      setDirty(false);
+      if (isNew && json?.template?.id) {
+        router.replace(`/admin/templates/editor/${json.template.id}`);
+      }
+      return json?.template ?? null;
     } catch (error: any) {
       alert(error?.message || 'Erro ao salvar template');
+      return null;
     } finally {
       setSaving(false);
     }
+  }
+
+  async function togglePublished() {
+    const next = !form.isActive;
+    const saved = await saveTemplate(next);
+    if (!saved) {
+      return;
+    }
+    setForm((prev) => ({ ...prev, isActive: next }));
+    alert(next ? 'Template publicado.' : 'Template despublicado.');
   }
 
   if (loading) return <div className="p-6">Carregando editor de template...</div>;
@@ -270,8 +340,30 @@ export default function AdminTemplateEditorPage() {
           <Button variant="outline" asChild>
             <Link href="/admin/templates">Voltar</Link>
           </Button>
+          <Button variant="outline" asChild>
+            <Link href={form.category ? `/templates?categoria=${encodeURIComponent(form.category)}` : '/templates'} target="_blank">
+              Visualizar
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setTemplateGifts((prev) => [...prev, { name: '', description: '', imageUrl: '', basePrice: 100, totalQuantity: 1 }]);
+              setDirty(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Adicionar presentes
+          </Button>
           <Button onClick={() => saveTemplate().catch(() => null)} disabled={saving}>
             {saving ? 'Salvando...' : 'Salvar template'}
+          </Button>
+          <Button
+            className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800"
+            onClick={() => togglePublished().catch(() => null)}
+            disabled={saving}
+          >
+            {form.isActive ? 'Despublicar template' : 'Publicar template'}
           </Button>
         </div>
       </div>
