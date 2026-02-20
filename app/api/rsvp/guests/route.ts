@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { createCheckInCode, createQrToken, normalizeGuestName } from "@/lib/rsvp";
 import { getActingUserContext } from "@/lib/acting-user";
+import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 
 const guestSchema = z.object({
   fullName: z.string().min(2, "Nome completo e obrigatorio"),
@@ -28,8 +29,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function getGiftListId(userId: string) {
-  const giftList = await prisma.giftList.findFirst({ where: { userId }, select: { id: true } });
-  return giftList?.id || null;
+  return getPrimaryGiftListIdForUser(userId);
 }
 
 export async function GET(req: Request) {
@@ -77,8 +77,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const giftList = await prisma.giftList.findFirst({ where: { userId: ctx.effectiveUserId }, select: { id: true } });
-    if (!giftList) {
+    const giftListId = await getGiftListId(ctx.effectiveUserId);
+    if (!giftListId) {
       return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
 
@@ -87,13 +87,13 @@ export async function POST(req: Request) {
     if (Array.isArray(body?.guests)) {
       const parsedImport = importSchema.parse(body);
 
-      const existing = await prisma.rsvpGuest.findMany({ where: { giftListId: giftList.id }, select: { fullName: true } });
+      const existing = await prisma.rsvpGuest.findMany({ where: { giftListId }, select: { fullName: true } });
       const existingNames = new Set(existing.map((g) => normalizeGuestName(g.fullName)));
 
       const toCreate = parsedImport.guests
         .filter((g) => !existingNames.has(normalizeGuestName(g.fullName)))
         .map((g) => ({
-          giftListId: giftList.id,
+          giftListId,
           fullName: g.fullName.trim(),
           email: null,
           phone: null,
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
     const parsed = guestSchema.parse(body);
 
     const normalizedName = normalizeGuestName(parsed.fullName);
-    const exists = await prisma.rsvpGuest.findMany({ where: { giftListId: giftList.id }, select: { fullName: true } });
+    const exists = await prisma.rsvpGuest.findMany({ where: { giftListId }, select: { fullName: true } });
     const found = exists.some((g) => normalizeGuestName(g.fullName) === normalizedName);
     if (found) {
       return NextResponse.json({ error: "Ja existe convidado com esse nome" }, { status: 400 });
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
 
     const guest = await prisma.rsvpGuest.create({
       data: {
-        giftListId: giftList.id,
+        giftListId,
         fullName: parsed.fullName.trim(),
         email: null,
         phone: null,

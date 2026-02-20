@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActingUserContext } from "@/lib/acting-user";
+import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,10 +18,10 @@ export async function GET() {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const giftList = await prisma.giftList.findFirst({
-      where: { userId: ctx.effectiveUserId },
-      select: { id: true, slug: true },
-    });
+    const primaryGiftListId = await getPrimaryGiftListIdForUser(ctx.effectiveUserId);
+    const giftList = primaryGiftListId
+      ? await prisma.giftList.findUnique({ where: { id: primaryGiftListId }, select: { id: true, slug: true } })
+      : null;
 
     if (!giftList) {
       return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });

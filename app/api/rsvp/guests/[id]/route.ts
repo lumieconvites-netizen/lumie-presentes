@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getActingUserContext } from "@/lib/acting-user";
+import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 
 const updateSchema = z.object({
   fullName: z.string().min(2).optional(),
@@ -17,8 +18,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function getGiftListId(userId: string) {
-  const giftList = await prisma.giftList.findFirst({ where: { userId }, select: { id: true } });
-  return giftList?.id || null;
+  return getPrimaryGiftListIdForUser(userId);
 }
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {

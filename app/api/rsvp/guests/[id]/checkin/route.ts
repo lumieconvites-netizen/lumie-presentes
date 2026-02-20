@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActingUserContext } from "@/lib/acting-user";
+import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function getGiftListId(userId: string) {
-  const giftList = await prisma.giftList.findFirst({ where: { userId }, select: { id: true } });
-  return giftList?.id || null;
+  return getPrimaryGiftListIdForUser(userId);
 }
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {

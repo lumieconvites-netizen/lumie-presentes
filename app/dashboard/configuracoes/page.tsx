@@ -50,6 +50,29 @@ export default function ConfiguracoesPage() {
 
     (async () => {
       try {
+        const res = await fetch('/api/me', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (typeof data?.name === 'string' && data.name.trim()) setName(data.name);
+        if (typeof data?.email === 'string' && data.email.trim()) setEmail(data.email);
+        if (typeof data?.image === 'string' && data.image.trim()) setPhoto(data.image);
+      } catch {
+        // noop
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
         const res = await fetch('/api/gift-lists/my-list', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();

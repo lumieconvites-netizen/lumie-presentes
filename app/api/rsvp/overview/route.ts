@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPublicBaseUrl, getPublicCheckInUrl, normalizeCheckInSlug } from "@/lib/rsvp";
 import { getActingUserContext } from "@/lib/acting-user";
+import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,8 +14,13 @@ export async function GET() {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const giftList = await prisma.giftList.findFirst({
-      where: { userId: ctx.effectiveUserId },
+    const primaryGiftListId = await getPrimaryGiftListIdForUser(ctx.effectiveUserId);
+    if (!primaryGiftListId) {
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+    }
+
+    const giftList = await prisma.giftList.findUnique({
+      where: { id: primaryGiftListId },
       select: {
         id: true,
         slug: true,

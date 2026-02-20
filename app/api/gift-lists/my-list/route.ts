@@ -7,6 +7,7 @@ import {
   validateGiftListSlug,
 } from "@/lib/gift-list-slug";
 import { getActingUserContext } from "@/lib/acting-user";
+import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,10 +20,10 @@ export async function GET() {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    let giftList = await prisma.giftList.findFirst({
-      where: { userId: ctx.effectiveUserId },
-      orderBy: { updatedAt: "desc" },
-    });
+    const primaryGiftListId = await getPrimaryGiftListIdForUser(ctx.effectiveUserId);
+    let giftList = primaryGiftListId
+      ? await prisma.giftList.findUnique({ where: { id: primaryGiftListId } })
+      : null;
 
     if (!giftList) {
       const nextSlug = buildGiftListSlug(ctx.effectiveUser.name, ctx.effectiveUserId);
@@ -60,15 +61,17 @@ export async function PATCH(req: Request) {
 
     const body = await req.json().catch(() => ({} as any));
 
+    const targetGiftListId =
+      typeof body?.giftListId === "string" && body.giftListId
+        ? body.giftListId
+        : await getPrimaryGiftListIdForUser(ctx.effectiveUserId);
+
     const giftList = await prisma.giftList.findFirst({
       where: {
         userId: ctx.effectiveUserId,
-        ...(typeof body?.giftListId === "string" && body.giftListId
-          ? { id: body.giftListId }
-          : {}),
+        ...(targetGiftListId ? { id: targetGiftListId } : {}),
       },
       select: { id: true },
-      orderBy: { updatedAt: "desc" },
     });
 
     if (!giftList) {
