@@ -46,6 +46,17 @@ export default function LoginPage() {
 
       if (result.ok) {
         toast.success('Login realizado com sucesso.');
+        try {
+          const sessionRes = await fetch('/api/auth/session', { cache: 'no-store' });
+          const session = await sessionRes.json();
+          const role = session?.user?.role;
+          if (role === 'ADMIN') {
+            window.location.assign('/admin');
+            return;
+          }
+        } catch {
+          // fallback para fluxo padrao
+        }
         window.location.assign(result.url || callbackUrl);
       }
     } catch {
