@@ -64,15 +64,17 @@ function toExternalMapUrl(value: string) {
 }
 
 export default function PublicPageView({ blocks, gifts, messages, settings, theme = {} }: PublicPageViewProps) {
-  const primaryColor = theme.primary_color || '#C86E52';
-  const secondaryColor = theme.secondary_color || '#8E3D2C';
-  const captionColor = theme.caption_color || secondaryColor;
-  const dividerColor = theme.divider_color || secondaryColor;
+  const primaryColor = theme.primary_color || '#C86E52'; // icones
+  const titleColor = theme.title_color || theme.secondary_color || '#8E3D2C';
+  const captionColor = theme.caption_color || '#5F4A41';
+  const dividerColor = theme.divider_color || titleColor;
   const dividerEnabled = theme.divider_enabled !== false;
   const dividerStyle = theme.divider_style || 'dot';
+  const blendColor = theme.blend_color || dividerColor;
   const backgroundColor = theme.background_color || '#FAF4EF';
   const backgroundImage = theme.background_image || '';
-  const themeOverlay = toRgba(backgroundColor, 0.5);
+  const overlayPercent = Math.min(100, Math.max(0, Number(theme.background_overlay_opacity ?? 50)));
+  const themeOverlay = toRgba(backgroundColor, overlayPercent / 100);
   const fontTitle = theme.font_title || 'Cormorant Garamond';
   const fontBody = theme.font_body || 'Inter';
   const header = theme.header || {};
@@ -153,7 +155,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
           ['--list-font-title' as any]: `"${fontTitle}"`,
           ['--list-font-body' as any]: `"${fontBody}"`,
           ['--lp-divider-color' as any]: toRgba(dividerColor, 0.42),
-          ['--lp-blend-color' as any]: toRgba(secondaryColor, 0.26),
+          ['--lp-blend-color' as any]: toRgba(blendColor, 0.28),
           ...pageBackgroundStyle,
         } as React.CSSProperties
       }
@@ -232,7 +234,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                 style={{
                   background: config.backgroundImage
                     ? `url(${config.backgroundImage}) center/cover`
-                    : `linear-gradient(135deg, ${secondaryColor} 0%, ${primaryColor} 100%)`,
+                    : `linear-gradient(135deg, ${titleColor} 0%, ${primaryColor} 100%)`,
                 }}
               >
                 <div className="absolute inset-0 bg-black/20" />
@@ -258,19 +260,19 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
 
             {block.type === 'message' && (
               <div className={`${sectionClass} p-12 md:p-20 text-center`}>
-                <h2 className="text-3xl md:text-4xl mb-6" style={{ fontFamily: fontTitle, color: primaryColor }}>
+                <h2 className="text-3xl md:text-4xl mb-6" style={{ fontFamily: fontTitle, color: titleColor }}>
                   {config.title || 'Nossa Historia'}
                 </h2>
-                <p className="text-base md:text-lg text-gray-700 mb-4 max-w-3xl mx-auto leading-relaxed whitespace-pre-wrap">
+                <p className="text-base md:text-lg mb-4 max-w-3xl mx-auto leading-relaxed whitespace-pre-wrap" style={{ color: captionColor }}>
                   {config.message || 'Escreva aqui uma mensagem especial para seus convidados.'}
                 </p>
-                {config.signature && <p className="text-gray-600 italic mt-8 text-lg">{config.signature}</p>}
+                {config.signature && <p className="italic mt-8 text-lg" style={{ color: captionColor }}>{config.signature}</p>}
               </div>
             )}
 
             {block.type === 'countdown' && config.eventDate && (
               <div className={`${sectionClass} p-12 md:p-16`}>
-                <h3 className="text-2xl md:text-3xl text-center mb-10" style={{ fontFamily: fontTitle, color: primaryColor }}>
+                <h3 className="text-2xl md:text-3xl text-center mb-10" style={{ fontFamily: fontTitle, color: titleColor }}>
                   {config.title || 'Contagem Regressiva'}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
@@ -284,7 +286,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       <div className="text-4xl md:text-5xl font-bold mb-2" style={{ color: primaryColor }}>
                         {String(item.value).padStart(2, '0')}
                       </div>
-                      <div className="text-sm text-gray-600 uppercase tracking-wider">{item.label}</div>
+                      <div className="text-sm uppercase tracking-wider" style={{ color: captionColor }}>{item.label}</div>
                     </div>
                   ))}
                 </div>
@@ -326,7 +328,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
 
             {block.type === 'messages' && config.showPublicly !== false && (
               <div className={`${sectionClass} p-12 md:p-16`}>
-                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: primaryColor }}>
+                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: titleColor }}>
                   {config.title || 'Recados Especiais'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
@@ -341,11 +343,11 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-gray-900">{msg.guestName}</h4>
-                            <p className="text-xs text-gray-500">{new Date(msg.date).toLocaleDateString('pt-BR')}</p>
+                            <p className="text-xs" style={{ color: captionColor }}>{new Date(msg.date).toLocaleDateString('pt-BR')}</p>
                           </div>
                           {msg.isFavorite && <Heart className="w-5 h-5 text-red-500 fill-red-500" />}
                         </div>
-                        <p className="text-gray-700 leading-relaxed">{msg.message}</p>
+                        <p className="leading-relaxed" style={{ color: captionColor }}>{msg.message}</p>
                       </Card>
                     ))}
                 </div>
@@ -354,7 +356,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
 
             {block.type === 'gallery' && config.images && config.images.length > 0 && (
               <div className={`${sectionClass} p-12 md:p-16`}>
-                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: primaryColor }}>
+                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: titleColor }}>
                   {config.title || 'Galeria de Fotos'}
                 </h2>
                 <div className="gallery-slider-mask max-w-6xl mx-auto">
@@ -371,7 +373,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
 
             {block.type === 'event-info' && (
               <div id="como-chegar-section" className={`${sectionClass} p-12 md:p-16`}>
-                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: primaryColor }}>
+                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: titleColor }}>
                   {config.title || 'Informacoes do Evento'}
                 </h2>
                 <div className="max-w-3xl mx-auto space-y-6">
@@ -382,7 +384,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-base mb-2" style={{ color: captionColor }}>Data e Hora</p>
-                        <p className="text-gray-600 text-lg">
+                        <p className="text-lg" style={{ color: captionColor }}>
                           {new Date(config.datetime).toLocaleString('pt-BR', {
                             day: '2-digit',
                             month: 'long',
@@ -402,9 +404,9 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-base mb-2" style={{ color: captionColor }}>{config.location || 'Local do Evento'}</p>
-                        <p className="text-gray-600 mb-3">{config.address}</p>
+                        <p className="mb-3" style={{ color: captionColor }}>{config.address}</p>
                         {config.mapLink && (
-                          <a href={config.mapLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium hover:underline" style={{ color: primaryColor }}>
+                          <a href={config.mapLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium hover:underline" style={{ color: captionColor }}>
                             <Globe className="w-4 h-4" />
                             {config.mapButtonText || 'Ver no mapa'}
                           </a>
@@ -419,12 +421,12 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             {block.type === 'map' && (
               <div id="como-chegar-section" className={`${sectionClass} p-12 md:p-16`}>
                 <div className="max-w-5xl mx-auto">
-                  <h2 className="text-3xl md:text-4xl mb-2" style={{ fontFamily: fontTitle, color: primaryColor }}>
+                  <h2 className="text-3xl md:text-4xl mb-2" style={{ fontFamily: fontTitle, color: titleColor }}>
                     {config.title || 'Como chegar'}
                   </h2>
-                  {config.subtitle && <p className="text-gray-600 mb-6">{config.subtitle}</p>}
+                  {config.subtitle && <p className="mb-6" style={{ color: captionColor }}>{config.subtitle}</p>}
                   {config.address && (
-                    <p className="text-gray-700 mb-4 flex items-center gap-2">
+                    <p className="mb-4 flex items-center gap-2" style={{ color: captionColor }}>
                       <MapPin className="w-4 h-4" /> {config.address}
                     </p>
                   )}
@@ -437,7 +439,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                   </div>
                   {config.externalMapUrl && (
                     <div className="mt-4">
-                      <a href={config.externalMapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium hover:underline" style={{ color: primaryColor }}>
+                      <a href={config.externalMapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium hover:underline" style={{ color: captionColor }}>
                         <Globe className="w-4 h-4" />
                         Abrir rota no mapa
                       </a>
@@ -450,16 +452,16 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             {block.type === 'music' && (
               <div className={`${sectionClass} p-12 md:p-16`}>
                 <div className="max-w-4xl mx-auto">
-                  <h2 className="text-3xl md:text-4xl mb-2" style={{ fontFamily: fontTitle, color: primaryColor }}>
+                  <h2 className="text-3xl md:text-4xl mb-2" style={{ fontFamily: fontTitle, color: titleColor }}>
                     {config.title || 'Nossa trilha sonora'}
                   </h2>
-                  {config.description && <p className="text-gray-600 mb-6">{config.description}</p>}
+                  {config.description && <p className="mb-6" style={{ color: captionColor }}>{config.description}</p>}
                   {config.spotifyUrl ? (
                     <iframe src={toSpotifyEmbedUrl(config.spotifyUrl)} width="100%" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" className="rounded-2xl" />
                   ) : config.youtubeUrl ? (
                     <iframe src={toYoutubeEmbedUrl(config.youtubeUrl)} width="100%" height="360" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="rounded-2xl border border-gray-200" />
                   ) : (
-                    <div className="h-36 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-gray-500 gap-2">
+                    <div className="h-36 rounded-2xl bg-white border border-gray-200 flex items-center justify-center gap-2" style={{ color: captionColor }}>
                       <Music2 className="w-4 h-4" /> Configure Spotify ou YouTube no editor
                     </div>
                   )}
@@ -470,14 +472,14 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             {block.type === 'video' && (
               <div className={`${sectionClass} p-12 md:p-16`}>
                 <div className="max-w-5xl mx-auto">
-                  <h2 className="text-3xl md:text-4xl mb-2" style={{ fontFamily: fontTitle, color: primaryColor }}>
+                  <h2 className="text-3xl md:text-4xl mb-2" style={{ fontFamily: fontTitle, color: titleColor }}>
                     {config.title || 'Nosso video'}
                   </h2>
-                  {config.description && <p className="text-gray-600 mb-6">{config.description}</p>}
+                  {config.description && <p className="mb-6" style={{ color: captionColor }}>{config.description}</p>}
                   {config.videoUrl ? (
                     <iframe src={toYoutubeEmbedUrl(config.videoUrl)} width="100%" height="460" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="rounded-2xl border border-gray-200" />
                   ) : (
-                    <div className="h-[280px] rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 gap-2">
+                    <div className="h-[280px] rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center gap-2" style={{ color: captionColor }}>
                       <Video className="w-4 h-4" /> Configure o link do video no editor
                     </div>
                   )}

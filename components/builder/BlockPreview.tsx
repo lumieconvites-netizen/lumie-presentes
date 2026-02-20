@@ -31,17 +31,19 @@ function toRgba(color: string, alpha: number) {
 
 export default function BlockPreview({ list, blocks, selectedBlock, onSelectBlock, gifts }: BlockPreviewProps) {
   const theme = list.theme || {};
-  const primaryColor = theme.primary_color || '#C86E52';
-  const secondaryColor = theme.secondary_color || '#8E3D2C';
-  const captionColor = theme.caption_color || secondaryColor;
-  const dividerColor = theme.divider_color || secondaryColor;
+  const primaryColor = theme.primary_color || '#C86E52'; // icones
+  const titleColor = theme.title_color || theme.secondary_color || '#8E3D2C';
+  const captionColor = theme.caption_color || '#5F4A41';
+  const dividerColor = theme.divider_color || titleColor;
   const dividerEnabled = theme.divider_enabled !== false;
   const dividerStyle = theme.divider_style || 'dot';
+  const blendColor = theme.blend_color || dividerColor;
   const backgroundColor = theme.background_color || '#FAF4EF';
   const backgroundImage = theme.background_image || '';
   const fontTitle = theme.font_title || 'Cormorant Garamond';
   const fontBody = theme.font_body || 'Inter';
-  const themeOverlay = toRgba(backgroundColor, 0.5);
+  const overlayPercent = Math.min(100, Math.max(0, Number(theme.background_overlay_opacity ?? 50)));
+  const themeOverlay = toRgba(backgroundColor, overlayPercent / 100);
   const pageBackgroundStyle: React.CSSProperties = backgroundImage
     ? {
         backgroundColor,
@@ -151,7 +153,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
         ["--list-font-title" as any]: `"${fontTitle}"`,
         ["--list-font-body" as any]: `"${fontBody}"`,
         ["--lp-divider-color" as any]: toRgba(dividerColor, 0.42),
-        ["--lp-blend-color" as any]: toRgba(secondaryColor, 0.26),
+        ["--lp-blend-color" as any]: toRgba(blendColor, 0.28),
         ...pageBackgroundStyle,
       } as React.CSSProperties
     }
@@ -179,7 +181,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                 style={{
                   background: config.backgroundImage
                     ? `url(${config.backgroundImage}) center/cover`
-                    : `linear-gradient(135deg, ${secondaryColor} 0%, ${primaryColor} 100%)`
+                    : `linear-gradient(135deg, ${titleColor} 0%, ${primaryColor} 100%)`
                 }}
               >
                 <div className="absolute inset-0 bg-black/20" />
@@ -226,15 +228,15 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
               <div className={`${sectionClass} p-12 md:p-20 text-center`}>
                 <h2 
                   className="text-3xl md:text-4xl mb-6" 
-                  style={{ color: primaryColor, fontFamily: fontTitle }}
+                  style={{ color: titleColor, fontFamily: fontTitle }}
                 >
                   {config.title || 'Nossa HistÃ³ria'}
                 </h2>
-                <p className="text-base md:text-lg text-gray-700 mb-4 max-w-3xl mx-auto leading-relaxed whitespace-pre-wrap">
+                <p className="text-base md:text-lg mb-4 max-w-3xl mx-auto leading-relaxed whitespace-pre-wrap" style={{ color: captionColor }}>
                   {config.message || 'Escreva aqui uma mensagem especial para seus convidados. Conte sua histÃ³ria, compartilhe seus sonhos e torne este momento ainda mais especial.'}
                 </p>
                 {config.signature && (
-                  <p className="text-gray-600 italic mt-8 text-lg">{config.signature}</p>
+                  <p className="italic mt-8 text-lg" style={{ color: captionColor }}>{config.signature}</p>
                 )}
               </div>
             )}
@@ -244,7 +246,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
               <div className={`${sectionClass} p-12 md:p-16`}>
                 <h3 
                   className="text-2xl md:text-3xl text-center mb-10" 
-                  style={{ color: primaryColor, fontFamily: fontTitle }}
+                  style={{ color: titleColor, fontFamily: fontTitle }}
                 >
                   {config.title || 'Contagem Regressiva'}
                 </h3>
@@ -259,7 +261,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       <div className="text-4xl md:text-5xl font-bold mb-2" style={{ color: primaryColor }}>
                         {item.value}
                       </div>
-                      <div className="text-sm text-gray-600 uppercase tracking-wider">
+                      <div className="text-sm uppercase tracking-wider" style={{ color: captionColor }}>
                         {item.label}
                       </div>
                     </div>
@@ -305,7 +307,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {/* Messages Feed Block */}
             {block.type === 'messages' && (
               <div className={`${sectionClass} p-12 md:p-16`}>
-                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: primaryColor, fontFamily: fontTitle }}>
+                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: titleColor, fontFamily: fontTitle }}>
                   {config.title || 'Recados Especiais'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
@@ -325,10 +327,10 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-gray-900">{msg.name}</h4>
-                          <p className="text-xs text-gray-500">{msg.time}</p>
+                          <p className="text-xs" style={{ color: captionColor }}>{msg.time}</p>
                         </div>
                       </div>
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="leading-relaxed" style={{ color: captionColor }}>
                         {msg.message}
                       </p>
                     </Card>
@@ -340,7 +342,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {/* Gallery Block */}
             {block.type === 'gallery' && (
               <div className={`${sectionClass} p-12 md:p-16`}>
-                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: primaryColor, fontFamily: fontTitle }}>
+                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: titleColor, fontFamily: fontTitle }}>
                   {config.title || 'Galeria de Fotos'}
                 </h2>
                 {(config.images && config.images.length > 0) ? (
@@ -372,7 +374,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {/* Event Info Block */}
             {block.type === 'event-info' && (
               <div className={`${sectionClass} p-12 md:p-16`}>
-                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: primaryColor, fontFamily: fontTitle }}>
+                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: titleColor, fontFamily: fontTitle }}>
                   {config.title || 'InformaÃ§Ãµes do Evento'}
                 </h2>
                 <div className="max-w-3xl mx-auto space-y-6">
@@ -384,7 +386,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       <p className="font-medium text-base mb-2" style={{ color: captionColor }}>
                         Data e Hora
                       </p>
-                      <p className="text-gray-600 text-lg">
+                      <p className="text-lg" style={{ color: captionColor }}>
                         {config.datetime 
                           ? new Date(config.datetime).toLocaleString('pt-BR', { 
                               day: '2-digit', 
@@ -406,7 +408,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       <p className="font-medium text-base mb-2" style={{ color: captionColor }}>
                         {config.location || 'Local do Evento'}
                       </p>
-                      <p className="text-gray-600 mb-3">
+                      <p className="mb-3" style={{ color: captionColor }}>
                         {config.address || 'EndereÃ§o serÃ¡ informado em breve'}
                       </p>
                       {config.mapLink && (
@@ -415,7 +417,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-sm font-medium hover:underline"
-                          style={{ color: primaryColor }}
+                          style={{ color: captionColor }}
                         >
                           <Globe className="w-4 h-4" />
                           Ver no mapa
@@ -430,12 +432,12 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {block.type === 'map' && (
               <div className={`${sectionClass} p-10 md:p-14`}>
                 <div className="max-w-5xl mx-auto">
-                  <h2 className="text-3xl md:text-4xl mb-2" style={{ color: primaryColor, fontFamily: fontTitle }}>
+                  <h2 className="text-3xl md:text-4xl mb-2" style={{ color: titleColor, fontFamily: fontTitle }}>
                     {config.title || 'Como chegar'}
                   </h2>
-                  {config.subtitle && <p className="text-gray-600 mb-6">{config.subtitle}</p>}
+                  {config.subtitle && <p className="mb-6" style={{ color: captionColor }}>{config.subtitle}</p>}
                   {config.address && (
-                    <p className="text-gray-700 mb-4 flex items-center gap-2">
+                    <p className="mb-4 flex items-center gap-2" style={{ color: captionColor }}>
                       <MapPin className="w-4 h-4" /> {config.address}
                     </p>
                   )}
@@ -461,10 +463,10 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {block.type === 'music' && (
               <div className={`${sectionClass} p-10 md:p-14`}>
                 <div className="max-w-4xl mx-auto">
-                  <h2 className="text-3xl md:text-4xl mb-2" style={{ color: primaryColor, fontFamily: fontTitle }}>
+                  <h2 className="text-3xl md:text-4xl mb-2" style={{ color: titleColor, fontFamily: fontTitle }}>
                     {config.title || 'Nossa trilha sonora'}
                   </h2>
-                  {config.description && <p className="text-gray-600 mb-6">{config.description}</p>}
+                  {config.description && <p className="mb-6" style={{ color: captionColor }}>{config.description}</p>}
                   {config.spotifyUrl ? (
                     <iframe
                       src={toSpotifyEmbedUrl(config.spotifyUrl)}
@@ -485,7 +487,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       className="rounded-2xl"
                     />
                   ) : (
-                    <div className="h-36 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-gray-500 gap-2">
+                    <div className="h-36 rounded-2xl bg-white border border-gray-200 flex items-center justify-center gap-2" style={{ color: captionColor }}>
                       <Music2 className="w-4 h-4" /> Adicione Spotify ou YouTube
                     </div>
                   )}
@@ -496,10 +498,10 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {block.type === 'video' && (
               <div className={`${sectionClass} p-10 md:p-14`}>
                 <div className="max-w-5xl mx-auto">
-                  <h2 className="text-3xl md:text-4xl mb-2" style={{ color: primaryColor, fontFamily: fontTitle }}>
+                  <h2 className="text-3xl md:text-4xl mb-2" style={{ color: titleColor, fontFamily: fontTitle }}>
                     {config.title || 'Nosso video'}
                   </h2>
-                  {config.description && <p className="text-gray-600 mb-6">{config.description}</p>}
+                  {config.description && <p className="mb-6" style={{ color: captionColor }}>{config.description}</p>}
                   {config.videoUrl ? (
                     <iframe
                       src={toYoutubeEmbedUrl(config.videoUrl)}
@@ -511,7 +513,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       className="rounded-2xl border border-gray-200"
                     />
                   ) : (
-                    <div className="h-[280px] rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 gap-2">
+                    <div className="h-[280px] rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center gap-2" style={{ color: captionColor }}>
                       <Video className="w-4 h-4" /> Adicione URL do video
                     </div>
                   )}

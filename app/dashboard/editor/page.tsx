@@ -30,11 +30,13 @@ const BLOCK_TYPES: Array<{ id: BlockTypeId; name: string; icon: any }> = [
 
 type Theme = {
   primary_color?: string;
-  secondary_color?: string;
+  title_color?: string;
   caption_color?: string;
   divider_color?: string;
   divider_enabled?: boolean;
   divider_style?: 'dot' | 'line' | 'ornament';
+  blend_color?: string;
+  background_overlay_opacity?: number;
   background_color?: string;
   background_image?: string;
   font_title?: string;
@@ -101,11 +103,13 @@ export default function PageBuilder() {
   const [pageBlocks, setPageBlocks] = useState<PageBlock[]>([]);
   const [theme, setTheme] = useState<Theme>({
     primary_color: '#C86E52',
-    secondary_color: '#8E3D2C',
+    title_color: '#8E3D2C',
     caption_color: '#5F4A41',
     divider_color: '#8E3D2C',
     divider_enabled: true,
     divider_style: 'dot',
+    blend_color: '#8E3D2C',
+    background_overlay_opacity: 50,
     background_color: '#FAF4EF',
     font_title: 'Cormorant Garamond',
     font_body: 'Inter',
@@ -438,7 +442,7 @@ export default function PageBuilder() {
 
             <TabsContent value="theme" className="space-y-6">
               <div>
-                <Label className="text-sm font-medium mb-2 block">Cor Principal</Label>
+                <Label className="text-sm font-medium mb-2 block">Cor dos ícones</Label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={theme.primary_color || '#C86E52'} onChange={(e) => updateTheme({ ...theme, primary_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
                   <Input value={theme.primary_color || '#C86E52'} onChange={(e) => updateTheme({ ...theme, primary_color: e.target.value })} className="flex-1" />
@@ -446,10 +450,10 @@ export default function PageBuilder() {
               </div>
 
               <div>
-                <Label className="text-sm font-medium mb-2 block">Cor Secundária</Label>
+                <Label className="text-sm font-medium mb-2 block">Cor dos títulos</Label>
                 <div className="flex items-center gap-2">
-                  <input type="color" value={theme.secondary_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, secondary_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
-                  <Input value={theme.secondary_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, secondary_color: e.target.value })} className="flex-1" />
+                  <input type="color" value={theme.title_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, title_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
+                  <Input value={theme.title_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, title_color: e.target.value })} className="flex-1" />
                 </div>
               </div>
 
@@ -472,8 +476,8 @@ export default function PageBuilder() {
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Cor do divisor</Label>
                   <div className="flex items-center gap-2">
-                    <input type="color" value={theme.divider_color || theme.secondary_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, divider_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
-                    <Input value={theme.divider_color || theme.secondary_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, divider_color: e.target.value })} className="flex-1" />
+                    <input type="color" value={theme.divider_color || theme.title_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, divider_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
+                    <Input value={theme.divider_color || theme.title_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, divider_color: e.target.value })} className="flex-1" />
                   </div>
                 </div>
                 <div>
@@ -486,6 +490,14 @@ export default function PageBuilder() {
                       <SelectItem value="ornament">Ornamental</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Cor do esfumado (Hero para blocos)</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={theme.blend_color || theme.title_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, blend_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
+                  <Input value={theme.blend_color || theme.title_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, blend_color: e.target.value })} className="flex-1" />
                 </div>
               </div>
 
@@ -545,6 +557,24 @@ export default function PageBuilder() {
                 )}
                 <p className="mt-2 text-xs text-gray-500">
                   A imagem do tema vale para todos os blocos, exceto o Hero. Se remover, fica a cor de fundo.
+                </p>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">
+                  Transparência da imagem de fundo ({Math.min(100, Math.max(0, Number(theme.background_overlay_opacity ?? 50)))}%)
+                </Label>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={Math.min(100, Math.max(0, Number(theme.background_overlay_opacity ?? 50)))}
+                  onChange={(e) => updateTheme({ ...theme, background_overlay_opacity: Number(e.target.value) })}
+                  className="w-full"
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  0% mostra mais a imagem. 100% mostra mais a cor de fundo.
                 </p>
               </div>
 

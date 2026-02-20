@@ -341,25 +341,6 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             </div>
           </div>
 
-          <div>
-            <Label className="text-sm font-medium">Layout</Label>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <Button
-                variant={config.layout === 'grid' ? 'default' : 'outline'}
-                onClick={() => handleChange('layout', 'grid')}
-                className="w-full"
-              >
-                Grade
-              </Button>
-              <Button
-                variant={config.layout === 'masonry' ? 'default' : 'outline'}
-                onClick={() => handleChange('layout', 'masonry')}
-                className="w-full"
-              >
-                Mosaico
-              </Button>
-            </div>
-          </div>
         </>
       )}
 
