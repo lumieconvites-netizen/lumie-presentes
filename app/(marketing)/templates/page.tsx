@@ -158,7 +158,7 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
                           <Link href={`/templates/${encodeURIComponent(template.slug)}`}>Ver</Link>
                         </Button>
                         <Button asChild className="bg-[#C65A3A] hover:bg-[#8E3D2C] text-white">
-                          <Link href={chooseHref(template.slug)}>Escolher</Link>
+                          <Link href={chooseHref(template.slug)}>Usar modelo</Link>
                         </Button>
                       </div>
                     </div>
