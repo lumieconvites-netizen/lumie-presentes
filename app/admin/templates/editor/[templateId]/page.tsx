@@ -36,6 +36,11 @@ const defaultTheme = {
   background_color: '#FAF4EF',
   title_color: '#8E3D2C',
   caption_color: '#5F4A41',
+  divider_color: '#8E3D2C',
+  divider_enabled: true,
+  divider_style: 'dot',
+  background_overlay_opacity: 50,
+  background_image: '',
   font_title: 'Playfair Display',
   font_body: 'Inter',
 };
@@ -165,6 +170,7 @@ export default function AdminTemplateEditorPage() {
   const [activeTab, setActiveTab] = useState<'blocks' | 'theme' | 'header' | 'template'>('blocks');
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [uploadingGiftIndex, setUploadingGiftIndex] = useState<number | null>(null);
+  const [uploadingThemeBg, setUploadingThemeBg] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -397,6 +403,20 @@ export default function AdminTemplateEditorPage() {
     }
   }
 
+  async function handleThemeBackgroundUpload(file?: File | null) {
+    if (!file) return;
+    try {
+      setUploadingThemeBg(true);
+      const url = await uploadFile(file, 'template-theme-background');
+      setTheme((prev: any) => ({ ...prev, background_image: url }));
+      setDirty(true);
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao enviar imagem de fundo');
+    } finally {
+      setUploadingThemeBg(false);
+    }
+  }
+
   if (loading) return <div className="p-6">Carregando editor de template...</div>;
 
   return (
@@ -518,12 +538,86 @@ export default function AdminTemplateEditorPage() {
                   <Input value={theme.caption_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, caption_color: e.target.value })); setDirty(true); }} />
                 </div>
               </div>
+              <div className="rounded-lg border border-[#ead9cd] bg-white p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Exibir divisores entre blocos</Label>
+                  <Switch
+                    checked={theme.divider_enabled !== false}
+                    onCheckedChange={(checked) => { setTheme((prev: any) => ({ ...prev, divider_enabled: checked })); setDirty(true); }}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Cor do divisor</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={theme.divider_color || '#8E3D2C'}
+                      onChange={(e) => { setTheme((prev: any) => ({ ...prev, divider_color: e.target.value })); setDirty(true); }}
+                      className="h-9 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
+                    />
+                    <Input value={theme.divider_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, divider_color: e.target.value })); setDirty(true); }} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Estilo do divisor</Label>
+                  <Select value={theme.divider_style || 'dot'} onValueChange={(value) => { setTheme((prev: any) => ({ ...prev, divider_style: value })); setDirty(true); }}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="line">Linha simples</SelectItem>
+                      <SelectItem value="dot">Ponto</SelectItem>
+                      <SelectItem value="ornament">Ornamento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               <div className="space-y-1">
                 <Label>Cor de fundo</Label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={theme.background_color || '#FAF4EF'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_color: e.target.value })); setDirty(true); }} className="h-9 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer" />
                   <Input value={theme.background_color || ''} onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_color: e.target.value })); setDirty(true); }} />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Imagem de fundo (blocos, exceto hero)</Label>
+                {theme.background_image ? (
+                  <div className="space-y-2">
+                    <img src={theme.background_image} alt="Background do tema" className="w-full h-24 rounded-lg object-cover border border-[#ead9cd]" />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setTheme((prev: any) => ({ ...prev, background_image: '' })); setDirty(true); }}
+                      >
+                        Remover imagem
+                      </Button>
+                      <label className="inline-flex">
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleThemeBackgroundUpload(e.target.files?.[0] || null)} disabled={uploadingThemeBg} />
+                        <span className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-medium cursor-pointer">
+                          {uploadingThemeBg ? 'Enviando...' : 'Trocar imagem'}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="mt-1 flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-[#d8c6b7] rounded-lg cursor-pointer hover:bg-[#fff8f2]">
+                    <Upload className="w-5 h-5 text-gray-400 mb-1" />
+                    <span className="text-xs text-gray-500">{uploadingThemeBg ? 'Enviando...' : 'Enviar imagem'}</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleThemeBackgroundUpload(e.target.files?.[0] || null)} disabled={uploadingThemeBg} />
+                  </label>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label>TransparÃªncia da imagem de fundo ({Math.min(100, Math.max(0, Number(theme.background_overlay_opacity ?? 50)))}%)</Label>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={Math.min(100, Math.max(0, Number(theme.background_overlay_opacity ?? 50)))}
+                  onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_overlay_opacity: Number(e.target.value) })); setDirty(true); }}
+                  className="w-full"
+                />
               </div>
               <div className="space-y-1">
                 <Label>Fonte do tÃ­tulo</Label>
