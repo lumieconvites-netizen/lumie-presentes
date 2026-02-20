@@ -358,7 +358,13 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                   <p className="text-base md:text-lg mb-4 max-w-3xl mx-auto leading-relaxed whitespace-pre-wrap" style={{ color: captionColor }}>
                     {config.message || 'Escreva aqui uma mensagem especial para seus convidados.'}
                   </p>
-                  {config.signature && <p className={`italic mt-8 text-lg ${signatureClass}`} style={{ color: captionColor }}>{config.signature}</p>}
+                  {config.signature && (
+                    <div className="max-w-3xl mx-auto">
+                      <p className={`italic mt-8 text-lg ${signatureClass}`} style={{ color: captionColor }}>
+                        {config.signature}
+                      </p>
+                    </div>
+                  )}
                     </>
                   );
                 })()}

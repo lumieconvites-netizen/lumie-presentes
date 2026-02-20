@@ -315,7 +315,11 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                   {config.message || 'Escreva aqui uma mensagem especial para seus convidados. Conte sua histÃ³ria, compartilhe seus sonhos e torne este momento ainda mais especial.'}
                 </p>
                 {config.signature && (
-                  <p className={`italic mt-8 text-lg ${signatureClass}`} style={{ color: captionColor }}>{config.signature}</p>
+                  <div className="max-w-3xl mx-auto">
+                    <p className={`italic mt-8 text-lg ${signatureClass}`} style={{ color: captionColor }}>
+                      {config.signature}
+                    </p>
+                  </div>
                 )}
                     </>
                   );
