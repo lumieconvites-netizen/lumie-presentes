@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { getTemplatePresetBySlug } from "@/lib/template-presets";
 import { ensureDefaultReferralCodesForUser, resolveReferralForSignup } from "@/lib/referrals";
 import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
+import { resolveSignupTemplateBySlug } from "@/lib/template-selection";
 
 const verifySchema = z.object({
   email: z.string().email("Email invalido"),
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Cadastro invalido. Refaça o cadastro." }, { status: 400 });
     }
 
-    const selectedTemplate = getTemplatePresetBySlug(verification.templateSlug);
+    const selectedTemplate = await resolveSignupTemplateBySlug(verification.templateSlug);
     const requestedRole = verification.requestedRole === "PARTNER" ? "PARTNER" : "CLIENT";
     const referral = await resolveReferralForSignup({
       requestedRole,
@@ -92,6 +92,7 @@ export async function POST(request: Request) {
             data: {
               title: defaultTitle,
               description: defaultDescription,
+              ...(selectedTemplate?.templateId ? { templateId: selectedTemplate.templateId } : {}),
               ...(isLegacyGiftListSlug(existingGiftList.slug) ? { slug: nextSlug } : {}),
             },
           })
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
               slug: nextSlug,
               title: defaultTitle,
               description: defaultDescription,
+              ...(selectedTemplate?.templateId ? { templateId: selectedTemplate.templateId } : {}),
             },
           });
 

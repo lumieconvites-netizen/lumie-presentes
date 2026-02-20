@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { PageBlock } from '@/contexts/user-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,6 +98,9 @@ function mapGift(gift: any) {
 }
 
 export default function PageBuilder() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const templateSlugParam = searchParams.get('template') || '';
   const [giftList, setGiftList] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [pageBlocks, setPageBlocks] = useState<PageBlock[]>([]);
@@ -170,6 +174,28 @@ export default function PageBuilder() {
         setPageBlocks(cleanBlocks);
         setTheme((layout?.theme ?? {}) as Theme);
         setListGifts(Array.isArray(gifts) ? gifts.map(mapGift) : []);
+
+        if (templateSlugParam) {
+          try {
+            const templateRes = await fetch(`/api/templates/by-slug/${encodeURIComponent(templateSlugParam)}`, {
+              cache: 'no-store',
+            });
+            const templateJson = await templateRes.json();
+            if (templateRes.ok && templateJson?.template) {
+              const selected = templateJson.template;
+              const nextBlocks = sanitizeBlocks(Array.isArray(selected.blocks) ? selected.blocks : []);
+              const nextTheme = (selected.theme ?? {}) as Theme;
+
+              setPageBlocks(nextBlocks);
+              setTheme(nextTheme);
+              await saveLayout(nextBlocks, nextTheme);
+            }
+          } catch (error) {
+            console.error('Erro ao aplicar template por URL', error);
+          } finally {
+            router.replace('/dashboard/editor');
+          }
+        }
 
         if (Array.isArray(layout?.blocks) && cleanBlocks.length !== layout.blocks.length) {
           try {

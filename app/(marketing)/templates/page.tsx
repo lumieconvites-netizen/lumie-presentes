@@ -1,21 +1,43 @@
-﻿import Link from 'next/link';
-import { TEMPLATE_PRESETS } from '@/lib/template-presets';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { Button } from '@/components/ui/button';
+import { TEMPLATE_PRESETS } from '@/lib/template-presets';
+import { isCategoryMetaTemplate, normalizeCategorySlug, parseCategoryMarkerName, prettyCategoryName } from '@/lib/template-categories';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 type TemplateCard = {
   slug: string;
   name: string;
   category: string;
+  categoryLabel: string;
   description: string;
   preview: string;
+};
+
+type TemplatesPageProps = {
+  searchParams?: { categoria?: string };
 };
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export default async function TemplatesPage() {
-  const dbTemplates = await prisma.template.findMany({
+function buildPreview(template: { thumbnail?: string | null; defaultTheme?: any }) {
+  const theme = (template.defaultTheme as any) || {};
+  if (typeof template.thumbnail === 'string' && template.thumbnail) {
+    return `url(${template.thumbnail}) center / cover no-repeat`;
+  }
+  return `linear-gradient(135deg, ${theme.secondary_color || '#8E3D2C'}, ${theme.primary_color || '#C65A3A'})`;
+}
+
+export default async function TemplatesPage({ searchParams }: TemplatesPageProps) {
+  const session = await getServerSession(authOptions);
+  const chooseHref = (slug: string) =>
+    session?.user?.id ? `/dashboard/editor?template=${encodeURIComponent(slug)}` : `/auth/cadastro?template=${encodeURIComponent(slug)}`;
+
+  const selectedCategory = normalizeCategorySlug(searchParams?.categoria || '');
+
+  const rawTemplates = await prisma.template.findMany({
     where: { isActive: true },
     orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
     select: {
@@ -28,61 +50,141 @@ export default async function TemplatesPage() {
     },
   });
 
+  const dbTemplates = rawTemplates.filter((template) => !isCategoryMetaTemplate(template));
+
   const templateCards: TemplateCard[] =
     dbTemplates.length > 0
       ? dbTemplates.map((template) => {
-          const theme = (template.defaultTheme as any) || {};
-          const preview =
-            typeof template.thumbnail === 'string' && template.thumbnail
-              ? `url(${template.thumbnail}) center / cover no-repeat`
-              : `linear-gradient(135deg, ${theme.secondary_color || '#8E3D2C'}, ${theme.primary_color || '#C65A3A'})`;
-
+          const category = normalizeCategorySlug(template.category || 'geral') || 'geral';
           return {
             slug: template.slug,
             name: template.name,
-            category: template.category || 'geral',
+            category,
+            categoryLabel: prettyCategoryName(category),
             description: template.description || 'Template pronto para sua lista de presentes.',
-            preview,
+            preview: buildPreview(template),
           };
         })
       : TEMPLATE_PRESETS.map((template) => ({
           slug: template.slug,
           name: template.name,
-          category: template.category,
+          category: normalizeCategorySlug(template.category) || 'geral',
+          categoryLabel: prettyCategoryName(template.category),
           description: template.description,
           preview: template.preview,
         }));
+
+  const markerTemplates = await prisma.template.findMany({
+    where: {
+      description: { startsWith: '__CATEGORY_MARKER__:' },
+    },
+    select: {
+      category: true,
+      description: true,
+    },
+  });
+
+  const categoryNameMap = new Map<string, string>();
+  for (const marker of markerTemplates) {
+    const slug = normalizeCategorySlug(marker.category || '');
+    if (!slug) continue;
+    categoryNameMap.set(slug, parseCategoryMarkerName(marker.description, prettyCategoryName(slug)));
+  }
+
+  const grouped = new Map<string, TemplateCard[]>();
+  for (const card of templateCards) {
+    const arr = grouped.get(card.category) || [];
+    arr.push(card);
+    grouped.set(card.category, arr);
+  }
+
+  const categories = Array.from(grouped.entries())
+    .map(([slug, cards]) => ({
+      slug,
+      name: categoryNameMap.get(slug) || cards[0]?.categoryLabel || prettyCategoryName(slug),
+      count: cards.length,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+
+  // Include categories created in admin even when there are no public templates yet.
+  for (const marker of markerTemplates) {
+    const slug = normalizeCategorySlug(marker.category || '');
+    if (!slug) continue;
+    if (!categories.some((category) => category.slug === slug)) {
+      categories.push({
+        slug,
+        name: categoryNameMap.get(slug) || prettyCategoryName(slug),
+        count: 0,
+      });
+    }
+  }
+  categories.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+
+  const visibleCategories = selectedCategory
+    ? categories.filter((category) => category.slug === selectedCategory)
+    : categories;
 
   return (
     <div className="min-h-screen bg-[#FAF4EF] py-12 px-6">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="text-center space-y-3">
-          <h1 className="font-display text-5xl text-[#8E3D2C]">Escolha seu Template</h1>
-          <p className="text-gray-600">{templateCards.length} opcoes prontas para voce comecar e personalizar em minutos.</p>
+          <h1 className="font-display text-5xl text-[#8E3D2C]">Templates por Tipo de Evento</h1>
+          <p className="text-gray-600">Escolha o tipo e depois selecione o template ideal para sua lista.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templateCards.map((template) => (
-            <article key={template.slug} className="bg-white border rounded-2xl overflow-hidden shadow-sm">
-              <div className="h-40" style={{ background: template.preview }} />
-              <div className="p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-lg">{template.name}</h2>
-                  <span className="text-xs px-2 py-1 rounded-full bg-[#F1E3D6] text-[#8E3D2C]">{template.category}</span>
-                </div>
-                <p className="text-sm text-gray-600 min-h-[40px]">{template.description}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Link
+            href="/templates"
+            className={`rounded-2xl border p-4 bg-white ${!selectedCategory ? 'border-[#c65a3a] ring-2 ring-[#f1d8cc]' : 'border-[#ead9cd]'}`}
+          >
+            <p className="font-semibold text-[#8E3D2C]">Todos</p>
+            <p className="text-sm text-gray-500">{templateCards.length} templates</p>
+          </Link>
 
-                <div className="flex gap-2">
-                  <Button asChild className="flex-1 bg-[#C65A3A] hover:bg-[#8E3D2C] text-white">
-                    <Link href={`/auth/cadastro?template=${encodeURIComponent(template.slug)}`}>Escolher template</Link>
-                  </Button>
-                </div>
-              </div>
-            </article>
+          {categories.map((category) => (
+            <Link
+              key={category.slug}
+              href={`/templates?categoria=${encodeURIComponent(category.slug)}`}
+              className={`rounded-2xl border p-4 bg-white ${selectedCategory === category.slug ? 'border-[#c65a3a] ring-2 ring-[#f1d8cc]' : 'border-[#ead9cd]'}`}
+            >
+              <p className="font-semibold text-[#8E3D2C]">{category.name}</p>
+              <p className="text-sm text-gray-500">{category.count} templates</p>
+            </Link>
           ))}
         </div>
+
+        {visibleCategories.map((category) => {
+          const cards = grouped.get(category.slug) || [];
+          return (
+            <section key={category.slug} className="space-y-4">
+              <h2 className="font-display text-3xl text-[#8E3D2C]">{category.name}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {cards.map((template) => (
+                  <article key={template.slug} className="bg-white border rounded-2xl overflow-hidden shadow-sm">
+                    <div className="h-40" style={{ background: template.preview }} />
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-lg">{template.name}</h3>
+                        <span className="text-xs px-2 py-1 rounded-full bg-[#F1E3D6] text-[#8E3D2C]">{category.name}</span>
+                      </div>
+                      <p className="text-sm text-gray-600 min-h-[40px]">{template.description}</p>
+
+                      <Button asChild className="w-full bg-[#C65A3A] hover:bg-[#8E3D2C] text-white">
+                        <Link href={chooseHref(template.slug)}>Escolher template</Link>
+                      </Button>
+                    </div>
+                  </article>
+                ))}
+                {cards.length === 0 ? (
+                  <div className="md:col-span-2 lg:col-span-3 rounded-2xl border border-dashed border-[#d9b9a4] bg-white p-6 text-sm text-gray-600">
+                    Em breve novos templates para esta categoria.
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
   );
 }
-

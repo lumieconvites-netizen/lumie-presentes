@@ -1,7 +1,8 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { isCategoryMetaTemplate, normalizeCategorySlug } from "@/lib/template-categories";
 
 const templateSchema = z.object({
   name: z.string().min(2).max(120),
@@ -18,14 +19,21 @@ const templateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await requireAdminSession();
   if (!session) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
-  const templates = await prisma.template.findMany({
+  const { searchParams } = new URL(request.url);
+  const category = normalizeCategorySlug(searchParams.get("category") || "");
+
+  const rawTemplates = await prisma.template.findMany({
+    where: {
+      ...(category ? { category } : {}),
+    },
     orderBy: [{ isActive: "desc" }, { order: "asc" }, { createdAt: "desc" }],
   });
 
+  const templates = rawTemplates.filter((template) => !isCategoryMetaTemplate(template));
   return NextResponse.json({ templates });
 }
 
@@ -36,6 +44,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const parsed = templateSchema.parse(body);
+    const categorySlug = normalizeCategorySlug(parsed.category);
+    if (!categorySlug) {
+      return NextResponse.json({ error: "Categoria invalida." }, { status: 400 });
+    }
 
     const existing = await prisma.template.findUnique({ where: { slug: parsed.slug } });
     if (existing) {
@@ -49,7 +61,7 @@ export async function POST(request: Request) {
         name: parsed.name.trim(),
         slug: parsed.slug.trim().toLowerCase(),
         description: parsed.description?.trim() || null,
-        category: parsed.category.trim().toLowerCase(),
+        category: categorySlug,
         thumbnail: parsed.thumbnail?.trim() || null,
         defaultBlocks: parsed.defaultBlocks,
         defaultTheme: parsed.defaultTheme,
@@ -66,4 +78,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Erro ao criar template" }, { status: 500 });
   }
 }
-

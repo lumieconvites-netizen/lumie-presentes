@@ -1,17 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-
-type AdminTemplate = {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-  isActive: boolean;
-};
+import { Label } from '@/components/ui/label';
 
 const slugify = (v: string) =>
   v
@@ -23,63 +18,93 @@ const slugify = (v: string) =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 120);
 
+type AdminTemplate = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  isActive: boolean;
+};
+
+type CategoryItem = {
+  slug: string;
+  name: string;
+  templatesCount: number;
+  activeTemplatesCount: number;
+};
+
 export default function AdminTemplatesPage() {
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get('category') || 'all';
+
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [templates, setTemplates] = useState<AdminTemplate[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [q, setQ] = useState('');
-  const [form, setForm] = useState({ name: '', slug: '', category: 'casamento' });
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [categoryForm, setCategoryForm] = useState({ name: '', slug: '' });
 
   const filteredTemplates = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return templates;
-    return templates.filter(
-      (template) =>
+    return templates.filter((template) => {
+      if (!term) return true;
+      return (
         template.name.toLowerCase().includes(term) ||
         template.slug.toLowerCase().includes(term) ||
         template.category.toLowerCase().includes(term)
-    );
+      );
+    });
   }, [q, templates]);
 
-  async function loadTemplates() {
-    const res = await fetch('/api/admin/templates', { cache: 'no-store' });
+  async function loadCategories() {
+    const res = await fetch('/api/admin/template-categories', { cache: 'no-store' });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Erro ao carregar categorias');
+    setCategories(json.categories || []);
+  }
+
+  async function loadTemplates(category?: string) {
+    const categorySlug = category || selectedCategory;
+    const query = categorySlug !== 'all' ? `?category=${encodeURIComponent(categorySlug)}` : '';
+    const res = await fetch(`/api/admin/templates${query}`, { cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) throw new Error(json?.error || 'Erro ao carregar templates');
     setTemplates(json.templates || []);
   }
 
-  async function createTemplate() {
-    const slug = slugify(form.slug || form.name);
-    const res = await fetch('/api/admin/templates', {
+  async function createCategory() {
+    if (!categoryForm.name.trim()) {
+      alert('Informe o nome do tipo de evento.');
+      return;
+    }
+
+    const res = await fetch('/api/admin/template-categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: form.name,
-        slug,
-        category: form.category,
-        description: null,
-        thumbnail: null,
-        defaultTheme: {
-          primary_color: '#C65A3A',
-          secondary_color: '#8E3D2C',
-          background_color: '#FAF4EF',
-          font_title: 'Playfair Display',
-          font_body: 'Inter',
-        },
-        defaultBlocks: [
-          {
-            id: 'hero-1',
-            type: 'hero',
-            order: 1,
-            enabled: true,
-            config: { title: form.name || 'Novo template', subtitle: 'Seu evento especial', backgroundColor: '#8E3D2C' },
-          },
-        ],
+        name: categoryForm.name,
+        slug: categoryForm.slug || slugify(categoryForm.name),
       }),
     });
     const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || 'Erro ao criar template');
-    setForm({ name: '', slug: '', category: 'casamento' });
-    await loadTemplates();
+    if (!res.ok) throw new Error(json?.error || 'Erro ao criar tipo de evento');
+
+    setCategoryForm({ name: '', slug: '' });
+    const nextCategory = json.slug || 'all';
+    await loadCategories();
+    setSelectedCategory(nextCategory);
+    await loadTemplates(nextCategory);
+  }
+
+  async function deleteCategory(slug: string) {
+    if (!window.confirm('Excluir tipo de evento? So e permitido se nao tiver templates.')) return;
+    const res = await fetch(`/api/admin/template-categories/${slug}`, { method: 'DELETE' });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Erro ao excluir categoria');
+
+    await loadCategories();
+    setSelectedCategory('all');
+    await loadTemplates('all');
   }
 
   async function patchTemplate(id: string, payload: any) {
@@ -93,6 +118,7 @@ export default function AdminTemplatesPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || 'Erro ao atualizar template');
       await loadTemplates();
+      await loadCategories();
     } finally {
       setBusyId(null);
     }
@@ -105,35 +131,110 @@ export default function AdminTemplatesPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || 'Erro ao excluir template');
       await loadTemplates();
+      await loadCategories();
     } finally {
       setBusyId(null);
     }
   }
 
   useEffect(() => {
-    loadTemplates().catch((error) => alert(error.message));
+    let cancelled = false;
+    (async () => {
+      try {
+        await Promise.all([loadCategories(), loadTemplates(initialCategory)]);
+      } catch (error: any) {
+        if (!cancelled) alert(error?.message || 'Erro ao carregar templates');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    loadTemplates().catch((error) => alert(error.message));
+  }, [selectedCategory]);
+
+  const selectedCategoryName =
+    selectedCategory === 'all' ? 'Todos os tipos' : categories.find((c) => c.slug === selectedCategory)?.name || selectedCategory;
 
   return (
     <div className="space-y-6">
       <Card className="border-[#e7d8cb]">
         <CardHeader>
-          <CardTitle>Criar template</CardTitle>
+          <CardTitle>Tipos de evento</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-2">
-          <Input placeholder="Nome do template" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
-          <Input placeholder="Slug (opcional)" value={form.slug} onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))} />
-          <Input placeholder="Categoria" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
-          <Button onClick={() => createTemplate().catch((error) => alert(error.message))}>Criar e publicar</Button>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <Label>Nome do tipo</Label>
+              <Input placeholder="Ex: 15 anos" value={categoryForm.name} onChange={(e) => setCategoryForm((prev) => ({ ...prev, name: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label>Slug (opcional)</Label>
+              <Input placeholder="Ex: 15-anos" value={categoryForm.slug} onChange={(e) => setCategoryForm((prev) => ({ ...prev, slug: e.target.value }))} />
+            </div>
+            <div className="flex items-end">
+              <Button onClick={() => createCategory().catch((error) => alert(error.message))}>Criar tipo de evento</Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('all')}
+              className={`rounded-xl border px-4 py-3 text-left ${selectedCategory === 'all' ? 'bg-[#fff4ea] border-[#d9b9a4]' : 'bg-white border-[#ead9cd]'}`}
+            >
+              <p className="font-medium">Todos</p>
+              <p className="text-xs text-gray-500">{categories.reduce((acc, c) => acc + c.templatesCount, 0)} templates</p>
+            </button>
+
+            {categories.map((category) => (
+              <div
+                key={category.slug}
+                className={`rounded-xl border px-4 py-3 ${selectedCategory === category.slug ? 'bg-[#fff4ea] border-[#d9b9a4]' : 'bg-white border-[#ead9cd]'}`}
+              >
+                <button type="button" className="text-left w-full" onClick={() => setSelectedCategory(category.slug)}>
+                  <p className="font-medium">{category.name}</p>
+                  <p className="text-xs text-gray-500">{category.templatesCount} templates ({category.activeTemplatesCount} publicados)</p>
+                </button>
+                <div className="mt-2 flex gap-1">
+                  <Button size="sm" asChild>
+                    <Link href={`/admin/templates/editor/new?category=${encodeURIComponent(category.slug)}`}>Criar template</Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => deleteCategory(category.slug).catch((error) => alert(error.message))}
+                  >
+                    Excluir tipo
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
       <Card className="border-[#e7d8cb]">
         <CardHeader>
-          <CardTitle>Templates</CardTitle>
+          <CardTitle>Templates - {selectedCategoryName}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Input placeholder="Buscar por nome, slug ou categoria" value={q} onChange={(e) => setQ(e.target.value)} />
+          <div className="flex flex-wrap gap-2">
+            <Input
+              placeholder="Buscar por nome, slug ou categoria"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="max-w-md"
+            />
+            <Button asChild>
+              <Link href={`/admin/templates/editor/new${selectedCategory !== 'all' ? `?category=${encodeURIComponent(selectedCategory)}` : ''}`}>
+                Criar template
+              </Link>
+            </Button>
+          </div>
+
           <div className="overflow-auto rounded-lg border">
             <table className="w-full text-sm">
               <thead className="bg-[#faf3ee]">
@@ -152,9 +253,12 @@ export default function AdminTemplatesPage() {
                       <p className="text-xs text-gray-500">/{template.slug}</p>
                     </td>
                     <td className="p-2">{template.category}</td>
-                    <td className="p-2">{template.isActive ? 'Ativo' : 'Inativo'}</td>
+                    <td className="p-2">{template.isActive ? 'Publicado' : 'Rascunho'}</td>
                     <td className="p-2">
                       <div className="flex flex-wrap gap-1">
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/admin/templates/editor/${template.id}`}>Editar</Link>
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -183,7 +287,7 @@ export default function AdminTemplatesPage() {
                 {filteredTemplates.length === 0 ? (
                   <tr>
                     <td className="p-3 text-sm text-gray-500" colSpan={4}>
-                      Nenhum template encontrado.
+                      Nenhum template encontrado para esse tipo de evento.
                     </td>
                   </tr>
                 ) : null}

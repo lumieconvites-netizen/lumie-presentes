@@ -1,7 +1,8 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { isCategoryMetaTemplate, normalizeCategorySlug } from "@/lib/template-categories";
 
 const patchSchema = z.object({
   name: z.string().min(2).max(120).optional(),
@@ -19,6 +20,19 @@ const patchSchema = z.object({
   isActive: z.boolean().optional(),
   order: z.number().int().min(0).max(9999).optional(),
 });
+
+export async function GET(_request: Request, { params }: { params: { id: string } }) {
+  const session = await requireAdminSession();
+  if (!session) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+
+  const template = await prisma.template.findUnique({ where: { id: params.id } });
+  if (!template) return NextResponse.json({ error: "Template nao encontrado" }, { status: 404 });
+  if (isCategoryMetaTemplate(template)) {
+    return NextResponse.json({ error: "Template nao encontrado" }, { status: 404 });
+  }
+
+  return NextResponse.json({ template });
+}
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const session = await requireAdminSession();
@@ -39,13 +53,22 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
     }
 
+    const current = await prisma.template.findUnique({ where: { id: params.id } });
+    if (!current || isCategoryMetaTemplate(current)) {
+      return NextResponse.json({ error: "Template nao encontrado" }, { status: 404 });
+    }
+
+    if (parsed.category && !normalizeCategorySlug(parsed.category)) {
+      return NextResponse.json({ error: "Categoria invalida." }, { status: 400 });
+    }
+
     const updated = await prisma.template.update({
       where: { id: params.id },
       data: {
         ...(parsed.name ? { name: parsed.name.trim() } : {}),
         ...(parsed.slug ? { slug: parsed.slug.trim().toLowerCase() } : {}),
         ...(typeof parsed.description !== "undefined" ? { description: parsed.description?.trim() || null } : {}),
-        ...(parsed.category ? { category: parsed.category.trim().toLowerCase() } : {}),
+        ...(parsed.category ? { category: normalizeCategorySlug(parsed.category) } : {}),
         ...(typeof parsed.thumbnail !== "undefined" ? { thumbnail: parsed.thumbnail?.trim() || null } : {}),
         ...(typeof parsed.defaultBlocks !== "undefined" ? { defaultBlocks: parsed.defaultBlocks } : {}),
         ...(typeof parsed.defaultTheme !== "undefined" ? { defaultTheme: parsed.defaultTheme } : {}),
@@ -68,6 +91,11 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
   if (!session) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
   try {
+    const current = await prisma.template.findUnique({ where: { id: params.id } });
+    if (!current || isCategoryMetaTemplate(current)) {
+      return NextResponse.json({ error: "Template nao encontrado" }, { status: 404 });
+    }
+
     const linked = await prisma.giftList.count({ where: { templateId: params.id } });
     if (linked > 0) {
       return NextResponse.json({ error: "Template em uso por listas, nao pode excluir." }, { status: 400 });
@@ -79,4 +107,3 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     return NextResponse.json({ error: "Erro ao excluir template" }, { status: 500 });
   }
 }
-
