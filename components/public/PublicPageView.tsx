@@ -70,7 +70,6 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
   const dividerColor = theme.divider_color || titleColor;
   const dividerEnabled = theme.divider_enabled !== false;
   const dividerStyle = theme.divider_style || 'dot';
-  const blendColor = theme.blend_color || dividerColor;
   const backgroundColor = theme.background_color || '#FAF4EF';
   const backgroundImage = theme.background_image || '';
   const overlayPercent = Math.min(100, Math.max(0, Number(theme.background_overlay_opacity ?? 50)));
@@ -155,7 +154,6 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
           ['--list-font-title' as any]: `"${fontTitle}"`,
           ['--list-font-body' as any]: `"${fontBody}"`,
           ['--lp-divider-color' as any]: toRgba(dividerColor, 0.42),
-          ['--lp-blend-color' as any]: toRgba(blendColor, 0.28),
           ...pageBackgroundStyle,
         } as React.CSSProperties
       }
@@ -221,8 +219,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
 
       {enabledBlocks.map((block, index) => {
         const config = block.config || {};
-        const blendAfterHero = index > 0 && enabledBlocks[index - 1]?.type === 'hero';
-        const sectionClass = `lp-section${blendAfterHero ? ' lp-hero-blend' : ''}`;
+        const sectionClass = 'lp-section';
         const showDivider = dividerEnabled && index > 0 && enabledBlocks[index - 1]?.type !== 'hero';
 
         return (
@@ -271,22 +268,22 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'countdown' && config.eventDate && (
-              <div className={`${sectionClass} p-12 md:p-16`}>
-                <h3 className="text-2xl md:text-3xl text-center mb-10" style={{ fontFamily: fontTitle, color: titleColor }}>
+              <div className={`${sectionClass} p-6 md:p-16`}>
+                <h3 className="text-2xl md:text-3xl text-center mb-6 md:mb-10" style={{ fontFamily: fontTitle, color: titleColor }}>
                   {config.title || 'Contagem Regressiva'}
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-3xl mx-auto">
                   {[
                     { value: countdown.days, label: 'Dias' },
                     { value: countdown.hours, label: 'Horas' },
                     { value: countdown.minutes, label: 'Minutos' },
                     { value: countdown.seconds, label: 'Segundos' },
                   ].map((item, i) => (
-                    <div key={i} className="text-center p-6 bg-white rounded-2xl shadow-sm">
-                      <div className="text-4xl md:text-5xl font-bold mb-2" style={{ color: primaryColor }}>
+                    <div key={i} className="text-center p-3 md:p-6 bg-white rounded-xl md:rounded-2xl shadow-sm">
+                      <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2" style={{ color: primaryColor }}>
                         {String(item.value).padStart(2, '0')}
                       </div>
-                      <div className="text-sm uppercase tracking-wider" style={{ color: captionColor }}>{item.label}</div>
+                      <div className="text-xs md:text-sm uppercase tracking-wider" style={{ color: captionColor }}>{item.label}</div>
                     </div>
                   ))}
                 </div>
@@ -294,20 +291,20 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'gifts' && (
-              <div id="lista-presentes-section" className={`${sectionClass} p-12 md:p-16`}>
+              <div id="lista-presentes-section" className={`${sectionClass} p-3 md:p-16`}>
                 <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden border border-gray-200">
-                  <div className="relative h-[320px] md:h-[420px]">
+                  <div className="relative h-[360px] md:h-[420px]">
                     {config.coverImage ? (
                       <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-700" />
                     )}
                     <div className="absolute inset-0 bg-black/35" />
-                    <div className="absolute left-8 right-8 bottom-8">
-                      <h2 className="text-3xl md:text-4xl mb-3" style={{ fontFamily: fontTitle, color: config.titleColor || '#FFFFFF' }}>
+                    <div className="absolute left-5 right-5 bottom-5 md:left-8 md:right-8 md:bottom-8">
+                      <h2 className="text-2xl md:text-4xl mb-2 md:mb-3" style={{ fontFamily: fontTitle, color: config.titleColor || '#FFFFFF' }}>
                         {config.title || 'Lista de Presentes'}
                       </h2>
-                      <p className="max-w-2xl mb-5" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
+                      <p className="max-w-2xl mb-4 md:mb-5 text-sm md:text-base" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
                         {config.description || 'Esta e nossa lista de presentes. Ficamos felizes em compartilhar esse momento com voce.'}
                       </p>
                       <Link
@@ -327,27 +324,27 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             )}
 
             {block.type === 'messages' && config.showPublicly !== false && (
-              <div className={`${sectionClass} p-12 md:p-16`}>
-                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: titleColor }}>
+              <div className={`${sectionClass} p-6 md:p-16`}>
+                <h2 className="text-2xl md:text-4xl text-center mb-6 md:mb-12" style={{ fontFamily: fontTitle, color: titleColor }}>
                   {config.title || 'Recados Especiais'}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-5xl mx-auto">
                   {messages
                     .filter((m) => m.isPublic)
                     .slice(0, 4)
                     .map((msg, i) => (
-                      <Card key={i} className="p-6 bg-white">
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0" style={{ backgroundColor: primaryColor }}>
+                      <Card key={i} className="p-4 md:p-6 bg-white">
+                        <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white text-sm md:text-base font-semibold flex-shrink-0" style={{ backgroundColor: primaryColor }}>
                             {msg.guestName?.charAt(0) || '•'}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900">{msg.guestName}</h4>
+                            <h4 className="font-semibold text-sm md:text-base text-gray-900">{msg.guestName}</h4>
                             <p className="text-xs" style={{ color: captionColor }}>{new Date(msg.date).toLocaleDateString('pt-BR')}</p>
                           </div>
                           {msg.isFavorite && <Heart className="w-5 h-5 text-red-500 fill-red-500" />}
                         </div>
-                        <p className="leading-relaxed" style={{ color: captionColor }}>{msg.message}</p>
+                        <p className="leading-relaxed text-sm md:text-base" style={{ color: captionColor }}>{msg.message}</p>
                       </Card>
                     ))}
                 </div>

@@ -35,7 +35,6 @@ type Theme = {
   divider_color?: string;
   divider_enabled?: boolean;
   divider_style?: 'dot' | 'line' | 'ornament';
-  blend_color?: string;
   background_overlay_opacity?: number;
   background_color?: string;
   background_image?: string;
@@ -108,7 +107,6 @@ export default function PageBuilder() {
     divider_color: '#8E3D2C',
     divider_enabled: true,
     divider_style: 'dot',
-    blend_color: '#8E3D2C',
     background_overlay_opacity: 50,
     background_color: '#FAF4EF',
     font_title: 'Cormorant Garamond',
@@ -490,14 +488,6 @@ export default function PageBuilder() {
                       <SelectItem value="ornament">Ornamental</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Cor do esfumado (Hero para blocos)</Label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={theme.blend_color || theme.title_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, blend_color: e.target.value })} className="w-12 h-12 rounded-lg cursor-pointer border-2" />
-                  <Input value={theme.blend_color || theme.title_color || '#8E3D2C'} onChange={(e) => updateTheme({ ...theme, blend_color: e.target.value })} className="flex-1" />
                 </div>
               </div>
 

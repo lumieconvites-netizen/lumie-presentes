@@ -37,7 +37,6 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
   const dividerColor = theme.divider_color || titleColor;
   const dividerEnabled = theme.divider_enabled !== false;
   const dividerStyle = theme.divider_style || 'dot';
-  const blendColor = theme.blend_color || dividerColor;
   const backgroundColor = theme.background_color || '#FAF4EF';
   const backgroundImage = theme.background_image || '';
   const fontTitle = theme.font_title || 'Cormorant Garamond';
@@ -153,7 +152,6 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
         ["--list-font-title" as any]: `"${fontTitle}"`,
         ["--list-font-body" as any]: `"${fontBody}"`,
         ["--lp-divider-color" as any]: toRgba(dividerColor, 0.42),
-        ["--lp-blend-color" as any]: toRgba(blendColor, 0.28),
         ...pageBackgroundStyle,
       } as React.CSSProperties
     }
@@ -161,8 +159,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
       {enabledBlocks.map((block, index) => {
         const isSelected = selectedBlock?.id === block.id;
         const config = block.config || {};
-        const blendAfterHero = index > 0 && enabledBlocks[index - 1]?.type === 'hero';
-        const sectionClass = `lp-section${blendAfterHero ? ' lp-hero-blend' : ''}`;
+        const sectionClass = 'lp-section';
         const showDivider = dividerEnabled && index > 0 && enabledBlocks[index - 1]?.type !== 'hero';
 
         return (
@@ -243,25 +240,25 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Countdown Block */}
             {block.type === 'countdown' && (
-              <div className={`${sectionClass} p-12 md:p-16`}>
+              <div className={`${sectionClass} p-6 md:p-16`}>
                 <h3 
-                  className="text-2xl md:text-3xl text-center mb-10" 
+                  className="text-2xl md:text-3xl text-center mb-6 md:mb-10" 
                   style={{ color: titleColor, fontFamily: fontTitle }}
                 >
                   {config.title || 'Contagem Regressiva'}
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-3xl mx-auto">
                   {[
                     { value: String(countdown.days).padStart(2, '0'), label: 'Dias' },
                     { value: String(countdown.hours).padStart(2, '0'), label: 'Horas' },
                     { value: String(countdown.minutes).padStart(2, '0'), label: 'Minutos' },
                     { value: String(countdown.seconds).padStart(2, '0'), label: 'Segundos' }
                   ].map((item, i) => (
-                    <div key={i} className="text-center p-6 bg-white rounded-2xl shadow-sm">
-                      <div className="text-4xl md:text-5xl font-bold mb-2" style={{ color: primaryColor }}>
+                    <div key={i} className="text-center p-3 md:p-6 bg-white rounded-xl md:rounded-2xl shadow-sm">
+                      <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2" style={{ color: primaryColor }}>
                         {item.value}
                       </div>
-                      <div className="text-sm uppercase tracking-wider" style={{ color: captionColor }}>
+                      <div className="text-xs md:text-sm uppercase tracking-wider" style={{ color: captionColor }}>
                         {item.label}
                       </div>
                     </div>
@@ -272,20 +269,20 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Gifts Block */}
             {block.type === 'gifts' && (
-              <div className={`${sectionClass} p-12 md:p-16`} id="lista-presentes-section">
+              <div className={`${sectionClass} p-3 md:p-16`} id="lista-presentes-section">
                 <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden border border-gray-200">
-                  <div className="relative h-[320px] md:h-[420px]">
+                  <div className="relative h-[360px] md:h-[420px]">
                     {config.coverImage ? (
                       <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-700" />
                     )}
                     <div className="absolute inset-0 bg-black/35" />
-                    <div className="absolute left-8 right-8 bottom-8">
-                      <h2 className="text-3xl md:text-4xl mb-3" style={{ fontFamily: fontTitle, color: config.titleColor || '#FFFFFF' }}>
+                    <div className="absolute left-5 right-5 bottom-5 md:left-8 md:right-8 md:bottom-8">
+                      <h2 className="text-2xl md:text-4xl mb-2 md:mb-3" style={{ fontFamily: fontTitle, color: config.titleColor || '#FFFFFF' }}>
                         {config.title || 'Lista de Presentes'}
                       </h2>
-                      <p className="max-w-2xl mb-5" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
+                      <p className="max-w-2xl mb-4 md:mb-5 text-sm md:text-base" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
                         {config.description || 'Criamos esta lista com carinho para quem desejar nos presentear.'}
                       </p>
                       <button
@@ -306,31 +303,31 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
             {/* Messages Feed Block */}
             {block.type === 'messages' && (
-              <div className={`${sectionClass} p-12 md:p-16`}>
-                <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: titleColor, fontFamily: fontTitle }}>
+              <div className={`${sectionClass} p-6 md:p-16`}>
+                <h2 className="text-2xl md:text-4xl text-center mb-6 md:mb-12" style={{ color: titleColor, fontFamily: fontTitle }}>
                   {config.title || 'Recados Especiais'}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-5xl mx-auto">
                   {[
                     { name: 'Maria Silva', message: 'ParabÃ©ns! Que esse dia seja repleto de alegrias e momentos inesquecÃ­veis. ðŸŽ‰', time: '2 dias atrÃ¡s' },
                     { name: 'JoÃ£o Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrÃ¡s' },
                     { name: 'Ana Costa', message: 'Muitas bÃªnÃ§Ã£os e sucesso! VocÃª merece toda a felicidade do mundo. â¤ï¸', time: '5 dias atrÃ¡s' },
                     { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atrÃ¡s' }
                   ].map((msg, i) => (
-                    <Card key={i} className="p-6 bg-white">
-                      <div className="flex items-start gap-4 mb-4">
+                    <Card key={i} className="p-4 md:p-6 bg-white">
+                      <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
                         <div
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
+                          className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white text-sm md:text-base font-semibold flex-shrink-0"
                           style={{ backgroundColor: primaryColor }}
                         >
                           {msg.name.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-gray-900">{msg.name}</h4>
+                          <h4 className="font-semibold text-sm md:text-base text-gray-900">{msg.name}</h4>
                           <p className="text-xs" style={{ color: captionColor }}>{msg.time}</p>
                         </div>
                       </div>
-                      <p className="leading-relaxed" style={{ color: captionColor }}>
+                      <p className="leading-relaxed text-sm md:text-base" style={{ color: captionColor }}>
                         {msg.message}
                       </p>
                     </Card>

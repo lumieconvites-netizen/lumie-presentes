@@ -204,23 +204,6 @@
   position: relative;
 }
 
-.list-font-scope .lp-hero-blend::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -72px;
-  height: 88px;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0) 0%,
-    var(--lp-blend-color, rgba(74, 58, 66, 0.22)) 54%,
-    var(--lp-blend-color, rgba(74, 58, 66, 0.34)) 100%
-  );
-  filter: blur(1px);
-}
-
 .list-font-scope .lp-divider {
   position: relative;
   height: 24px;
