@@ -45,18 +45,28 @@ export default function AdminPage() {
   }, [qList]);
 
   async function loadAll() {
+    const getJson = async (url: string) => {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        return await res.json();
+      } catch {
+        return null;
+      }
+    };
+
     const [o, u, l, t, i] = await Promise.all([
-      fetch('/api/admin/overview', { cache: 'no-store' }).then((r) => r.json()),
-      fetch(`/api/admin/users?${userQuery}`, { cache: 'no-store' }).then((r) => r.json()),
-      fetch(`/api/admin/gift-lists?${listQuery}`, { cache: 'no-store' }).then((r) => r.json()),
-      fetch('/api/admin/templates', { cache: 'no-store' }).then((r) => r.json()),
-      fetch('/api/admin/impersonation', { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
+      getJson('/api/admin/overview'),
+      getJson(`/api/admin/users?${userQuery}`),
+      getJson(`/api/admin/gift-lists?${listQuery}`),
+      getJson('/api/admin/templates'),
+      getJson('/api/admin/impersonation'),
     ]);
-    setOverview(o);
-    setUsers(u.users || []);
-    setLists(l.giftLists || []);
-    setTemplates(t.templates || []);
-    setImpersonation(i);
+
+    if (o && !o.error) setOverview(o);
+    if (u && Array.isArray(u.users)) setUsers(u.users);
+    if (l && Array.isArray(l.giftLists)) setLists(l.giftLists);
+    if (t && Array.isArray(t.templates)) setTemplates(t.templates);
+    if (i) setImpersonation(i);
   }
 
   useEffect(() => { loadAll().catch(() => null); }, []);

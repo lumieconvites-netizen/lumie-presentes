@@ -13,7 +13,6 @@ export async function GET() {
     clientsCount,
     partnersCount,
     ambassadorsCount,
-    employeesCount,
     listsCount,
     publishedListsCount,
     templatesCount,
@@ -22,27 +21,33 @@ export async function GET() {
     messagesCount,
     ordersCount,
     paidOrders,
-  ] =
-    await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({ where: { role: "ADMIN" } }),
-      prisma.user.count({ where: { isBlocked: true } }),
-      prisma.user.count({ where: { role: "CLIENT" } }),
-      prisma.user.count({ where: { role: "PARTNER" } }),
-      prisma.user.count({ where: { role: "AMBASSADOR" } }),
-      prisma.user.count({ where: { role: "EMPLOYEE" } }),
-      prisma.giftList.count(),
-      prisma.giftList.count({ where: { isPublished: true } }),
-      prisma.template.count(),
-      prisma.template.count({ where: { isActive: true } }),
-      prisma.giftItem.count(),
-      prisma.message.count(),
-      prisma.order.count(),
-      prisma.order.findMany({
-        where: { status: "PAID" },
-        select: { totalAmount: true },
-      }),
-    ]);
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({ where: { role: "ADMIN" } }),
+    prisma.user.count({ where: { isBlocked: true } }),
+    prisma.user.count({ where: { role: "CLIENT" } }),
+    prisma.user.count({ where: { role: "PARTNER" } }),
+    prisma.user.count({ where: { role: "AMBASSADOR" } }),
+    prisma.giftList.count(),
+    prisma.giftList.count({ where: { isPublished: true } }),
+    prisma.template.count(),
+    prisma.template.count({ where: { isActive: true } }),
+    prisma.giftItem.count(),
+    prisma.message.count(),
+    prisma.order.count(),
+    prisma.order.findMany({
+      where: { status: "PAID" },
+      select: { totalAmount: true },
+    }),
+  ]);
+
+  // Fallback: if EMPLOYEE enum is not available in DB yet, keep admin page functional.
+  let employeesCount = 0;
+  try {
+    employeesCount = await prisma.user.count({ where: { role: "EMPLOYEE" as any } });
+  } catch {
+    employeesCount = 0;
+  }
 
   const paidTotal = paidOrders.reduce((acc, order) => acc + Number(order.totalAmount), 0);
 
