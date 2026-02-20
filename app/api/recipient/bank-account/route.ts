@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createRecipient, updateRecipientDefaultBankAccount } from "@/lib/pagarme";
 import { z } from "zod";
+import { getActingUserContext } from "@/lib/acting-user";
 
 const bankAccountSchema = z.object({
   holderName: z.string().min(3, "Nome do titular invalido"),
@@ -26,13 +25,13 @@ function isRealRecipientId(value?: string | null) {
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const ctx = await getActingUserContext();
+  if (!ctx) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   }
 
   const recipient = await prisma.recipient.findUnique({
-    where: { userId: session.user.id },
+    where: { userId: ctx.effectiveUserId },
     select: {
       id: true,
       pagarmeRecipientId: true,
@@ -47,8 +46,8 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
     }
 
@@ -57,7 +56,7 @@ export async function PUT(request: Request) {
     const bankAccount = parsed;
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: ctx.effectiveUserId },
       select: { id: true, name: true, email: true },
     });
 
@@ -66,11 +65,11 @@ export async function PUT(request: Request) {
     }
 
     const existingRecipient = await prisma.recipient.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: ctx.effectiveUserId },
       select: { id: true, pagarmeRecipientId: true },
     });
 
-    let nextRecipientId = existingRecipient?.pagarmeRecipientId ?? `pending_${session.user.id}`;
+    let nextRecipientId = existingRecipient?.pagarmeRecipientId ?? `pending_${ctx.effectiveUserId}`;
     let nextStatus = "pending";
     let warning: string | null = null;
 
@@ -108,9 +107,9 @@ export async function PUT(request: Request) {
     }
 
     const recipient = await prisma.recipient.upsert({
-      where: { userId: session.user.id },
+      where: { userId: ctx.effectiveUserId },
       create: {
-        userId: session.user.id,
+        userId: ctx.effectiveUserId,
         pagarmeRecipientId: nextRecipientId,
         bankAccount: bankAccount as any,
         status: nextStatus,

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getActingUserContext } from "@/lib/acting-user";
 
 const PAGARME_API_BASE = process.env.PAGARME_API_BASE ?? "https://api.pagar.me/core/v5";
 
@@ -11,8 +10,8 @@ function getApiKey() {
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const ctx = await getActingUserContext();
+  if (!ctx) {
     return NextResponse.json({ ok: false, error: "Nao autenticado" }, { status: 401 });
   }
 
@@ -30,7 +29,7 @@ export async function GET() {
         metadata: {
           probe: true,
           source: "lumie_transfer_probe",
-          userId: session.user.id,
+          userId: ctx.effectiveUserId,
         },
       }),
       cache: "no-store",

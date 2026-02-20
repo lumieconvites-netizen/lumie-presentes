@@ -1,21 +1,20 @@
-﻿import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPublicBaseUrl, getPublicCheckInUrl, normalizeCheckInSlug } from "@/lib/rsvp";
+import { getActingUserContext } from "@/lib/acting-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
     const giftList = await prisma.giftList.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: ctx.effectiveUserId },
       select: {
         id: true,
         slug: true,
@@ -52,13 +51,13 @@ export async function GET() {
         ? { ...settings, checkInSlug: settings.checkInSlug || resolvedCheckInSlug }
         : {
             enabled: false,
-            notificationEmail: session.user.email ?? null,
+            notificationEmail: ctx.effectiveUser.email ?? null,
             eventTitle: giftList.title,
             eventDateLabel: null,
             eventLocation: null,
             coverImageUrl: null,
             publicTitle: "Confirmar Presenca",
-            publicDescription: "Confirme sua presença no evento.",
+            publicDescription: "Confirme sua presenca no evento.",
             searchPlaceholder: "Digite seu nome completo",
             checkInEnabled: true,
             checkInSlug: resolvedCheckInSlug,
@@ -77,4 +76,3 @@ export async function GET() {
     return NextResponse.json({ error: "Erro ao carregar RSVP" }, { status: 500 });
   }
 }
-

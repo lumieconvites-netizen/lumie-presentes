@@ -1,9 +1,8 @@
-﻿import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRecipientBalanceSummary } from "@/lib/pagarme";
 import { createRecipientTransferWithGateway } from "@/lib/withdraw-gateway";
+import { getActingUserContext } from "@/lib/acting-user";
 
 const WITHDRAW_FEE_CENTS = 367;
 
@@ -14,13 +13,13 @@ function isRealRecipientId(value?: string | null) {
 
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
     }
 
     const recipient = await prisma.recipient.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: ctx.effectiveUserId },
       select: {
         id: true,
         pagarmeRecipientId: true,
@@ -109,7 +108,7 @@ export async function POST() {
       amountInCents: netAmount,
       metadata: {
         source: "lumie_dashboard_withdraw",
-        userId: session.user.id,
+        userId: ctx.effectiveUserId,
       },
     });
 

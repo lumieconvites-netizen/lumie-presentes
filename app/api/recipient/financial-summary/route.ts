@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getRecipientFinancialSummaryWithGateway } from "@/lib/withdraw-gateway";
+import { getActingUserContext } from "@/lib/acting-user";
 
 function isRealRecipientId(value?: string | null) {
   if (!value) return false;
@@ -11,13 +10,13 @@ function isRealRecipientId(value?: string | null) {
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
     }
 
     const recipient = await prisma.recipient.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: ctx.effectiveUserId },
       select: {
         pagarmeRecipientId: true,
         status: true,

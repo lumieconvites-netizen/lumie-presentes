@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   buildGiftListSlug,
@@ -8,6 +6,7 @@ import {
   normalizeGiftListSlugInput,
   validateGiftListSlug,
 } from "@/lib/gift-list-slug";
+import { getActingUserContext } from "@/lib/acting-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,29 +14,28 @@ export const revalidate = 0;
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
     let giftList = await prisma.giftList.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: ctx.effectiveUserId },
       orderBy: { updatedAt: "desc" },
     });
 
     if (!giftList) {
-      const nextSlug = buildGiftListSlug(session.user.name, session.user.id);
+      const nextSlug = buildGiftListSlug(ctx.effectiveUser.name, ctx.effectiveUserId);
       giftList = await prisma.giftList.create({
         data: {
-          userId: session.user.id,
+          userId: ctx.effectiveUserId,
           slug: nextSlug,
           title: "Minha Lista de Presentes",
           description: "Ajude a realizar nossos sonhos!",
         },
       });
     } else if (isLegacyGiftListSlug(giftList.slug)) {
-      // Migra automaticamente slugs antigos para formato legivel + id curto unico.
-      const nextSlug = buildGiftListSlug(session.user.name, session.user.id);
+      const nextSlug = buildGiftListSlug(ctx.effectiveUser.name, ctx.effectiveUserId);
       if (nextSlug !== giftList.slug) {
         giftList = await prisma.giftList.update({
           where: { id: giftList.id },
@@ -55,8 +53,8 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
@@ -64,7 +62,7 @@ export async function PATCH(req: Request) {
 
     const giftList = await prisma.giftList.findFirst({
       where: {
-        userId: session.user.id,
+        userId: ctx.effectiveUserId,
         ...(typeof body?.giftListId === "string" && body.giftListId
           ? { id: body.giftListId }
           : {}),
@@ -112,10 +110,9 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Nenhum campo valido para atualizar" }, { status: 400 });
     }
 
-    // Mantem feeMode consistente em todas as listas do mesmo dono
     if (nextFeeMode) {
       await prisma.giftList.updateMany({
-        where: { userId: session.user.id },
+        where: { userId: ctx.effectiveUserId },
         data: { feeMode: nextFeeMode },
       });
     }

@@ -1,12 +1,11 @@
-﻿import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createCheckInCode, createQrToken, normalizeGuestName } from "@/lib/rsvp";
+import { getActingUserContext } from "@/lib/acting-user";
 
 const guestSchema = z.object({
-  fullName: z.string().min(2, "Nome completo é obrigatório"),
+  fullName: z.string().min(2, "Nome completo e obrigatorio"),
   notes: z.string().max(300).optional().or(z.literal("")),
   adultLimit: z.coerce.number().int().min(0).max(20).optional(),
   childLimit: z.coerce.number().int().min(0).max(20).optional(),
@@ -14,7 +13,7 @@ const guestSchema = z.object({
 });
 
 const importGuestSchema = z.object({
-  fullName: z.string().min(2, "Nome completo é obrigatório"),
+  fullName: z.string().min(2, "Nome completo e obrigatorio"),
   notes: z.string().optional(),
   adultLimit: z.coerce.number().int().min(0).max(20).optional(),
   childLimit: z.coerce.number().int().min(0).max(20).optional(),
@@ -35,14 +34,14 @@ async function getGiftListId(userId: string) {
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    const ctx = await getActingUserContext();
+    if (!ctx) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const giftListId = await getGiftListId(session.user.id);
+    const giftListId = await getGiftListId(ctx.effectiveUserId);
     if (!giftListId) {
-      return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -73,14 +72,14 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    const ctx = await getActingUserContext();
+    if (!ctx) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const giftList = await prisma.giftList.findFirst({ where: { userId: session.user.id }, select: { id: true } });
+    const giftList = await prisma.giftList.findFirst({ where: { userId: ctx.effectiveUserId }, select: { id: true } });
     if (!giftList) {
-      return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -123,7 +122,7 @@ export async function POST(req: Request) {
     const exists = await prisma.rsvpGuest.findMany({ where: { giftListId: giftList.id }, select: { fullName: true } });
     const found = exists.some((g) => normalizeGuestName(g.fullName) === normalizedName);
     if (found) {
-      return NextResponse.json({ error: "Já existe convidado com esse nome" }, { status: 400 });
+      return NextResponse.json({ error: "Ja existe convidado com esse nome" }, { status: 400 });
     }
 
     const guest = await prisma.rsvpGuest.create({
@@ -153,4 +152,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro ao criar convidado" }, { status: 500 });
   }
 }
-

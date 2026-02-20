@@ -1,8 +1,7 @@
-﻿import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getActingUserContext } from "@/lib/acting-user";
 
 const updateSchema = z.object({
   fullName: z.string().min(2).optional(),
@@ -24,12 +23,12 @@ async function getGiftListId(userId: string) {
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const giftListId = await getGiftListId(session.user.id);
+    const giftListId = await getGiftListId(ctx.effectiveUserId);
     if (!giftListId) {
       return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
@@ -81,12 +80,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const giftListId = await getGiftListId(session.user.id);
+    const giftListId = await getGiftListId(ctx.effectiveUserId);
     if (!giftListId) {
       return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
@@ -107,4 +106,3 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "Erro ao excluir convidado" }, { status: 500 });
   }
 }
-

@@ -1,8 +1,7 @@
-﻿import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { extractTokenOrCode } from "@/lib/rsvp-checkin";
+import { getActingUserContext } from "@/lib/acting-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,12 +16,12 @@ async function getGiftListId(userId: string) {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const giftListId = await getGiftListId(session.user.id);
+    const giftListId = await getGiftListId(ctx.effectiveUserId);
     if (!giftListId) {
       return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
@@ -106,4 +105,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro ao processar check-in" }, { status: 500 });
   }
 }
-

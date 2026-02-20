@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { getActingUserContext } from "@/lib/acting-user";
 
 const updateSchema = z.object({
   isPublic: z.boolean().optional(),
@@ -11,8 +10,8 @@ const updateSchema = z.object({
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const ctx = await getActingUserContext();
+    if (!ctx) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
@@ -22,7 +21,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const existing = await prisma.message.findFirst({
       where: {
         id: params.id,
-        giftList: { userId: session.user.id },
+        giftList: { userId: ctx.effectiveUserId },
       },
       select: { id: true },
     });
@@ -46,4 +45,3 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     return NextResponse.json({ error: "Erro ao atualizar recado" }, { status: 500 });
   }
 }
-

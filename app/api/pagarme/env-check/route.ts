@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getActingUserContext } from "@/lib/acting-user";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const ctx = await getActingUserContext();
+  if (!ctx) {
     return NextResponse.json({ ok: false, error: "Nao autenticado" }, { status: 401 });
   }
 
@@ -22,4 +21,3 @@ export async function GET() {
     },
   });
 }
-

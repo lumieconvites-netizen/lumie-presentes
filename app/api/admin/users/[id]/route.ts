@@ -7,6 +7,8 @@ import { ensureDefaultReferralCodesForUser } from "@/lib/referrals";
 const patchSchema = z.object({
   role: z.enum(["ADMIN", "CLIENT", "PARTNER", "AMBASSADOR"]).optional(),
   isBlocked: z.boolean().optional(),
+  name: z.string().min(2).max(120).optional(),
+  email: z.string().email().optional(),
 });
 
 export async function PATCH(
@@ -32,10 +34,30 @@ export async function PATCH(
       );
     }
 
+    if (typeof data.email === "string") {
+      const conflict = await prisma.user.findFirst({
+        where: {
+          email: data.email,
+          NOT: { id: params.id },
+        },
+        select: { id: true },
+      });
+      if (conflict) {
+        return NextResponse.json({ error: "Este email ja esta em uso." }, { status: 409 });
+      }
+    }
+
+    const updateData: any = {
+      ...(typeof data.role === "string" ? { role: data.role } : {}),
+      ...(typeof data.isBlocked === "boolean" ? { isBlocked: data.isBlocked } : {}),
+      ...(typeof data.name === "string" ? { name: data.name.trim() } : {}),
+      ...(typeof data.email === "string" ? { email: data.email.trim().toLowerCase() } : {}),
+    };
+
     const updated = await prisma.$transaction(async (tx) => {
       const user = await tx.user.update({
         where: { id: params.id },
-        data,
+        data: updateData,
         select: {
           id: true,
           name: true,

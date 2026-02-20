@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureDefaultReferralCodesForUser } from "@/lib/referrals";
+import { getActingUserContext } from "@/lib/acting-user";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const ctx = await getActingUserContext();
+  if (!ctx) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: ctx.effectiveUserId },
     select: {
       id: true,
       role: true,
@@ -53,4 +52,3 @@ export async function GET() {
     codes,
   });
 }
-

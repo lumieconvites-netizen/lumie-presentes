@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
+import { getActingUserContext } from "@/lib/acting-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,11 +9,11 @@ export const revalidate = 0;
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    const ctx = await getActingUserContext();
+    if (!ctx) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
     const giftList = await prisma.giftList.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: ctx.effectiveUserId },
       include: {
         pageLayout: true,
         gifts: { orderBy: { order: "asc" } },
@@ -50,7 +49,7 @@ export async function GET() {
     if (!giftList) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
 
     if (isLegacyGiftListSlug(giftList.slug)) {
-      const nextSlug = buildGiftListSlug(session.user.name, session.user.id);
+      const nextSlug = buildGiftListSlug(ctx.effectiveUser.name, ctx.effectiveUserId);
       if (nextSlug !== giftList.slug) {
         const migrated = await prisma.giftList.update({
           where: { id: giftList.id },

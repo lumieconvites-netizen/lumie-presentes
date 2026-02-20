@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useUser } from '@/contexts/user-context';
 import { Button } from '@/components/ui/button';
@@ -12,16 +12,28 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, LayoutDashboard, Globe, Shield, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
+
+type ImpersonationData = {
+  isImpersonating: boolean;
+  effectiveUser?: {
+    name: string | null;
+    email: string;
+    role: string;
+  };
+};
 
 export default function DashboardHeader() {
   const { user } = useUser();
   const { data: session } = useSession();
   const router = useRouter();
+  const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
+
   const sessionImage = (session?.user as any)?.image as string | undefined;
-  const sessionName = session?.user?.name ?? user?.name ?? 'Usuário';
+  const sessionName = session?.user?.name ?? user?.name ?? 'Usuario';
   const sessionEmail = session?.user?.email ?? user?.email ?? '';
   const avatarSrc = sessionImage || user?.photo;
 
@@ -34,18 +46,55 @@ export default function DashboardHeader() {
       .slice(0, 2);
   };
 
-  const firstName = sessionName.split(' ')[0];
   const role = (session?.user as any)?.role;
+  const displayName = role === 'ADMIN' && impersonation?.isImpersonating ? (impersonation.effectiveUser?.name || 'Usuario') : sessionName;
+  const displayEmail = role === 'ADMIN' && impersonation?.isImpersonating ? (impersonation.effectiveUser?.email || '') : sessionEmail;
+  const firstName = displayName.split(' ')[0];
+
+  useEffect(() => {
+    if (role !== 'ADMIN') return;
+
+    fetch('/api/admin/impersonation', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => setImpersonation(data))
+      .catch(() => null);
+  }, [role]);
+
+  async function stopImpersonation() {
+    const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
+    if (!res.ok) {
+      alert('Nao foi possivel sair do modo acesso.');
+      return;
+    }
+
+    window.location.assign('/admin');
+  }
 
   return (
-    <header className="bg-white border-b border-border px-4 md:px-6 py-4">
+    <header className="bg-white border-b border-border px-4 md:px-6 py-4 space-y-3">
+      {role === 'ADMIN' && impersonation?.isImpersonating ? (
+        <div className="rounded-lg border border-[#E9D8C8] bg-[#fff7f1] px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs md:text-sm text-[#8E3D2C]">
+            Acessando como: {impersonation.effectiveUser?.name || 'Sem nome'} ({impersonation.effectiveUser?.email}) - {impersonation.effectiveUser?.role}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/admin">Voltar ao admin</Link>
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => stopImpersonation().catch(() => null)}>
+              Sair do modo acesso
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex items-center justify-between">
         <div className="pl-16 md:pl-0">
           <h1 className="text-2xl font-display text-foreground flex items-center gap-2">
-            <span>Olá, {firstName}!</span>
+            <span>Ola, {firstName}!</span>
             <Sparkles className="h-4 w-4 text-[#c65a3a]" />
           </h1>
-          <p className="text-sm text-gray-500">Veja como está indo sua lista de presentes</p>
+          <p className="text-sm text-gray-500">Veja como esta indo sua lista de presentes</p>
         </div>
 
         <DropdownMenu>
@@ -63,8 +112,8 @@ export default function DashboardHeader() {
           <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{sessionName}</p>
-                <p className="text-xs leading-none text-muted-foreground">{sessionEmail}</p>
+                <p className="text-sm font-medium leading-none">{displayName}</p>
+                <p className="text-xs leading-none text-muted-foreground">{displayEmail}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -91,7 +140,7 @@ export default function DashboardHeader() {
             <DropdownMenuItem asChild>
               <Link href="/dashboard/configuracoes" className="cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" />
-                Configurações
+                Configuracoes
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

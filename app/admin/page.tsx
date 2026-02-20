@@ -14,6 +14,10 @@ type Overview = {
 type AdminUser = { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR'; isBlocked: boolean; _count: { giftLists: number } };
 type AdminGiftList = { id: string; title: string; slug: string; isPublished: boolean; user: { email: string; name: string | null }; _count: { gifts: number; orders: number; messages: number } };
 type AdminTemplate = { id: string; name: string; slug: string; category: string; isActive: boolean };
+type ImpersonationState = {
+  isImpersonating: boolean;
+  effectiveUser?: { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' };
+};
 
 const slugify = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120);
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -23,6 +27,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [lists, setLists] = useState<AdminGiftList[]>([]);
   const [templates, setTemplates] = useState<AdminTemplate[]>([]);
+  const [impersonation, setImpersonation] = useState<ImpersonationState | null>(null);
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
   const [qUser, setQUser] = useState('');
   const [qList, setQList] = useState('');
@@ -40,16 +45,18 @@ export default function AdminPage() {
   }, [qList]);
 
   async function loadAll() {
-    const [o, u, l, t] = await Promise.all([
+    const [o, u, l, t, i] = await Promise.all([
       fetch('/api/admin/overview', { cache: 'no-store' }).then((r) => r.json()),
       fetch(`/api/admin/users?${userQuery}`, { cache: 'no-store' }).then((r) => r.json()),
       fetch(`/api/admin/gift-lists?${listQuery}`, { cache: 'no-store' }).then((r) => r.json()),
       fetch('/api/admin/templates', { cache: 'no-store' }).then((r) => r.json()),
+      fetch('/api/admin/impersonation', { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
     ]);
     setOverview(o);
     setUsers(u.users || []);
     setLists(l.giftLists || []);
     setTemplates(t.templates || []);
+    setImpersonation(i);
   }
 
   useEffect(() => { loadAll().catch(() => null); }, []);
@@ -62,6 +69,18 @@ export default function AdminPage() {
   async function patchList(id: string, payload: any) {
     const res = await fetch(`/api/admin/gift-lists/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar lista'); await loadAll();
+  }
+  async function createListForUser(userId: string) {
+    const title = window.prompt('Titulo da nova lista', 'Minha Lista de Presentes');
+    const res = await fetch('/api/admin/gift-lists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, title: title?.trim() || undefined }),
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j?.error || 'Erro ao criar lista');
+    setQList(j?.giftList?.user?.email || '');
+    await loadAll();
   }
   async function createTemplate() {
     const slug = slugify(newTemplate.slug || newTemplate.name);
@@ -95,6 +114,24 @@ export default function AdminPage() {
     }
   }
 
+  async function startImpersonation(userId: string) {
+    const res = await fetch('/api/admin/impersonation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j?.error || 'Erro ao acessar painel do usuario');
+    window.location.assign('/dashboard');
+  }
+
+  async function stopImpersonation() {
+    const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j?.error || 'Erro ao sair do modo de acesso');
+    await loadAll();
+  }
+
   return (
     <div className="space-y-6">
       <Card className="border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9]">
@@ -111,13 +148,24 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
+      {impersonation?.isImpersonating && impersonation.effectiveUser ? (
+        <Card className="border-[#e7d8cb] bg-[#fff7f1]">
+          <CardContent className="pt-6 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-[#8E3D2C]">
+              Modo acesso ativo: {impersonation.effectiveUser.name || 'Sem nome'} ({impersonation.effectiveUser.email}) - {impersonation.effectiveUser.role}
+            </p>
+            <Button variant="outline" onClick={() => stopImpersonation().catch((e) => alert(e.message))}>Sair do modo acesso</Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card className="border-[#e7d8cb]">
         <CardHeader><CardTitle>Usuarios (clientes, parceiros e embaixadores)</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           <Input placeholder="Buscar usuario por nome/email" value={qUser} onChange={(e) => setQUser(e.target.value)} />
           <div className="overflow-auto rounded-lg border">
             <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Usuario</th><th className="p-2 text-left">Papel</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
-              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p></td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { isBlocked: !u.isBlocked }).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button><Button size="sm" variant="outline" onClick={() => setQList(u.email)}>Ver listas</Button></div></td></tr>)}
+              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p></td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { isBlocked: !u.isBlocked }).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button><Button size="sm" variant="outline" onClick={() => { const n = window.prompt('Nome do usuario', u.name || ''); const e = window.prompt('Email do usuario', u.email || ''); if ((n && n.trim()) || (e && e.trim())) patchUser(u.id, { ...(n ? { name: n.trim() } : {}), ...(e ? { email: e.trim().toLowerCase() } : {}) }).catch((err) => alert(err.message)); }}>Editar conta</Button><Button size="sm" variant="outline" onClick={() => setQList(u.email)}>Ver listas</Button><Button size="sm" variant="outline" onClick={() => createListForUser(u.id).catch((e) => alert(e.message))}>Criar lista</Button>{u.role !== 'ADMIN' ? <Button size="sm" onClick={() => startImpersonation(u.id).catch((e) => alert(e.message))}>Acessar painel</Button> : null}</div></td></tr>)}
             </tbody></table>
           </div>
         </CardContent>

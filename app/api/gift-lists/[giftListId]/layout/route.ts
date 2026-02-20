@@ -1,28 +1,25 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getActingUserContext } from "@/lib/acting-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 function safeJson(value: any) {
-  // garante que não vai salvar "undefined" ou Date quebrada
   return value ?? null;
 }
 
-// GET /api/gift-lists/:giftListId/layout
 export async function GET(
   _req: Request,
   { params }: { params: { giftListId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id as string | undefined;
+    const ctx = await getActingUserContext();
+    const userId = ctx?.effectiveUserId;
 
     if (!userId) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
     const giftListId = params.giftListId;
@@ -33,10 +30,9 @@ export async function GET(
     });
 
     if (!list) {
-      return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
 
-    // se não tiver layout ainda, cria
     if (!list.pageLayout) {
       const created = await prisma.pageLayout.create({
         data: {
@@ -67,41 +63,38 @@ export async function GET(
   }
 }
 
-// PUT /api/gift-lists/:giftListId/layout
 export async function PUT(
   req: Request,
   { params }: { params: { giftListId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id as string | undefined;
+    const ctx = await getActingUserContext();
+    const userId = ctx?.effectiveUserId;
 
     if (!userId) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
     const giftListId = params.giftListId;
 
-    // garante que a lista é do usuário logado
     const list = await prisma.giftList.findFirst({
       where: { id: giftListId, userId },
       select: { id: true },
     });
 
     if (!list) {
-      return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
 
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {
-      return NextResponse.json({ error: "Body inválido" }, { status: 400 });
+      return NextResponse.json({ error: "Body invalido" }, { status: 400 });
     }
 
     const blocks = safeJson(body.blocks);
     const theme = safeJson(body.theme);
     const customCss = typeof body.customCss === "string" ? body.customCss : null;
 
-    // upsert do layout (cria se não existe, atualiza se existe)
     const layout = await prisma.pageLayout.upsert({
       where: { giftListId },
       create: {

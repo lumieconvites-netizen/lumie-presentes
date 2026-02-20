@@ -1,9 +1,8 @@
-﻿import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizeCheckInSlug } from "@/lib/rsvp";
+import { getActingUserContext } from "@/lib/acting-user";
 
 const settingsSchema = z.object({
   enabled: z.boolean().optional(),
@@ -32,14 +31,14 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    const ctx = await getActingUserContext();
+    if (!ctx) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const giftList = await prisma.giftList.findFirst({ where: { userId: session.user.id }, select: { id: true, title: true, slug: true } });
+    const giftList = await prisma.giftList.findFirst({ where: { userId: ctx.effectiveUserId }, select: { id: true, title: true, slug: true } });
     if (!giftList) {
-      return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -106,13 +105,13 @@ export async function PATCH(req: Request) {
       create: {
         giftListId: giftList.id,
         enabled: data.enabled ?? false,
-        notificationEmail: data.notificationEmail ?? session.user.email ?? null,
+        notificationEmail: data.notificationEmail ?? ctx.effectiveUser.email ?? null,
         eventTitle: data.eventTitle ?? giftList.title,
         eventDateLabel: data.eventDateLabel ?? null,
         eventLocation: data.eventLocation ?? null,
         coverImageUrl: data.coverImageUrl ?? null,
-        publicTitle: data.publicTitle ?? "Confirmar Presença",
-        publicDescription: data.publicDescription ?? "Confirme sua presença no evento.",
+        publicTitle: data.publicTitle ?? "Confirmar Presenca",
+        publicDescription: data.publicDescription ?? "Confirme sua presenca no evento.",
         searchPlaceholder: data.searchPlaceholder ?? "Ex: Isabella",
         checkInEnabled: data.checkInEnabled ?? true,
         checkInSlug: data.checkInSlug ?? defaultCheckInSlug,
@@ -125,8 +124,7 @@ export async function PATCH(req: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
     }
-    console.error("Erro ao salvar configurações RSVP:", error);
-    return NextResponse.json({ error: "Erro ao salvar configurações" }, { status: 500 });
+    console.error("Erro ao salvar configuracoes RSVP:", error);
+    return NextResponse.json({ error: "Erro ao salvar configuracoes" }, { status: 500 });
   }
 }
-
