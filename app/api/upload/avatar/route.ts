@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getActingUserContext } from "@/lib/acting-user";
+import { isR2Configured, uploadImageToR2 } from "@/lib/r2";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,13 +16,6 @@ function getFileExt(filename?: string) {
 
 export async function POST(req: Request) {
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json(
-        { error: "Upload externo nao configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY." },
-        { status: 503 }
-      );
-    }
-
     const ctx = await getActingUserContext();
     const userId = ctx?.effectiveUserId;
     if (!userId) return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
@@ -40,6 +34,25 @@ export async function POST(req: Request) {
     const path = `${userId}/${folder}/${Date.now()}.${ext}`;
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+
+    if (isR2Configured()) {
+      const url = await uploadImageToR2({
+        key: path,
+        body: buffer,
+        contentType: file.type,
+      });
+      return NextResponse.json({ url }, { status: 200 });
+    }
+
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        {
+          error:
+            "Upload externo nao configurado. Configure Cloudflare R2 (recomendado) ou SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.",
+        },
+        { status: 503 }
+      );
+    }
 
     const bucket = "avatars";
     const { error: uploadError } = await supabaseAdmin.storage.from(bucket).upload(path, buffer, {

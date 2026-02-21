@@ -11,6 +11,9 @@ const nextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
       // opcional (algumas regiões/rotas podem usar .supabase.in)
       { protocol: "https", hostname: "*.supabase.in" },
+      // Cloudflare R2 public URLs
+      { protocol: "https", hostname: "*.r2.dev" },
+      { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
     ],
   },
 
