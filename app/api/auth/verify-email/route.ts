@@ -46,32 +46,53 @@ export async function POST(request: Request) {
     });
 
     await prisma.$transaction(async (tx) => {
-      const user = await tx.user.upsert({
+      const existingUser = await tx.user.findUnique({
         where: { email: normalizedEmail },
-        update: {
-          name: verification.name,
-          password: verification.passwordHash,
-          emailVerified: new Date(),
-          role: requestedRole,
-          partnerAmbassadorId: referral.partnerAmbassadorId,
-          referredByPartnerId: referral.referredByPartnerId,
-          referredByAmbassadorId: referral.referredByAmbassadorId,
-          acquisitionSource: referral.acquisitionSource,
-          appliedReferralCode: referral.normalizedInviteCode,
-        },
-        create: {
-          email: normalizedEmail,
-          name: verification.name ?? "Novo usuario",
-          password: verification.passwordHash,
-          emailVerified: new Date(),
-          role: requestedRole,
-          partnerAmbassadorId: referral.partnerAmbassadorId,
-          referredByPartnerId: referral.referredByPartnerId,
-          referredByAmbassadorId: referral.referredByAmbassadorId,
-          acquisitionSource: referral.acquisitionSource,
-          appliedReferralCode: referral.normalizedInviteCode,
-        },
+        select: { id: true },
       });
+
+      if (existingUser) {
+        await tx.user.updateMany({
+          where: { id: existingUser.id },
+          data: {
+            name: verification.name,
+            password: verification.passwordHash,
+            emailVerified: new Date(),
+            role: requestedRole,
+            partnerAmbassadorId: referral.partnerAmbassadorId,
+            referredByPartnerId: referral.referredByPartnerId,
+            referredByAmbassadorId: referral.referredByAmbassadorId,
+            acquisitionSource: referral.acquisitionSource,
+            appliedReferralCode: referral.normalizedInviteCode,
+          },
+        });
+      } else {
+        await tx.user.createMany({
+          data: [
+            {
+              email: normalizedEmail,
+              name: verification.name ?? "Novo usuario",
+              password: verification.passwordHash,
+              emailVerified: new Date(),
+              role: requestedRole,
+              partnerAmbassadorId: referral.partnerAmbassadorId,
+              referredByPartnerId: referral.referredByPartnerId,
+              referredByAmbassadorId: referral.referredByAmbassadorId,
+              acquisitionSource: referral.acquisitionSource,
+              appliedReferralCode: referral.normalizedInviteCode,
+            },
+          ],
+        });
+      }
+
+      const user = await tx.user.findUnique({
+        where: { email: normalizedEmail },
+        select: { id: true, role: true, name: true },
+      });
+
+      if (!user) {
+        throw new Error("Nao foi possivel salvar o usuario.");
+      }
 
       await ensureDefaultReferralCodesForUser({
         id: user.id,

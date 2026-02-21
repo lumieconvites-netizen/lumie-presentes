@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       });
 
       if (existingUser && !existingUser.emailVerified) {
-        await tx.user.update({
+        await tx.user.updateMany({
           where: { id: existingUser.id },
           data: {
             name,
