@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ type CategoryItem = {
 };
 
 export default function AdminTemplatesPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
 
@@ -132,6 +133,21 @@ export default function AdminTemplatesPage() {
       if (!res.ok) throw new Error(json?.error || 'Erro ao excluir template');
       await loadTemplates();
       await loadCategories();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function duplicateTemplate(id: string) {
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/admin/templates/${id}/duplicate`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Erro ao duplicar template');
+      await Promise.all([loadCategories(), loadTemplates()]);
+      if (json?.template?.id) {
+        router.push(`/admin/templates/editor/${json.template.id}`);
+      }
     } finally {
       setBusyId(null);
     }
@@ -266,6 +282,14 @@ export default function AdminTemplatesPage() {
                           onClick={() => patchTemplate(template.id, { isActive: !template.isActive }).catch((error) => alert(error.message))}
                         >
                           {template.isActive ? 'Despublicar' : 'Publicar'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busyId === template.id}
+                          onClick={() => duplicateTemplate(template.id).catch((error) => alert(error.message))}
+                        >
+                          Duplicar
                         </Button>
                         <Button
                           size="sm"
