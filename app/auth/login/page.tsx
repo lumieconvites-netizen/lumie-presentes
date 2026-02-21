@@ -54,6 +54,14 @@ export default function LoginPage() {
             window.location.assign('/admin');
             return;
           }
+          if (role === 'PARTNER') {
+            window.location.assign('/parceiro');
+            return;
+          }
+          if (role === 'AMBASSADOR') {
+            window.location.assign('/embaixador');
+            return;
+          }
         } catch {
           // fallback para fluxo padrao
         }

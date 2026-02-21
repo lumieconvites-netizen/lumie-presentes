@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
 import DashboardSidebar from '@/components/dashboard/sidebar';
 import DashboardHeader from '@/components/dashboard/header';
+import { getActingUserContext } from '@/lib/acting-user';
 
 export default async function DashboardLayout({
   children,
@@ -13,6 +14,19 @@ export default async function DashboardLayout({
 
   if (!session?.user?.id) {
     redirect('/login');
+  }
+
+  const ctx = await getActingUserContext();
+  if (!ctx) {
+    redirect('/login');
+  }
+
+  if (ctx.effectiveUser.role === 'PARTNER') {
+    redirect('/parceiro');
+  }
+
+  if (ctx.effectiveUser.role === 'AMBASSADOR') {
+    redirect('/embaixador');
   }
 
   return (
