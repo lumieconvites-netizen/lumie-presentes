@@ -4,21 +4,21 @@ Data base: 2026-02-22
 Objetivo: consolidar custo mensal estimado e realizado por provedor.
 
 ## Parametros
-- Cambio USD->BRL usado no fechamento: `R$ ____`
-- Periodo: `____/2026`
+- Cambio USD->BRL usado no fechamento: `a definir no fechamento`
+- Periodo: `02/2026` (parcial)
 
-## Tabela mensal (preencher)
+## Tabela mensal (parcial preenchida)
 | Provedor | Plano/uso | Moeda origem | Valor origem | Cambio usado | Valor em BRL |
 |---|---|---|---:|---:|---:|
-| Supabase | | USD | | | |
-| Vercel | | USD | | | |
-| Cloudflare R2 | | USD | | | |
-| Upstash Redis | | USD | | | |
-| Sentry | | USD | | | |
-| Resend | | USD | | | |
-| Pagar.me (infra/plataforma) | | BRL | | 1.00 | |
-| Outros | | BRL/USD | | | |
-| **TOTAL MENSAL** |  |  |  |  | **R$** |
+| Supabase | Pro (billing mensal) | USD | `pendente coleta` | `pendente` | `pendente` |
+| Vercel | Pro + execucao/build | USD | `pendente coleta` | `pendente` | `pendente` |
+| Cloudflare R2 | storage + egress + operacoes | USD | `pendente coleta` | `pendente` | `pendente` |
+| Upstash Redis | pay-as-you-go | USD | `0.00` (parcial visto no painel) | `pendente` | `0.00` (parcial) |
+| Sentry | plano atual do projeto | USD | `pendente coleta` | `pendente` | `pendente` |
+| Resend | email transacional | USD | `pendente coleta` | `pendente` | `pendente` |
+| Pagar.me (infra/plataforma) | custos/ajustes internos | BRL | `pendente coleta` | `1.00` | `pendente` |
+| Outros | dominios/plugins/ferramentas | BRL/USD | `pendente coleta` | `pendente` | `pendente` |
+| **TOTAL MENSAL** |  |  |  |  | **R$ pendente** |
 
 ## Rateio por tipo (opcional)
 | Categoria | Valor BRL |
@@ -41,3 +41,4 @@ Objetivo: consolidar custo mensal estimado e realizado por provedor.
 ## Observacoes
 - Este arquivo e operacional e nao deve conter credenciais.
 - Recomenda-se manter um commit por fechamento mensal para historico.
+- Status atual: consolidado estrutural concluido; fechamento financeiro depende de valores dos paineis de billing.
