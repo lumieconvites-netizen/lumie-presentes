@@ -103,18 +103,13 @@ export default function PresentesDashboard() {
       setGiftListFeeMode(glData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
       setListPageTitle(glData?.title || 'Minha Lista de Presentes');
       setListPageMessage(glData?.description || '');
-      if (typeof glData?.giftsPageCoverImageUrl === 'string') {
-        setListPageCoverImage(glData.giftsPageCoverImageUrl);
+      const layoutRes = await fetch(`/api/gift-lists/${encodeURIComponent(glData.id)}/layout`, { cache: 'no-store' });
+      const layoutData = await parseJsonSafe(layoutRes);
+      if (layoutRes.ok) {
+        const theme = (layoutData?.theme ?? {}) as Record<string, any>;
+        setListPageCoverImage(typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '');
       } else {
-        // fallback legado: capa salva anteriormente no theme JSON
-        const layoutRes = await fetch(`/api/gift-lists/${encodeURIComponent(glData.id)}/layout`, { cache: 'no-store' });
-        const layoutData = await parseJsonSafe(layoutRes);
-        if (layoutRes.ok) {
-          const theme = (layoutData?.theme ?? {}) as Record<string, any>;
-          setListPageCoverImage(typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '');
-        } else {
-          setListPageCoverImage('');
-        }
+        setListPageCoverImage('');
       }
 
       const giftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(glData.id)}`, { cache: 'no-store' });
@@ -136,17 +131,47 @@ export default function PresentesDashboard() {
   async function handleSaveListTexts() {
     setSavingListTexts(true);
     try {
-      const giftListRes = await fetch('/api/gift-lists/my-list', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: listPageTitle.trim() || 'Minha Lista de Presentes',
-          description: listPageMessage.trim(),
-          giftsPageCoverImageUrl: listPageCoverImage || '',
+      const [giftListRes, layoutRes] = await Promise.all([
+        fetch('/api/gift-lists/my-list', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: listPageTitle.trim() || 'Minha Lista de Presentes',
+            description: listPageMessage.trim(),
+          }),
         }),
-      });
+        giftListId
+          ? fetch(`/api/gift-lists/${encodeURIComponent(giftListId)}/layout`, { cache: 'no-store' })
+          : Promise.resolve(null as any),
+      ]);
+
       const data = await parseJsonSafe(giftListRes);
       if (!giftListRes.ok) throw new Error(data?.error ?? 'Erro ao salvar textos');
+
+      if (giftListId && layoutRes) {
+        const layoutData = await parseJsonSafe(layoutRes);
+        if (!layoutRes.ok) {
+          throw new Error(layoutData?.error ?? 'Erro ao carregar layout para salvar capa');
+        }
+
+        const currentTheme = (layoutData?.theme ?? {}) as Record<string, any>;
+        const layoutSaveRes = await fetch(`/api/gift-lists/${encodeURIComponent(giftListId)}/layout`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            blocks: layoutData?.blocks ?? [],
+            customCss: layoutData?.customCss ?? null,
+            theme: {
+              ...currentTheme,
+              gifts_page_cover_image: listPageCoverImage || '',
+            },
+          }),
+        });
+        const layoutSaveData = await parseJsonSafe(layoutSaveRes);
+        if (!layoutSaveRes.ok) {
+          throw new Error(layoutSaveData?.error ?? 'Erro ao salvar capa da pagina de presentes');
+        }
+      }
 
       alert('Textos e capa da página de presentes salvos.');
     } catch (error: any) {

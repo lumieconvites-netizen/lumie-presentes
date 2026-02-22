@@ -40,9 +40,7 @@ export default async function SiteGiftsBySlugPage({
   const fontTitle = theme.font_title || "Cormorant Garamond";
   const pageTitle = list.title || "Lista de Presentes";
   const pageMessage = list.description || "Escolha um presente especial e participe desse momento.";
-  const pageCoverImage =
-    list.giftsPageCoverImageUrl ||
-    (typeof theme.gifts_page_cover_image === "string" ? theme.gifts_page_cover_image : "");
+  const pageCoverImage = typeof theme.gifts_page_cover_image === "string" ? theme.gifts_page_cover_image : "";
 
   return (
     <main className="min-h-screen bg-[#faf7f5]">
