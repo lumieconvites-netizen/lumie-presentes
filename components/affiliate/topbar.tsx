@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, House } from 'lucide-react';
+import { LogOut, Settings, Home } from 'lucide-react';
 
 type ImpersonationData = {
   isImpersonating: boolean;
@@ -123,7 +123,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/" className="cursor-pointer">
-                <House className="w-4 h-4 mr-2" />
+                <Home className="w-4 h-4 mr-2" />
                 Inicio
               </Link>
             </DropdownMenuItem>
