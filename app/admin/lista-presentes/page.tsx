@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -45,6 +46,7 @@ export default function AdminGiftModelsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [uploadingItemImage, setUploadingItemImage] = useState(false);
 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategorySlug, setNewCategorySlug] = useState('');
@@ -253,6 +255,32 @@ export default function AdminGiftModelsPage() {
     }
   }
 
+  async function handleItemImageUpload(file?: File | null) {
+    if (!file) return;
+
+    setUploadingItemImage(true);
+    try {
+      const formData = new FormData();
+      formData.set('file', file);
+      formData.set('folder', 'gift-models-admin');
+
+      const res = await fetch('/api/upload/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await parseJsonSafe(res);
+      if (!res.ok || !data?.url) {
+        throw new Error(data?.error || 'Erro ao enviar imagem');
+      }
+
+      setItemDraft((prev) => ({ ...prev, imageUrl: data.url }));
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao enviar imagem');
+    } finally {
+      setUploadingItemImage(false);
+    }
+  }
+
   async function handleDeleteItem(itemId: string) {
     if (!selectedCategory) return;
     if (!window.confirm('Excluir este presente do modelo?')) return;
@@ -445,6 +473,23 @@ export default function AdminGiftModelsPage() {
 
             <div className="border rounded-lg p-3 space-y-3">
               <p className="text-sm font-medium">Adicionar presente manualmente</p>
+              <div className="flex flex-wrap gap-2">
+                <label className="inline-flex">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemImageUpload(e.target.files?.[0] || null)}
+                    disabled={uploadingItemImage || saving}
+                  />
+                  <span className="inline-flex h-10 items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium cursor-pointer">
+                    {uploadingItemImage ? 'Enviando imagem...' : 'Upload de imagem'}
+                  </span>
+                </label>
+                {itemDraft.imageUrl ? (
+                  <p className="text-xs text-gray-500 self-center truncate max-w-full">{itemDraft.imageUrl}</p>
+                ) : null}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <Input
                   placeholder="Nome"
