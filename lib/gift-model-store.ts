@@ -6,6 +6,7 @@ import {
   DEFAULT_GIFT_MODEL_CATEGORIES,
   extractGiftModelItemsFromBlocks,
   GIFT_MODEL_CATEGORY,
+  hasGiftModelMarker,
   isGiftModelTemplate,
   normalizeGiftModelItems,
   normalizeGiftModelSlug,
@@ -48,10 +49,22 @@ export async function ensureDefaultGiftModelCategories() {
 
     const existing = await prisma.template.findUnique({
       where: { slug },
-      select: { id: true },
+      select: { id: true, category: true, description: true },
     });
 
-    if (existing) continue;
+    if (existing) {
+      const isLegacyGiftModel =
+        existing.category?.toLowerCase() !== GIFT_MODEL_CATEGORY &&
+        hasGiftModelMarker(existing.description);
+
+      if (isLegacyGiftModel) {
+        await prisma.template.update({
+          where: { id: existing.id },
+          data: { category: GIFT_MODEL_CATEGORY },
+        });
+      }
+      continue;
+    }
 
     try {
       await prisma.template.create({
@@ -81,7 +94,12 @@ export async function listGiftModelTemplates() {
   await ensureDefaultGiftModelCategories();
 
   const rows = await prisma.template.findMany({
-    where: { category: GIFT_MODEL_CATEGORY },
+    where: {
+      OR: [
+        { category: GIFT_MODEL_CATEGORY },
+        { description: { startsWith: '__GIFT_MODEL__' } },
+      ],
+    },
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
     select: {
       id: true,
@@ -110,6 +128,7 @@ export async function getGiftModelTemplateBySlug(rawSlug: string) {
       id: true,
       name: true,
       slug: true,
+      category: true,
       description: true,
       thumbnail: true,
       isActive: true,
@@ -119,6 +138,13 @@ export async function getGiftModelTemplateBySlug(rawSlug: string) {
   });
 
   if (!row || !isGiftModelTemplate(row)) return null;
+
+  if (row.category.toLowerCase() !== GIFT_MODEL_CATEGORY && hasGiftModelMarker(row.description)) {
+    await prisma.template.update({
+      where: { id: row.id },
+      data: { category: GIFT_MODEL_CATEGORY },
+    });
+  }
 
   const items = extractGiftModelItemsFromBlocks(row.defaultBlocks);
 

@@ -63,9 +63,13 @@ export function parseGiftModelSummary(description?: string | null) {
   return raw.replace(GIFT_MODEL_MARKER, '').trim();
 }
 
+export function hasGiftModelMarker(description?: string | null) {
+  return safeString(description).startsWith(GIFT_MODEL_MARKER);
+}
+
 export function isGiftModelTemplate(template: { category?: string | null; description?: string | null }) {
   const category = safeString(template.category).toLowerCase();
-  return category === GIFT_MODEL_CATEGORY;
+  return category === GIFT_MODEL_CATEGORY || hasGiftModelMarker(template.description);
 }
 
 export function normalizeGiftModelSlug(value: string) {
