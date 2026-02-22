@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/account-retention",
+      "schedule": "10 6 * * *"
+    }
+  ]
+}
+
