@@ -309,7 +309,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                     <img
                       src={config.backgroundImage}
                       alt={config.title || 'Capa do evento'}
-                      className="w-full max-h-[90vh] object-contain md:h-[78vh] md:max-h-none md:object-cover"
+                      className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]"
                     />
                     {getHeroOverlayStyle(config) && <div className="absolute inset-0" style={getHeroOverlayStyle(config) as React.CSSProperties} />}
                     {config.logo && (
