@@ -241,54 +241,93 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             >
             {/* Hero Block */}
             {block.type === 'hero' && (
-              <div
-                className="relative h-[500px] text-white"
-                style={{
-                  background: config.backgroundImage
-                    ? `url(${config.backgroundImage}) center/cover`
-                    : `linear-gradient(135deg, ${titleColor} 0%, ${primaryColor} 100%)`
-                }}
-              >
-                {getHeroOverlayStyle(config) && <div className="absolute inset-0" style={getHeroOverlayStyle(config) as React.CSSProperties} />}
-                
-                {/* Logo */}
-                {config.logo && (
-                  <div className="absolute top-8 left-8 z-10">
-                    <img 
-                      src={config.logo} 
-                      alt="Logo" 
-                      className="h-16 w-auto object-contain drop-shadow-lg"
-                    />
+              <div className="relative text-white">
+                {config.backgroundImage ? (
+                  <div className="relative w-full bg-black/20">
+                    <img src={config.backgroundImage} alt={config.title || 'Capa do evento'} className="w-full h-auto object-contain max-h-[90vh]" />
+                    {getHeroOverlayStyle(config) && <div className="absolute inset-0" style={getHeroOverlayStyle(config) as React.CSSProperties} />}
+                    {config.logo && (
+                      <div className="absolute top-8 left-8 z-10">
+                        <img
+                          src={config.logo}
+                          alt="Logo"
+                          className="h-16 w-auto object-contain drop-shadow-lg"
+                        />
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 z-10 p-6 md:p-10">
+                      {config.label && (
+                        <p
+                          className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
+                          style={heroElementStyle(getHeroPoint(config, 'label'))}
+                        >
+                          {config.label}
+                        </p>
+                      )}
+
+                      <h1
+                        className="text-4xl md:text-7xl font-bold text-center whitespace-pre leading-[1.05] max-w-none"
+                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle }}
+                      >
+                        {config.title || 'Meu Evento Especial'}
+                      </h1>
+
+                      {config.subtitle && (
+                        <p
+                          className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
+                          style={heroElementStyle(getHeroPoint(config, 'subtitle'))}
+                        >
+                          {config.subtitle}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="relative min-h-[420px] md:min-h-[500px]"
+                    style={{ background: `linear-gradient(135deg, ${titleColor} 0%, ${primaryColor} 100%)` }}
+                  >
+                    {getHeroOverlayStyle(config) && <div className="absolute inset-0" style={getHeroOverlayStyle(config) as React.CSSProperties} />}
+
+                    {config.logo && (
+                      <div className="absolute top-8 left-8 z-10">
+                        <img
+                          src={config.logo}
+                          alt="Logo"
+                          className="h-16 w-auto object-contain drop-shadow-lg"
+                        />
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 z-10 p-6 md:p-10">
+                      {config.label && (
+                        <p
+                          className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
+                          style={heroElementStyle(getHeroPoint(config, 'label'))}
+                        >
+                          {config.label}
+                        </p>
+                      )}
+
+                      <h1
+                        className="text-4xl md:text-7xl font-bold text-center whitespace-pre leading-[1.05] max-w-none"
+                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle }}
+                      >
+                        {config.title || 'Meu Evento Especial'}
+                      </h1>
+
+                      {config.subtitle && (
+                        <p
+                          className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
+                          style={heroElementStyle(getHeroPoint(config, 'subtitle'))}
+                        >
+                          {config.subtitle}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
-
-                <div className="absolute inset-0 z-10 p-6 md:p-10">
-                  {config.label && (
-                    <p
-                      className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
-                      style={heroElementStyle(getHeroPoint(config, 'label'))}
-                    >
-                      {config.label}
-                    </p>
-                  )}
-
-                  <h1
-                    className="text-4xl md:text-7xl font-bold text-center whitespace-pre leading-[1.05] max-w-none"
-                    style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle }}
-                  >
-                    {config.title || 'Meu Evento Especial'}
-                  </h1>
-
-                  {config.subtitle && (
-                    <p
-                      className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
-                      style={heroElementStyle(getHeroPoint(config, 'subtitle'))}
-                    >
-                      {config.subtitle}
-                    </p>
-                  )}
-
-                </div>
               </div>
             )}
 
