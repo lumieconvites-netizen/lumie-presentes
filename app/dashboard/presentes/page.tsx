@@ -49,6 +49,16 @@ async function parseJsonSafe(res: Response) {
   }
 }
 
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...(init ?? {}), signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export default function PresentesDashboard() {
   const { settings } = useUser();
   const [giftListId, setGiftListId] = useState<string>('');
@@ -95,7 +105,7 @@ export default function PresentesDashboard() {
   async function loadGiftListAndGifts() {
     setLoading(true);
     try {
-      const glRes = await fetch('/api/gift-lists/my-list', { cache: 'no-store' });
+      const glRes = await fetchWithTimeout('/api/gift-lists/my-list', { cache: 'no-store' });
       const glData = await parseJsonSafe(glRes);
       if (!glRes.ok) throw new Error(glData?.error ?? 'Erro ao carregar lista');
       setGiftListId(glData.id);
@@ -103,16 +113,24 @@ export default function PresentesDashboard() {
       setGiftListFeeMode(glData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
       setListPageTitle(glData?.title || 'Minha Lista de Presentes');
       setListPageMessage(glData?.description || '');
-      const layoutRes = await fetch(`/api/gift-lists/${encodeURIComponent(glData.id)}/layout`, { cache: 'no-store' });
-      const layoutData = await parseJsonSafe(layoutRes);
-      if (layoutRes.ok) {
-        const theme = (layoutData?.theme ?? {}) as Record<string, any>;
-        setListPageCoverImage(typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '');
-      } else {
-        setListPageCoverImage('');
-      }
 
-      const giftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(glData.id)}`, { cache: 'no-store' });
+      // Layout nao pode bloquear o carregamento dos presentes.
+      void (async () => {
+        try {
+          const layoutRes = await fetchWithTimeout(`/api/gift-lists/${encodeURIComponent(glData.id)}/layout`, { cache: 'no-store' });
+          const layoutData = await parseJsonSafe(layoutRes);
+          if (!layoutRes.ok) {
+            setListPageCoverImage('');
+            return;
+          }
+          const theme = (layoutData?.theme ?? {}) as Record<string, any>;
+          setListPageCoverImage(typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '');
+        } catch {
+          setListPageCoverImage('');
+        }
+      })();
+
+      const giftsRes = await fetchWithTimeout(`/api/gifts?giftListId=${encodeURIComponent(glData.id)}`, { cache: 'no-store' });
       const giftsData = await parseJsonSafe(giftsRes);
       if (!giftsRes.ok) throw new Error(giftsData?.error ?? 'Erro ao carregar presentes');
       setGifts((giftsData ?? []).map((row: any) => ({
@@ -122,7 +140,11 @@ export default function PresentesDashboard() {
       setSelectionMode(false);
       setSelectedIds([]);
     } catch (error: any) {
-      alert(error?.message ?? 'Erro ao carregar presentes');
+      if (error?.name === 'AbortError') {
+        alert('O carregamento demorou demais. Tente novamente em alguns segundos.');
+      } else {
+        alert(error?.message ?? 'Erro ao carregar presentes');
+      }
     } finally {
       setLoading(false);
     }
