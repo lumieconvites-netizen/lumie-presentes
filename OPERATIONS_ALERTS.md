@@ -12,10 +12,10 @@ Fechar o bloco prioritario de alertas operacionais com thresholds fixos e aciona
   - `prod-auth-failure-spike` (Sentry)
   - `prod-checkout-webhook-critical` (Sentry)
   - monitor custom no Supabase: `prod-db-saturation` (visual)
+  - Supabase: monitor visual manual ativo com regra operacional (`CPU > 80% por 10m` ou `Memory > 80% por 10m`)
+  - Upstash: monitoramento manual ativo em `Uso` + `Monitor` (sem pacote pago)
 - Parcial:
-  - Supabase: sem alerta automatico nativo configurado nesta UI; monitor visual criado.
-- Pendente (decisao de custo):
-  - Upstash alerta automatico (`prod-redis-error-latency`) depende de ativar pacote de monitoramento pago.
+  - Alertas automaticos nativos para DB/Redis dependem de recursos pagos em plataformas externas ou plano adicional.
 
 ## Alertas (definicao final)
 
@@ -72,12 +72,15 @@ Fechar o bloco prioritario de alertas operacionais com thresholds fixos e aciona
   - P95 latency `> 100ms` por `10 minutos`
 - Acao:
   - Notificar canal operacional + owner backend
+- Status atual:
+  - modo manual (sem pacote pago): revisar `Uso` e `Monitor` 1x por dia util
+  - registrar check com data/hora e situacao (`OK`, `atencao`, `incidente`)
 
 ## Sequencia de execucao (passo a passo)
 
 1. Criar os 3 alertas no Sentry (1, 2, 3) com `environment:production`. (concluido)
 2. Criar monitor de banco no Supabase (4). (concluido como visual)
-3. Criar alerta de Redis no Upstash (5). (pendente por custo/plano)
+3. Upstash em modo manual sem custo extra (5). (concluido)
 4. Testar disparo controlado do Sentry: (concluido)
    - Com header `Authorization: Bearer <CRON_SECRET>`, chamar:
    - `GET /api/sentry-debug?mode=exception&label=alert-test`
@@ -92,10 +95,19 @@ Fechar o bloco prioritario de alertas operacionais com thresholds fixos e aciona
    - validar picos de conexao/CPU e registrar observacao
 3. Upstash:
    - abrir aba `Uso` e `Monitor` do Redis de producao
-   - checar erros/latencia anormal
+   - checar comandos diarios por regiao e tendencia de subida anormal
+   - checar latencia/erros no monitor (se houver picos recorrentes)
    - registrar data/hora da revisao manual
 4. Acao corretiva:
    - se houver degradacao recorrente, priorizar ativacao de pacote para alerta automatico no Upstash
+
+## Checklist diario (30s) - Upstash manual
+1. Abrir Redis de producao em `Uso` (janela ultimos 5 dias).
+2. Confirmar que nao houve salto atipico de comandos em relacao ao padrao da semana.
+3. Abrir `Monitor` e verificar se nao ha pico sustentado de latencia/erro.
+4. Registrar em log operacional:
+   - `YYYY-MM-DD HH:mm - Upstash - OK`
+   - ou `YYYY-MM-DD HH:mm - Upstash - ATENCAO (descrever pico)`
 
 ## Validacao rapida (PowerShell)
 
