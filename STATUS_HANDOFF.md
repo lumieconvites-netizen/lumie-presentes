@@ -23,6 +23,8 @@
 - Endpoints de escrita de imagem (`gifts`, `admin/gift-lists/*/gifts`, `rsvp/settings`) bloqueiam novas URLs legadas de Supabase Storage.
 - `app/api/sentry-debug/route.ts`: endpoint protegido por bearer para validar alertas operacionais no Sentry.
 - `lib/email-jobs.ts` + `/api/cron/email-jobs`: fila/worker de email via Redis + cron.
+- `lib/media-cleanup-jobs.ts` + `/api/cron/media-cleanup-jobs`: fila/worker de limpeza de midia via Redis + cron.
+- `lib/media-cleanup.ts`: centraliza remocao de assets (R2 e legado Supabase Storage).
 - `app/api/public/rsvp/[slug]/confirm/route.ts`: notificacao de RSVP movida para fila assincrona.
 - `app/api/auth/register/route.ts`: envio de codigo de verificacao movido para fila assincrona.
 - `app/api/auth/resend-verification/route.ts`: reenvio de codigo movido para fila assincrona.
@@ -47,7 +49,7 @@
 ## Pendente prioritario
 - Filas para tarefas pesadas fora da request:
   - fila de emails em producao para RSVP + auth (cadastro, reenvio e recuperacao)
-  - falta definir fila para limpeza/processamentos de midia
+  - fila de limpeza de midia em producao para deletar assets fora da request
 - Alertas operacionais completos:
   - regras Sentry para 5xx/auth/checkout/webhook (concluido)
   - Supabase em monitor visual manual (concluido)

@@ -1,21 +1,14 @@
-import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { UserRole } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { enqueueMediaCleanupJob } from "@/lib/media-cleanup-jobs";
+import { AssetDeleteResult, deleteAssets } from "@/lib/media-cleanup";
 
 const RETENTION_MARKER = "[AUTO_RETENTION_PENDING_DELETE]";
 
 type RetentionRunOptions = {
   dryRun?: boolean;
   now?: Date;
-};
-
-type AssetDeleteResult = {
-  attempted: number;
-  deleted: number;
-  failed: number;
-  errors: string[];
 };
 
 type RetentionAuditEntry = {
@@ -62,65 +55,6 @@ function extractUrlsFromJson(value: unknown, output: Set<string>) {
       extractUrlsFromJson(nested, output);
     }
   }
-}
-
-function getR2Client() {
-  const accountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID;
-  const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
-  if (!accountId || !accessKeyId || !secretAccessKey) return null;
-
-  return new S3Client({
-    region: "auto",
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    credentials: { accessKeyId, secretAccessKey },
-  });
-}
-
-async function deleteAssetByUrl(url: string, r2Client: S3Client | null) {
-  const r2Base = process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL?.replace(/\/+$/, "");
-  const r2Bucket = process.env.CLOUDFLARE_R2_BUCKET;
-
-  if (r2Client && r2Base && r2Bucket && url.startsWith(`${r2Base}/`)) {
-    const key = url.slice(r2Base.length + 1);
-    if (!key) return;
-    await r2Client.send(new DeleteObjectCommand({ Bucket: r2Bucket, Key: key }));
-    return;
-  }
-
-  const supabaseBase = process.env.SUPABASE_URL?.replace(/\/+$/, "");
-  const prefix = supabaseBase ? `${supabaseBase}/storage/v1/object/public/` : null;
-  if (prefix && url.startsWith(prefix)) {
-    if (!supabaseAdmin) return;
-    const rest = url.slice(prefix.length);
-    const slashIndex = rest.indexOf("/");
-    if (slashIndex <= 0) return;
-    const bucket = rest.slice(0, slashIndex);
-    const path = rest.slice(slashIndex + 1);
-    if (!bucket || !path) return;
-    const { error } = await supabaseAdmin.storage.from(bucket).remove([path]);
-    if (error && !`${error.message}`.toLowerCase().includes("not found")) {
-      throw error;
-    }
-  }
-}
-
-async function deleteAssets(urls: string[]): Promise<AssetDeleteResult> {
-  const r2Client = getR2Client();
-  const result: AssetDeleteResult = { attempted: 0, deleted: 0, failed: 0, errors: [] };
-
-  for (const url of urls) {
-    result.attempted += 1;
-    try {
-      await deleteAssetByUrl(url, r2Client);
-      result.deleted += 1;
-    } catch (error) {
-      result.failed += 1;
-      result.errors.push(`${url} => ${error instanceof Error ? error.message : "unknown error"}`);
-    }
-  }
-
-  return result;
 }
 
 async function writeRetentionAuditLog(entries: RetentionAuditEntry[]) {
@@ -281,8 +215,23 @@ export async function runAccountRetentionJob(options: RetentionRunOptions = {}) 
 
     const urls = Array.from(assetUrls);
     let assetResult: AssetDeleteResult = { attempted: urls.length, deleted: 0, failed: 0, errors: [] };
+    let cleanupMode: "dry_run" | "queued" | "inline_fallback" = dryRun ? "dry_run" : "queued";
+    let cleanupJobId: string | null = null;
     if (!dryRun && urls.length > 0) {
-      assetResult = await deleteAssets(urls);
+      try {
+        cleanupJobId = await enqueueMediaCleanupJob({
+          urls,
+          source: "account_retention",
+          userId: user.id,
+          userEmail: user.email,
+        });
+      } catch (error) {
+        cleanupMode = "inline_fallback";
+        assetResult = await deleteAssets(urls);
+        assetResult.errors.unshift(
+          `[enqueue_failed] ${error instanceof Error ? error.message : "unknown error"}`
+        );
+      }
     }
 
     if (!dryRun) {
@@ -299,6 +248,8 @@ export async function runAccountRetentionJob(options: RetentionRunOptions = {}) 
       metadata: {
         hardDeleteAt,
         assets: assetResult,
+        cleanupMode,
+        cleanupJobId,
       },
     });
     details.push({
@@ -307,6 +258,8 @@ export async function runAccountRetentionJob(options: RetentionRunOptions = {}) 
       action: dryRun ? "would_hard_delete" : "hard_deleted",
       hardDeleteAt,
       assets: assetResult,
+      cleanupMode,
+      cleanupJobId,
     });
   }
 
