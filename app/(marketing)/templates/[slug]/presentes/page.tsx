@@ -30,8 +30,8 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
   if (!template || !template.isActive || isCategoryMetaTemplate(template)) return notFound();
 
   const gifts = extractTemplateGiftItemsFromBlocks(template.defaultBlocks || []);
-  const blocks = Array.isArray(template.defaultBlocks) ? template.defaultBlocks : [];
-  const giftsBlock = blocks.find((block: any) => block?.type === 'gifts');
+  const blocks = (Array.isArray(template.defaultBlocks) ? template.defaultBlocks : []) as any[];
+  const giftsBlock = blocks.find((block) => block?.type === 'gifts');
   const giftsConfig = (giftsBlock?.config as any) || {};
   const theme = (template.defaultTheme as any) || {};
   const pageTitle = giftsConfig?.title || 'Lista de Presentes';
