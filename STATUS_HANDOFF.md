@@ -25,6 +25,7 @@
 - `DEPLOY_CHECKLIST.md`: reescrito para stack atual.
 - `OPERATIONS_ALERTS.md`: runbook com 5 alertas (Sentry + Supabase + Upstash) e thresholds fixos.
 - `SECRET_ROTATION_POLICY.md`: politica formal de rotacao com calendario, responsaveis e rollback.
+- `scripts/load-test.mjs` e `TESTE_CARGA.md`: harness de teste de carga com modo seguro e modo de validacao de escrita.
 
 ## Parcial (faltando fechar)
 - Migracao 100% de legados de Storage:
@@ -43,10 +44,8 @@
   - Supabase em monitor visual (parcial)
   - Upstash automatico pendente por custo/plano
 - Teste de carga:
-  - cadastro
-  - upload
-  - checkout
-  - RSVP/check-in
+  - roteiro/scripting pronto (`TESTE_CARGA.md`)
+  - falta executar rodada oficial e registrar baseline
 - Rotacao operacional:
   - politica definida; falta executar primeira rodada com auditoria preenchida
 
