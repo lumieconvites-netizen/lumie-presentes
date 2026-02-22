@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { isCategoryMetaTemplate, normalizeCategorySlug } from "@/lib/template-categories";
+import { isGiftModelTemplate } from "@/lib/gift-models";
 
 const templateSchema = z.object({
   name: z.string().min(2).max(120),
@@ -33,7 +34,9 @@ export async function GET(request: Request) {
     orderBy: [{ isActive: "desc" }, { order: "asc" }, { createdAt: "desc" }],
   });
 
-  const templates = rawTemplates.filter((template) => !isCategoryMetaTemplate(template));
+  const templates = rawTemplates.filter(
+    (template) => !isCategoryMetaTemplate(template) && !isGiftModelTemplate(template)
+  );
   return NextResponse.json({ templates });
 }
 

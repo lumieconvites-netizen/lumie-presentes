@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { isCategoryMetaTemplate, normalizeCategorySlug } from "@/lib/template-categories";
+import { isGiftModelTemplate } from "@/lib/gift-models";
 
 const patchSchema = z.object({
   name: z.string().min(2).max(120).optional(),
@@ -27,7 +28,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 
   const template = await prisma.template.findUnique({ where: { id: params.id } });
   if (!template) return NextResponse.json({ error: "Template nao encontrado" }, { status: 404 });
-  if (isCategoryMetaTemplate(template)) {
+  if (isCategoryMetaTemplate(template) || isGiftModelTemplate(template)) {
     return NextResponse.json({ error: "Template nao encontrado" }, { status: 404 });
   }
 
@@ -54,7 +55,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const current = await prisma.template.findUnique({ where: { id: params.id } });
-    if (!current || isCategoryMetaTemplate(current)) {
+    if (!current || isCategoryMetaTemplate(current) || isGiftModelTemplate(current)) {
       return NextResponse.json({ error: "Template nao encontrado" }, { status: 404 });
     }
 
@@ -92,7 +93,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
 
   try {
     const current = await prisma.template.findUnique({ where: { id: params.id } });
-    if (!current || isCategoryMetaTemplate(current)) {
+    if (!current || isCategoryMetaTemplate(current) || isGiftModelTemplate(current)) {
       return NextResponse.json({ error: "Template nao encontrado" }, { status: 404 });
     }
 

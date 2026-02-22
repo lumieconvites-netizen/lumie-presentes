@@ -418,6 +418,9 @@ export default function PresentesDashboard() {
                   </Button>
                 </>
               )}
+              <Button variant="outline" asChild disabled={loading}>
+                <Link href="/dashboard/presentes/modelos">Modelos prontos</Link>
+              </Button>
               <Button onClick={() => setOpenCreate(true)} style={{ backgroundColor: primary }} className="text-white hover:opacity-90" disabled={loading}>
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Presente

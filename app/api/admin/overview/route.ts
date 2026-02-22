@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { GIFT_MODEL_CATEGORY } from "@/lib/gift-models";
 
 export async function GET() {
   const session = await requireAdminSession();
@@ -30,8 +31,8 @@ export async function GET() {
     prisma.user.count({ where: { role: "AMBASSADOR" } }),
     prisma.giftList.count(),
     prisma.giftList.count({ where: { isPublished: true } }),
-    prisma.template.count(),
-    prisma.template.count({ where: { isActive: true } }),
+    prisma.template.count({ where: { category: { not: GIFT_MODEL_CATEGORY } } }),
+    prisma.template.count({ where: { isActive: true, category: { not: GIFT_MODEL_CATEGORY } } }),
     prisma.giftItem.count(),
     prisma.message.count(),
     prisma.order.count(),

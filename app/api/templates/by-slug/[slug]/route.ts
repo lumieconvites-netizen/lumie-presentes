@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isCategoryMetaTemplate } from "@/lib/template-categories";
 import { extractTemplateGiftItemsFromBlocks } from "@/lib/template-gifts";
+import { isGiftModelTemplate } from "@/lib/gift-models";
 
 export async function GET(_request: Request, { params }: { params: { slug: string } }) {
   const slug = String(params.slug || "").trim().toLowerCase();
@@ -20,7 +21,7 @@ export async function GET(_request: Request, { params }: { params: { slug: strin
     },
   });
 
-  if (dbTemplate && dbTemplate.isActive && !isCategoryMetaTemplate(dbTemplate)) {
+  if (dbTemplate && dbTemplate.isActive && !isCategoryMetaTemplate(dbTemplate) && !isGiftModelTemplate(dbTemplate)) {
     const blocks = Array.isArray(dbTemplate.defaultBlocks) ? dbTemplate.defaultBlocks : [];
     return NextResponse.json({
       template: {

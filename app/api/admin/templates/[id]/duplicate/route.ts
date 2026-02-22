@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { isCategoryMetaTemplate } from "@/lib/template-categories";
+import { isGiftModelTemplate } from "@/lib/gift-models";
 
 function slugify(v: string) {
   return v
@@ -39,7 +40,7 @@ export async function POST(_request: Request, { params }: { params: { id: string
 
   try {
     const original = await prisma.template.findUnique({ where: { id: params.id } });
-    if (!original || isCategoryMetaTemplate(original)) {
+    if (!original || isCategoryMetaTemplate(original) || isGiftModelTemplate(original)) {
       return NextResponse.json({ error: "Template nao encontrado" }, { status: 404 });
     }
 

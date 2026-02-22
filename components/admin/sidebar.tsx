@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Blocks, CreditCard, LayoutTemplate, ShieldBan, Sparkles, ClipboardList } from 'lucide-react';
+import { Blocks, CreditCard, LayoutTemplate, ShieldBan, Sparkles, ClipboardList, Gift } from 'lucide-react';
 
 const items = [
   { href: '/admin', label: 'Geral', icon: Blocks },
@@ -11,6 +11,7 @@ const items = [
   { href: '/admin/bloqueados', label: 'Bloqueados', icon: ShieldBan },
   { href: '/admin/retencao', label: 'Retencao', icon: ClipboardList },
   { href: '/admin/templates', label: 'Templates', icon: LayoutTemplate },
+  { href: '/admin/lista-presentes', label: 'Lista de presentes', icon: Gift },
 ];
 
 export default function AdminSidebar() {

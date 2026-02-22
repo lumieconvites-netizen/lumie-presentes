@@ -10,6 +10,7 @@ import {
   parseCategoryMarkerName,
   prettyCategoryName,
 } from "@/lib/template-categories";
+import { isGiftModelTemplate } from "@/lib/gift-models";
 
 const createSchema = z.object({
   name: z.string().min(2).max(80),
@@ -34,6 +35,7 @@ export async function GET() {
   const categoriesMap = new Map<string, { slug: string; name: string; templatesCount: number; activeTemplatesCount: number }>();
 
   for (const template of templates) {
+    if (isGiftModelTemplate(template)) continue;
     const categorySlug = normalizeCategorySlug(template.category || "");
     if (!categorySlug) continue;
     const current = categoriesMap.get(categorySlug) ?? {

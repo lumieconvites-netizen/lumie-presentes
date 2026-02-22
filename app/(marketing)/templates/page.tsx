@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { Button } from '@/components/ui/button';
 import { isCategoryMetaTemplate, normalizeCategorySlug, parseCategoryMarkerName, prettyCategoryName } from '@/lib/template-categories';
+import { isGiftModelTemplate } from '@/lib/gift-models';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
@@ -49,7 +50,9 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
     },
   });
 
-  const dbTemplates = rawTemplates.filter((template) => !isCategoryMetaTemplate(template));
+  const dbTemplates = rawTemplates.filter(
+    (template) => !isCategoryMetaTemplate(template) && !isGiftModelTemplate(template)
+  );
 
   const templateCards: TemplateCard[] = dbTemplates.map((template) => {
     const category = normalizeCategorySlug(template.category || 'geral') || 'geral';
