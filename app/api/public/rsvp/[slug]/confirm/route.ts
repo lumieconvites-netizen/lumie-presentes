@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getQrImageUrl, getQrPayload } from "@/lib/rsvp";
-import { sendRsvpNotificationEmail } from "@/lib/email";
+import { enqueueRsvpNotificationEmailJob } from "@/lib/email-jobs";
 
 const confirmSchema = z.object({
-  guestId: z.string().min(1, "Convidado inválido"),
+  guestId: z.string().min(1, "Convidado invalido"),
   status: z.enum(["CONFIRMED", "DECLINED"]).optional(),
   adultsCompanions: z.coerce.number().int().min(0).max(20).optional(),
   childrenCount: z.coerce.number().int().min(0).max(20).optional(),
@@ -30,11 +30,11 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
     });
 
     if (!list || !list.isPublished) {
-      return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
     }
 
     if (!list.rsvpSettings?.enabled) {
-      return NextResponse.json({ error: "RSVP ainda não foi habilitado para esta lista" }, { status: 400 });
+      return NextResponse.json({ error: "RSVP ainda nao foi habilitado para esta lista" }, { status: 400 });
     }
 
     const body = await req.json();
@@ -52,10 +52,8 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
       select: {
         id: true,
         fullName: true,
-        status: true,
         qrToken: true,
         checkInCode: true,
-        checkedInAt: true,
         confirmedAt: true,
         adultLimit: true,
         childLimit: true,
@@ -63,20 +61,20 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
     });
 
     if (!guest) {
-      return NextResponse.json({ error: "Convidado não encontrado na lista deste evento." }, { status: 404 });
+      return NextResponse.json({ error: "Convidado nao encontrado na lista deste evento." }, { status: 404 });
     }
 
     if (nextStatus === "CONFIRMED") {
       if (adultsCompanions > guest.adultLimit) {
         return NextResponse.json(
-          { error: `Este convidado permite até ${guest.adultLimit} acompanhante(s) adulto(s).` },
+          { error: `Este convidado permite ate ${guest.adultLimit} acompanhante(s) adulto(s).` },
           { status: 400 }
         );
       }
 
       if (childrenCount > guest.childLimit) {
         return NextResponse.json(
-          { error: `Este convidado permite até ${guest.childLimit} criança(s).` },
+          { error: `Este convidado permite ate ${guest.childLimit} crianca(s).` },
           { status: 400 }
         );
       }
@@ -106,14 +104,14 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
 
     if (list.rsvpSettings.notificationEmail) {
       try {
-        await sendRsvpNotificationEmail({
+        await enqueueRsvpNotificationEmailJob({
           to: list.rsvpSettings.notificationEmail,
           eventTitle: list.rsvpSettings.eventTitle || list.title,
           guestName: updated.fullName,
           status: nextStatus,
         });
       } catch (mailError) {
-      console.error("Falha ao enviar notificação RSVP por e-mail:", mailError);
+        console.error("Falha ao enfileirar notificacao RSVP por e-mail:", mailError);
       }
     }
 
@@ -135,6 +133,6 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
     }
     console.error("Erro ao confirmar RSVP:", error);
-    return NextResponse.json({ error: "Erro ao confirmar presença" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao confirmar presenca" }, { status: 500 });
   }
 }

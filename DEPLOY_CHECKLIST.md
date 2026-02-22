@@ -101,6 +101,7 @@ vercel --prod
 $h = @{ Authorization = "Bearer <CRON_SECRET>" }
 Invoke-RestMethod -Uri "https://lumieeventos.com/api/cron/account-retention?dryRun=1" -Headers $h
 Invoke-RestMethod -Uri "https://lumieeventos.com/api/sentry-debug?mode=exception&label=smoke-prod" -Headers $h
+Invoke-RestMethod -Uri "https://lumieeventos.com/api/cron/email-jobs?dryRun=1&limit=10" -Headers $h
 ```
 
 ## 6) Rotina operacional semanal

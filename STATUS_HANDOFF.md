@@ -22,6 +22,8 @@
 - `app/api/upload/avatar/route.ts`: upload em R2-only quando configurado; sem fallback legado no endpoint.
 - Endpoints de escrita de imagem (`gifts`, `admin/gift-lists/*/gifts`, `rsvp/settings`) bloqueiam novas URLs legadas de Supabase Storage.
 - `app/api/sentry-debug/route.ts`: endpoint protegido por bearer para validar alertas operacionais no Sentry.
+- `lib/email-jobs.ts` + `/api/cron/email-jobs`: fila/worker de email via Redis + cron.
+- `app/api/public/rsvp/[slug]/confirm/route.ts`: notificacao de RSVP movida para fila assincrona.
 - `DEPLOY_CHECKLIST.md`: reescrito para stack atual.
 - `OPERATIONS_ALERTS.md`: runbook com 5 alertas (Sentry + Supabase + Upstash) e thresholds fixos.
 - `SECRET_ROTATION_POLICY.md`: politica formal de rotacao com calendario, responsaveis e rollback.
@@ -38,9 +40,9 @@
 
 ## Pendente prioritario
 - Filas para tarefas pesadas fora da request:
-  - emails em lote
-  - limpeza/processamentos async
-  - rotinas demoradas
+  - infraestrutura base de fila para email implementada (Redis + cron)
+  - falta migrar outros envios de email (auth) para worker
+  - falta definir fila para limpeza/processamentos de midia
 - Alertas operacionais completos:
   - regras Sentry para 5xx/auth/checkout/webhook (concluido)
   - Supabase em monitor visual (parcial)
