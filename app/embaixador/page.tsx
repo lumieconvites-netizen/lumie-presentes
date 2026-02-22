@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Copy, Check } from 'lucide-react';
 
 type AmbassadorOverview = {
   ambassador: { id: string; name: string; email: string };
@@ -28,6 +30,45 @@ function brl(value: number) {
 export default function AmbassadorDashboardPage() {
   const [data, setData] = useState<AmbassadorOverview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copiedCode, setCopiedCode] = useState<string>('');
+
+  const codeMeta = (type: string) => {
+    if (type === 'PARTNER_CLIENT') {
+      return {
+        label: 'Código do parceiro para cliente',
+        hint: 'Use quando um PARCEIRO trouxer um CLIENTE.',
+      };
+    }
+    if (type === 'AMBASSADOR_CLIENT') {
+      return {
+        label: 'Seu código para cliente direto',
+        hint: 'Use quando VOCÊ trouxer um CLIENTE direto.',
+      };
+    }
+    if (type === 'AMBASSADOR_PARTNER') {
+      return {
+        label: 'Seu código para cadastrar parceiro',
+        hint: 'Use para cadastrar PARCEIROS na sua rede.',
+      };
+    }
+
+    return {
+      label: type,
+      hint: 'Use este código no cadastro.',
+    };
+  };
+
+  async function handleCopyCode(code: string) {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      window.setTimeout(() => {
+        setCopiedCode((prev) => (prev === code ? '' : prev));
+      }, 1800);
+    } catch {
+      alert('Nao foi possivel copiar automaticamente.');
+    }
+  }
 
   useEffect(() => {
     let cancel = false;
@@ -58,13 +99,30 @@ export default function AmbassadorDashboardPage() {
       <Card className="border-[#ead9cd]">
         <CardHeader>
           <CardTitle>Seus codigos de embaixador</CardTitle>
+          <p className="text-sm text-gray-600">
+            Dica rapida: <b>cliente direto = AMBASSADOR_CLIENT</b>, <b>novo parceiro = AMBASSADOR_PARTNER</b>,{' '}
+            <b>cliente trazido por parceiro = PARTNER_CLIENT</b>.
+          </p>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {data.codes.map((code) => (
             <div key={code.id} className="rounded-lg border border-[#ead9cd] p-3 bg-white">
-              <p className="text-xs text-gray-500">{code.type}</p>
-              <p className="font-semibold text-lg">{code.code}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">{codeMeta(code.type).label}</p>
+              <p className="font-semibold text-lg break-all">{code.code}</p>
+              <p className="text-xs text-gray-500 mt-1">{codeMeta(code.type).hint}</p>
               <p className="text-sm text-gray-600">{code.usageCount} cadastros com este codigo</p>
+              <div className="mt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => handleCopyCode(code.code)}
+                >
+                  {copiedCode === code.code ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                  {copiedCode === code.code ? 'Copiado' : 'Copiar codigo'}
+                </Button>
+              </div>
             </div>
           ))}
         </CardContent>
