@@ -10,7 +10,7 @@ Objetivo: consolidar custo mensal estimado e realizado por provedor.
 ## Tabela mensal (parcial preenchida)
 | Provedor | Plano/uso | Moeda origem | Valor origem | Cambio usado | Valor em BRL |
 |---|---|---|---:|---:|---:|
-| Supabase | Pro (billing mensal) | USD | `pendente coleta` | `pendente` | `pendente` |
+| Supabase | Pro Plan + 7-days PITR (ciclo Feb 22 - Mar 22) | USD | `Current: 25.96` (`Projected: 118.88`) | `pendente` | `pendente` |
 | Vercel | Pro + execucao/build | USD | `pendente coleta` | `pendente` | `pendente` |
 | Cloudflare R2 | storage + egress + operacoes | USD | `pendente coleta` | `pendente` | `pendente` |
 | Upstash Redis | pay-as-you-go | USD | `0.00` (parcial visto no painel) | `pendente` | `0.00` (parcial) |
