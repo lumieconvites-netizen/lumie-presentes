@@ -38,8 +38,13 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
       where: {
         giftListId: list.id,
         status: "PENDING",
+        fullName: {
+          contains: q,
+          mode: "insensitive",
+        },
       },
       orderBy: [{ fullName: "asc" }],
+      take: 200,
       select: {
         id: true,
         fullName: true,
@@ -51,9 +56,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
       },
     });
 
-    const results = guests
-      .filter((guest) => normalizeGuestName(guest.fullName).includes(normalizedQ))
-      .slice(0, 20);
+    const results = guests.filter((guest) => normalizeGuestName(guest.fullName).includes(normalizedQ)).slice(0, 20);
 
     return NextResponse.json({
       results,

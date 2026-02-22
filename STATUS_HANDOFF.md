@@ -26,6 +26,8 @@
 - `OPERATIONS_ALERTS.md`: runbook com 5 alertas (Sentry + Supabase + Upstash) e thresholds fixos.
 - `SECRET_ROTATION_POLICY.md`: politica formal de rotacao com calendario, responsaveis e rollback.
 - `scripts/load-test.mjs` e `TESTE_CARGA.md`: harness de teste de carga com modo seguro e modo de validacao de escrita.
+- `TESTE_CARGA_RESULTADOS.md`: duas rodadas executadas em producao (baseline + escrita controlada).
+- `app/api/public/rsvp/[slug]/search/route.ts`: filtro no banco + limite de scan para reduzir custo de busca.
 
 ## Parcial (faltando fechar)
 - Migracao 100% de legados de Storage:
@@ -44,8 +46,8 @@
   - Supabase em monitor visual (parcial)
   - Upstash automatico pendente por custo/plano
 - Teste de carga:
-  - roteiro/scripting pronto (`TESTE_CARGA.md`)
-  - falta executar rodada oficial e registrar baseline
+  - executado com baseline oficial (pass)
+  - ponto de atencao: latencia alta em `rsvp_search` sob carga mista persiste apos primeiro ajuste; requer tuning de DB/pool
 - Rotacao operacional:
   - politica definida; falta executar primeira rodada com auditoria preenchida
 
