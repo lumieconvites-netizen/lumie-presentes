@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getActingUserContext } from "@/lib/acting-user";
 import { isR2Configured, uploadImageToR2 } from "@/lib/r2";
 
@@ -35,40 +34,21 @@ export async function POST(req: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    if (isR2Configured()) {
-      const url = await uploadImageToR2({
-        key: path,
-        body: buffer,
-        contentType: file.type,
-      });
-      return NextResponse.json({ url }, { status: 200 });
-    }
-
-    if (!supabaseAdmin) {
+    if (!isR2Configured()) {
       return NextResponse.json(
         {
-          error:
-            "Upload externo nao configurado. Configure Cloudflare R2 (recomendado) ou SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.",
+          error: "Upload indisponivel: Cloudflare R2 nao configurado.",
         },
         { status: 503 }
       );
     }
 
-    const bucket = "avatars";
-    const { error: uploadError } = await supabaseAdmin.storage.from(bucket).upload(path, buffer, {
+    const url = await uploadImageToR2({
+      key: path,
+      body: buffer,
       contentType: file.type,
-      upsert: true,
     });
-
-    if (uploadError) {
-      return NextResponse.json({ error: `Falha no upload: ${uploadError.message}` }, { status: 500 });
-    }
-
-    const { data } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
-    const publicUrl = data?.publicUrl;
-    if (!publicUrl) return NextResponse.json({ error: "Nao foi possivel gerar URL publica." }, { status: 500 });
-
-    return NextResponse.json({ url: publicUrl }, { status: 200 });
+    return NextResponse.json({ url }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? "Erro inesperado" }, { status: 500 });
   }

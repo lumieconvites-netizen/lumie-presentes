@@ -1,60 +1,110 @@
-# Deploy checklist - LUMIE
+# Deploy Checklist - LUMIE (Atual)
 
-## 1) Pre-requisitos
-- Projeto Supabase (Postgres + Storage bucket `avatars` publico)
-- Conta Vercel
-- Conta Resend (email transacional)
-- Conta Pagar.me (sandbox/producao)
+## 1) Infra obrigatoria
+- Supabase (Postgres + backup agendado ativo)
+- Vercel (producao)
+- Cloudflare R2 (bucket de uploads)
+- Upstash Redis (rate limit + idempotencia)
+- Sentry (monitoramento de erros)
+- Resend (email transacional)
+- Pagar.me (pagamentos)
 
-## 2) Comandos locais (PowerShell)
+## 2) Variaveis de ambiente (Vercel)
+
+### Banco
+- `DATABASE_URL` (Supabase Transaction Pooler, `sslmode=require`, `pgbouncer=true`, `connection_limit=1`)
+- `DIRECT_URL` (Supabase Direct Connection 5432)
+
+### Auth / App
+- `NEXTAUTH_URL=https://lumieeventos.com`
+- `NEXTAUTH_SECRET`
+- `NEXT_PUBLIC_APP_URL=https://lumieeventos.com`
+
+### Fees / negocio
+- `PLATFORM_FEE_PERCENTAGE`
+- `PLATFORM_FEE_PERCENTAGE_PIX`
+- `PLATFORM_FEE_PERCENTAGE_CREDIT_CARD`
+- `PLATFORM_NETWORK_FEE_PERCENTAGE`
+- `PLATFORM_NETWORK_FEE_PERCENTAGE_PIX`
+- `PLATFORM_NETWORK_FEE_PERCENTAGE_CREDIT_CARD`
+- `PAGARME_PROCESSING_FEE_PERCENTAGE`
+- `PAGARME_PROCESSING_FEE_PERCENTAGE_PIX`
+- `PAGARME_PROCESSING_FEE_PERCENTAGE_CREDIT_CARD`
+- `PARTNER_COMMISSION_PERCENTAGE`
+- `AMBASSADOR_COMMISSION_PERCENTAGE`
+
+### Pagar.me
+- `PAGARME_API_KEY`
+- `PAGARME_SECRET_KEY`
+- `PAGARME_PLATFORM_RECIPIENT_ID`
+- `PAGARME_WEBHOOK_SECRET`
+- `PAGARME_WEBHOOK_BASIC_USER`
+- `PAGARME_WEBHOOK_BASIC_PASSWORD`
+- `PAGARME_ENVIRONMENT=production`
+
+### Saque (gateway)
+- `WITHDRAW_GATEWAY_URL`
+- `WITHDRAW_GATEWAY_TOKEN`
+
+### Upload (Cloudflare R2)
+- `CLOUDFLARE_R2_ACCOUNT_ID`
+- `CLOUDFLARE_R2_ACCESS_KEY_ID`
+- `CLOUDFLARE_R2_SECRET_ACCESS_KEY`
+- `CLOUDFLARE_R2_BUCKET`
+- `CLOUDFLARE_R2_PUBLIC_BASE_URL`
+
+### Redis / rate limit
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+
+### Sentry
+- `SENTRY_DSN`
+- `NEXT_PUBLIC_SENTRY_DSN`
+- `SENTRY_TRACES_SAMPLE_RATE`
+- `SENTRY_ORG`
+- `SENTRY_PROJECT`
+- `SENTRY_AUTH_TOKEN`
+
+### Email
+- `RESEND_API_KEY`
+- `EMAIL_FROM`
+
+### Retencao automatica
+- `ACCOUNT_RETENTION_ENABLED=true`
+- `ACCOUNT_RETENTION_DAYS_AFTER_EVENT=90`
+- `ACCOUNT_RETENTION_GRACE_DAYS=7`
+- `CRON_SECRET`
+
+## 3) Passos locais antes do deploy
 ```powershell
 cd "C:\Users\Rayan\Documents\Site Lumie presentes\lumie-presentes"
 npm install
-
-# Se voce usa somente .env.local, copie para .env para o Prisma CLI:
-Copy-Item .env.local .env -Force
-
-npx prisma migrate deploy
 npx prisma generate
 npm run build
 ```
 
-## 3) Variaveis de ambiente na Vercel
-- `DATABASE_URL` (Supabase connection string)
-- `NEXTAUTH_URL=https://lumieconvites.com`
-- `NEXTAUTH_SECRET` (openssl rand -base64 32)
-- `NEXT_PUBLIC_APP_URL=https://lumieconvites.com`
-- `NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE=7.99`
-- `PLATFORM_FEE_PERCENTAGE=7.99`
-- `RESEND_API_KEY`
-- `EMAIL_FROM=LUMIE <no-reply@lumieconvites.com>`
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `PAGARME_API_KEY`
-- `PAGARME_SECRET_KEY`
-- `PAGARME_WEBHOOK_SECRET`
-- `PAGARME_WEBHOOK_BASIC_USER` (se habilitar autenticacao no webhook)
-- `PAGARME_WEBHOOK_BASIC_PASSWORD` (se habilitar autenticacao no webhook)
-- `PAGARME_ENVIRONMENT=production`
-- `WITHDRAW_GATEWAY_URL` (URL do backend com IP fixo para saque)
-- `WITHDRAW_GATEWAY_TOKEN` (token compartilhado com o gateway)
-
-## 4) Supabase Storage
-- Bucket: `avatars`
-- Visibilidade: Public
-- Confirmar URL publica funcionando para upload de avatar/fotos.
-
-## 5) Deploy Vercel
+## 4) Deploy de producao
 ```powershell
-npm i -g vercel
-vercel login
-vercel link
 vercel --prod
 ```
 
-## 6) Pos deploy
-- Rodar cadastro por email (codigo)
-- Criar presentes com upload
-- Publicar lista e testar link copiado
-- Abrir checkout e confirmar criacao de pedido
-- Testar `GET /api/pagarme/ping` e fluxo de saque no dashboard
+## 5) Validacao pos-deploy (smoke test)
+- Login e dashboard de cliente
+- Criacao/edicao de presente com upload de imagem
+- Checkout PIX e cartao
+- RSVP e check-in publico
+- Admin: financeiro, bloqueados, retencao, templates
+- Partner/Embaixador dashboards
+- `/api/sentry-debug` gera evento no Sentry
+- Cron dry-run:
+```powershell
+$h = @{ Authorization = "Bearer <CRON_SECRET>" }
+Invoke-RestMethod -Uri "https://lumieeventos.com/api/cron/account-retention?dryRun=1" -Headers $h
+```
+
+## 6) Rotina operacional semanal
+- Revisar erros 5xx no Sentry
+- Revisar falhas de webhook Pagar.me
+- Revisar uso de banco/latencia no Supabase
+- Revisar uso/operacoes no Upstash
+- Revisar custo/uso no R2
