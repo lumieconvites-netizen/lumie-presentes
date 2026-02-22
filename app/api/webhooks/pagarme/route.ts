@@ -1,6 +1,8 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { validateWebhookSignature, mapOrderStatus } from "@/lib/pagarme";
 import { prisma } from "@/lib/prisma";
+import { claimIdempotencyKey } from "@/lib/idempotency";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,6 +34,14 @@ export async function POST(request: Request) {
 
   const event = JSON.parse(rawBody);
   const eventType = event?.type as string | undefined;
+  const eventFingerprint =
+    String(event?.id ?? "") ||
+    createHash("sha256").update(`${eventType ?? "unknown"}|${rawBody}`).digest("hex");
+
+  const idempotencyClaimed = await claimIdempotencyKey(`webhook:pagarme:${eventFingerprint}`, 60 * 60 * 24);
+  if (!idempotencyClaimed) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
 
   try {
     const pagarmeOrderId = resolvePagarmeOrderId(event);

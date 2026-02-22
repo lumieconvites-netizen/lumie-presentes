@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendVerificationCodeEmail } from "@/lib/email";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
+import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
 
 const resendSchema = z.object({
   email: z.string().email("Email invalido"),
@@ -10,9 +11,28 @@ const resendSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const ip = getRequestIp(request);
+    const ipRate = await enforceRateLimit({
+      key: `auth:resend:ip:${ip}`,
+      requests: 8,
+      window: "10 m",
+    });
+    if (!ipRate.allowed) {
+      return NextResponse.json({ error: "Muitas tentativas. Aguarde alguns minutos." }, { status: 429 });
+    }
+
     const body = await request.json();
     const { email } = resendSchema.parse(body);
     const normalizedEmail = email.trim().toLowerCase();
+
+    const emailRate = await enforceRateLimit({
+      key: `auth:resend:email:${normalizedEmail}`,
+      requests: 4,
+      window: "10 m",
+    });
+    if (!emailRate.allowed) {
+      return NextResponse.json({ error: "Limite de reenvios atingido. Aguarde alguns minutos." }, { status: 429 });
+    }
 
     const pending = await prisma.emailVerificationCode.findFirst({
       where: {

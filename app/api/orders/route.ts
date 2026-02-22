@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { calculateTotal } from '@/lib/utils';
 import { createCreditCardOrder, createPixOrder, getOrder } from '@/lib/pagarme';
 import { z } from 'zod';
+import { enforceRateLimit, getRequestIp } from '@/lib/rate-limit';
 
 const orderSchema = z.object({
   giftId: z.string(),
@@ -155,8 +156,28 @@ function calculateCommissionSplit(params: {
 
 export async function POST(request: Request) {
   try {
+    const ip = getRequestIp(request);
+    const ipRate = await enforceRateLimit({
+      key: `checkout:orders:ip:${ip}`,
+      requests: 40,
+      window: "5 m",
+    });
+    if (!ipRate.allowed) {
+      return NextResponse.json({ error: "Muitas tentativas de pagamento. Aguarde alguns minutos." }, { status: 429 });
+    }
+
     const body = await request.json();
     const data = orderSchema.parse(body);
+
+    const emailRate = await enforceRateLimit({
+      key: `checkout:orders:email:${data.guestEmail.trim().toLowerCase()}`,
+      requests: 12,
+      window: "5 m",
+    });
+    if (!emailRate.allowed) {
+      return NextResponse.json({ error: "Muitas tentativas para este email. Aguarde alguns minutos." }, { status: 429 });
+    }
+
     const guestDocument = onlyDigits(data.guestDocument);
     const guestArea = onlyDigits(data.guestPhoneArea);
     const guestNumber = onlyDigits(data.guestPhoneNumber);

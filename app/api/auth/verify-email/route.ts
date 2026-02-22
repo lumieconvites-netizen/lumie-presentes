@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ensureDefaultReferralCodesForUser, resolveReferralForSignup } from "@/lib/referrals";
 import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
 import { resolveSignupTemplateBySlug } from "@/lib/template-selection";
+import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
 
 const verifySchema = z.object({
   email: z.string().email("Email invalido"),
@@ -12,9 +13,28 @@ const verifySchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const ip = getRequestIp(request);
+    const ipRate = await enforceRateLimit({
+      key: `auth:verify-email:ip:${ip}`,
+      requests: 20,
+      window: "10 m",
+    });
+    if (!ipRate.allowed) {
+      return NextResponse.json({ error: "Muitas tentativas. Aguarde alguns minutos." }, { status: 429 });
+    }
+
     const body = await request.json();
     const { email, code } = verifySchema.parse(body);
     const normalizedEmail = email.trim().toLowerCase();
+
+    const emailRate = await enforceRateLimit({
+      key: `auth:verify-email:email:${normalizedEmail}`,
+      requests: 12,
+      window: "10 m",
+    });
+    if (!emailRate.allowed) {
+      return NextResponse.json({ error: "Muitas tentativas para este email. Aguarde alguns minutos." }, { status: 429 });
+    }
 
     const verification = await prisma.emailVerificationCode.findFirst({
       where: {
