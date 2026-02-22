@@ -95,11 +95,12 @@ vercel --prod
 - RSVP e check-in publico
 - Admin: financeiro, bloqueados, retencao, templates
 - Partner/Embaixador dashboards
-- `/api/sentry-debug` gera evento no Sentry
+- `/api/sentry-debug` gera evento no Sentry (com `Authorization: Bearer <CRON_SECRET>`)
 - Cron dry-run:
 ```powershell
 $h = @{ Authorization = "Bearer <CRON_SECRET>" }
 Invoke-RestMethod -Uri "https://lumieeventos.com/api/cron/account-retention?dryRun=1" -Headers $h
+Invoke-RestMethod -Uri "https://lumieeventos.com/api/sentry-debug?mode=exception&label=smoke-prod" -Headers $h
 ```
 
 ## 6) Rotina operacional semanal
