@@ -67,6 +67,7 @@ export default function PresentesDashboard() {
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
   const [savingListTexts, setSavingListTexts] = useState(false);
   const [uploadingDraftPhoto, setUploadingDraftPhoto] = useState(false);
+  const [uploadingListCover, setUploadingListCover] = useState(false);
   const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -81,6 +82,7 @@ export default function PresentesDashboard() {
   });
   const [listPageTitle, setListPageTitle] = useState('Minha Lista de Presentes');
   const [listPageMessage, setListPageMessage] = useState('Ajude a realizar nossos sonhos!');
+  const [listPageCoverImage, setListPageCoverImage] = useState('');
 
   const editingGift = useMemo(() => gifts.find((g) => g.id === editingId) ?? null, [gifts, editingId]);
 
@@ -101,6 +103,19 @@ export default function PresentesDashboard() {
       setGiftListFeeMode(glData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
       setListPageTitle(glData?.title || 'Minha Lista de Presentes');
       setListPageMessage(glData?.description || '');
+      if (typeof glData?.giftsPageCoverImageUrl === 'string') {
+        setListPageCoverImage(glData.giftsPageCoverImageUrl);
+      } else {
+        // fallback legado: capa salva anteriormente no theme JSON
+        const layoutRes = await fetch(`/api/gift-lists/${encodeURIComponent(glData.id)}/layout`, { cache: 'no-store' });
+        const layoutData = await parseJsonSafe(layoutRes);
+        if (layoutRes.ok) {
+          const theme = (layoutData?.theme ?? {}) as Record<string, any>;
+          setListPageCoverImage(typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '');
+        } else {
+          setListPageCoverImage('');
+        }
+      }
 
       const giftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(glData.id)}`, { cache: 'no-store' });
       const giftsData = await parseJsonSafe(giftsRes);
@@ -121,22 +136,55 @@ export default function PresentesDashboard() {
   async function handleSaveListTexts() {
     setSavingListTexts(true);
     try {
-      const res = await fetch('/api/gift-lists/my-list', {
+      const giftListRes = await fetch('/api/gift-lists/my-list', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: listPageTitle.trim() || 'Minha Lista de Presentes',
           description: listPageMessage.trim(),
+          giftsPageCoverImageUrl: listPageCoverImage || '',
         }),
       });
-      const data = await parseJsonSafe(res);
-      if (!res.ok) throw new Error(data?.error ?? 'Erro ao salvar textos');
-      alert('Textos da página de presentes salvos.');
+      const data = await parseJsonSafe(giftListRes);
+      if (!giftListRes.ok) throw new Error(data?.error ?? 'Erro ao salvar textos');
+
+      alert('Textos e capa da página de presentes salvos.');
     } catch (error: any) {
       alert(error?.message ?? 'Erro ao salvar textos');
     } finally {
       setSavingListTexts(false);
     }
+  }
+
+  async function handleListCoverUpload(file?: File | null) {
+    if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      alert('Imagem maior que 5MB. Escolha um arquivo de ate 5MB.');
+      return;
+    }
+
+    try {
+      setUploadingListCover(true);
+      const form = new FormData();
+      form.append('file', file);
+      form.append('folder', 'gifts-page-cover');
+
+      const res = await fetch('/api/upload/avatar', { method: 'POST', body: form });
+      const data = await parseJsonSafe(res);
+      if (!res.ok || !data?.url) {
+        throw new Error(data?.error ?? 'Falha no upload da capa');
+      }
+
+      setListPageCoverImage(data.url as string);
+    } catch (error: any) {
+      alert(error?.message ?? 'Erro no upload da capa');
+    } finally {
+      setUploadingListCover(false);
+    }
+  }
+
+  async function handleRemoveListCover() {
+    setListPageCoverImage('');
   }
 
   useEffect(() => {
@@ -386,6 +434,28 @@ export default function PresentesDashboard() {
               onChange={(e) => setListPageTitle(e.target.value)}
               placeholder="Título da página de presentes"
             />
+            <div className="space-y-2">
+              <p className="text-xs text-gray-600">Foto de capa da página de presentes (recomendado: horizontal 16:9, até 5MB)</p>
+              {listPageCoverImage ? (
+                <div className="space-y-2">
+                  <img src={listPageCoverImage} alt="Prévia da capa da página de presentes" className="h-36 w-full rounded-md object-cover border border-[#ead9cd]" />
+                  <div className="flex items-center gap-2">
+                    <label className="h-10 px-3 border rounded-md text-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50">
+                      <Upload className="w-4 h-4" /> {uploadingListCover ? 'Enviando capa...' : 'Trocar capa'}
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleListCoverUpload(e.target.files?.[0])} disabled={uploadingListCover} />
+                    </label>
+                    <Button type="button" variant="outline" onClick={handleRemoveListCover} disabled={uploadingListCover || savingListTexts}>
+                      Remover capa
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <label className="h-10 px-3 border rounded-md text-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50 w-fit">
+                  <Upload className="w-4 h-4" /> {uploadingListCover ? 'Enviando capa...' : 'Upload capa 16:9'}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleListCoverUpload(e.target.files?.[0])} disabled={uploadingListCover} />
+                </label>
+              )}
+            </div>
             <Textarea
               value={listPageMessage}
               onChange={(e) => setListPageMessage(e.target.value)}
@@ -548,6 +618,11 @@ export default function PresentesDashboard() {
             <Input placeholder="Título" value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} />
             <Input placeholder="Descrição" value={draft.description} onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))} />
             <Input placeholder="URL da foto (opcional)" value={draft.imageUrl} onChange={(e) => setDraft((d) => ({ ...d, imageUrl: e.target.value }))} />
+            {draft.imageUrl ? (
+              <div className="rounded-md border border-[#ead9cd] bg-white p-2">
+                <img src={draft.imageUrl} alt="Prévia do presente" className="h-32 w-full rounded-md object-cover" />
+              </div>
+            ) : null}
             <label className="h-10 px-3 border rounded-md text-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50">
               <Upload className="w-4 h-4" /> {uploadingDraftPhoto ? 'Enviando foto...' : 'Upload de foto'}
               <input type="file" accept="image/*" className="hidden" onChange={(e) => handleDraftPhotoUpload(e.target.files?.[0])} disabled={uploadingDraftPhoto} />

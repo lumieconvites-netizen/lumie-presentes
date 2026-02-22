@@ -119,6 +119,7 @@ model GiftList {
   slug             String    @unique
   title            String
   description      String?
+  giftsPageCoverImageUrl String?
   eventDate        DateTime?
   isPublished      Boolean   @default(false)
   templateId       String?

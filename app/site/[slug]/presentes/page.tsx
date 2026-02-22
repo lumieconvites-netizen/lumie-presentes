@@ -40,6 +40,9 @@ export default async function SiteGiftsBySlugPage({
   const fontTitle = theme.font_title || "Cormorant Garamond";
   const pageTitle = list.title || "Lista de Presentes";
   const pageMessage = list.description || "Escolha um presente especial e participe desse momento.";
+  const pageCoverImage =
+    list.giftsPageCoverImageUrl ||
+    (typeof theme.gifts_page_cover_image === "string" ? theme.gifts_page_cover_image : "");
 
   return (
     <main className="min-h-screen bg-[#faf7f5]">
@@ -56,6 +59,12 @@ export default async function SiteGiftsBySlugPage({
       </header>
 
       <section className="max-w-6xl mx-auto px-4 py-10">
+        {pageCoverImage ? (
+          <div className="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={pageCoverImage} alt={`Capa da página ${pageTitle}`} className="w-full aspect-[16/9] object-cover" />
+          </div>
+        ) : null}
         {pageMessage ? <p className="text-gray-600 mb-8 max-w-3xl">{pageMessage}</p> : null}
         {list.gifts.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-600">

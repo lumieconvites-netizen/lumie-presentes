@@ -87,6 +87,9 @@ export async function PATCH(req: Request) {
     if (typeof body?.isPublished === "boolean") data.isPublished = body.isPublished;
     if (typeof body?.title === "string") data.title = body.title.trim() || "Minha Lista de Presentes";
     if (typeof body?.description === "string") data.description = body.description.trim() || null;
+    if (typeof body?.giftsPageCoverImageUrl === "string") {
+      data.giftsPageCoverImageUrl = body.giftsPageCoverImageUrl.trim() || null;
+    }
     if (typeof body?.slug === "string") {
       const normalizedSlug = normalizeGiftListSlugInput(body.slug);
       const validation = validateGiftListSlug(normalizedSlug);
