@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { ChangeEvent } from 'react';
+import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -47,6 +46,7 @@ export default function AdminGiftModelsPage() {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [uploadingItemImage, setUploadingItemImage] = useState(false);
+  const [uploadingCategoryThumbnail, setUploadingCategoryThumbnail] = useState(false);
 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategorySlug, setNewCategorySlug] = useState('');
@@ -281,6 +281,32 @@ export default function AdminGiftModelsPage() {
     }
   }
 
+  async function handleCategoryThumbnailUpload(file?: File | null) {
+    if (!file || !selectedCategory) return;
+
+    setUploadingCategoryThumbnail(true);
+    try {
+      const formData = new FormData();
+      formData.set('file', file);
+      formData.set('folder', `gift-models-thumbnail-${selectedCategory.slug}`);
+
+      const res = await fetch('/api/upload/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await parseJsonSafe(res);
+      if (!res.ok || !data?.url) {
+        throw new Error(data?.error || 'Erro ao enviar thumbnail');
+      }
+
+      setSelectedCategory((prev) => (prev ? { ...prev, thumbnail: data.url } : prev));
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao enviar thumbnail');
+    } finally {
+      setUploadingCategoryThumbnail(false);
+    }
+  }
+
   async function handleDeleteItem(itemId: string) {
     if (!selectedCategory) return;
     if (!window.confirm('Excluir este presente do modelo?')) return;
@@ -457,6 +483,30 @@ export default function AdminGiftModelsPage() {
                 value={selectedCategory.thumbnail || ''}
                 onChange={(e) => setSelectedCategory((prev) => (prev ? { ...prev, thumbnail: e.target.value || null } : prev))}
               />
+              <div className="mt-2 flex flex-wrap gap-2">
+                <label className="inline-flex">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => handleCategoryThumbnailUpload(e.target.files?.[0] || null)}
+                    disabled={uploadingCategoryThumbnail || saving}
+                  />
+                  <span className="inline-flex h-10 items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium cursor-pointer">
+                    {uploadingCategoryThumbnail ? 'Enviando thumbnail...' : 'Upload thumbnail'}
+                  </span>
+                </label>
+                {selectedCategory.thumbnail ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSelectedCategory((prev) => (prev ? { ...prev, thumbnail: null } : prev))}
+                    disabled={uploadingCategoryThumbnail || saving}
+                  >
+                    Remover thumbnail
+                  </Button>
+                ) : null}
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
