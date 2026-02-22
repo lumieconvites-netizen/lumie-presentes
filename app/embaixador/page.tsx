@@ -90,6 +90,10 @@ export default function AmbassadorDashboardPage() {
   }, []);
 
   const topPartners = useMemo(() => (data?.partners || []).slice(0, 20), [data?.partners]);
+  const visibleCodes = useMemo(
+    () => (data?.codes || []).filter((c) => c.type !== 'PARTNER_CLIENT'),
+    [data?.codes]
+  );
 
   if (loading) return <div>Carregando painel embaixador...</div>;
   if (!data) return <div>Nao foi possivel carregar os dados.</div>;
@@ -100,12 +104,14 @@ export default function AmbassadorDashboardPage() {
         <CardHeader>
           <CardTitle>Seus codigos de embaixador</CardTitle>
           <p className="text-sm text-gray-600">
-            Dica rapida: <b>cliente direto = AMBASSADOR_CLIENT</b>, <b>novo parceiro = AMBASSADOR_PARTNER</b>,{' '}
-            <b>cliente trazido por parceiro = PARTNER_CLIENT</b>.
+            Aqui aparecem apenas os codigos que voce usa: <b>cliente direto</b> e <b>cadastrar parceiro</b>.
+          </p>
+          <p className="text-sm text-gray-600">
+            O codigo de <b>parceiro para cliente</b> fica no painel do proprio parceiro.
           </p>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          {data.codes.map((code) => (
+          {visibleCodes.map((code) => (
             <div key={code.id} className="rounded-lg border border-[#ead9cd] p-3 bg-white">
               <p className="text-xs text-gray-500 uppercase tracking-wide">{codeMeta(code.type).label}</p>
               <p className="font-semibold text-lg break-all">{code.code}</p>
