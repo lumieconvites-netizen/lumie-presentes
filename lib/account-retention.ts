@@ -1,5 +1,6 @@
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { UserRole } from "@prisma/client";
+import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -17,6 +18,15 @@ type AssetDeleteResult = {
   errors: string[];
 };
 
+type RetentionAuditEntry = {
+  runId: string;
+  dryRun: boolean;
+  action: string;
+  userId?: string;
+  userEmail?: string;
+  metadata?: unknown;
+};
+
 function toInt(value: string | undefined, fallback: number) {
   const parsed = Number.parseInt(value ?? "", 10);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
@@ -26,6 +36,10 @@ function addDays(base: Date, days: number) {
   const copy = new Date(base);
   copy.setDate(copy.getDate() + days);
   return copy;
+}
+
+function toJsonCompatible(value: unknown) {
+  return JSON.parse(JSON.stringify(value));
 }
 
 function extractUrlsFromJson(value: unknown, output: Set<string>) {
@@ -109,11 +123,34 @@ async function deleteAssets(urls: string[]): Promise<AssetDeleteResult> {
   return result;
 }
 
+async function writeRetentionAuditLog(entries: RetentionAuditEntry[]) {
+  if (entries.length === 0) return { inserted: 0, failed: false as const };
+
+  try {
+    const result = await prisma.accountRetentionAuditLog.createMany({
+      data: entries.map((entry) => ({
+        runId: entry.runId,
+        dryRun: entry.dryRun,
+        action: entry.action,
+        userId: entry.userId ?? null,
+        userEmail: entry.userEmail ?? null,
+        metadata: typeof entry.metadata === "undefined" ? null : toJsonCompatible(entry.metadata),
+      })),
+    });
+    return { inserted: result.count, failed: false as const };
+  } catch (error) {
+    console.error("[account-retention] failed to persist audit log:", error);
+    return { inserted: 0, failed: true as const };
+  }
+}
+
 export async function runAccountRetentionJob(options: RetentionRunOptions = {}) {
   const dryRun = Boolean(options.dryRun);
   const now = options.now ?? new Date();
+  const runId = randomUUID();
   const retentionDays = toInt(process.env.ACCOUNT_RETENTION_DAYS_AFTER_EVENT, 90);
   const graceDays = toInt(process.env.ACCOUNT_RETENTION_GRACE_DAYS, 7);
+  const auditEntries: RetentionAuditEntry[] = [];
 
   const users = await prisma.user.findMany({
     where: { role: UserRole.CLIENT },
@@ -186,6 +223,17 @@ export async function runAccountRetentionJob(options: RetentionRunOptions = {}) 
 
       unpublishedLists += toUnpublish.length;
       blockedNow += 1;
+      auditEntries.push({
+        runId,
+        dryRun,
+        action: dryRun ? "would_block_and_unpublish" : "blocked_and_unpublished",
+        userId: user.id,
+        userEmail: user.email,
+        metadata: {
+          retentionDeadline,
+          unpublishedCount: toUnpublish.length,
+        },
+      });
       details.push({
         userId: user.id,
         email: user.email,
@@ -200,6 +248,14 @@ export async function runAccountRetentionJob(options: RetentionRunOptions = {}) 
     const blockedAt = user.blockedAt ?? now;
     const hardDeleteAt = addDays(blockedAt, graceDays);
     if (now < hardDeleteAt) {
+      auditEntries.push({
+        runId,
+        dryRun,
+        action: "waiting_grace_period",
+        userId: user.id,
+        userEmail: user.email,
+        metadata: { hardDeleteAt },
+      });
       details.push({
         userId: user.id,
         email: user.email,
@@ -234,6 +290,17 @@ export async function runAccountRetentionJob(options: RetentionRunOptions = {}) 
     }
 
     deletedNow += 1;
+    auditEntries.push({
+      runId,
+      dryRun,
+      action: dryRun ? "would_hard_delete" : "hard_deleted",
+      userId: user.id,
+      userEmail: user.email,
+      metadata: {
+        hardDeleteAt,
+        assets: assetResult,
+      },
+    });
     details.push({
       userId: user.id,
       email: user.email,
@@ -243,8 +310,27 @@ export async function runAccountRetentionJob(options: RetentionRunOptions = {}) 
     });
   }
 
+  auditEntries.push({
+    runId,
+    dryRun,
+    action: "run_summary",
+    metadata: {
+      checkedUsers: checked,
+      eligibleUsers: eligible,
+      blockedNow,
+      deletedNow,
+      unpublishedLists,
+      retentionDays,
+      graceDays,
+      ranAt: now.toISOString(),
+    },
+  });
+
+  const auditPersist = await writeRetentionAuditLog(auditEntries);
+
   return {
     ok: true,
+    runId,
     dryRun,
     checkedUsers: checked,
     eligibleUsers: eligible,
@@ -254,6 +340,8 @@ export async function runAccountRetentionJob(options: RetentionRunOptions = {}) 
     retentionDays,
     graceDays,
     ranAt: now.toISOString(),
+    auditLogged: auditPersist.inserted,
+    auditPersistFailed: auditPersist.failed,
     details,
   };
 }

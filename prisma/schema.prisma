@@ -298,6 +298,23 @@ model WebhookEvent {
   @@map("webhook_events")
 }
 
+model AccountRetentionAuditLog {
+  id        String   @id @default(cuid())
+  runId     String
+  dryRun    Boolean  @default(false)
+  action    String
+  userId    String?
+  userEmail String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([runId])
+  @@index([action, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("account_retention_audit_logs")
+}
+
 // ===== TEMPLATES =====
 
 model Template {
