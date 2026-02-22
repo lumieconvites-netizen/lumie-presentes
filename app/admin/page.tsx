@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,6 @@ type ImpersonationState = {
   effectiveUser?: { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE' };
 };
 
-const slugify = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120);
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function AdminPage() {
@@ -40,7 +40,6 @@ export default function AdminPage() {
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
   const [qUser, setQUser] = useState('');
   const [qList, setQList] = useState('');
-  const [newTemplate, setNewTemplate] = useState({ name: '', slug: '', category: 'casamento' });
 
   const userQuery = useMemo(() => {
     const p = new URLSearchParams();
@@ -110,19 +109,6 @@ export default function AdminPage() {
     const j = await res.json();
     if (!res.ok) throw new Error(j?.error || 'Erro ao excluir lista');
     await loadAll();
-  }
-  async function createTemplate() {
-    const slug = slugify(newTemplate.slug || newTemplate.name);
-    const res = await fetch('/api/admin/templates', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: newTemplate.name, slug, category: newTemplate.category, description: null, thumbnail: null,
-        defaultTheme: { primary_color: '#C65A3A', secondary_color: '#8E3D2C', background_color: '#FAF4EF', font_title: 'Playfair Display', font_body: 'Inter' },
-        defaultBlocks: [{ id: 'hero-1', type: 'hero', order: 1, enabled: true, config: { title: newTemplate.name || 'Novo template', subtitle: 'Seu evento especial', backgroundColor: '#8E3D2C' } }],
-      }),
-    });
-    const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao criar template');
-    setNewTemplate({ name: '', slug: '', category: 'casamento' }); await loadAll();
   }
   async function patchTemplate(id: string, payload: any) {
     setBusyTemplateId(id);
@@ -219,15 +205,9 @@ export default function AdminPage() {
       <Card className="border-[#e7d8cb]">
         <CardHeader><CardTitle>Templates (publicacao imediata)</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-            <Input placeholder="Nome do template" value={newTemplate.name} onChange={(e) => setNewTemplate((p) => ({ ...p, name: e.target.value }))} />
-            <Input placeholder="Slug" value={newTemplate.slug} onChange={(e) => setNewTemplate((p) => ({ ...p, slug: e.target.value }))} />
-            <Input placeholder="Categoria" value={newTemplate.category} onChange={(e) => setNewTemplate((p) => ({ ...p, category: e.target.value }))} />
-            <Button onClick={() => createTemplate().catch((e) => alert(e.message))}>Criar e publicar</Button>
-          </div>
           <div className="overflow-auto rounded-lg border">
             <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Template</th><th className="p-2 text-left">Categoria</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
-              {templates.map((t) => <tr key={t.id} className="border-t"><td className="p-2"><p className="font-medium">{t.name}</p><p className="text-xs text-gray-500">/{t.slug}</p></td><td className="p-2">{t.category}</td><td className="p-2"><div className="flex gap-1"><Button size="sm" variant="outline" disabled={busyTemplateId === t.id} onClick={() => patchTemplate(t.id, { isActive: !t.isActive }).catch((e) => alert(e.message))}>{t.isActive ? 'Despublicar' : 'Publicar'}</Button><Button size="sm" variant="outline" disabled={busyTemplateId === t.id} onClick={() => { if (confirm('Excluir template?')) removeTemplate(t.id).catch((e) => alert(e.message)); }}>Excluir</Button></div></td></tr>)}
+              {templates.map((t) => <tr key={t.id} className="border-t"><td className="p-2"><p className="font-medium">{t.name}</p><p className="text-xs text-gray-500">/{t.slug}</p></td><td className="p-2">{t.category}</td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" disabled={busyTemplateId === t.id} onClick={() => patchTemplate(t.id, { isActive: !t.isActive }).catch((e) => alert(e.message))}>{t.isActive ? 'Despublicar' : 'Publicar'}</Button><Button size="sm" variant="outline" asChild><Link href={`/admin/templates/editor/${t.id}`}>Editar</Link></Button><Button size="sm" variant="outline" asChild><Link href={`/templates/${encodeURIComponent(t.slug)}`} target="_blank" rel="noreferrer">Visualizar</Link></Button><Button size="sm" variant="outline" disabled={busyTemplateId === t.id} onClick={() => { if (confirm('Excluir template?')) removeTemplate(t.id).catch((e) => alert(e.message)); }}>Excluir</Button></div></td></tr>)}
             </tbody></table>
           </div>
         </CardContent>

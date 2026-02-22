@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import AdminSidebar from "@/components/admin/sidebar";
+import AdminTopbarMenu from "@/components/admin/topbar-menu";
 
 export default async function AdminLayout({
   children,
@@ -19,6 +19,10 @@ export default async function AdminLayout({
     redirect("/dashboard");
   }
 
+  const adminName = session.user.name || "Admin";
+  const adminEmail = session.user.email || "";
+  const adminImage = (session.user as any).image as string | null | undefined;
+
   return (
     <div className="min-h-screen bg-[#FAF4EF]">
       <div className="flex min-h-screen">
@@ -31,14 +35,7 @@ export default async function AdminLayout({
                 <h1 className="text-2xl font-display text-[#8E3D2C]">Central Administrativa</h1>
                 <p className="text-sm text-[#8E3D2C]/70">Operacao geral da plataforma LUMIE</p>
               </div>
-              <div className="flex items-center gap-4">
-                <Link href="/dashboard" className="text-sm text-[#8E3D2C] hover:underline">
-                  Ir para dashboard cliente
-                </Link>
-                <Link href="/admin/configuracoes" className="text-sm text-[#8E3D2C] hover:underline">
-                  Configuracoes da conta
-                </Link>
-              </div>
+              <AdminTopbarMenu name={adminName} email={adminEmail} image={adminImage} />
             </div>
           </header>
 
