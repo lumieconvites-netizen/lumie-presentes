@@ -103,7 +103,7 @@ export async function processEmailJobs(options?: { limit?: number; dryRun?: bool
     }
   }
 
-  const remainingApprox = redis ? await redis.llen<number>(QUEUE_KEY) : localQueue.length;
+  const remainingApprox = redis ? Number((await redis.llen(QUEUE_KEY)) ?? 0) : localQueue.length;
   return {
     ok: true,
     dryRun,
