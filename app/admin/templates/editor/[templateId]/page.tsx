@@ -41,6 +41,7 @@ const defaultTheme = {
   divider_style: 'dot',
   background_overlay_opacity: 50,
   background_image: '',
+  gifts_page_cover_image: '',
   font_title: 'Playfair Display',
   font_body: 'Inter',
 };
@@ -171,6 +172,7 @@ export default function AdminTemplateEditorPage() {
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [uploadingGiftIndex, setUploadingGiftIndex] = useState<number | null>(null);
   const [uploadingThemeBg, setUploadingThemeBg] = useState(false);
+  const [uploadingGiftsPageCover, setUploadingGiftsPageCover] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -376,6 +378,9 @@ export default function AdminTemplateEditorPage() {
   }
 
   async function uploadFile(file: File, folder: string) {
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('Imagem maior que 5MB. Envie um arquivo de ate 5MB.');
+    }
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', folder);
@@ -424,6 +429,20 @@ export default function AdminTemplateEditorPage() {
       alert(error?.message || 'Erro ao enviar imagem de fundo');
     } finally {
       setUploadingThemeBg(false);
+    }
+  }
+
+  async function handleGiftsPageCoverUpload(file?: File | null) {
+    if (!file) return;
+    try {
+      setUploadingGiftsPageCover(true);
+      const url = await uploadFile(file, 'template-gifts-page-cover');
+      setTheme((prev: any) => ({ ...prev, gifts_page_cover_image: url }));
+      setDirty(true);
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao enviar capa da pagina de presentes');
+    } finally {
+      setUploadingGiftsPageCover(false);
     }
   }
 
@@ -633,6 +652,37 @@ export default function AdminTemplateEditorPage() {
                   onChange={(e) => { setTheme((prev: any) => ({ ...prev, background_overlay_opacity: Number(e.target.value) })); setDirty(true); }}
                   className="w-full"
                 />
+              </div>
+              <div className="space-y-2 rounded-lg border border-[#ead9cd] bg-white p-3">
+                <Label>Capa da pagina de presentes</Label>
+                <p className="text-xs text-gray-500">Recomendado: horizontal 16:9. Limite de 5MB.</p>
+                {theme.gifts_page_cover_image ? (
+                  <div className="space-y-2">
+                    <img src={theme.gifts_page_cover_image} alt="Capa da pagina de presentes" className="w-full aspect-[16/9] rounded-lg object-cover border border-[#ead9cd]" />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setTheme((prev: any) => ({ ...prev, gifts_page_cover_image: '' })); setDirty(true); }}
+                      >
+                        Remover capa
+                      </Button>
+                      <label className="inline-flex">
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleGiftsPageCoverUpload(e.target.files?.[0] || null)} disabled={uploadingGiftsPageCover} />
+                        <span className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-medium cursor-pointer">
+                          {uploadingGiftsPageCover ? 'Enviando...' : 'Trocar capa'}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="mt-1 flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-[#d8c6b7] rounded-lg cursor-pointer hover:bg-[#fff8f2]">
+                    <Upload className="w-5 h-5 text-gray-400 mb-1" />
+                    <span className="text-xs text-gray-500">{uploadingGiftsPageCover ? 'Enviando...' : 'Enviar capa 16:9'}</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleGiftsPageCoverUpload(e.target.files?.[0] || null)} disabled={uploadingGiftsPageCover} />
+                  </label>
+                )}
               </div>
               <div className="space-y-1">
                 <Label>Fonte do tÃ­tulo</Label>

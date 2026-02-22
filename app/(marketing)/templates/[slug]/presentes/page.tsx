@@ -22,6 +22,7 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
       name: true,
       thumbnail: true,
       defaultBlocks: true,
+      defaultTheme: true,
       isActive: true,
     },
   });
@@ -29,6 +30,16 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
   if (!template || !template.isActive || isCategoryMetaTemplate(template)) return notFound();
 
   const gifts = extractTemplateGiftItemsFromBlocks(template.defaultBlocks || []);
+  const blocks = Array.isArray(template.defaultBlocks) ? template.defaultBlocks : [];
+  const giftsBlock = blocks.find((block: any) => block?.type === 'gifts');
+  const giftsConfig = (giftsBlock?.config as any) || {};
+  const theme = (template.defaultTheme as any) || {};
+  const pageTitle = giftsConfig?.title || 'Lista de Presentes';
+  const pageMessage = giftsConfig?.description || '';
+  const pageCoverImage =
+    (typeof theme?.gifts_page_cover_image === 'string' && theme.gifts_page_cover_image) ||
+    (typeof giftsConfig?.coverImage === 'string' && giftsConfig.coverImage) ||
+    '';
 
   return (
     <div className="min-h-screen bg-[#FAF4EF] py-8 px-4">
@@ -54,6 +65,17 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
               </Link>
             </div>
           </div>
+        </div>
+
+        {pageCoverImage ? (
+          <div className="overflow-hidden rounded-2xl border border-[#e8dbcf] bg-white">
+            <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-cover" />
+          </div>
+        ) : null}
+
+        <div className="rounded-2xl border border-[#e8dbcf] bg-white p-4 md:p-6">
+          <h2 className="font-display text-2xl text-[#8E3D2C]">{pageTitle}</h2>
+          {pageMessage ? <p className="mt-2 text-[#6f584d]">{pageMessage}</p> : null}
         </div>
 
         {gifts.length === 0 ? (
