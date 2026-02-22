@@ -20,6 +20,7 @@
 - `components/ui/dialog.tsx`: sanitiza `aria-describedby="undefined"`.
 - `components/ui/alert-dialog.tsx`: sanitiza `aria-describedby="undefined"`.
 - `app/api/upload/avatar/route.ts`: upload em R2-only quando configurado; sem fallback legado no endpoint.
+- Endpoints de escrita de imagem (`gifts`, `admin/gift-lists/*/gifts`, `rsvp/settings`) bloqueiam novas URLs legadas de Supabase Storage.
 - `app/api/sentry-debug/route.ts`: endpoint protegido por bearer para validar alertas operacionais no Sentry.
 - `DEPLOY_CHECKLIST.md`: reescrito para stack atual.
 - `OPERATIONS_ALERTS.md`: runbook com 5 alertas (Sentry + Supabase + Upstash) e thresholds fixos.

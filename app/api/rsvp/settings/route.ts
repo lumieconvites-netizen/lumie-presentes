@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeCheckInSlug } from "@/lib/rsvp";
 import { getActingUserContext } from "@/lib/acting-user";
 import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
+import { getLegacyStorageRejectMessage, isLegacySupabaseStorageUrl } from "@/lib/storage-url";
 
 const settingsSchema = z.object({
   enabled: z.boolean().optional(),
@@ -47,6 +48,9 @@ export async function PATCH(req: Request) {
 
     const body = await req.json();
     const payload = settingsSchema.parse(body);
+    if (typeof payload.coverImageUrl === "string" && isLegacySupabaseStorageUrl(payload.coverImageUrl || null)) {
+      return NextResponse.json({ error: getLegacyStorageRejectMessage("coverImageUrl") }, { status: 400 });
+    }
     const currentSettings = await prisma.rsvpSettings.findUnique({
       where: { giftListId: giftList.id },
       select: { checkInSlug: true },

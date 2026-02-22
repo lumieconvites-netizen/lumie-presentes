@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { getLegacyStorageRejectMessage, isLegacySupabaseStorageUrl } from "@/lib/storage-url";
 
 const updateGiftSchema = z.object({
   name: z.string().min(2).max(140).optional(),
@@ -24,6 +25,9 @@ export async function PATCH(
   try {
     const body = await request.json();
     const data = updateGiftSchema.parse(body);
+    if (typeof data.imageUrl !== "undefined" && isLegacySupabaseStorageUrl(data.imageUrl || null)) {
+      return NextResponse.json({ error: getLegacyStorageRejectMessage("imageUrl") }, { status: 400 });
+    }
 
     const currentGift = await prisma.giftItem.findFirst({
       where: { id: params.giftId, giftListId: params.id },
