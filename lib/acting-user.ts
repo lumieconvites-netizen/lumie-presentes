@@ -9,6 +9,7 @@ type SafeUser = {
   id: string;
   name: string | null;
   email: string;
+  image: string | null;
   role: "ADMIN" | "CLIENT" | "PARTNER" | "AMBASSADOR" | "EMPLOYEE";
 };
 
@@ -35,7 +36,7 @@ export async function getActingUserContext(): Promise<ActingUserContext | null> 
 
   const sessionUser = await prisma.user.findUnique({
     where: { id: sessionUserId },
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, email: true, image: true, role: true },
   });
 
   if (!sessionUser) {
@@ -65,7 +66,7 @@ export async function getActingUserContext(): Promise<ActingUserContext | null> 
 
   const targetUser = await prisma.user.findUnique({
     where: { id: actAsId },
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, email: true, image: true, role: true },
   });
 
   if (!targetUser || targetUser.role === "ADMIN") {

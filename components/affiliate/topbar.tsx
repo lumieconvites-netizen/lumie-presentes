@@ -4,12 +4,23 @@ import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { LogOut, Settings, House } from 'lucide-react';
 
 type ImpersonationData = {
   isImpersonating: boolean;
   effectiveUser?: {
     name: string | null;
     email: string;
+    image?: string | null;
     role: string;
   };
 };
@@ -19,12 +30,30 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
   const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
   const sessionRole = (session?.user as any)?.role;
   const name = session?.user?.name || 'Usuario';
+  const email = session?.user?.email || '';
+  const sessionImage = (session?.user as any)?.image as string | undefined;
   const title = role === 'PARTNER' ? 'Area do Parceiro' : 'Area do Embaixador';
   const base = role === 'PARTNER' ? '/parceiro' : '/embaixador';
   const displayName =
     sessionRole === 'ADMIN' && impersonation?.isImpersonating
       ? impersonation.effectiveUser?.name || 'Usuario'
       : name;
+  const displayEmail =
+    sessionRole === 'ADMIN' && impersonation?.isImpersonating
+      ? impersonation.effectiveUser?.email || ''
+      : email;
+  const avatarSrc =
+    sessionRole === 'ADMIN' && impersonation?.isImpersonating
+      ? impersonation.effectiveUser?.image || undefined
+      : sessionImage;
+
+  const getUserInitials = (value: string) =>
+    value
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
 
   useEffect(() => {
     if (sessionRole !== 'ADMIN') return;
@@ -66,24 +95,51 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
           <h1 className="text-2xl font-display text-foreground">{title}</h1>
           <p className="text-sm text-gray-500">Acompanhe codigos, indicacoes e ganhos em tempo real</p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 hidden md:block">{displayName}</span>
-          <Button variant="outline" asChild>
-            <Link href={`${base}/configuracoes`}>Configuracoes</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/">Inicio</Link>
-          </Button>
-          <Button
-            variant="outline"
-            onClick={async () => {
-              await signOut({ redirect: false });
-              window.location.assign('/login');
-            }}
-          >
-            Sair
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-10 w-10 rounded-full p-0 overflow-hidden ring-1 ring-border">
+              {avatarSrc ? (
+                <Image src={avatarSrc} alt={displayName} width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-medium">
+                  {getUserInitials(displayName)}
+                </div>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel>
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{displayName}</p>
+                <p className="text-xs leading-none text-muted-foreground">{displayEmail}</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href={`${base}/configuracoes`} className="cursor-pointer">
+                <Settings className="w-4 h-4 mr-2" />
+                Configuracoes
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/" className="cursor-pointer">
+                <House className="w-4 h-4 mr-2" />
+                Inicio
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={async () => {
+                await signOut({ redirect: false });
+                window.location.assign('/login');
+              }}
+              className="text-red-600 focus:text-red-600 cursor-pointer"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
