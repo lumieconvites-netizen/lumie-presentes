@@ -31,9 +31,14 @@ export default async function AdminLayout({
                 <h1 className="text-2xl font-display text-[#8E3D2C]">Central Administrativa</h1>
                 <p className="text-sm text-[#8E3D2C]/70">Operacao geral da plataforma LUMIE</p>
               </div>
-              <Link href="/dashboard" className="text-sm text-[#8E3D2C] hover:underline">
-                Ir para dashboard cliente
-              </Link>
+              <div className="flex items-center gap-4">
+                <Link href="/dashboard" className="text-sm text-[#8E3D2C] hover:underline">
+                  Ir para dashboard cliente
+                </Link>
+                <Link href="/admin/configuracoes" className="text-sm text-[#8E3D2C] hover:underline">
+                  Configuracoes da conta
+                </Link>
+              </div>
             </div>
           </header>
 

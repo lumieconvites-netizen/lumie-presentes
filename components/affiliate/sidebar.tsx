@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Handshake, Shield } from 'lucide-react';
+import { BarChart3, Handshake, Shield, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type AffiliateRole = 'PARTNER' | 'AMBASSADOR';
@@ -12,7 +12,11 @@ export default function AffiliateSidebar({ role }: { role: AffiliateRole }) {
   const label = role === 'PARTNER' ? 'Painel Parceiro' : 'Painel Embaixador';
   const Icon = role === 'PARTNER' ? Handshake : Shield;
 
-  const items = [{ href: role === 'PARTNER' ? '/parceiro' : '/embaixador', label: 'Visao Geral', icon: BarChart3 }];
+  const base = role === 'PARTNER' ? '/parceiro' : '/embaixador';
+  const items = [
+    { href: base, label: 'Visao Geral', icon: BarChart3 },
+    { href: `${base}/configuracoes`, label: 'Configuracoes', icon: Settings },
+  ];
 
   return (
     <aside className="w-64 bg-white border-r border-border min-h-screen">
