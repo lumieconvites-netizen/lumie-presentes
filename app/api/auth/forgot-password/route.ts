@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
-import { sendPasswordResetCodeEmail } from "@/lib/email";
+import { enqueuePasswordResetCodeEmailJob } from "@/lib/email-jobs";
 import { PASSWORD_RESET_TEMPLATE_SLUG } from "@/lib/password-reset";
 
 const forgotPasswordSchema = z.object({
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       });
     });
 
-    await sendPasswordResetCodeEmail({
+    await enqueuePasswordResetCodeEmailJob({
       to: normalizedEmail,
       code,
       name: user.name ?? undefined,

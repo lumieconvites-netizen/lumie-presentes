@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { sendVerificationCodeEmail } from "@/lib/email";
+import { enqueueVerificationCodeEmailJob } from "@/lib/email-jobs";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       });
     });
 
-    await sendVerificationCodeEmail({
+    await enqueueVerificationCodeEmailJob({
       to: normalizedEmail,
       code,
       name: pending.name ?? undefined,

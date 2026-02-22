@@ -1,5 +1,9 @@
 import { Redis } from "@upstash/redis";
-import { sendRsvpNotificationEmail } from "@/lib/email";
+import {
+  sendPasswordResetCodeEmail,
+  sendRsvpNotificationEmail,
+  sendVerificationCodeEmail,
+} from "@/lib/email";
 
 type RsvpNotificationPayload = {
   to: string;
@@ -8,11 +12,37 @@ type RsvpNotificationPayload = {
   status: "CONFIRMED" | "DECLINED";
 };
 
+type VerificationCodePayload = {
+  to: string;
+  code: string;
+  name?: string;
+};
+
+type PasswordResetCodePayload = {
+  to: string;
+  code: string;
+  name?: string;
+};
+
 type EmailJob =
   | {
       id: string;
       type: "rsvp_notification";
       payload: RsvpNotificationPayload;
+      attempts: number;
+      createdAt: string;
+    }
+  | {
+      id: string;
+      type: "verification_code";
+      payload: VerificationCodePayload;
+      attempts: number;
+      createdAt: string;
+    }
+  | {
+      id: string;
+      type: "password_reset_code";
+      payload: PasswordResetCodePayload;
       attempts: number;
       createdAt: string;
     };
@@ -61,9 +91,41 @@ export async function enqueueRsvpNotificationEmailJob(payload: RsvpNotificationP
   return job.id;
 }
 
+export async function enqueueVerificationCodeEmailJob(payload: VerificationCodePayload) {
+  const job: EmailJob = {
+    id: jobId(),
+    type: "verification_code",
+    payload,
+    attempts: 0,
+    createdAt: new Date().toISOString(),
+  };
+  await pushJob(job);
+  return job.id;
+}
+
+export async function enqueuePasswordResetCodeEmailJob(payload: PasswordResetCodePayload) {
+  const job: EmailJob = {
+    id: jobId(),
+    type: "password_reset_code",
+    payload,
+    attempts: 0,
+    createdAt: new Date().toISOString(),
+  };
+  await pushJob(job);
+  return job.id;
+}
+
 async function processJob(job: EmailJob) {
   if (job.type === "rsvp_notification") {
     await sendRsvpNotificationEmail(job.payload);
+    return;
+  }
+  if (job.type === "verification_code") {
+    await sendVerificationCodeEmail(job.payload);
+    return;
+  }
+  if (job.type === "password_reset_code") {
+    await sendPasswordResetCodeEmail(job.payload);
     return;
   }
 }

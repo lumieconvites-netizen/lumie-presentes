@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { sendVerificationCodeEmail } from "@/lib/email";
+import { enqueueVerificationCodeEmailJob } from "@/lib/email-jobs";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { resolveReferralForSignup } from "@/lib/referrals";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       }
     });
 
-    await sendVerificationCodeEmail({ to: normalizedEmail, code, name });
+    await enqueueVerificationCodeEmailJob({ to: normalizedEmail, code, name });
 
     return NextResponse.json(
       {

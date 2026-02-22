@@ -24,6 +24,9 @@
 - `app/api/sentry-debug/route.ts`: endpoint protegido por bearer para validar alertas operacionais no Sentry.
 - `lib/email-jobs.ts` + `/api/cron/email-jobs`: fila/worker de email via Redis + cron.
 - `app/api/public/rsvp/[slug]/confirm/route.ts`: notificacao de RSVP movida para fila assincrona.
+- `app/api/auth/register/route.ts`: envio de codigo de verificacao movido para fila assincrona.
+- `app/api/auth/resend-verification/route.ts`: reenvio de codigo movido para fila assincrona.
+- `app/api/auth/forgot-password/route.ts`: envio de codigo de recuperacao movido para fila assincrona.
 - `DEPLOY_CHECKLIST.md`: reescrito para stack atual.
 - `OPERATIONS_ALERTS.md`: runbook com 5 alertas (Sentry + Supabase + Upstash) e thresholds fixos.
 - `SECRET_ROTATION_POLICY.md`: politica formal de rotacao com calendario, responsaveis e rollback.
@@ -40,8 +43,7 @@
 
 ## Pendente prioritario
 - Filas para tarefas pesadas fora da request:
-  - infraestrutura base de fila para email implementada (Redis + cron)
-  - falta migrar outros envios de email (auth) para worker
+  - fila de emails em producao para RSVP + auth (cadastro, reenvio e recuperacao)
   - falta definir fila para limpeza/processamentos de midia
 - Alertas operacionais completos:
   - regras Sentry para 5xx/auth/checkout/webhook (concluido)
