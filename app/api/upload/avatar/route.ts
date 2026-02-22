@@ -26,8 +26,8 @@ export async function POST(req: Request) {
     if (!file) return NextResponse.json({ error: "Arquivo nao enviado. Use o campo 'file'." }, { status: 400 });
     if (!file.type?.startsWith("image/")) return NextResponse.json({ error: "Envie uma imagem (image/*)." }, { status: 400 });
 
-    const MAX = 4 * 1024 * 1024;
-    if (file.size > MAX) return NextResponse.json({ error: "Imagem muito grande (max 4MB)." }, { status: 400 });
+    const MAX = 5 * 1024 * 1024;
+    if (file.size > MAX) return NextResponse.json({ error: "Imagem muito grande (max 5MB)." }, { status: 400 });
 
     const ext = getFileExt(file.name);
     const path = `${userId}/${folder}/${Date.now()}.${ext}`;

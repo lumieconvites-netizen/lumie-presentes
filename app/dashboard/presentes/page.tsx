@@ -66,6 +66,8 @@ export default function PresentesDashboard() {
   const [deletingSelected, setDeletingSelected] = useState(false);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
   const [savingListTexts, setSavingListTexts] = useState(false);
+  const [uploadingDraftPhoto, setUploadingDraftPhoto] = useState(false);
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [qtyToAdd, setQtyToAdd] = useState<number>(1);
@@ -141,56 +143,13 @@ export default function PresentesDashboard() {
     loadGiftListAndGifts();
   }, []);
 
-  const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
-
-  async function compressImageForUpload(file: File): Promise<File> {
-    if (file.size <= MAX_UPLOAD_BYTES) return file;
-
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const url = URL.createObjectURL(file);
-      const el = new window.Image();
-      el.onload = () => {
-        URL.revokeObjectURL(url);
-        resolve(el);
-      };
-      el.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error('Falha ao processar imagem'));
-      };
-      el.src = url;
-    });
-
-    const maxSide = 1600;
-    const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-    const width = Math.max(1, Math.floor(img.width * scale));
-    const height = Math.max(1, Math.floor(img.height * scale));
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Falha ao comprimir imagem');
-    ctx.drawImage(img, 0, 0, width, height);
-
-    let quality = 0.86;
-    let blob: Blob | null = null;
-    while (quality >= 0.45) {
-      blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
-      if (blob && blob.size <= MAX_UPLOAD_BYTES) break;
-      quality -= 0.08;
+  const uploadGiftPhoto = async (file: File) => {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      throw new Error('Imagem maior que 5MB. Escolha um arquivo de ate 5MB.');
     }
 
-    if (!blob) throw new Error('Não foi possível comprimir imagem');
-    if (blob.size > MAX_UPLOAD_BYTES) throw new Error('Imagem muito grande. Use uma imagem menor.');
-
-    return new File([blob], `${file.name.replace(/\.[^/.]+$/, '') || 'imagem'}.jpg`, { type: 'image/jpeg' });
-  }
-
-  const uploadGiftPhoto = async (file: File) => {
-    const optimizedFile = await compressImageForUpload(file);
     const form = new FormData();
-    form.append('file', optimizedFile);
+    form.append('file', file);
     form.append('folder', 'gifts');
 
     const res = await fetch('/api/upload/avatar', { method: 'POST', body: form });
@@ -205,11 +164,19 @@ export default function PresentesDashboard() {
 
   const handleDraftPhotoUpload = async (file?: File | null) => {
     if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      alert('Imagem maior que 5MB. Escolha um arquivo de ate 5MB.');
+      return;
+    }
+
     try {
+      setUploadingDraftPhoto(true);
       const url = await uploadGiftPhoto(file);
       setDraft((prev) => ({ ...prev, imageUrl: url }));
     } catch (error: any) {
       alert(error?.message ?? 'Erro no upload da imagem');
+    } finally {
+      setUploadingDraftPhoto(false);
     }
   };
 
@@ -542,10 +509,16 @@ export default function PresentesDashboard() {
             <Input placeholder="Título" value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} />
             <Input placeholder="Descrição" value={draft.description} onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))} />
             <Input placeholder="URL da foto (opcional)" value={draft.imageUrl} onChange={(e) => setDraft((d) => ({ ...d, imageUrl: e.target.value }))} />
+            {draft.imageUrl ? (
+              <div className="rounded-md border border-[#ead9cd] bg-white p-2">
+                <img src={draft.imageUrl} alt="Prévia do presente" className="h-32 w-full rounded-md object-cover" />
+              </div>
+            ) : null}
             <label className="h-10 px-3 border rounded-md text-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50">
-              <Upload className="w-4 h-4" /> Upload de foto
-              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleDraftPhotoUpload(e.target.files?.[0])} />
+              <Upload className="w-4 h-4" /> {uploadingDraftPhoto ? 'Enviando foto...' : 'Upload de foto'}
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleDraftPhotoUpload(e.target.files?.[0])} disabled={uploadingDraftPhoto} />
             </label>
+            <p className="text-xs text-gray-500">Recomendado: formato horizontal 16:9. Limite de 5MB por foto.</p>
 
             <div className="grid grid-cols-2 gap-3">
               <Input type="number" placeholder="Valor" value={draft.basePrice} onChange={(e) => setDraft((d) => ({ ...d, basePrice: Number(e.target.value) }))} />
@@ -576,9 +549,10 @@ export default function PresentesDashboard() {
             <Input placeholder="Descrição" value={draft.description} onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))} />
             <Input placeholder="URL da foto (opcional)" value={draft.imageUrl} onChange={(e) => setDraft((d) => ({ ...d, imageUrl: e.target.value }))} />
             <label className="h-10 px-3 border rounded-md text-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50">
-              <Upload className="w-4 h-4" /> Upload de foto
-              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleDraftPhotoUpload(e.target.files?.[0])} />
+              <Upload className="w-4 h-4" /> {uploadingDraftPhoto ? 'Enviando foto...' : 'Upload de foto'}
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleDraftPhotoUpload(e.target.files?.[0])} disabled={uploadingDraftPhoto} />
             </label>
+            <p className="text-xs text-gray-500">Recomendado: formato horizontal 16:9. Limite de 5MB por foto.</p>
 
             <div className="grid grid-cols-2 gap-3">
               <Input type="number" placeholder="Valor" value={draft.basePrice} onChange={(e) => setDraft((d) => ({ ...d, basePrice: Number(e.target.value) }))} />

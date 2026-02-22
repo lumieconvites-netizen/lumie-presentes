@@ -20,6 +20,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
   const config = block.config || {};
   const [uploading, setUploading] = useState(false);
   const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
   const handleChange = (key: string, value: any) => {
     onUpdate({ [key]: value });
@@ -58,9 +59,61 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       reader.readAsDataURL(file);
     });
 
+  const readImageDimensions = (file: File) =>
+    new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new window.Image();
+      image.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve({ width: image.width, height: image.height });
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Nao foi possivel ler as dimensoes da imagem.'));
+      };
+      image.src = objectUrl;
+    });
+
+  const validateImageFile = async (
+    file: File,
+    options?: { label?: string; maxWidth?: number; maxHeight?: number }
+  ) => {
+    const label = options?.label ?? 'Imagem';
+    if (file.size > MAX_UPLOAD_BYTES) {
+      alert(`${label} maior que 5MB. Escolha um arquivo de ate 5MB.`);
+      return false;
+    }
+
+    if (options?.maxWidth || options?.maxHeight) {
+      try {
+        const { width, height } = await readImageDimensions(file);
+        const maxWidth = options.maxWidth ?? width;
+        const maxHeight = options.maxHeight ?? height;
+        if (width > maxWidth || height > maxHeight) {
+          alert(`${label} acima do limite recomendado de ${maxWidth}x${maxHeight}px.`);
+          return false;
+        }
+      } catch (error: any) {
+        alert(error?.message ?? 'Falha ao validar dimensoes da imagem.');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const valid =
+      key === 'logo'
+        ? await validateImageFile(file, { label: 'Logo', maxWidth: 500, maxHeight: 500 })
+        : await validateImageFile(file, { label: 'Imagem' });
+    if (!valid) {
+      e.target.value = '';
+      return;
+    }
 
     setUploading(true);
     try {
@@ -90,6 +143,13 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
 
       // faz upload 1 a 1 (mais seguro e simples)
       for (const file of files) {
+        const valid = await validateImageFile(file, {
+          label: 'Foto da galeria',
+          maxWidth: 1000,
+          maxHeight: 1000,
+        });
+        if (!valid) continue;
+
         try {
           const url = await uploadToServer(file, 'gallery');
           uploaded.push(url);
@@ -325,6 +385,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           {/* Logo Upload */}
           <div>
             <Label className="text-sm font-medium">Logo (opcional)</Label>
+            <p className="mt-1 text-xs text-gray-500">Recomendado: 500x500px. Limite de 5MB.</p>
 
             {config.logo ? (
               <div className="mt-2 relative">
@@ -363,6 +424,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           {/* Background Image */}
           <div>
             <Label className="text-sm font-medium">Imagem de Fundo</Label>
+            <p className="mt-1 text-xs text-gray-500">Recomendado: formato horizontal 16:9. Limite de 5MB.</p>
 
             {config.backgroundImage ? (
               <div className="mt-2 relative">
@@ -478,6 +540,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
 
           <div>
             <Label className="text-sm font-medium">Fotos</Label>
+            <p className="mt-1 text-xs text-gray-500">Recomendado: fotos quadradas ate 1000x1000px. Limite de 5MB por foto.</p>
 
             <div className="mt-2 grid grid-cols-3 gap-2">
               {(config.images || []).map((img: string, index: number) => (
@@ -764,6 +827,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
 
           <div>
             <Label className="text-sm font-medium">Imagem da lista (capa)</Label>
+            <p className="mt-1 text-xs text-gray-500">Recomendado: formato horizontal 16:9. Limite de 5MB.</p>
             {config.coverImage ? (
               <div className="mt-2 relative">
                 <img src={config.coverImage} alt="Capa da lista" className="w-full h-40 object-cover rounded-lg" />

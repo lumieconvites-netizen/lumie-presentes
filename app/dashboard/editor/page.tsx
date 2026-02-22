@@ -139,6 +139,7 @@ export default function PageBuilder() {
   const [listGifts, setListGifts] = useState<any[]>([]);
   const [dirty, setDirty] = useState(false);
   const [uploadingThemeBg, setUploadingThemeBg] = useState(false);
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
   const saveTimer = useRef<any>(null);
 
@@ -290,6 +291,10 @@ export default function PageBuilder() {
 
   const uploadThemeBackground = async (file?: File | null) => {
     if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      alert('Imagem maior que 5MB. Escolha um arquivo de ate 5MB.');
+      return;
+    }
     try {
       setUploadingThemeBg(true);
       const form = new FormData();
@@ -601,6 +606,9 @@ export default function PageBuilder() {
                 )}
                 <p className="mt-2 text-xs text-gray-500">
                   A imagem do tema vale para todos os blocos, exceto o Hero. Se remover, fica a cor de fundo.
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Recomendado: formato vertical 9:16. Limite de 5MB.
                 </p>
               </div>
 
