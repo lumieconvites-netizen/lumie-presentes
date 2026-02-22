@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Search, Pencil, Copy, Trash2, Boxes, Upload, Loader2 } from 'lucide-react';
 import { useUser } from '@/contexts/user-context';
 import Link from 'next/link';
@@ -533,6 +533,9 @@ export default function PresentesDashboard() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Novo presente</DialogTitle>
+            <DialogDescription className="sr-only">
+              Preencha os dados para criar um novo presente na sua lista.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-3">
@@ -563,6 +566,9 @@ export default function PresentesDashboard() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Editar presente</DialogTitle>
+            <DialogDescription className="sr-only">
+              Atualize as informacoes do presente selecionado.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-3">
@@ -591,6 +597,9 @@ export default function PresentesDashboard() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Adicionar quantidade</DialogTitle>
+            <DialogDescription className="sr-only">
+              Informe quantas unidades deseja adicionar ao presente.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <Input type="number" placeholder="Quantidade a adicionar" value={qtyToAdd} onChange={(e) => setQtyToAdd(Number(e.target.value))} />
