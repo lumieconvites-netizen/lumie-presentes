@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, Check } from 'lucide-react';
+import AffiliateWithdrawCard from '@/components/affiliate/withdraw-card';
 
 type AmbassadorOverview = {
   ambassador: { id: string; name: string; email: string };
@@ -100,6 +101,8 @@ export default function AmbassadorDashboardPage() {
 
   return (
     <div className="space-y-6">
+      <AffiliateWithdrawCard />
+
       <Card className="border-[#ead9cd]">
         <CardHeader>
           <CardTitle>Seus codigos de embaixador</CardTitle>

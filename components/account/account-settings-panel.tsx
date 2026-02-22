@@ -39,10 +39,12 @@ export default function AccountSettingsPanel({
   title,
   subtitle,
   showBankSection,
+  profileScope = 'effective',
 }: {
   title: string;
   subtitle: string;
   showBankSection: boolean;
+  profileScope?: 'effective' | 'session';
 }) {
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -60,7 +62,13 @@ export default function AccountSettingsPanel({
 
     async function loadAll() {
       try {
-        const meRes = await fetch('/api/me', { cache: 'no-store' });
+        const meUrl = profileScope === 'session' ? '/api/me?scope=session' : '/api/me';
+        const meRequest = fetch(meUrl, { cache: 'no-store' });
+        const bankRequest = showBankSection
+          ? fetch('/api/recipient/bank-account', { cache: 'no-store' })
+          : Promise.resolve(null);
+
+        const [meRes, bankRes] = await Promise.all([meRequest, bankRequest]);
         const meData = await meRes.json().catch(() => null);
         if (!meRes.ok) throw new Error(meData?.error ?? 'Erro ao carregar conta.');
 
@@ -70,8 +78,7 @@ export default function AccountSettingsPanel({
           setPhoto(meData?.image || '');
         }
 
-        if (showBankSection) {
-          const bankRes = await fetch('/api/recipient/bank-account', { cache: 'no-store' });
+        if (showBankSection && bankRes) {
           const bankData = await bankRes.json().catch(() => null);
           if (bankRes.ok && bankData?.recipient?.bankAccount) {
             const account = bankData.recipient.bankAccount as Partial<BankAccountForm>;
@@ -101,7 +108,7 @@ export default function AccountSettingsPanel({
     return () => {
       cancelled = true;
     };
-  }, [showBankSection]);
+  }, [showBankSection, profileScope]);
 
   async function handlePhotoUpload(file?: File | null) {
     if (!file) return;
@@ -129,7 +136,8 @@ export default function AccountSettingsPanel({
   async function saveProfile() {
     try {
       setSavingProfile(true);
-      const res = await fetch('/api/me', {
+      const profileUrl = profileScope === 'session' ? '/api/me?scope=session' : '/api/me';
+      const res = await fetch(profileUrl, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -279,4 +287,3 @@ export default function AccountSettingsPanel({
     </div>
   );
 }
-

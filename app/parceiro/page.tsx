@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AffiliateWithdrawCard from '@/components/affiliate/withdraw-card';
 
 type PartnerOverview = {
   partner: { id: string; name: string; email: string; ambassador?: { name: string | null; email: string } | null };
@@ -52,6 +53,8 @@ export default function PartnerDashboardPage() {
 
   return (
     <div className="space-y-6">
+      <AffiliateWithdrawCard />
+
       <Card className="border-[#ead9cd]">
         <CardHeader>
           <CardTitle>Seus codigos de parceiro</CardTitle>

@@ -8,7 +8,7 @@ export default function AdminSettingsPage() {
       title="Configuracoes da conta admin"
       subtitle="Atualize seu perfil administrativo."
       showBankSection={false}
+      profileScope="session"
     />
   );
 }
-
