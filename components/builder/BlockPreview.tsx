@@ -244,7 +244,11 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
               <div className="relative text-white">
                 {config.backgroundImage ? (
                   <div className="relative w-full bg-black/20">
-                    <img src={config.backgroundImage} alt={config.title || 'Capa do evento'} className="w-full h-auto object-contain max-h-[90vh]" />
+                    <img
+                      src={config.backgroundImage}
+                      alt={config.title || 'Capa do evento'}
+                      className="w-full max-h-[90vh] object-contain md:h-[78vh] md:max-h-none md:object-cover"
+                    />
                     {getHeroOverlayStyle(config) && <div className="absolute inset-0" style={getHeroOverlayStyle(config) as React.CSSProperties} />}
                     {config.logo && (
                       <div className="absolute top-8 left-8 z-10">
