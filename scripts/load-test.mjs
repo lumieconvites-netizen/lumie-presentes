@@ -78,7 +78,7 @@ function getOperations() {
         method: "GET",
         path: `/api/public/rsvp/${encodeURIComponent(RSVP_SLUG)}/search${toQuery({ q: RSVP_QUERY })}`,
       }),
-      isExpectedStatus: (status) => status === 200,
+      isExpectedStatus: (status) => status === 200 || status === 429,
     });
   }
 

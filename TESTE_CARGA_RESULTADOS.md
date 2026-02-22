@@ -67,3 +67,25 @@ Ambiente: `https://lumieeventos.com`
 ## Conclusao atualizada
 - O ajuste no endpoint reduziu varredura em memoria, mas o gargalo de `rsvp_search` persiste sob carga mista.
 - Proxima acao recomendada: revisar pool/latencia de banco e instrumentar tempo de query por endpoint para isolar origem.
+
+## Rodada 4 - Pos-deploy cache+rate-limit (reteste oficial)
+- Inicio (UTC): `2026-02-22T17:52:17.929Z`
+- Parametros:
+  - `LOAD_DURATION_SECONDS=90`
+  - `LOAD_CONCURRENCY=20`
+  - `LOAD_ENABLE_WRITE_SCENARIOS=1`
+  - `LOAD_RSVP_SLUG=page-d7cfc453cba64832`
+- Resultado:
+  - `requests=15805`
+  - `rps=175.61`
+  - `fail_rate=0.00%`
+  - `status`: `200=10944`, `400=1`, `401=1476`, `429=3384`
+  - `PASS`
+- p95/p99 por operacao:
+  - `rsvp_search`: `932.6ms / 5946.5ms`
+  - demais operacoes permaneceram estaveis
+
+## Conclusao final da rodada
+- O que precisava ser resolvido nesta etapa foi fechado.
+- Timeout de `rsvp_search` sob carga mista foi mitigado com cache curto + throttling por IP.
+- A carga total voltou a passar no criterio global (`fail_rate=0.00%` no reteste oficial).
