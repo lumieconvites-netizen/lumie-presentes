@@ -31,6 +31,7 @@
 - `OPERATIONS_ALERTS.md`: runbook com 5 alertas (Sentry + Supabase + Upstash) e thresholds fixos.
 - `SECRET_ROTATION_POLICY.md`: politica formal de rotacao com calendario, responsaveis e rollback.
 - `SECRET_ROTATION_AUDIT.md`: primeira rotacao real executada (`CRON_SECRET`) com auditoria registrada.
+- `COSTS_BRL.md`: template de consolidado mensal de custos em BRL.
 - `scripts/load-test.mjs` e `TESTE_CARGA.md`: harness de teste de carga com modo seguro e modo de validacao de escrita.
 - `TESTE_CARGA_RESULTADOS.md`: quatro rodadas executadas (baseline, escrita controlada, pos-ajuste e reteste final).
 - `app/api/public/rsvp/[slug]/search/route.ts`: filtro no banco + cache curto + throttling por IP para reduzir timeout sob carga.
@@ -57,6 +58,9 @@
 - Rotacao operacional:
   - primeira rodada concluida (`CRON_SECRET`)
   - proxima rodada mensal: 2026-03-05
+- Custos:
+  - consolidado em BRL estruturado em `COSTS_BRL.md`
+  - falta preencher valores fechados dos provedores no fechamento mensal
 
 ## URLs e blocos importantes
 - Admin retencao: `/admin/retencao`
