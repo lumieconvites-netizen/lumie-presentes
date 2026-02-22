@@ -79,6 +79,7 @@ Definir calendario, responsavel e procedimento padrao para rotacao de chaves/tok
 
 ## Registro obrigatorio de auditoria
 - Manter historico em documento operacional (data, segredo, operador, resultado).
+- Arquivo de auditoria deste projeto: `SECRET_ROTATION_AUDIT.md`.
 - Formato minimo:
   - `YYYY-MM-DD | segredo | operador | status(ok/falha) | observacao`
 

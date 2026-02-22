@@ -30,6 +30,7 @@
 - `DEPLOY_CHECKLIST.md`: reescrito para stack atual.
 - `OPERATIONS_ALERTS.md`: runbook com 5 alertas (Sentry + Supabase + Upstash) e thresholds fixos.
 - `SECRET_ROTATION_POLICY.md`: politica formal de rotacao com calendario, responsaveis e rollback.
+- `SECRET_ROTATION_AUDIT.md`: primeira rotacao real executada (`CRON_SECRET`) com auditoria registrada.
 - `scripts/load-test.mjs` e `TESTE_CARGA.md`: harness de teste de carga com modo seguro e modo de validacao de escrita.
 - `TESTE_CARGA_RESULTADOS.md`: quatro rodadas executadas (baseline, escrita controlada, pos-ajuste e reteste final).
 - `app/api/public/rsvp/[slug]/search/route.ts`: filtro no banco + cache curto + throttling por IP para reduzir timeout sob carga.
@@ -40,6 +41,7 @@
   - objetivo final: sem novos writes em Supabase Storage (ja atingido para rota principal de upload).
 - Politica formal de rotacao de chaves:
   - documentada em `SECRET_ROTATION_POLICY.md`.
+  - primeira rodada executada e auditada em `SECRET_ROTATION_AUDIT.md`.
 
 ## Pendente prioritario
 - Filas para tarefas pesadas fora da request:
@@ -47,13 +49,14 @@
   - falta definir fila para limpeza/processamentos de midia
 - Alertas operacionais completos:
   - regras Sentry para 5xx/auth/checkout/webhook (concluido)
-  - Supabase em monitor visual (parcial)
-  - Upstash automatico pendente por custo/plano
+  - Supabase em monitor visual manual (concluido)
+  - Upstash em monitoramento manual sem pacote pago (concluido)
 - Teste de carga:
   - executado com baseline oficial e reteste final (pass)
   - `rsvp_search` estabilizado no criterio global apos mitigacao (cache + rate limit)
 - Rotacao operacional:
-  - politica definida; falta executar primeira rodada com auditoria preenchida
+  - primeira rodada concluida (`CRON_SECRET`)
+  - proxima rodada mensal: 2026-03-05
 
 ## URLs e blocos importantes
 - Admin retencao: `/admin/retencao`
