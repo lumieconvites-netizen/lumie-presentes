@@ -69,7 +69,7 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
 
         {pageCoverImage ? (
           <div className="overflow-hidden rounded-2xl border border-[#e8dbcf] bg-white">
-            <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-cover" />
+            <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[52vh]" />
           </div>
         ) : null}
 
@@ -109,4 +109,5 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
     </div>
   );
 }
+
 
