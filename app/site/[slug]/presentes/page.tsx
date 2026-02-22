@@ -56,13 +56,14 @@ export default async function SiteGiftsBySlugPage({
         </div>
       </header>
 
+      {pageCoverImage ? (
+        <div className="w-full bg-black">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
+        </div>
+      ) : null}
+
       <section className="max-w-6xl mx-auto px-4 py-10">
-        {pageCoverImage ? (
-          <div className="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={pageCoverImage} alt={`Capa da página ${pageTitle}`} className="w-full h-auto object-contain max-h-[78vh]" />
-          </div>
-        ) : null}
         {pageMessage ? <p className="text-gray-600 mb-8 max-w-3xl">{pageMessage}</p> : null}
         {list.gifts.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-600">
@@ -122,4 +123,3 @@ export default async function SiteGiftsBySlugPage({
     </main>
   );
 }
-

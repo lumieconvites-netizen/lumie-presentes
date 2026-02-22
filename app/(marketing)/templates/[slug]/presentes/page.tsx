@@ -42,8 +42,8 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
     '';
 
   return (
-    <div className="min-h-screen bg-[#FAF4EF] py-8 px-4">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#FAF4EF] py-8">
+      <div className="max-w-6xl mx-auto space-y-6 px-4">
         <div className="rounded-2xl border border-[#e7d8cb] bg-[#fffaf7] p-4 md:p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="min-w-0">
@@ -66,13 +66,15 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
             </div>
           </div>
         </div>
+      </div>
 
-        {pageCoverImage ? (
-          <div className="overflow-hidden rounded-2xl border border-[#e8dbcf] bg-white">
-            <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full h-auto object-contain max-h-[78vh]" />
-          </div>
-        ) : null}
+      {pageCoverImage ? (
+        <div className="w-full bg-black">
+          <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
+        </div>
+      ) : null}
 
+      <div className="max-w-6xl mx-auto space-y-6 px-4 py-6">
         <div className="rounded-2xl border border-[#e8dbcf] bg-white p-4 md:p-6">
           <h2 className="font-display text-2xl text-[#8E3D2C]">{pageTitle}</h2>
           {pageMessage ? <p className="mt-2 text-[#6f584d]">{pageMessage}</p> : null}
@@ -109,5 +111,3 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
     </div>
   );
 }
-
-
