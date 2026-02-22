@@ -109,3 +109,12 @@ Invoke-RestMethod -Uri "https://lumieeventos.com/api/sentry-debug?mode=exception
 - Revisar uso de banco/latencia no Supabase
 - Revisar uso/operacoes no Upstash
 - Revisar custo/uso no R2
+
+## 7) Rotacao de segredos
+- Politica oficial: `SECRET_ROTATION_POLICY.md`
+- Em toda rotacao:
+  - atualizar env na Vercel (Production)
+  - disparar deploy
+  - rodar smoke test completo
+  - revogar segredo antigo somente apos validacao
+  - registrar auditoria (data/segredo/operador/status)

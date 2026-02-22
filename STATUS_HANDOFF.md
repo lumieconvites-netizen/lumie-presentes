@@ -23,13 +23,14 @@
 - `app/api/sentry-debug/route.ts`: endpoint protegido por bearer para validar alertas operacionais no Sentry.
 - `DEPLOY_CHECKLIST.md`: reescrito para stack atual.
 - `OPERATIONS_ALERTS.md`: runbook com 5 alertas (Sentry + Supabase + Upstash) e thresholds fixos.
+- `SECRET_ROTATION_POLICY.md`: politica formal de rotacao com calendario, responsaveis e rollback.
 
 ## Parcial (faltando fechar)
 - Migracao 100% de legados de Storage:
   - ainda existe suporte de limpeza de URL antiga no job de retencao (`lib/account-retention.ts`), o que e intencional para limpar historico.
   - objetivo final: sem novos writes em Supabase Storage (ja atingido para rota principal de upload).
 - Politica formal de rotacao de chaves:
-  - falta documentar calendario e responsavel operacional.
+  - documentada em `SECRET_ROTATION_POLICY.md`.
 
 ## Pendente prioritario
 - Filas para tarefas pesadas fora da request:
@@ -37,15 +38,16 @@
   - limpeza/processamentos async
   - rotinas demoradas
 - Alertas operacionais completos:
-  - regras Sentry para 5xx/auth/checkout/webhook
-  - alertas de latencia/erros de banco e Redis
+  - regras Sentry para 5xx/auth/checkout/webhook (concluido)
+  - Supabase em monitor visual (parcial)
+  - Upstash automatico pendente por custo/plano
 - Teste de carga:
   - cadastro
   - upload
   - checkout
   - RSVP/check-in
 - Rotacao operacional:
-  - tokens/chaves (R2, Upstash, Sentry, Pagar.me, Resend)
+  - politica definida; falta executar primeira rodada com auditoria preenchida
 
 ## URLs e blocos importantes
 - Admin retencao: `/admin/retencao`
