@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { PageBlock } from '@/contexts/user-context';
@@ -144,7 +144,6 @@ export default function PageBuilder() {
   const [uploadingThemeBg, setUploadingThemeBg] = useState(false);
   const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
-  const saveTimer = useRef<any>(null);
 
   const siteHref = useMemo(() => {
     if (!giftList?.slug) return '/site';
@@ -282,30 +281,14 @@ export default function PageBuilder() {
     if (!res.ok) throw new Error(data?.error ?? 'Falha ao salvar layout');
   }
 
-  function scheduleSave(nextBlocks: PageBlock[], nextTheme: Theme) {
-    if (!giftList?.id) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-
-    saveTimer.current = setTimeout(async () => {
-      try {
-        await saveLayout(nextBlocks, nextTheme);
-        setDirty(false);
-      } catch (error) {
-        console.error(error);
-      }
-    }, 500);
-  }
-
   const updatePageBlocks = (next: PageBlock[]) => {
     setPageBlocks(next);
     setDirty(true);
-    scheduleSave(next, theme);
   };
 
   const updateTheme = (nextTheme: Theme) => {
     setTheme(nextTheme);
     setDirty(true);
-    scheduleSave(pageBlocks, nextTheme);
   };
 
   const uploadThemeBackground = async (file?: File | null) => {
