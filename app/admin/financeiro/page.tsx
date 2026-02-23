@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 
 type MethodFilter = 'all' | 'card' | 'pix';
+type PeriodFilter = 'total' | 'current_month' | 'last_month';
 
 type OptionUser = {
   id: string;
@@ -73,6 +74,7 @@ const brl = (value: number) => value.toLocaleString('pt-BR', { style: 'currency'
 const dateBr = (value?: string | null) => (value ? new Date(value).toLocaleDateString('pt-BR') : '-');
 
 export default function AdminFinanceiroPage() {
+  const [period, setPeriod] = useState<PeriodFilter>('total');
   const [method, setMethod] = useState<MethodFilter>('all');
   const [clientId, setClientId] = useState('all');
   const [partnerId, setPartnerId] = useState('all');
@@ -82,12 +84,13 @@ export default function AdminFinanceiroPage() {
 
   const query = useMemo(() => {
     const params = new URLSearchParams();
+    params.set('period', period);
     params.set('method', method);
     if (clientId !== 'all') params.set('clientId', clientId);
     if (partnerId !== 'all') params.set('partnerId', partnerId);
     if (ambassadorId !== 'all') params.set('ambassadorId', ambassadorId);
     return params.toString();
-  }, [method, clientId, partnerId, ambassadorId]);
+  }, [period, method, clientId, partnerId, ambassadorId]);
 
   async function loadData() {
     setLoading(true);
@@ -114,7 +117,21 @@ export default function AdminFinanceiroPage() {
           <CardTitle>Financeiro</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500">Período</p>
+              <Select value={period} onValueChange={(value: PeriodFilter) => setPeriod(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="current_month">Mês atual</SelectItem>
+                  <SelectItem value="last_month">Mês passado</SelectItem>
+                  <SelectItem value="total">Total</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-1">
               <p className="text-xs text-gray-500">Método de pagamento</p>
               <Select value={method} onValueChange={(value: MethodFilter) => setMethod(value)}>
@@ -183,6 +200,7 @@ export default function AdminFinanceiroPage() {
 
           <div>
             <Button variant="outline" onClick={() => {
+              setPeriod('total');
               setMethod('all');
               setClientId('all');
               setPartnerId('all');

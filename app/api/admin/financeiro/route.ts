@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter";
 
 type MethodFilter = "all" | "card" | "pix";
 const CARD_METHODS = ["credit_card", "CREDIT_CARD", "card", "CARD"];
@@ -134,6 +135,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const method = (searchParams.get("method") ?? "all") as MethodFilter;
+  const period = normalizePeriodFilter(searchParams.get("period"));
   const clientId = (searchParams.get("clientId") ?? "").trim();
   const partnerId = (searchParams.get("partnerId") ?? "").trim();
   const ambassadorId = (searchParams.get("ambassadorId") ?? "").trim();
@@ -148,8 +150,11 @@ export async function GET(request: Request) {
   if (partnerId) relationFilters.push({ giftList: { user: { referredByPartnerId: partnerId } } });
   if (ambassadorId) relationFilters.push({ giftList: { user: { referredByAmbassadorId: ambassadorId } } });
 
+  const createdAtWhere = buildCreatedAtWhere(period);
+
   const orderWhere: any = {
     status: "PAID",
+    ...(createdAtWhere ? { createdAt: createdAtWhere } : {}),
     ...(paymentMethodFilter || {}),
     ...(relationFilters.length ? { AND: relationFilters } : {}),
   };
@@ -159,6 +164,7 @@ export async function GET(request: Request) {
 
   const pendingCardWhere: any = {
     AND: [
+      ...(createdAtWhere ? [{ createdAt: createdAtWhere }] : []),
       cardPaymentMethodWhere(),
       {
         OR: [
@@ -427,6 +433,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     filters: {
+      period,
       method: validMethod,
       clientId: clientId || null,
       partnerId: partnerId || null,

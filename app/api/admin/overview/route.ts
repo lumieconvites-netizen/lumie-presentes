@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { GIFT_MODEL_CATEGORY } from "@/lib/gift-models";
+import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await requireAdminSession();
   if (!session) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  const period = normalizePeriodFilter(searchParams.get("period"));
+  const createdAtWhere = buildCreatedAtWhere(period);
 
   const [
     usersCount,
@@ -37,7 +42,7 @@ export async function GET() {
     prisma.message.count(),
     prisma.order.count(),
     prisma.order.findMany({
-      where: { status: "PAID" },
+      where: { status: "PAID", ...(createdAtWhere ? { createdAt: createdAtWhere } : {}) },
       select: { totalAmount: true },
     }),
   ]);
@@ -68,5 +73,6 @@ export async function GET() {
     messagesCount,
     ordersCount,
     paidTotal,
+    period,
   });
 }

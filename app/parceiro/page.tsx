@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AffiliateWithdrawCard from '@/components/affiliate/withdraw-card';
 
 type PartnerOverview = {
@@ -19,12 +20,14 @@ type PartnerOverview = {
   };
   clients: { id: string; name: string; email: string; sales: number; commission: number; orders: number }[];
 };
+type PeriodFilter = 'total' | 'current_month' | 'last_month';
 
 function brl(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 export default function PartnerDashboardPage() {
+  const [period, setPeriod] = useState<PeriodFilter>('total');
   const [data, setData] = useState<PartnerOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingClientId, setOpeningClientId] = useState<string | null>(null);
@@ -33,7 +36,7 @@ export default function PartnerDashboardPage() {
     let cancel = false;
     (async () => {
       try {
-        const res = await fetch('/api/affiliate/partner/overview', { cache: 'no-store' });
+        const res = await fetch(`/api/affiliate/partner/overview?period=${period}`, { cache: 'no-store' });
         const json = await res.json();
         if (!res.ok) throw new Error(json?.error || 'Erro ao carregar painel de parceiro');
         if (!cancel) setData(json);
@@ -46,7 +49,7 @@ export default function PartnerDashboardPage() {
     return () => {
       cancel = true;
     };
-  }, []);
+  }, [period]);
 
   const topClients = useMemo(() => data?.clients || [], [data?.clients]);
 
@@ -74,6 +77,24 @@ export default function PartnerDashboardPage() {
   return (
     <div className="space-y-6">
       <AffiliateWithdrawCard />
+
+      <Card className="border-[#ead9cd]">
+        <CardContent className="p-4">
+          <div className="w-full md:w-56">
+            <p className="text-xs text-gray-500 mb-1">Período</p>
+            <Select value={period} onValueChange={(value: PeriodFilter) => setPeriod(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="current_month">Mês atual</SelectItem>
+                <SelectItem value="last_month">Mês passado</SelectItem>
+                <SelectItem value="total">Total</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-[#ead9cd]">
         <CardHeader>

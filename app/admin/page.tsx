@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LayoutTemplate, Shield, Users } from 'lucide-react';
 
 type Overview = {
@@ -28,10 +29,12 @@ type ImpersonationState = {
   isImpersonating: boolean;
   effectiveUser?: { id: string; name: string | null; email: string; role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE' };
 };
+type PeriodFilter = 'total' | 'current_month' | 'last_month';
 
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function AdminPage() {
+  const [period, setPeriod] = useState<PeriodFilter>('total');
   const [overview, setOverview] = useState<Overview | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [lists, setLists] = useState<AdminGiftList[]>([]);
@@ -63,7 +66,7 @@ export default function AdminPage() {
     };
 
     const [o, u, l, t, i] = await Promise.all([
-      getJson('/api/admin/overview'),
+      getJson(`/api/admin/overview?period=${period}`),
       getJson(`/api/admin/users?${userQuery}`),
       getJson(`/api/admin/gift-lists?${listQuery}`),
       getJson('/api/admin/templates'),
@@ -78,7 +81,7 @@ export default function AdminPage() {
   }
 
   useEffect(() => { loadAll().catch(() => null); }, []);
-  useEffect(() => { loadAll().catch(() => null); }, [userQuery, listQuery]);
+  useEffect(() => { loadAll().catch(() => null); }, [period, userQuery, listQuery]);
 
   async function patchList(id: string, payload: any) {
     const res = await fetch(`/api/admin/gift-lists/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -154,7 +157,21 @@ export default function AdminPage() {
           <CardTitle className="text-3xl font-display">Admin LUMIÊ</CardTitle>
           <p className="text-sm text-[#8E3D2C]/80">Visão geral da operação da plataforma.</p>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-5 xl:grid-cols-9 gap-3 text-sm">
+        <CardContent className="space-y-3">
+          <div className="w-full md:w-56">
+            <p className="text-xs text-gray-500 mb-1">Período</p>
+            <Select value={period} onValueChange={(value: PeriodFilter) => setPeriod(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="current_month">Mês atual</SelectItem>
+                <SelectItem value="last_month">Mês passado</SelectItem>
+                <SelectItem value="total">Total</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 xl:grid-cols-9 gap-3 text-sm">
           <Stat icon={<Users className="w-4 h-4" />} label="Usuários" value={overview?.usersCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Admins" value={overview?.adminsCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Clientes" value={overview?.clientsCount || 0} />
@@ -164,6 +181,7 @@ export default function AdminPage() {
           <Stat icon={<Users className="w-4 h-4" />} label="Listas pub." value={overview?.publishedListsCount || 0} />
           <Stat icon={<LayoutTemplate className="w-4 h-4" />} label="Templates ativos" value={overview?.activeTemplatesCount || 0} />
           <div className="rounded-xl border p-3 bg-white"><p className="text-xs text-gray-500">Arrecadado</p><p className="text-base font-semibold">{brl(overview?.paidTotal || 0)}</p></div>
+          </div>
         </CardContent>
       </Card>
 

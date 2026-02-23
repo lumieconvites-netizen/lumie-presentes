@@ -3,15 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { getActingUserContext } from "@/lib/acting-user";
 import { ensureDefaultReferralCodesForUser } from "@/lib/referrals";
 import { calculateSplitFromOrder, cardPaymentMethodWhere, isRealRecipientId } from "@/lib/affiliate-splits";
+import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter";
 
 const CARD_LIQUIDATION_WINDOW_DAYS = 45;
 
-export async function GET() {
+export async function GET(request: Request) {
   const ctx = await getActingUserContext();
   if (!ctx) return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   if (ctx.effectiveUser.role !== "AMBASSADOR") {
     return NextResponse.json({ error: "Acesso permitido apenas para embaixadores." }, { status: 403 });
   }
+
+  const { searchParams } = new URL(request.url);
+  const period = normalizePeriodFilter(searchParams.get("period"));
+  const createdAtWhere = buildCreatedAtWhere(period);
 
   const ambassadorId = ctx.effectiveUserId;
   await ensureDefaultReferralCodesForUser({ id: ambassadorId, role: "AMBASSADOR" });
@@ -56,6 +61,7 @@ export async function GET() {
     prisma.order.findMany({
       where: {
         status: "PAID",
+        ...(createdAtWhere ? { createdAt: createdAtWhere } : {}),
         giftList: { user: { referredByAmbassadorId: ambassadorId } },
       },
       orderBy: { createdAt: "desc" },
@@ -90,6 +96,7 @@ export async function GET() {
     prisma.order.findMany({
       where: {
         AND: [
+          ...(createdAtWhere ? [{ createdAt: createdAtWhere }] : []),
           cardPaymentMethodWhere(),
           {
             OR: [
@@ -220,6 +227,7 @@ export async function GET() {
       pendingCardOrders: pendingCardOrders.length,
       pendingCardAmount,
     },
+    period,
     clients: Array.from(clientsMap.values()).sort((a, b) => b.commission - a.commission),
     partners: Array.from(partnersMap.values()).sort((a, b) => b.commission - a.commission),
     recentPendingCards: pendingCardOrders,
