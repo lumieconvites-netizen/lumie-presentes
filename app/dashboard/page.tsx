@@ -96,7 +96,7 @@ export default function DashboardPage() {
 
     (async () => {
       try {
-        const listRes = await fetch('/api/gift-lists/my-list/full', { cache: 'no-store' });
+        const listRes = await fetch('/api/gift-lists/my-list/full?view=dashboard', { cache: 'no-store' });
         const listJson = await listRes.json();
         if (!listRes.ok) throw new Error(listJson?.error ?? 'Falha ao carregar dashboard');
         if (!cancelled) setData(listJson);
