@@ -64,13 +64,18 @@ export async function POST(request: Request) {
     }
 
     const mapped = mapOrderStatus(event?.data?.status ?? event?.data?.charges?.[0]?.status);
-    const nextStatus = toOrderStatus(mapped);
+    let nextStatus = toOrderStatus(mapped);
+
+    // Evita regressão de estado quando já foi marcado como pago no fluxo síncrono.
+    if (dbOrder.status === "PAID" && nextStatus === "PENDING") {
+      nextStatus = "PAID";
+    }
 
     await prisma.order.update({
       where: { id: dbOrder.id },
       data: {
         status: nextStatus,
-        paidAt: nextStatus === "PAID" ? new Date() : dbOrder.status === "PAID" ? null : undefined,
+        paidAt: nextStatus === "PAID" && dbOrder.status !== "PAID" ? new Date() : undefined,
         refundedAt: nextStatus === "REFUNDED" ? new Date() : undefined,
       },
     });

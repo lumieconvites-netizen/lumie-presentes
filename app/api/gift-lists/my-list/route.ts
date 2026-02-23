@@ -13,6 +13,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function hasConfiguredBankAccount(bankAccount: any) {
+  if (!bankAccount || typeof bankAccount !== "object") return false;
+  const required = ["holderName", "holderDocument", "bankCode", "agency", "accountNumber", "accountType"];
+  return required.every((field) => String(bankAccount?.[field] ?? "").trim().length > 0);
+}
+
 export async function GET() {
   try {
     const ctx = await getActingUserContext();
@@ -111,6 +117,20 @@ export async function PATCH(req: Request) {
 
     if (Object.keys(data).length === 0 && !nextFeeMode) {
       return NextResponse.json({ error: "Nenhum campo valido para atualizar" }, { status: 400 });
+    }
+
+    if (data.isPublished === true) {
+      const recipient = await prisma.recipient.findUnique({
+        where: { userId: ctx.effectiveUserId },
+        select: { bankAccount: true },
+      });
+
+      if (!hasConfiguredBankAccount(recipient?.bankAccount)) {
+        return NextResponse.json(
+          { error: "Cadastre a conta bancaria antes de publicar os presentes." },
+          { status: 400 }
+        );
+      }
     }
 
     if (nextFeeMode) {

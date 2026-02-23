@@ -96,6 +96,11 @@ function looksLikeSuccessReason(reason?: string | null) {
   return /(aprovad|approved|sucesso|capturad|captured)/i.test(reason);
 }
 
+function isApprovalLikeStatus(status?: string | null) {
+  const value = String(status ?? "").toLowerCase();
+  return value === "paid" || value === "authorized" || value === "captured";
+}
+
 function isInvalidRequestError(error: any) {
   const raw = String(error?.message ?? "");
   return /Pagar\.me error 400/i.test(raw) && /request is invalid/i.test(raw);
@@ -470,15 +475,55 @@ export async function POST(request: Request) {
           nonSuccessReasons[0] ||
           `Pagamento recusado pelo gateway (charge=${chargeStatus || 'unknown'}, transaction=${transactionStatus || 'unknown'})`;
 
-        await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            pagarmeOrderId: latestOrder?.id ?? null,
-            pagarmeChargeId: charge?.id ?? null,
-            paymentMethod: data.paymentMethod === 'CREDIT_CARD' ? 'credit_card' : 'pix',
-            ...(isFailed ? { status: 'REFUSED' as const } : {}),
-          },
-        });
+        const approvedNow =
+          !isFailed &&
+          (isApprovalLikeStatus(charge?.status) ||
+            isApprovalLikeStatus(transaction?.status) ||
+            looksLikeSuccessReason(transaction?.status_reason) ||
+            looksLikeSuccessReason(transaction?.acquirer_message));
+
+        if (approvedNow) {
+          await prisma.$transaction(async (tx) => {
+            const currentOrder = await tx.order.findUnique({
+              where: { id: order.id },
+              select: { id: true, status: true, giftItemId: true, quantity: true },
+            });
+            if (!currentOrder) return;
+
+            const wasPaid = currentOrder.status === "PAID";
+            await tx.order.update({
+              where: { id: order.id },
+              data: {
+                pagarmeOrderId: latestOrder?.id ?? null,
+                pagarmeChargeId: charge?.id ?? null,
+                paymentMethod: data.paymentMethod === 'CREDIT_CARD' ? 'credit_card' : 'pix',
+                status: "PAID",
+                paidAt: wasPaid ? undefined : new Date(),
+              },
+            });
+
+            if (!wasPaid) {
+              await tx.giftItem.update({
+                where: { id: currentOrder.giftItemId },
+                data: { availableQty: { decrement: currentOrder.quantity } },
+              });
+              await tx.message.updateMany({
+                where: { orderId: currentOrder.id },
+                data: { isPublic: true },
+              });
+            }
+          });
+        } else {
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              pagarmeOrderId: latestOrder?.id ?? null,
+              pagarmeChargeId: charge?.id ?? null,
+              paymentMethod: data.paymentMethod === 'CREDIT_CARD' ? 'credit_card' : 'pix',
+              ...(isFailed ? { status: 'REFUSED' as const } : {}),
+            },
+          });
+        }
 
         if (isFailed) {
           console.warn('Pagamento recusado pela Pagar.me', {
