@@ -1,8 +1,8 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Google Fonts Import - Fontes de Título */
+/* Google Fonts Import - Fontes de TÃ­tulo */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Cormorant+Garamond:wght@400;600;700&family=Libre+Baskerville:wght@400;700&family=Merriweather:wght@400;700&family=Lora:wght@400;600;700&family=EB+Garamond:wght@400;600;700&family=Crimson+Text:wght@400;600;700&display=swap');
 
 /* Google Fonts Import - Fontes Cursivas */
@@ -109,7 +109,7 @@
   background: hsl(var(--primary));
 }
 
-/* Animações customizadas */
+/* AnimaÃ§Ãµes customizadas */
 @keyframes shimmer {
   0% {
     background-position: -1000px 0;
@@ -130,7 +130,7 @@
   background-size: 1000px 100%;
 }
 
-/* Utilitários adicionais */
+/* UtilitÃ¡rios adicionais */
 .text-balance {
   text-wrap: balance;
 }
@@ -147,7 +147,7 @@
   @apply backdrop-blur-md bg-white/80 dark:bg-gray-900/80;
 }
 
-/* Estilos específicos do design LUMIÊ */
+/* Estilos especÃ­ficos do design LUMIÃŠ */
 .sidebar-active {
   @apply bg-primary text-white;
 }
@@ -187,7 +187,7 @@
 .icon-badge-blue {
   @apply icon-badge bg-blue-50;
 }
-/* ===== Font scope para páginas de lista/preview ===== */
+/* ===== Font scope para pÃ¡ginas de lista/preview ===== */
 .list-font-scope {
   font-family: var(--list-font-body, 'Inter'), sans-serif;
 }
@@ -754,7 +754,7 @@
   align-items: stretch;
   width: max-content;
   padding-inline: 12px;
-  animation: resourceMarquee 38s linear infinite;
+  animation: resourceMarquee 50s linear infinite;
 }
 
 .resource-card {
@@ -872,7 +872,7 @@
   }
 
   .resource-carousel-track {
-    animation-duration: 30s;
+    animation-duration: 40s;
   }
 
   .resource-carousel-wrap::before,
@@ -917,3 +917,4 @@
     min-width: 640px;
   }
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -98,7 +98,7 @@ export default function AccountSettingsPanel({
           }
         }
       } catch (error: any) {
-        if (!cancelled) alert(error?.message ?? 'Erro ao carregar configuracoes.');
+        if (!cancelled) alert(error?.message ?? 'Erro ao carregar configurações.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -165,17 +165,17 @@ export default function AccountSettingsPanel({
         body: JSON.stringify(bank),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.error ?? 'Erro ao salvar dados bancarios.');
+      if (!res.ok) throw new Error(data?.error ?? 'Erro ao salvar dados bancários.');
       setBankStatus(data?.recipient?.status ?? 'pending');
-      alert(data?.warning ?? data?.message ?? 'Dados bancarios salvos.');
+      alert(data?.warning ?? data?.message ?? 'Dados bancários salvos.');
     } catch (error: any) {
-      alert(error?.message ?? 'Erro ao salvar dados bancarios.');
+      alert(error?.message ?? 'Erro ao salvar dados bancários.');
     } finally {
       setSavingBank(false);
     }
   }
 
-  if (loading) return <div className="p-4 md:p-6">Carregando configuracoes...</div>;
+  if (loading) return <div className="p-4 md:p-6">Carregando configurações...</div>;
 
   return (
     <div className="space-y-6">
@@ -219,7 +219,7 @@ export default function AccountSettingsPanel({
       {showBankSection ? (
         <Card>
           <CardHeader>
-            <CardTitle>Conta bancaria</CardTitle>
+            <CardTitle>Conta bancária</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -238,11 +238,11 @@ export default function AccountSettingsPanel({
                 <Input value={bank.bankCode} onChange={(e) => setBank((p) => ({ ...p, bankCode: e.target.value }))} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Agencia</label>
+                <label className="text-sm font-medium mb-2 block">Agência</label>
                 <Input value={bank.agency} onChange={(e) => setBank((p) => ({ ...p, agency: e.target.value }))} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Digito agencia</label>
+                <label className="text-sm font-medium mb-2 block">Dígito agência</label>
                 <Input value={bank.agencyDigit} onChange={(e) => setBank((p) => ({ ...p, agencyDigit: e.target.value }))} />
               </div>
             </div>
@@ -253,7 +253,7 @@ export default function AccountSettingsPanel({
                 <Input value={bank.accountNumber} onChange={(e) => setBank((p) => ({ ...p, accountNumber: e.target.value }))} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Digito conta</label>
+                <label className="text-sm font-medium mb-2 block">Dígito conta</label>
                 <Input value={bank.accountDigit} onChange={(e) => setBank((p) => ({ ...p, accountDigit: e.target.value }))} />
               </div>
               <div>
@@ -269,7 +269,7 @@ export default function AccountSettingsPanel({
                   }
                 >
                   <option value="conta_corrente">Conta corrente</option>
-                  <option value="conta_poupanca">Conta poupanca</option>
+                  <option value="conta_poupanca">Conta poupança</option>
                 </select>
               </div>
             </div>
@@ -279,7 +279,7 @@ export default function AccountSettingsPanel({
             </p>
 
             <Button className="w-full sm:w-auto" onClick={() => saveBank()} disabled={savingBank}>
-              {savingBank ? 'Salvando...' : 'Salvar conta bancaria'}
+              {savingBank ? 'Salvando...' : 'Salvar conta bancária'}
             </Button>
           </CardContent>
         </Card>
@@ -287,3 +287,4 @@ export default function AccountSettingsPanel({
     </div>
   );
 }
+

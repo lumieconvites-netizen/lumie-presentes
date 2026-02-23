@@ -256,7 +256,7 @@ export default function HomePage() {
               <div className="rounded-[2rem] overflow-hidden">
               <div className="bg-gradient-to-r from-[#8e3d2c] to-[#c65a3a] text-white px-7 py-7">
                 <h4 className="font-display text-4xl">Lista de Presentes</h4>
-                <p className="text-sm text-white/90 mt-1">Mock de visual elegante da sua página</p>
+                <p className="text-sm text-white/90 mt-1">Com um visual elegante</p>
               </div>
 
               <div className="p-6">
@@ -632,4 +632,5 @@ export default function HomePage() {
     </div>
   );
 }
+
 

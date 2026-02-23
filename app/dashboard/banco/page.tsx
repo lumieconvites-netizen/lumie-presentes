@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,22 +72,22 @@ export default function BancoDashboardPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Erro ao salvar");
       setStatus(data?.recipient?.status ?? "pending");
-      alert(data?.warning ?? data?.message ?? "Dados bancarios salvos com sucesso.");
+      alert(data?.warning ?? data?.message ?? "Dados bancários salvos com sucesso.");
     } catch (error: any) {
-      alert(error?.message ?? "Erro ao salvar dados bancarios.");
+      alert(error?.message ?? "Erro ao salvar dados bancários.");
     } finally {
       setSaving(false);
     }
   }
 
   if (loading) {
-    return <div className="p-4 md:p-6">Carregando dados bancarios...</div>;
+    return <div className="p-4 md:p-6">Carregando dados bancários...</div>;
   }
 
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Conta Bancaria</h1>
+        <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Conta Bancária</h1>
         <p className="text-gray-500">Cadastre a conta para receber os valores dos presentes.</p>
       </div>
 
@@ -112,11 +112,11 @@ export default function BancoDashboardPage() {
               <Input value={form.bankCode} onChange={(e) => setForm((p) => ({ ...p, bankCode: e.target.value }))} />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Agencia</label>
+              <label className="text-sm font-medium mb-2 block">Agência</label>
               <Input value={form.agency} onChange={(e) => setForm((p) => ({ ...p, agency: e.target.value }))} />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Digito agencia</label>
+              <label className="text-sm font-medium mb-2 block">Dígito agência</label>
               <Input value={form.agencyDigit} onChange={(e) => setForm((p) => ({ ...p, agencyDigit: e.target.value }))} />
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function BancoDashboardPage() {
               <Input value={form.accountNumber} onChange={(e) => setForm((p) => ({ ...p, accountNumber: e.target.value }))} />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Digito conta</label>
+              <label className="text-sm font-medium mb-2 block">Dígito conta</label>
               <Input value={form.accountDigit} onChange={(e) => setForm((p) => ({ ...p, accountDigit: e.target.value }))} />
             </div>
             <div>
@@ -143,7 +143,7 @@ export default function BancoDashboardPage() {
                 }
               >
                 <option value="conta_corrente">Conta corrente</option>
-                <option value="conta_poupanca">Conta poupanca</option>
+                <option value="conta_poupanca">Conta poupança</option>
               </select>
             </div>
           </div>
@@ -153,10 +153,11 @@ export default function BancoDashboardPage() {
           </div>
 
           <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
-            {saving ? "Salvando..." : "Salvar dados bancarios"}
+            {saving ? "Salvando..." : "Salvar dados bancários"}
           </Button>
         </CardContent>
       </Card>
     </div>
   );
 }
+
