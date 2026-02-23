@@ -18,6 +18,7 @@ import { Globe, LayoutDashboard, LogOut, Settings, Shield, Sparkles } from 'luci
 
 type ImpersonationData = {
   isImpersonating: boolean;
+  sessionUserRole?: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
   effectiveUser?: {
     name: string | null;
     email: string;
@@ -25,7 +26,12 @@ type ImpersonationData = {
   };
 };
 
-export default function DashboardHeader() {
+type DashboardHeaderProps = {
+  limitedMode?: boolean;
+  sessionUserRole?: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
+};
+
+export default function DashboardHeader({ limitedMode = false, sessionUserRole }: DashboardHeaderProps) {
   const { user } = useUser();
   const { data: session } = useSession();
 
@@ -65,6 +71,14 @@ export default function DashboardHeader() {
   }, [role]);
 
   useEffect(() => {
+    if (role !== 'PARTNER' && role !== 'AMBASSADOR') return;
+    fetch('/api/affiliate/impersonation', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => setImpersonation(data))
+      .catch(() => null);
+  }, [role]);
+
+  useEffect(() => {
     fetch('/api/gift-lists/my-list', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
@@ -74,25 +88,48 @@ export default function DashboardHeader() {
   }, []);
 
   async function stopImpersonation() {
-    const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
+    const route =
+      role === 'ADMIN'
+        ? '/api/admin/impersonation'
+        : role === 'PARTNER' || role === 'AMBASSADOR'
+          ? '/api/affiliate/impersonation'
+          : null;
+
+    if (!route) return;
+
+    const res = await fetch(route, { method: 'DELETE' });
     if (!res.ok) {
       alert('Não foi possível sair do modo de acesso.');
       return;
     }
-    window.location.assign('/admin');
+
+    if (role === 'ADMIN') {
+      window.location.assign('/admin');
+      return;
+    }
+
+    const roleToReturn = sessionUserRole ?? (role as 'PARTNER' | 'AMBASSADOR' | undefined);
+    const backTo = roleToReturn === 'PARTNER' ? '/parceiro' : '/embaixador';
+    window.location.assign(backTo);
   }
 
   return (
     <header className="bg-white border-b border-border px-4 md:px-6 py-4 space-y-3">
-      {role === 'ADMIN' && impersonation?.isImpersonating ? (
+      {impersonation?.isImpersonating ? (
         <div className="rounded-lg border border-[#E9D8C8] bg-[#fff7f1] px-3 py-2 flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs md:text-sm text-[#8E3D2C]">
             Acessando como: {impersonation.effectiveUser?.name || 'Sem nome'} ({impersonation.effectiveUser?.email}) - {impersonation.effectiveUser?.role}
           </p>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" asChild>
-              <Link href="/admin">Voltar ao admin</Link>
-            </Button>
+            {role === 'ADMIN' ? (
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/admin">Voltar ao admin</Link>
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" asChild>
+                <Link href={(sessionUserRole ?? role) === 'PARTNER' ? '/parceiro' : '/embaixador'}>Voltar ao painel</Link>
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={() => stopImpersonation().catch(() => null)}>
               Sair do modo de acesso
             </Button>
@@ -130,17 +167,19 @@ export default function DashboardHeader() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/dashboard" className="cursor-pointer">
+              <Link href={limitedMode ? '/dashboard/presentes' : '/dashboard'} className="cursor-pointer">
                 <LayoutDashboard className="w-4 h-4 mr-2" />
                 Meu Painel
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href={siteSlug ? `/site/${encodeURIComponent(siteSlug)}` : '/site'} className="cursor-pointer">
-                <Globe className="w-4 h-4 mr-2" />
-                Ver Site
-              </Link>
-            </DropdownMenuItem>
+            {!limitedMode ? (
+              <DropdownMenuItem asChild>
+                <Link href={siteSlug ? `/site/${encodeURIComponent(siteSlug)}` : '/site'} className="cursor-pointer">
+                  <Globe className="w-4 h-4 mr-2" />
+                  Ver Site
+                </Link>
+              </DropdownMenuItem>
+            ) : null}
             {role === 'ADMIN' ? (
               <DropdownMenuItem asChild>
                 <Link href="/admin" className="cursor-pointer">
@@ -149,12 +188,14 @@ export default function DashboardHeader() {
                 </Link>
               </DropdownMenuItem>
             ) : null}
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/configuracoes" className="cursor-pointer">
-                <Settings className="w-4 h-4 mr-2" />
-                Configurações
-              </Link>
-            </DropdownMenuItem>
+            {!limitedMode ? (
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/configuracoes" className="cursor-pointer">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Configurações
+                </Link>
+              </DropdownMenuItem>
+            ) : null}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={async () => {

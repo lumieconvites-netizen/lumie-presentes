@@ -21,6 +21,7 @@ type AmbassadorOverview = {
     pendingCardOrders: number;
     pendingCardAmount: number;
   };
+  clients: { id: string; name: string; email: string; sales: number; commission: number; orders: number }[];
   partners: { id: string; name: string; email: string; clients: number; sales: number; commission: number; orders: number }[];
 };
 
@@ -32,6 +33,7 @@ export default function AmbassadorDashboardPage() {
   const [data, setData] = useState<AmbassadorOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string>('');
+  const [openingClientId, setOpeningClientId] = useState<string | null>(null);
 
   const codeMeta = (type: string) => {
     if (type === 'PARTNER_CLIENT') {
@@ -91,10 +93,29 @@ export default function AmbassadorDashboardPage() {
   }, []);
 
   const topPartners = useMemo(() => (data?.partners || []).slice(0, 20), [data?.partners]);
+  const topClients = useMemo(() => data?.clients || [], [data?.clients]);
   const visibleCodes = useMemo(
     () => (data?.codes || []).filter((c) => c.type !== 'PARTNER_CLIENT'),
     [data?.codes]
   );
+
+  async function openClientDashboard(clientId: string) {
+    setOpeningClientId(clientId);
+    try {
+      const res = await fetch('/api/affiliate/impersonation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: clientId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Não foi possível abrir o painel do cliente');
+      window.location.assign('/dashboard/presentes');
+    } catch (error: any) {
+      alert(error?.message || 'Não foi possível abrir o painel do cliente');
+    } finally {
+      setOpeningClientId(null);
+    }
+  }
 
   if (loading) return <div className="p-4 md:p-6">Carregando painel de embaixador...</div>;
   if (!data) return <div className="p-4 md:p-6">Não foi possível carregar os dados.</div>;
@@ -151,6 +172,45 @@ export default function AmbassadorDashboardPage() {
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Pedidos pagos</p><p className="text-xl md:text-2xl font-bold">{data.kpis.totalOrdersPaid}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Cartões pendentes</p><p className="text-xl md:text-2xl font-bold">{data.kpis.pendingCardOrders} • {brl(data.kpis.pendingCardAmount)}</p></CardContent></Card>
       </div>
+
+      <Card className="border-[#ead9cd]">
+        <CardHeader>
+          <CardTitle>Clientes da sua rede</CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-sm">
+            <thead className="bg-[#faf3ee]">
+              <tr>
+                <th className="text-left p-2">Cliente</th>
+                <th className="text-left p-2">Pedidos</th>
+                <th className="text-left p-2">Vendas</th>
+                <th className="text-left p-2">Comissão embaixador</th>
+                <th className="text-left p-2">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topClients.map((client) => (
+                <tr key={client.id} className="border-t">
+                  <td className="p-2"><p className="font-medium">{client.name}</p><p className="text-xs text-gray-500">{client.email}</p></td>
+                  <td className="p-2">{client.orders}</td>
+                  <td className="p-2">{brl(client.sales)}</td>
+                  <td className="p-2">{brl(client.commission)}</td>
+                  <td className="p-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={openingClientId === client.id}
+                      onClick={() => openClientDashboard(client.id)}
+                    >
+                      {openingClientId === client.id ? 'Abrindo...' : 'Acessar painel'}
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
 
       <Card className="border-[#ead9cd]">
         <CardHeader>

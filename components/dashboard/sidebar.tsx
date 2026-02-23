@@ -29,11 +29,24 @@ const menuItems = [
   { href: '/dashboard/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
-function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+const limitedMenuItems = menuItems.filter((item) =>
+  ['/dashboard/presentes', '/dashboard/editor', '/dashboard/rsvp'].includes(item.href)
+);
+
+function SidebarNav({
+  pathname,
+  onNavigate,
+  limitedMode,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+  limitedMode?: boolean;
+}) {
+  const items = limitedMode ? limitedMenuItems : menuItems;
   return (
     <nav className="flex-1 p-4 space-y-1">
-      {menuItems.map((item) => {
-        const isActive = pathname === item.href;
+      {items.map((item) => {
+        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         const Icon = item.icon;
 
         return (
@@ -57,7 +70,7 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
   );
 }
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({ limitedMode = false }: { limitedMode?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -86,14 +99,14 @@ export default function DashboardSidebar() {
         )}
       >
         <div className="p-6 border-b border-border">
-          <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+          <Link href={limitedMode ? '/dashboard/presentes' : '/dashboard'} className="flex items-center gap-2" onClick={() => setOpen(false)}>
             <div className="relative w-20 h-10">
               <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" />
             </div>
           </Link>
         </div>
 
-        <SidebarNav pathname={pathname} onNavigate={() => setOpen(false)} />
+        <SidebarNav pathname={pathname} onNavigate={() => setOpen(false)} limitedMode={limitedMode} />
       </aside>
     </>
   );

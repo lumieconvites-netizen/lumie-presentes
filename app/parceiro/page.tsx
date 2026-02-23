@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import AffiliateWithdrawCard from '@/components/affiliate/withdraw-card';
 
 type PartnerOverview = {
@@ -26,6 +27,7 @@ function brl(value: number) {
 export default function PartnerDashboardPage() {
   const [data, setData] = useState<PartnerOverview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [openingClientId, setOpeningClientId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancel = false;
@@ -46,7 +48,25 @@ export default function PartnerDashboardPage() {
     };
   }, []);
 
-  const topClients = useMemo(() => (data?.clients || []).slice(0, 12), [data?.clients]);
+  const topClients = useMemo(() => data?.clients || [], [data?.clients]);
+
+  async function openClientDashboard(clientId: string) {
+    setOpeningClientId(clientId);
+    try {
+      const res = await fetch('/api/affiliate/impersonation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: clientId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Não foi possível abrir o painel do cliente');
+      window.location.assign('/dashboard/presentes');
+    } catch (error: any) {
+      alert(error?.message || 'Não foi possível abrir o painel do cliente');
+    } finally {
+      setOpeningClientId(null);
+    }
+  }
 
   if (loading) return <div className="p-4 md:p-6">Carregando painel de parceiro...</div>;
   if (!data) return <div className="p-4 md:p-6">Não foi possível carregar os dados.</div>;
@@ -94,6 +114,7 @@ export default function PartnerDashboardPage() {
                 <th className="text-left p-2">Pedidos</th>
                 <th className="text-left p-2">Vendas</th>
                 <th className="text-left p-2">Comissão</th>
+                <th className="text-left p-2">Ação</th>
               </tr>
             </thead>
             <tbody>
@@ -103,6 +124,16 @@ export default function PartnerDashboardPage() {
                   <td className="p-2">{client.orders}</td>
                   <td className="p-2">{brl(client.sales)}</td>
                   <td className="p-2">{brl(client.commission)}</td>
+                  <td className="p-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={openingClientId === client.id}
+                      onClick={() => openClientDashboard(client.id)}
+                    >
+                      {openingClientId === client.id ? 'Abrindo...' : 'Acessar painel'}
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>

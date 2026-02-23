@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import DashboardSidebar from '@/components/dashboard/sidebar';
 import DashboardHeader from '@/components/dashboard/header';
 import { getActingUserContext } from '@/lib/acting-user';
+import AffiliateLimitedGuard from '@/components/dashboard/affiliate-limited-guard';
 
 export default async function DashboardLayout({
   children,
@@ -21,19 +22,26 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  if (ctx.effectiveUser.role === 'PARTNER') {
+  const isAffiliateLimitedMode =
+    ctx.impersonationMode === 'AFFILIATE' &&
+    ctx.isImpersonating &&
+    ctx.effectiveUser.role === 'CLIENT' &&
+    (ctx.sessionUserRole === 'PARTNER' || ctx.sessionUserRole === 'AMBASSADOR');
+
+  if (!isAffiliateLimitedMode && ctx.effectiveUser.role === 'PARTNER') {
     redirect('/parceiro');
   }
 
-  if (ctx.effectiveUser.role === 'AMBASSADOR') {
+  if (!isAffiliateLimitedMode && ctx.effectiveUser.role === 'AMBASSADOR') {
     redirect('/embaixador');
   }
 
   return (
     <div className="min-h-screen bg-background flex">
-      <DashboardSidebar />
+      <DashboardSidebar limitedMode={isAffiliateLimitedMode} />
       <div className="flex-1 flex flex-col">
-        <DashboardHeader />
+        <DashboardHeader limitedMode={isAffiliateLimitedMode} sessionUserRole={ctx.sessionUserRole} />
+        <AffiliateLimitedGuard enabled={isAffiliateLimitedMode} />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>

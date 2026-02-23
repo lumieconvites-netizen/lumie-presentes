@@ -118,6 +118,7 @@ export async function GET() {
   let totalGrossSales = 0;
   let directClientCommission = 0;
   let viaPartnerCommission = 0;
+  const clientsMap = new Map<string, { id: string; name: string; email: string; sales: number; commission: number; orders: number }>();
 
   const partnersMap = new Map<
     string,
@@ -130,6 +131,17 @@ export async function GET() {
       name: p.name || "Sem nome",
       email: p.email,
       clients: p._count.referredClientsAsPartner,
+      sales: 0,
+      commission: 0,
+      orders: 0,
+    });
+  }
+
+  for (const client of referredClients) {
+    clientsMap.set(client.id, {
+      id: client.id,
+      name: client.name || "Sem nome",
+      email: client.email,
       sales: 0,
       commission: 0,
       orders: 0,
@@ -166,6 +178,19 @@ export async function GET() {
         partnersMap.set(user.referredByPartnerId, partnerLine);
       }
     }
+
+    const currentClient = clientsMap.get(user.id) ?? {
+      id: user.id,
+      name: user.name || "Sem nome",
+      email: user.email,
+      sales: 0,
+      commission: 0,
+      orders: 0,
+    };
+    currentClient.sales += totalAmount;
+    currentClient.commission += commission;
+    currentClient.orders += 1;
+    clientsMap.set(user.id, currentClient);
   }
 
   const pendingCardAmount = pendingCardOrders.reduce((acc, item) => acc + Number(item.totalAmount), 0);
@@ -195,6 +220,7 @@ export async function GET() {
       pendingCardOrders: pendingCardOrders.length,
       pendingCardAmount,
     },
+    clients: Array.from(clientsMap.values()).sort((a, b) => b.commission - a.commission),
     partners: Array.from(partnersMap.values()).sort((a, b) => b.commission - a.commission),
     recentPendingCards: pendingCardOrders,
   });

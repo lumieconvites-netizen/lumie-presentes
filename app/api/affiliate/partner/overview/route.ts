@@ -112,6 +112,17 @@ export async function GET() {
   let totalGrossSales = 0;
   const clientsMap = new Map<string, { id: string; name: string; email: string; sales: number; commission: number; orders: number }>();
 
+  for (const client of referredClients) {
+    clientsMap.set(client.id, {
+      id: client.id,
+      name: client.name || "Sem nome",
+      email: client.email,
+      sales: 0,
+      commission: 0,
+      orders: 0,
+    });
+  }
+
   for (const order of paidOrders) {
     const totalAmount = Number(order.totalAmount);
     const baseAmount = Number(order.baseAmount);

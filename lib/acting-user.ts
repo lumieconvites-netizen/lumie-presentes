@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const ADMIN_IMPERSONATION_COOKIE = "lumie_admin_act_as";
+export const AFFILIATE_IMPERSONATION_COOKIE = "lumie_affiliate_act_as";
 
 type SafeUser = {
   id: string;
@@ -19,6 +20,7 @@ export type ActingUserContext = {
   effectiveUserId: string;
   effectiveUser: SafeUser;
   isImpersonating: boolean;
+  impersonationMode: "ADMIN" | "AFFILIATE" | null;
 };
 
 function isValidUserId(value: string) {
@@ -44,12 +46,40 @@ export async function getActingUserContext(): Promise<ActingUserContext | null> 
   }
 
   if (sessionUser.role !== "ADMIN") {
+    if (sessionUser.role === "PARTNER" || sessionUser.role === "AMBASSADOR") {
+      const affiliateActAsId = cookies().get(AFFILIATE_IMPERSONATION_COOKIE)?.value?.trim();
+      if (affiliateActAsId && isValidUserId(affiliateActAsId) && affiliateActAsId !== sessionUserId) {
+        const targetUser = await prisma.user.findFirst({
+          where: {
+            id: affiliateActAsId,
+            role: "CLIENT",
+            ...(sessionUser.role === "PARTNER"
+              ? { referredByPartnerId: sessionUserId }
+              : { referredByAmbassadorId: sessionUserId }),
+          },
+          select: { id: true, name: true, email: true, image: true, role: true },
+        });
+
+        if (targetUser) {
+          return {
+            sessionUserId,
+            sessionUserRole: sessionUser.role,
+            effectiveUserId: targetUser.id,
+            effectiveUser: targetUser,
+            isImpersonating: true,
+            impersonationMode: "AFFILIATE",
+          };
+        }
+      }
+    }
+
     return {
       sessionUserId,
       sessionUserRole: sessionUser.role,
       effectiveUserId: sessionUser.id,
       effectiveUser: sessionUser,
       isImpersonating: false,
+      impersonationMode: null,
     };
   }
 
@@ -61,6 +91,7 @@ export async function getActingUserContext(): Promise<ActingUserContext | null> 
       effectiveUserId: sessionUser.id,
       effectiveUser: sessionUser,
       isImpersonating: false,
+      impersonationMode: null,
     };
   }
 
@@ -76,6 +107,7 @@ export async function getActingUserContext(): Promise<ActingUserContext | null> 
       effectiveUserId: sessionUser.id,
       effectiveUser: sessionUser,
       isImpersonating: false,
+      impersonationMode: null,
     };
   }
 
@@ -85,5 +117,6 @@ export async function getActingUserContext(): Promise<ActingUserContext | null> 
     effectiveUserId: targetUser.id,
     effectiveUser: targetUser,
     isImpersonating: true,
+    impersonationMode: "ADMIN",
   };
 }
