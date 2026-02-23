@@ -65,17 +65,17 @@ export default function AffiliateWithdrawCard() {
   return (
     <>
       <Card>
-        <CardContent className="p-4 flex items-center justify-between gap-3">
+        <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-sm text-gray-500">Saldo disponivel</p>
-            <p className="text-2xl font-bold">
+            <p className="text-xl md:text-2xl font-bold">
               {loading
                 ? '...'
                 : available.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
           </div>
           <Button
-            className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white"
+            className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white w-full sm:w-auto"
             onClick={() => setOpen(true)}
             disabled={loading}
           >
@@ -117,4 +117,3 @@ export default function AffiliateWithdrawCard() {
     </>
   );
 }
-

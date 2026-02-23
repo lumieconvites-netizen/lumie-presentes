@@ -476,11 +476,11 @@ export default function RsvpConfigPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Carregando configuração de RSVP...</div>;
+    return <div className="p-4 md:p-6">Carregando configuração de RSVP...</div>;
   }
 
   if (!data) {
-    return <div className="p-6">Não foi possível carregar o RSVP.</div>;
+    return <div className="p-4 md:p-6">Não foi possível carregar o RSVP.</div>;
   }
 
   const slugInputClassName =
@@ -501,23 +501,23 @@ export default function RsvpConfigPage() {
       : 'text-xs text-green-700 underline';
 
   return (
-    <div className="p-6 space-y-6 bg-[#fbf8f5] min-h-screen">
+    <div className="p-4 md:p-6 space-y-6 bg-[#fbf8f5] min-h-screen">
       <Card className="border-[#e7d8cb]">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <CardTitle>Configuração do RSVP</CardTitle>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <a href={`/site/${encodeURIComponent(data.list.slug)}/confirmar-presenca`} target="_blank" rel="noopener noreferrer">
                 Ver RSVP
               </a>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <a href="/api/rsvp/guests/export" target="_blank" rel="noopener noreferrer">
                 <Download className="w-4 h-4 mr-2" /> Exportar lista
               </a>
             </Button>
             <Button
-              className="bg-[#c65a3a] hover:bg-[#b55033] text-white"
+              className="bg-[#c65a3a] hover:bg-[#b55033] text-white w-full sm:w-auto"
               onClick={saveSettings}
               disabled={
                 savingSettings ||
@@ -626,10 +626,10 @@ export default function RsvpConfigPage() {
                   className="hidden"
                   onChange={(e) => uploadCoverImage(e.target.files?.[0] || null)}
                 />
-                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploadingCover}>
-                  <UploadCloud className="w-4 h-4 mr-2" /> {uploadingCover ? 'Enviando...' : 'Enviar foto'}
-                </Button>
-              </div>
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={uploadingCover}>
+                <UploadCloud className="w-4 h-4 mr-2" /> {uploadingCover ? 'Enviando...' : 'Enviar foto'}
+              </Button>
+            </div>
               {settings.coverImageUrl ? (
                 <img src={settings.coverImageUrl} alt="Preview capa RSVP" className="mt-2 h-36 w-full object-cover rounded-xl border border-[#e7d8cb]" />
               ) : null}
@@ -707,7 +707,7 @@ export default function RsvpConfigPage() {
                 value={guestForm.notes}
                 onChange={(e) => setGuestForm((s) => ({ ...s, notes: e.target.value }))}
               />
-              <Button type="submit" className="bg-[#8e3d2c] hover:bg-[#7a3326] text-white" disabled={addingGuest}>
+              <Button type="submit" className="bg-[#8e3d2c] hover:bg-[#7a3326] text-white w-full md:w-auto" disabled={addingGuest}>
                 <Plus className="w-4 h-4 mr-2" />
                 {addingGuest ? 'Adicionando...' : 'Adicionar'}
               </Button>
@@ -717,7 +717,7 @@ export default function RsvpConfigPage() {
           <div className="mt-5 space-y-3">
             <label className="text-sm font-medium block">Importar convidados por CSV</label>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => document.getElementById('rsvp-csv-input')?.click()}>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => document.getElementById('rsvp-csv-input')?.click()}>
                 <FileUp className="w-4 h-4 mr-2" /> Selecionar CSV
               </Button>
               <input id="rsvp-csv-input" type="file" accept=".csv,text/csv" className="hidden" onChange={handleCsvFileChange} />
@@ -732,7 +732,7 @@ export default function RsvpConfigPage() {
               placeholder="Maria Silva;2;1"
             />
             <div>
-              <Button variant="outline" onClick={importFromQuickText} disabled={!importText.trim()}>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={importFromQuickText} disabled={!importText.trim()}>
                 Revisar importação
               </Button>
             </div>

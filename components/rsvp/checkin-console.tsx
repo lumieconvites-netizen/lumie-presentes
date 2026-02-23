@@ -309,39 +309,39 @@ export function CheckInConsole({
   }, [data?.guests, search]);
 
   if (loading) {
-    return <div className="p-6">Carregando check-in...</div>;
+    return <div className="p-4 md:p-6">Carregando check-in...</div>;
   }
 
   if (!data) {
-    return <div className="p-6">Nao foi possivel carregar o check-in.</div>;
+    return <div className="p-4 md:p-6">Nao foi possivel carregar o check-in.</div>;
   }
 
   return (
-    <div className="p-6 space-y-6 bg-[#fbf8f5] min-h-screen">
+    <div className="p-4 md:p-6 space-y-6 bg-[#fbf8f5] min-h-screen">
       <Card className="border-[#e7d8cb]">
-        <CardContent className="p-6 flex flex-wrap justify-between gap-3">
+        <CardContent className="p-4 md:p-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-display">Check-in</h1>
+            <h1 className="text-2xl md:text-3xl font-display">Check-in</h1>
             <p className="text-gray-600 mt-1">Escaneie o QR Code na entrada do evento</p>
             <p className="text-sm text-gray-500 mt-1">Evento: {data.list.title}</p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             {mode === 'dashboard' ? (
-              <Button variant="outline" asChild>
+              <Button variant="outline" className="w-full sm:w-auto" asChild>
                 <Link href="/dashboard/rsvp">Voltar para RSVP</Link>
               </Button>
             ) : null}
 
             {data.publicRsvpUrl ? (
-              <Button variant="outline" asChild>
+              <Button variant="outline" className="w-full sm:w-auto" asChild>
                 <a href={data.publicRsvpUrl} target="_blank" rel="noopener noreferrer">
                   Ver RSVP
                 </a>
               </Button>
             ) : null}
 
-            <Button variant="outline" onClick={() => load()}>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => load()}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Atualizar
             </Button>
@@ -366,7 +366,7 @@ export function CheckInConsole({
             <CardTitle className="text-sm text-gray-600">Esperados</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold flex items-center gap-2">
+            <p className="text-2xl md:text-3xl font-bold flex items-center gap-2">
               <Users className="w-5 h-5" />
               {stats.expected}
             </p>
@@ -377,7 +377,7 @@ export function CheckInConsole({
             <CardTitle className="text-sm text-gray-600">Check-ins</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-[#1f8a4c] flex items-center gap-2">
+            <p className="text-2xl md:text-3xl font-bold text-[#1f8a4c] flex items-center gap-2">
               <UserCheck className="w-5 h-5" />
               {stats.checkedIn}
             </p>
@@ -388,7 +388,7 @@ export function CheckInConsole({
             <CardTitle className="text-sm text-gray-600">Restantes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-[#8e6c1d] flex items-center gap-2">
+            <p className="text-2xl md:text-3xl font-bold text-[#8e6c1d] flex items-center gap-2">
               <Clock3 className="w-5 h-5" />
               {stats.remaining}
             </p>
@@ -397,12 +397,12 @@ export function CheckInConsole({
       </div>
 
       <Card className="border-[#e7d8cb]">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <CardTitle className="text-lg">Modo de leitura</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <Button
               variant={activeTab === 'scanner' ? 'default' : 'outline'}
-              className={activeTab === 'scanner' ? 'bg-[#8e3d2c] text-white hover:bg-[#7a3426]' : ''}
+              className={`${activeTab === 'scanner' ? 'bg-[#8e3d2c] text-white hover:bg-[#7a3426]' : ''} w-full sm:w-auto`}
               onClick={() => setActiveTab('scanner')}
             >
               <QrCode className="w-4 h-4 mr-2" />
@@ -410,7 +410,7 @@ export function CheckInConsole({
             </Button>
             <Button
               variant={activeTab === 'lista' ? 'default' : 'outline'}
-              className={activeTab === 'lista' ? 'bg-[#8e3d2c] text-white hover:bg-[#7a3426]' : ''}
+              className={`${activeTab === 'lista' ? 'bg-[#8e3d2c] text-white hover:bg-[#7a3426]' : ''} w-full sm:w-auto`}
               onClick={() => setActiveTab('lista')}
             >
               <List className="w-4 h-4 mr-2" />
@@ -452,13 +452,13 @@ export function CheckInConsole({
                   <Button
                     onClick={startScanner}
                     disabled={!scannerSupported || !data.settings.checkInEnabled}
-                    className="bg-[#c65a3a] hover:bg-[#b34f32] text-white"
+                    className="bg-[#c65a3a] hover:bg-[#b34f32] text-white w-full sm:w-auto"
                   >
                     <Camera className="w-4 h-4 mr-2" />
                     Iniciar scanner
                   </Button>
                 ) : (
-                  <Button variant="outline" onClick={stopScanner}>
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={stopScanner}>
                     Parar scanner
                   </Button>
                 )}
@@ -466,7 +466,7 @@ export function CheckInConsole({
 
               <div className="pt-2 border-t border-[#efe3da]">
                 <p className="text-sm font-medium mb-2">Entrada manual (QR/token/codigo)</p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     placeholder="Cole o conteudo do QR ou digite o codigo"
                     value={manualCode}
@@ -478,7 +478,7 @@ export function CheckInConsole({
                       setManualCode('');
                     }}
                     disabled={!manualCode.trim() || processing || !data.settings.checkInEnabled}
-                    className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white"
+                    className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white w-full sm:w-auto"
                   >
                     Confirmar check-in
                   </Button>
@@ -495,10 +495,7 @@ export function CheckInConsole({
 
               <div className="space-y-2 max-h-[480px] overflow-auto pr-1">
                 {filteredGuests.map((guest) => (
-                  <div
-                    key={guest.id}
-                    className="rounded-xl border border-[#e7d8cb] bg-white p-3 flex items-center justify-between gap-3"
-                  >
+                  <div key={guest.id} className="rounded-xl border border-[#e7d8cb] bg-white p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium text-gray-900 truncate">{guest.fullName}</p>
                       <p className="text-xs text-gray-500">
@@ -514,7 +511,7 @@ export function CheckInConsole({
                     <Button
                       size="sm"
                       variant={guest.checkedInAt ? 'outline' : 'default'}
-                      className={guest.checkedInAt ? '' : 'bg-[#1f8a4c] hover:bg-[#166a38] text-white'}
+                      className={`${guest.checkedInAt ? '' : 'bg-[#1f8a4c] hover:bg-[#166a38] text-white'} w-full sm:w-auto`}
                       onClick={() => processScan(guest.checkInCode || '')}
                       disabled={!guest.checkInCode || processing || !data.settings.checkInEnabled}
                     >

@@ -51,13 +51,13 @@ export default function GiftModelsCategoriesPage() {
   return (
     <div className="min-h-screen bg-[#fbf8f5]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-display font-bold text-gray-900">Modelos prontos</h1>
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-gray-900">Modelos prontos</h1>
             <p className="text-sm text-gray-600 mt-1">Escolha uma categoria para importar presentes para sua lista.</p>
           </div>
 
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href="/dashboard/presentes">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar para presentes
@@ -73,7 +73,7 @@ export default function GiftModelsCategoriesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {categories.map((category) => (
               <Card key={category.id} className="border-[#ead9cd] overflow-hidden">
-                <div className="p-4 flex gap-4 items-center">
+                <div className="p-4 flex flex-col sm:flex-row gap-4 sm:items-center">
                   {category.thumbnail ? (
                     <img src={category.thumbnail} alt={category.name} className="h-20 w-28 rounded-md object-cover border border-[#ead9cd]" />
                   ) : (
@@ -86,7 +86,7 @@ export default function GiftModelsCategoriesPage() {
                     <p className="text-xs text-gray-500 mt-2">{category.itemsCount} presentes</p>
                   </div>
 
-                  <Button asChild variant="outline" className="shrink-0">
+                  <Button asChild variant="outline" className="shrink-0 w-full sm:w-auto">
                     <Link href={`/dashboard/presentes/modelos/${encodeURIComponent(category.slug)}`}>
                       Abrir
                       <ChevronRight className="w-4 h-4 ml-1" />

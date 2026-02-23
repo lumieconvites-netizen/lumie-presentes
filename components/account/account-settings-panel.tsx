@@ -175,12 +175,12 @@ export default function AccountSettingsPanel({
     }
   }
 
-  if (loading) return <div>Carregando configuracoes...</div>;
+  if (loading) return <div className="p-4 md:p-6">Carregando configuracoes...</div>;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-display text-foreground">{title}</h1>
+        <h1 className="text-2xl md:text-3xl font-display text-foreground">{title}</h1>
         <p className="text-sm text-gray-500">{subtitle}</p>
       </div>
 
@@ -189,7 +189,7 @@ export default function AccountSettingsPanel({
           <CardTitle>Perfil</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
               {photo ? <img src={photo} alt="Foto de perfil" className="h-full w-full object-cover" /> : null}
             </div>
@@ -210,7 +210,7 @@ export default function AccountSettingsPanel({
             <Input value={me?.email || ''} readOnly />
           </div>
 
-          <Button onClick={() => saveProfile()} disabled={savingProfile || uploadingPhoto}>
+          <Button className="w-full sm:w-auto" onClick={() => saveProfile()} disabled={savingProfile || uploadingPhoto}>
             {savingProfile ? 'Salvando...' : 'Salvar perfil'}
           </Button>
         </CardContent>
@@ -278,7 +278,7 @@ export default function AccountSettingsPanel({
               Status atual de validacao: <b>{bankStatus ?? 'nao enviado'}</b>
             </p>
 
-            <Button onClick={() => saveBank()} disabled={savingBank}>
+            <Button className="w-full sm:w-auto" onClick={() => saveBank()} disabled={savingBank}>
               {savingBank ? 'Salvando...' : 'Salvar conta bancaria'}
             </Button>
           </CardContent>

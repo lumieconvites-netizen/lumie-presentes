@@ -81,13 +81,13 @@ export default function BancoDashboardPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Carregando dados bancarios...</div>;
+    return <div className="p-4 md:p-6">Carregando dados bancarios...</div>;
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-display text-foreground mb-2">Conta Bancaria</h1>
+        <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Conta Bancaria</h1>
         <p className="text-gray-500">Cadastre a conta para receber os valores dos presentes.</p>
       </div>
 
@@ -152,7 +152,7 @@ export default function BancoDashboardPage() {
             Status atual de validacao: <strong>{status ?? "nao enviado"}</strong>
           </div>
 
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
             {saving ? "Salvando..." : "Salvar dados bancarios"}
           </Button>
         </CardContent>

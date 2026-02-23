@@ -303,18 +303,18 @@ export default function ConfiguracoesPage() {
   };
 
   if (status === 'loading') {
-    return <div className="p-6">Carregando...</div>;
+    return <div className="p-4 md:p-6">Carregando...</div>;
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-display text-foreground mb-2">Configuracoes</h1>
+        <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Configuracoes</h1>
         <p className="text-gray-500">Gerencie suas preferencias e dados da conta</p>
       </div>
 
       <Tabs defaultValue="perfil" className="space-y-6">
-        <TabsList>
+        <TabsList className="w-full overflow-x-auto justify-start">
           <TabsTrigger value="perfil">
             <User className="w-4 h-4 mr-2" />
             Perfil
@@ -335,7 +335,7 @@ export default function ConfiguracoesPage() {
               <CardTitle>Foto de Perfil</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                 <div className="relative">
                   {photo ? (
                     <div className="relative w-24 h-24 rounded-full overflow-hidden">
@@ -408,6 +408,7 @@ export default function ConfiguracoesPage() {
               <Button
                 onClick={handleSaveProfile}
                 disabled={!name || uploading || savingProfile || slugChecking || !slugAvailable}
+                className="w-full sm:w-auto"
               >
                 {savingProfile ? 'Salvando...' : 'Salvar Alteracoes'}
               </Button>
@@ -434,7 +435,7 @@ export default function ConfiguracoesPage() {
                 <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
               </div>
 
-              <Button onClick={handleChangePassword}>Alterar Senha</Button>
+              <Button onClick={handleChangePassword} className="w-full sm:w-auto">Alterar Senha</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -446,7 +447,7 @@ export default function ConfiguracoesPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <div>
                     <h3 className="font-medium text-foreground">Repassar taxa ao convidado</h3>
                     <p className="text-sm text-gray-500">Quando ativo, o convidado paga o valor do presente + 11,99%</p>
@@ -486,7 +487,7 @@ export default function ConfiguracoesPage() {
               <CardTitle>Privacidade e Visibilidade</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h3 className="font-medium text-foreground">Recados Publicos</h3>
                   <p className="text-sm text-gray-500">Exibir recados na pagina publica da lista</p>

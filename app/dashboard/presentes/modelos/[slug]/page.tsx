@@ -145,27 +145,27 @@ export default function GiftModelDetailsPage({ params }: { params: { slug: strin
   return (
     <div className="min-h-screen bg-[#fbf8f5]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-3">
           <div>
-            <h1 className="text-3xl font-display font-bold text-gray-900">{category?.name || 'Modelos prontos'}</h1>
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-gray-900">{category?.name || 'Modelos prontos'}</h1>
             <p className="text-sm text-gray-600 mt-1">{category?.summary || 'Escolha os presentes que deseja adicionar na sua lista.'}</p>
           </div>
 
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href="/dashboard/presentes/modelos">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar categorias
               </Link>
             </Button>
-            <Button variant="outline" onClick={toggleSelectAll} disabled={loading || importing || !totalCount}>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={toggleSelectAll} disabled={loading || importing || !totalCount}>
               {allSelected ? <Square className="w-4 h-4 mr-2" /> : <CheckSquare className="w-4 h-4 mr-2" />}
               {allSelected ? 'Limpar selecao' : 'Selecionar todos'}
             </Button>
-            <Button onClick={() => importItems('selected')} disabled={loading || importing || selectedCount === 0}>
+            <Button className="w-full sm:w-auto" onClick={() => importItems('selected')} disabled={loading || importing || selectedCount === 0}>
               Importar selecionados ({selectedCount})
             </Button>
-            <Button onClick={() => importItems('all')} disabled={loading || importing || !totalCount}>
+            <Button className="w-full sm:w-auto" onClick={() => importItems('all')} disabled={loading || importing || !totalCount}>
               <ShoppingBag className="w-4 h-4 mr-2" />
               Importar todos ({totalCount})
             </Button>

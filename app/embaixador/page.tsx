@@ -96,8 +96,8 @@ export default function AmbassadorDashboardPage() {
     [data?.codes]
   );
 
-  if (loading) return <div>Carregando painel embaixador...</div>;
-  if (!data) return <div>Nao foi possivel carregar os dados.</div>;
+  if (loading) return <div className="p-4 md:p-6">Carregando painel embaixador...</div>;
+  if (!data) return <div className="p-4 md:p-6">Nao foi possivel carregar os dados.</div>;
 
   return (
     <div className="space-y-6">
@@ -138,26 +138,26 @@ export default function AmbassadorDashboardPage() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Clientes indicados</p><p className="text-2xl font-bold">{data.kpis.clientsCount}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Clientes com lista ativa</p><p className="text-2xl font-bold">{data.kpis.activeClientsCount}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Parceiros indicados</p><p className="text-2xl font-bold">{data.kpis.partnersCount}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Volume vendido</p><p className="text-2xl font-bold">{brl(data.kpis.grossSales)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissao recebida</p><p className="text-2xl font-bold">{brl(data.kpis.totalCommissionPaid)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Clientes indicados</p><p className="text-xl md:text-2xl font-bold">{data.kpis.clientsCount}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Clientes com lista ativa</p><p className="text-xl md:text-2xl font-bold">{data.kpis.activeClientsCount}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Parceiros indicados</p><p className="text-xl md:text-2xl font-bold">{data.kpis.partnersCount}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Volume vendido</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.grossSales)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissao recebida</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.totalCommissionPaid)}</p></CardContent></Card>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissao direta (clientes)</p><p className="text-2xl font-bold">{brl(data.kpis.directClientCommission)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissao via parceiros</p><p className="text-2xl font-bold">{brl(data.kpis.viaPartnerCommission)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Pedidos pagos</p><p className="text-2xl font-bold">{data.kpis.totalOrdersPaid}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Cartoes pendentes</p><p className="text-2xl font-bold">{data.kpis.pendingCardOrders} • {brl(data.kpis.pendingCardAmount)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissao direta (clientes)</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.directClientCommission)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissao via parceiros</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.viaPartnerCommission)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Pedidos pagos</p><p className="text-xl md:text-2xl font-bold">{data.kpis.totalOrdersPaid}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Cartoes pendentes</p><p className="text-xl md:text-2xl font-bold">{data.kpis.pendingCardOrders} • {brl(data.kpis.pendingCardAmount)}</p></CardContent></Card>
       </div>
 
       <Card className="border-[#ead9cd]">
         <CardHeader>
           <CardTitle>Parceiros da sua rede</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-auto">
-          <table className="w-full text-sm">
+        <CardContent className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-sm">
             <thead className="bg-[#faf3ee]">
               <tr>
                 <th className="text-left p-2">Parceiro</th>

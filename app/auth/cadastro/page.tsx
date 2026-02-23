@@ -154,7 +154,7 @@ export default function RegisterPage() {
               <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" priority />
             </div>
           </div>
-          <CardTitle className="text-center font-display text-3xl text-terracota-700">
+          <CardTitle className="text-center font-display text-2xl md:text-3xl text-terracota-700">
             {isPartnerMode ? 'Criar conta de Parceiro' : 'Criar conta na LUMIÊ'}
           </CardTitle>
           <CardDescription className="text-center">

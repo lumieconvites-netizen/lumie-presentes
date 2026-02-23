@@ -408,15 +408,15 @@ export default function PresentesDashboard() {
     <div className="min-h-screen bg-[#fbf8f5]">
       <div className="bg-[#fbf8f5] border-b border-[#ead9cd] sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-start justify-between gap-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl font-display font-bold text-gray-900">Meus Presentes</h1>
+              <h1 className="text-2xl md:text-3xl font-display font-bold text-gray-900">Meus Presentes</h1>
               <p className="text-gray-600 mt-1">
                 {filteredGifts.length} {filteredGifts.length === 1 ? 'item' : 'itens'}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
               {selectionMode && (
                 <>
                   <Button
@@ -440,10 +440,10 @@ export default function PresentesDashboard() {
                   </Button>
                 </>
               )}
-              <Button variant="outline" asChild disabled={loading}>
+              <Button variant="outline" className="w-full sm:w-auto" asChild disabled={loading}>
                 <Link href="/dashboard/presentes/modelos">Modelos prontos</Link>
               </Button>
-              <Button onClick={() => setOpenCreate(true)} style={{ backgroundColor: primary }} className="text-white hover:opacity-90" disabled={loading}>
+              <Button onClick={() => setOpenCreate(true)} style={{ backgroundColor: primary }} className="text-white hover:opacity-90 w-full sm:w-auto" disabled={loading}>
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Presente
               </Button>
@@ -470,7 +470,7 @@ export default function PresentesDashboard() {
                 {selectedIds.length === filteredGifts.length && filteredGifts.length > 0 ? 'Limpar seleção' : 'Selecionar todos'}
               </Button>
             )}
-            <Button variant="outline" asChild>
+            <Button variant="outline" className="w-full sm:w-auto" asChild>
               <Link href={giftListSlug ? `/site/${encodeURIComponent(giftListSlug)}/presentes` : '/site/presentes'} target="_blank">
                 Ver página de presentes
               </Link>
@@ -489,7 +489,7 @@ export default function PresentesDashboard() {
               {listPageCoverImage ? (
                 <div className="space-y-2">
                   <img src={listPageCoverImage} alt="Prévia da capa da página de presentes" className="h-36 w-full rounded-md object-cover border border-[#ead9cd]" />
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <label className="h-10 px-3 border rounded-md text-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50">
                       <Upload className="w-4 h-4" /> {uploadingListCover ? 'Enviando capa...' : 'Trocar capa'}
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleListCoverUpload(e.target.files?.[0])} disabled={uploadingListCover} />
@@ -566,7 +566,7 @@ export default function PresentesDashboard() {
                   </div>
 
                   <div className="p-6">
-                    <h3 className="font-semibold text-xl text-gray-900 leading-tight mb-2">{gift.name}</h3>
+                    <h3 className="font-semibold text-lg md:text-xl text-gray-900 leading-tight mb-2">{gift.name}</h3>
 
                     {gift.description ? (
                       <p className="text-gray-600 text-sm mb-4 line-clamp-2">{gift.description}</p>
@@ -574,9 +574,9 @@ export default function PresentesDashboard() {
                       <p className="text-gray-400 text-sm mb-4">Sem descrição</p>
                     )}
 
-                    <div className="flex items-end justify-between mb-4">
+                    <div className="flex items-end justify-between mb-4 gap-3">
                       <div>
-                        <p className="text-3xl font-bold" style={{ color: primary }}>{formatBRL(valueShown)}</p>
+                        <p className="text-2xl md:text-3xl font-bold" style={{ color: primary }}>{formatBRL(valueShown)}</p>
                         <p className="text-xs text-gray-500 mt-1">{giftListFeeMode === 'PASS_TO_GUEST' ? 'Valor com taxa' : 'Valor do presente'}</p>
                       </div>
 

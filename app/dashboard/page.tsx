@@ -184,14 +184,14 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) return <div className="p-6">Carregando dashboard...</div>;
+  if (loading) return <div className="p-4 md:p-6">Carregando dashboard...</div>;
 
   return (
-    <div className="p-6 space-y-6 bg-[#fbf8f5]">
+    <div className="p-4 md:p-6 space-y-6 bg-[#fbf8f5]">
       <div className="rounded-2xl border border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9] p-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display text-foreground mb-1">Dashboard</h1>
+            <h1 className="text-2xl md:text-3xl font-display text-foreground mb-1">Dashboard</h1>
             <p className="text-gray-600">Visão geral da sua lista de presentes</p>
             <p className="text-sm text-gray-500 mt-1">
               {data?.title || 'Sua Lista'}
@@ -199,9 +199,9 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <Button
-              className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white"
+              className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white w-full sm:w-auto"
               onClick={() => setWithdrawOpen(true)}
             >
               <Wallet className="h-4 w-4 mr-2" />
@@ -210,7 +210,7 @@ export default function DashboardPage() {
 
             <Button
               variant="outline"
-              className="border-[#e0c6b4] bg-white hover:bg-[#fff6ef]"
+              className="border-[#e0c6b4] bg-white hover:bg-[#fff6ef] w-full sm:w-auto"
               onClick={copyPublicLink}
               disabled={!data?.slug || !data?.isPublished || copying}
               title={!data?.isPublished ? 'Publique seu site para copiar o link.' : undefined}
@@ -299,7 +299,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card className="border-[#ead9cd]">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <span>Últimos Presentes Recebidos</span>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard/pagamentos">Ver todos</Link>
@@ -312,12 +312,12 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {recentPayments.map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between p-4 rounded-xl bg-[#f7f2ed]">
+                  <div key={payment.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 rounded-xl bg-[#f7f2ed]">
                     <div className="min-w-0">
                       <p className="font-medium text-foreground truncate">{payment.guestName}</p>
                       <p className="text-sm text-gray-500 truncate">{payment.giftItem?.name ?? 'Presente'}</p>
                     </div>
-                    <div className="text-right ml-3 shrink-0">
+                    <div className="text-left sm:text-right sm:ml-3 shrink-0">
                       <p className="font-semibold text-[#0f9d58]">
                         {(toNumber(payment.totalAmount) - toNumber(payment.feeAmount)).toLocaleString('pt-BR', {
                           style: 'currency',
@@ -335,7 +335,7 @@ export default function DashboardPage() {
 
         <Card className="border-[#ead9cd]">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <span>Recados Recentes</span>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard/recados">Ver todos</Link>
@@ -349,7 +349,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {recentMessages.map((message) => (
                   <div key={message.id} className="rounded-xl border border-[#efe2d7] bg-[#fffaf7] px-4 py-3">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div className="min-w-0">
                         <p className="font-medium text-foreground truncate">{message.guestName}</p>
                         <p className="text-xs text-gray-500 truncate">
@@ -371,7 +371,7 @@ export default function DashboardPage() {
 
       <Card className="border-[#ead9cd]">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <span>Ações Rápidas</span>
             <span className="text-sm font-normal text-gray-500">Status: {statusLabel}</span>
           </CardTitle>
@@ -443,3 +443,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

@@ -61,12 +61,12 @@ export default function PagamentosPage() {
 
   const successfulOrders = orders.filter((order) => order.status === 'PAID' || order.status === 'AUTHORIZED');
 
-  if (loading) return <div className="p-6">Carregando pagamentos...</div>;
+  if (loading) return <div className="p-4 md:p-6">Carregando pagamentos...</div>;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-display text-foreground mb-2">Pagamentos</h1>
+        <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Pagamentos</h1>
         <p className="text-gray-500">Historico de pagamentos recebidos</p>
       </div>
 
@@ -79,7 +79,7 @@ export default function PagamentosPage() {
           successfulOrders.map((payment) => (
             <Card key={payment.id}>
               <CardContent className="p-6">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       {statusIcons[payment.status]}
@@ -91,7 +91,7 @@ export default function PagamentosPage() {
                     <p className="text-sm text-gray-500 mb-1">{payment.guestEmail || '-'}</p>
                     <p className="text-sm text-gray-600">{payment.giftItem?.name || 'Presente'}</p>
                   </div>
-                  <div className="text-right">
+                    <div className="text-left sm:text-right">
                     <p className="text-lg font-bold text-green-600">
                       {(Number(payment.totalAmount) - Number(payment.feeAmount)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </p>

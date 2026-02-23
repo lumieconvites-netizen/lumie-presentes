@@ -52,39 +52,39 @@ export default function DashboardRsvpPage() {
   }, []);
 
   if (loading) {
-    return <div className="p-6">Carregando RSVP...</div>;
+    return <div className="p-4 md:p-6">Carregando RSVP...</div>;
   }
 
   if (!data) {
-    return <div className="p-6">Nao foi possivel carregar o RSVP.</div>;
+    return <div className="p-4 md:p-6">Nao foi possivel carregar o RSVP.</div>;
   }
 
   const { metrics } = data;
 
   return (
-    <div className="p-6 space-y-6 bg-[#fbf8f5] min-h-screen">
+    <div className="p-4 md:p-6 space-y-6 bg-[#fbf8f5] min-h-screen">
       <Card className="border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9]">
-        <CardContent className="p-6 flex flex-wrap items-start justify-between gap-4">
+        <CardContent className="p-4 md:p-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display text-foreground">RSVP</h1>
+            <h1 className="text-2xl md:text-3xl font-display text-foreground">RSVP</h1>
             <p className="text-gray-600 mt-1">Controle de convidados, confirmações e check-in</p>
             <p className="text-sm text-gray-500 mt-1">Evento: {data.list.title}</p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             {!data.settings.enabled ? (
-              <Button asChild className="bg-[#c65a3a] hover:bg-[#b34f32] text-white">
+              <Button asChild className="bg-[#c65a3a] hover:bg-[#b34f32] text-white w-full sm:w-auto">
                 <Link href="/dashboard/rsvp/config">Criar RSVP</Link>
               </Button>
             ) : (
               <>
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild className="w-full sm:w-auto">
                   <Link href="/dashboard/rsvp/checkin">
                     <QrCode className="w-4 h-4 mr-2" />
                     Ver check-in
                   </Link>
                 </Button>
-                <Button asChild className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white">
+                <Button asChild className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white w-full sm:w-auto">
                   <Link href="/dashboard/rsvp/config">
                     <Settings className="w-4 h-4 mr-2" />
                     Configurar RSVP

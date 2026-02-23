@@ -55,12 +55,12 @@ export default function RecadosPage() {
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...payload } : m)));
   }
 
-  if (loading) return <div className="p-6">Carregando recados...</div>;
+  if (loading) return <div className="p-4 md:p-6">Carregando recados...</div>;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-display text-foreground mb-2">Recados</h1>
+        <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Recados</h1>
         <p className="text-gray-500">Mensagens carinhosas dos seus convidados</p>
       </div>
 
@@ -73,7 +73,7 @@ export default function RecadosPage() {
           messages.map((message) => (
             <Card key={message.id}>
               <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-4">
                   <div>
                     <h3 className="font-medium text-foreground">{message.guestName}</h3>
                     <p className="text-sm text-gray-500">{new Date(message.createdAt).toLocaleDateString('pt-BR')}</p>

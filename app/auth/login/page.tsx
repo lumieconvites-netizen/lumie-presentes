@@ -84,7 +84,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <CardTitle className="text-center font-display text-3xl text-terracota-700">Entrar na LUMIÊ</CardTitle>
+          <CardTitle className="text-center font-display text-2xl md:text-3xl text-terracota-700">Entrar na LUMIÊ</CardTitle>
           <CardDescription className="text-center">Acesse sua conta para gerenciar suas listas</CardDescription>
         </CardHeader>
 
