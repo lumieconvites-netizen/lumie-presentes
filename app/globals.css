@@ -754,7 +754,7 @@
   align-items: stretch;
   width: max-content;
   padding-inline: 12px;
-  animation: resourceMarquee 50s linear infinite;
+  animation: resourceMarquee 62s linear infinite;
 }
 
 .resource-card {
@@ -872,7 +872,7 @@
   }
 
   .resource-carousel-track {
-    animation-duration: 40s;
+    animation-duration: 50s;
   }
 
   .resource-carousel-wrap::before,
