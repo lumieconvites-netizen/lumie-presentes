@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bell, Globe, LayoutDashboard, LogOut, Settings, Shield, Sparkles } from 'lucide-react';
+import { Bell, Globe, LayoutDashboard, LogOut, Settings, Shield, Sparkles, X } from 'lucide-react';
 
 type ImpersonationData = {
   isImpersonating: boolean;
@@ -54,6 +54,7 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
     latestEventAt: null,
     events: [],
   });
+  const [dismissedNotificationIds, setDismissedNotificationIds] = useState<string[]>([]);
 
   const sessionImage = (session?.user as any)?.image as string | undefined;
   const sessionName = session?.user?.name ?? user?.name ?? 'Usuário';
@@ -106,6 +107,14 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const dismissedKey = `lumie:notif:dismissed:${siteSlug || 'default'}`;
+    const rawDismissed = localStorage.getItem(dismissedKey);
+    const parsedDismissed = rawDismissed ? JSON.parse(rawDismissed) : [];
+    setDismissedNotificationIds(Array.isArray(parsedDismissed) ? parsedDismissed : []);
+  }, [siteSlug]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
     const storageKey = `lumie:notif:lastSeen:${siteSlug || 'default'}`;
     let cancelled = false;
@@ -117,10 +126,12 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
         const res = await fetch(`/api/notifications/summary${since}`, { cache: 'no-store' });
         const data = await res.json().catch(() => null);
         if (!res.ok || cancelled) return;
+        const incomingEvents = Array.isArray(data?.events) ? data.events : [];
+        const visibleEvents = incomingEvents.filter((event: any) => !dismissedNotificationIds.includes(String(event?.id ?? '')));
         setNotifications({
-          unreadCount: Number(data?.unreadCount ?? 0),
+          unreadCount: visibleEvents.length,
           latestEventAt: typeof data?.latestEventAt === 'string' ? data.latestEventAt : null,
-          events: Array.isArray(data?.events) ? data.events : [],
+          events: visibleEvents,
         });
       } catch {
         // silencioso
@@ -134,7 +145,7 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
       cancelled = true;
       clearInterval(interval);
     };
-  }, [siteSlug]);
+  }, [siteSlug, dismissedNotificationIds]);
 
   function markNotificationsAsSeen() {
     if (typeof window === 'undefined') return;
@@ -153,6 +164,22 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  function dismissNotification(id: string) {
+    if (typeof window === 'undefined') return;
+    const dismissedKey = `lumie:notif:dismissed:${siteSlug || 'default'}`;
+    setDismissedNotificationIds((prev) => {
+      if (prev.includes(id)) return prev;
+      const next = [...prev, id];
+      localStorage.setItem(dismissedKey, JSON.stringify(next));
+      return next;
+    });
+    setNotifications((prev) => ({
+      ...prev,
+      events: prev.events.filter((event) => event.id !== id),
+      unreadCount: Math.max(0, prev.unreadCount - 1),
+    }));
   }
 
   async function stopImpersonation() {
@@ -234,16 +261,29 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
               ) : (
                 <div className="max-h-80 overflow-y-auto px-2 py-1 space-y-1">
                   {notifications.events.map((event) => (
-                    <DropdownMenuItem key={event.id} asChild className="p-0 focus:bg-transparent">
-                      <Link
-                        href={event.href || '/dashboard'}
-                        onClick={() => markNotificationsAsSeen()}
-                        className="block w-full rounded-md border border-gray-100 bg-white px-2 py-2 cursor-pointer hover:bg-gray-50"
-                      >
-                        <p className="text-sm text-gray-800 leading-snug whitespace-normal">{event.text}</p>
-                        <p className="text-[11px] text-gray-500 mt-1">{formatNotificationDate(event.at)}</p>
-                      </Link>
-                    </DropdownMenuItem>
+                    <div key={event.id} className="rounded-md border border-gray-100 bg-white px-2 py-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <Link
+                          href={event.href || '/dashboard'}
+                          onClick={() => {
+                            dismissNotification(event.id);
+                            markNotificationsAsSeen();
+                          }}
+                          className="flex-1 cursor-pointer hover:opacity-90"
+                        >
+                          <p className="text-sm text-gray-800 leading-snug whitespace-normal">{event.text}</p>
+                          <p className="text-[11px] text-gray-500 mt-1">{formatNotificationDate(event.at)}</p>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => dismissNotification(event.id)}
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                          aria-label="Remover notificacao"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
