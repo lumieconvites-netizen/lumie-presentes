@@ -7,6 +7,22 @@ import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter"
 
 const CARD_LIQUIDATION_WINDOW_DAYS = 45;
 
+function isCardMethod(value?: string | null) {
+  const method = String(value ?? "").toLowerCase();
+  return method.includes("credit") || method.includes("card") || method.includes("cartao") || method.includes("cartão");
+}
+
+function isCardStillPending(params: {
+  paymentMethod?: string | null;
+  paidAt?: Date | null;
+  createdAt: Date;
+  cutoff: Date;
+}) {
+  if (!isCardMethod(params.paymentMethod)) return false;
+  const referenceDate = params.paidAt ?? params.createdAt;
+  return referenceDate >= params.cutoff;
+}
+
 export async function GET(request: Request) {
   const ctx = await getActingUserContext();
   if (!ctx) return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
@@ -33,7 +49,7 @@ export async function GET(request: Request) {
         email: true,
         role: true,
         partnerAmbassador: { select: { id: true, name: true, email: true } },
-        recipient: { select: { pagarmeRecipientId: true } },
+        recipient: { select: { pagarmeRecipientId: true, createdAt: true } },
       },
     }),
     prisma.referralCode.findMany({
@@ -78,8 +94,14 @@ export async function GET(request: Request) {
                 name: true,
                 email: true,
                 acquisitionSource: true,
-                recipient: { select: { pagarmeRecipientId: true } },
-                referredByAmbassador: { select: { recipient: { select: { pagarmeRecipientId: true } } } },
+                recipient: { select: { pagarmeRecipientId: true, createdAt: true } },
+                referredByAmbassador: {
+                  select: {
+                    recipient: {
+                      select: { pagarmeRecipientId: true, createdAt: true },
+                    },
+                  },
+                },
               },
             },
           },
@@ -132,22 +154,44 @@ export async function GET(request: Request) {
 
   for (const order of paidOrders) {
     const totalAmount = Number(order.totalAmount);
-    const baseAmount = Number(order.baseAmount);
     totalGrossSales += totalAmount;
     const user = order.giftList.user;
+    const baseAmount = Number(order.baseAmount);
+
+    const clientRecipientReadyAtOrder =
+      isRealRecipientId(user.recipient?.pagarmeRecipientId) &&
+      Boolean(user.recipient?.createdAt && user.recipient.createdAt <= order.createdAt);
+    const partnerRecipientReadyAtOrder =
+      isRealRecipientId(partnerUser.recipient?.pagarmeRecipientId) &&
+      Boolean(partnerUser.recipient?.createdAt && partnerUser.recipient.createdAt <= order.createdAt);
+    const ambassadorRecipientReadyAtOrder =
+      isRealRecipientId(user.referredByAmbassador?.recipient?.pagarmeRecipientId) &&
+      Boolean(
+        user.referredByAmbassador?.recipient?.createdAt &&
+          user.referredByAmbassador.recipient.createdAt <= order.createdAt
+      );
 
     const split = calculateSplitFromOrder({
       baseAmount,
       totalAmount,
       acquisitionSource: user.acquisitionSource,
-      hasClientRecipient: isRealRecipientId(user.recipient?.pagarmeRecipientId),
-      hasPartnerRecipient: isRealRecipientId(partnerUser.recipient?.pagarmeRecipientId),
-      hasAmbassadorRecipient: isRealRecipientId(user.referredByAmbassador?.recipient?.pagarmeRecipientId),
-      paymentMethod: String(order.paymentMethod || "").toLowerCase().includes("pix") ? "PIX" : "CREDIT_CARD",
+      hasClientRecipient: clientRecipientReadyAtOrder,
+      hasPartnerRecipient: partnerRecipientReadyAtOrder,
+      hasAmbassadorRecipient: ambassadorRecipientReadyAtOrder,
+      paymentMethod: isCardMethod(order.paymentMethod) ? "CREDIT_CARD" : "PIX",
     });
 
-    const commission = split.partnerInCents / 100;
-    totalCommissionPaid += commission;
+    const commissionGenerated = split.partnerInCents / 100;
+    const commissionReceived = isCardStillPending({
+      paymentMethod: order.paymentMethod,
+      paidAt: order.paidAt,
+      createdAt: order.createdAt,
+      cutoff: cardLiquidationCutoff,
+    })
+      ? 0
+      : commissionGenerated;
+
+    totalCommissionPaid += commissionReceived;
 
     const key = user.id;
     const current = clientsMap.get(key) ?? {
@@ -159,7 +203,7 @@ export async function GET(request: Request) {
       orders: 0,
     };
     current.sales += totalAmount;
-    current.commission += commission;
+    current.commission += commissionReceived;
     current.orders += 1;
     clientsMap.set(key, current);
   }
