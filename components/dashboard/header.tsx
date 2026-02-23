@@ -1,5 +1,10 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
 import { useUser } from '@/contexts/user-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,12 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, LayoutDashboard, Globe, Shield, Sparkles } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
+import { Globe, LayoutDashboard, LogOut, Settings, Shield, Sparkles } from 'lucide-react';
 
 type ImpersonationData = {
   isImpersonating: boolean;
@@ -30,31 +30,36 @@ export default function DashboardHeader() {
   const { user } = useUser();
   const { data: session } = useSession();
   const router = useRouter();
+
   const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
-  const [siteSlug, setSiteSlug] = useState<string>('');
+  const [siteSlug, setSiteSlug] = useState('');
 
   const sessionImage = (session?.user as any)?.image as string | undefined;
-  const sessionName = session?.user?.name ?? user?.name ?? 'Usuario';
+  const sessionName = session?.user?.name ?? user?.name ?? 'UsuÃ¡rio';
   const sessionEmail = session?.user?.email ?? user?.email ?? '';
   const avatarSrc = sessionImage || user?.photo;
+  const role = (session?.user as any)?.role;
 
-  const getUserInitials = (name: string) => {
-    return name
+  const displayName =
+    role === 'ADMIN' && impersonation?.isImpersonating
+      ? impersonation.effectiveUser?.name || 'UsuÃ¡rio'
+      : sessionName;
+  const displayEmail =
+    role === 'ADMIN' && impersonation?.isImpersonating
+      ? impersonation.effectiveUser?.email || ''
+      : sessionEmail;
+  const firstName = displayName.split(' ')[0];
+
+  const getUserInitials = (name: string) =>
+    name
       .split(' ')
       .map((n) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  };
-
-  const role = (session?.user as any)?.role;
-  const displayName = role === 'ADMIN' && impersonation?.isImpersonating ? (impersonation.effectiveUser?.name || 'Usuario') : sessionName;
-  const displayEmail = role === 'ADMIN' && impersonation?.isImpersonating ? (impersonation.effectiveUser?.email || '') : sessionEmail;
-  const firstName = displayName.split(' ')[0];
 
   useEffect(() => {
     if (role !== 'ADMIN') return;
-
     fetch('/api/admin/impersonation', { cache: 'no-store' })
       .then((r) => r.json())
       .then((data) => setImpersonation(data))
@@ -73,10 +78,9 @@ export default function DashboardHeader() {
   async function stopImpersonation() {
     const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
     if (!res.ok) {
-      alert('Não foi possível sair do modo de acesso.');
+      alert('NÃ£o foi possÃ­vel sair do modo de acesso.');
       return;
     }
-
     window.location.assign('/admin');
   }
 
@@ -92,7 +96,7 @@ export default function DashboardHeader() {
               <Link href="/admin">Voltar ao admin</Link>
             </Button>
             <Button size="sm" variant="outline" onClick={() => stopImpersonation().catch(() => null)}>
-              Sair do modo acesso
+              Sair do modo de acesso
             </Button>
           </div>
         </div>
@@ -101,10 +105,10 @@ export default function DashboardHeader() {
       <div className="flex items-center justify-between">
         <div className="pl-16 md:pl-0">
           <h1 className="text-2xl font-display text-foreground flex items-center gap-2">
-            <span>Olá, {firstName}!</span>
+            <span>OlÃ¡, {firstName}!</span>
             <Sparkles className="h-4 w-4 text-[#c65a3a]" />
           </h1>
-          <p className="text-sm text-gray-500">Veja como está indo sua lista de presentes</p>
+          <p className="text-sm text-gray-500">Veja como estÃ¡ indo sua lista de presentes</p>
         </div>
 
         <DropdownMenu>
@@ -150,7 +154,7 @@ export default function DashboardHeader() {
             <DropdownMenuItem asChild>
               <Link href="/dashboard/configuracoes" className="cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" />
-                Configurações
+                ConfiguraÃ§Ãµes
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

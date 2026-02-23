@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
@@ -442,18 +442,18 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                 <div className="grid grid-cols-1 gap-3 md:gap-6 max-w-5xl mx-auto">
                   {(showAllMessages
                     ? [
-                        { name: 'Maria Silva', message: 'Parabens! Que esse dia seja repleto de alegrias e momentos inesqueciveis.', time: '2 dias atras' },
-                        { name: 'Joao Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atras' },
-                        { name: 'Ana Costa', message: 'Muitas bencaos e sucesso! Voce merece toda a felicidade do mundo.', time: '5 dias atras' },
-                        { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atras' },
-                        { name: 'Carla Souza', message: 'Que o evento seja inesquecivel e cheio de luz.', time: '1 semana atras' },
-                        { name: 'Bruno Alves', message: 'Parabens! Muita felicidade nessa nova etapa.', time: '2 semanas atras' }
+                        { name: 'Maria Silva', message: 'Parabéns! Que esse dia seja repleto de alegrias e momentos inesquecíveis.', time: '2 dias atrás' },
+                        { name: 'João Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrás' },
+                        { name: 'Ana Costa', message: 'Muitas bênçãos e sucesso! Você merece toda a felicidade do mundo.', time: '5 dias atrás' },
+                        { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atrás' },
+                        { name: 'Carla Souza', message: 'Que o evento seja inesquecível e cheio de luz.', time: '1 semana atrás' },
+                        { name: 'Bruno Alves', message: 'Parabéns! Muita felicidade nessa nova etapa.', time: '2 semanas atrás' }
                       ]
                     : [
-                        { name: 'Maria Silva', message: 'Parabens! Que esse dia seja repleto de alegrias e momentos inesqueciveis.', time: '2 dias atras' },
-                        { name: 'Joao Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atras' },
-                        { name: 'Ana Costa', message: 'Muitas bencaos e sucesso! Voce merece toda a felicidade do mundo.', time: '5 dias atras' },
-                        { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atras' }
+                        { name: 'Maria Silva', message: 'Parabéns! Que esse dia seja repleto de alegrias e momentos inesquecíveis.', time: '2 dias atrás' },
+                        { name: 'João Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrás' },
+                        { name: 'Ana Costa', message: 'Muitas bênçãos e sucesso! Você merece toda a felicidade do mundo.', time: '5 dias atrás' },
+                        { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atrás' }
                       ]).map((msg, i) => (
                     <Card key={i} className="p-4 md:p-6 bg-white">
                       <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
@@ -675,4 +675,3 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
     </div>
   );
 }
-

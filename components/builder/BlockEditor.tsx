@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -69,7 +69,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       };
       image.onerror = () => {
         URL.revokeObjectURL(objectUrl);
-        reject(new Error('Nao foi possivel ler as dimensoes da imagem.'));
+        reject(new Error('Não foi possível ler as dimensões da imagem.'));
       };
       image.src = objectUrl;
     });
@@ -94,7 +94,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           return false;
         }
       } catch (error: any) {
-        alert(error?.message ?? 'Falha ao validar dimensoes da imagem.');
+        alert(error?.message ?? 'Falha ao validar dimensões da imagem.');
         return false;
       }
     }
@@ -932,6 +932,3 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     </div>
   );
 }
-
-
-

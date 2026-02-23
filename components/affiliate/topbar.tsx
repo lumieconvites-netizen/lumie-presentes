@@ -1,10 +1,11 @@
 'use client';
 
-import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { signOut, useSession } from 'next-auth/react';
+import { LayoutDashboard, LogOut, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, LayoutDashboard } from 'lucide-react';
 
 type ImpersonationData = {
   isImpersonating: boolean;
@@ -28,15 +28,18 @@ type ImpersonationData = {
 export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADOR' }) {
   const { data: session } = useSession();
   const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
+
   const sessionRole = (session?.user as any)?.role;
-  const name = session?.user?.name || 'Usuario';
+  const name = session?.user?.name || 'UsuÃ¡rio';
   const email = session?.user?.email || '';
   const sessionImage = (session?.user as any)?.image as string | undefined;
-  const title = role === 'PARTNER' ? 'Area do Parceiro' : 'Area do Embaixador';
+
+  const title = role === 'PARTNER' ? 'Ãrea do Parceiro' : 'Ãrea do Embaixador';
   const base = role === 'PARTNER' ? '/parceiro' : '/embaixador';
+
   const displayName =
     sessionRole === 'ADMIN' && impersonation?.isImpersonating
-      ? impersonation.effectiveUser?.name || 'Usuario'
+      ? impersonation.effectiveUser?.name || 'UsuÃ¡rio'
       : name;
   const displayEmail =
     sessionRole === 'ADMIN' && impersonation?.isImpersonating
@@ -66,7 +69,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
   async function stopImpersonation() {
     const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
     if (!res.ok) {
-      alert('Não foi possível sair do modo de acesso.');
+      alert('NÃ£o foi possÃ­vel sair do modo de acesso.');
       return;
     }
     window.location.assign('/admin');
@@ -84,7 +87,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
               <Link href="/admin">Voltar ao admin</Link>
             </Button>
             <Button size="sm" variant="outline" onClick={() => stopImpersonation().catch(() => null)}>
-              Sair do modo acesso
+              Sair do modo de acesso
             </Button>
           </div>
         </div>
@@ -93,8 +96,9 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
       <div className="flex items-center justify-between">
         <div className="pl-14 md:pl-0">
           <h1 className="text-xl md:text-2xl font-display text-foreground">{title}</h1>
-          <p className="text-xs md:text-sm text-gray-500">Acompanhe codigos, indicacoes e ganhos em tempo real</p>
+          <p className="text-xs md:text-sm text-gray-500">Acompanhe cÃ³digos, indicaÃ§Ãµes e ganhos em tempo real</p>
         </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-10 w-10 rounded-full p-0 overflow-hidden ring-1 ring-border">
@@ -118,7 +122,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
             <DropdownMenuItem asChild>
               <Link href={`${base}/configuracoes`} className="cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" />
-                Configurações
+                ConfiguraÃ§Ãµes
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -144,4 +148,3 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
     </header>
   );
 }
-

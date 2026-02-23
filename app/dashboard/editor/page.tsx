@@ -897,18 +897,34 @@ export default function PageBuilder() {
         </div>
 
         <div className="flex-1 overflow-y-auto bg-[#f7efe8]">
-          <div className="max-w-6xl mx-auto px-3 md:px-6 pb-28 md:pb-6">
+          <div className="md:hidden px-2 pb-28 pt-3">
+            <div className="mx-auto w-full max-w-[390px] rounded-[30px] border-[8px] border-[#161616] bg-[#0f0f0f] shadow-2xl overflow-hidden">
+              <div className="flex justify-center py-2">
+                <div className="h-1.5 w-20 rounded-full bg-white/25" />
+              </div>
+              <div className="h-[76vh] max-h-[780px] overflow-y-auto bg-white">
+                <BlockPreview
+                  key={themeVersion}
+                  list={{ theme, slug: giftList?.slug }}
+                  blocks={pageBlocks}
+                  selectedBlock={selectedBlock}
+                  onSelectBlock={(block) => {
+                    setSelectedBlock(block);
+                    setMobileDrawer('selected');
+                  }}
+                  gifts={listGifts}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="hidden md:block max-w-6xl mx-auto px-6 pb-6">
             <BlockPreview
               key={themeVersion}
               list={{ theme, slug: giftList?.slug }}
               blocks={pageBlocks}
               selectedBlock={selectedBlock}
-              onSelectBlock={(block) => {
-                setSelectedBlock(block);
-                if (typeof window !== 'undefined' && window.innerWidth < 768) {
-                  setMobileDrawer('selected');
-                }
-              }}
+              onSelectBlock={setSelectedBlock}
               gifts={listGifts}
             />
           </div>

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
+import { LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings } from 'lucide-react';
 
 type AdminTopbarMenuProps = {
   name: string;
