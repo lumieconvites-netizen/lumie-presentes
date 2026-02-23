@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { isCategoryMetaTemplate } from '@/lib/template-categories';
@@ -70,7 +70,7 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
 
       {pageCoverImage ? (
         <div className="w-full bg-black">
-          <img src={pageCoverImage} alt={`Capa da página ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
+          <img src={pageCoverImage} alt={`Capa da pÃ¡gina ${pageTitle}`} className="w-full aspect-[16/9] object-contain bg-black md:aspect-auto md:h-[78vh]" />
         </div>
       ) : null}
 
@@ -82,7 +82,7 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
 
         {gifts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[#d9b9a4] bg-white p-8 text-center text-[#8E3D2C]">
-            Este modelo ainda não possui presentes cadastrados.
+            Este modelo ainda nÃ£o possui presentes cadastrados.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -111,3 +111,4 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
     </div>
   );
 }
+

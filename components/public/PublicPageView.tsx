@@ -473,7 +473,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                 <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden border border-gray-200">
                   <div className="relative h-[360px] md:h-[420px]">
                     {config.coverImage ? (
-                      <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-cover" />
+                      <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-contain bg-black" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-700" />
                     )}
@@ -610,6 +610,13 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                         <p className="leading-relaxed text-sm md:text-base" style={{ color: captionColor }}>{msg.message}</p>
                       </Card>
                     ))}
+                  {messages.filter((m) => m.isPublic).length === 0 ? (
+                    <Card className="p-6 md:p-8 bg-white text-center">
+                      <p className="text-sm md:text-base" style={{ color: captionColor }}>
+                        Sem recados até o momento.
+                      </p>
+                    </Card>
+                  ) : null}
                 </div>
                 {messages.filter((m) => m.isPublic).length > 3 && (
                   <div className="mt-4 text-center">

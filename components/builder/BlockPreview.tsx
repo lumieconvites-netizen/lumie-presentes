@@ -436,7 +436,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                 <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden border border-gray-200">
                   <div className="relative h-[360px] md:h-[420px]">
                     {config.coverImage ? (
-                      <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-cover" />
+                      <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-contain bg-black" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-700" />
                     )}
