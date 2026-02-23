@@ -471,24 +471,24 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             {block.type === 'gifts' && (
               <div id="lista-presentes-section" className={`${sectionClass} p-3 md:p-16`}>
                 <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden border border-gray-200">
-                  <div className="relative h-[360px] md:h-[420px]">
+                  <div className="relative h-[320px] md:h-[420px]">
                     {config.coverImage ? (
-                      <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-contain bg-black" />
+                      <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-700" />
                     )}
                     <div className="absolute inset-0 bg-black/35" />
-                    <div className="absolute left-5 right-5 bottom-5 md:left-8 md:right-8 md:bottom-8">
-                      <h2 className="text-2xl md:text-4xl mb-2 md:mb-3" style={{ fontFamily: fontTitle, color: config.titleColor || '#FFFFFF' }}>
+                    <div className="absolute left-4 right-4 bottom-4 md:left-8 md:right-8 md:bottom-8">
+                      <h2 className="text-xl md:text-4xl mb-2 md:mb-3" style={{ fontFamily: fontTitle, color: config.titleColor || '#FFFFFF' }}>
                         {config.title || 'Lista de Presentes'}
                       </h2>
-                      <p className="max-w-2xl mb-4 md:mb-5 text-sm md:text-base" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
+                      <p className="max-w-2xl mb-3 md:mb-5 text-xs md:text-base" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
                         {config.description || 'Esta é nossa lista de presentes. Ficamos felizes em compartilhar esse momento com você.'}
                       </p>
                       {isTemplatePreview ? (
                         <Link
                           href={templatePresentsPreviewHref}
-                          className="inline-flex h-11 items-center justify-center rounded-md px-8 text-sm font-medium shadow-sm transition-all duration-200 hover:brightness-110 hover:saturate-125"
+                          className="inline-flex h-10 md:h-11 items-center justify-center rounded-md px-6 md:px-8 text-sm font-medium shadow-sm transition-all duration-200 hover:brightness-110 hover:saturate-125"
                           style={{
                             backgroundColor: config.buttonBgColor || primaryColor,
                             color: config.buttonTextColor || '#FFFFFF',
@@ -499,7 +499,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       ) : (
                         <Link
                           href={presentsHref}
-                          className="inline-flex h-11 items-center justify-center rounded-md px-8 text-sm font-medium shadow-sm transition-all duration-200 hover:brightness-110 hover:saturate-125"
+                          className="inline-flex h-10 md:h-11 items-center justify-center rounded-md px-6 md:px-8 text-sm font-medium shadow-sm transition-all duration-200 hover:brightness-110 hover:saturate-125"
                           style={{
                             backgroundColor: config.buttonBgColor || primaryColor,
                             color: config.buttonTextColor || '#FFFFFF',

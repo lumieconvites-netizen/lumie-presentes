@@ -87,9 +87,9 @@ export default async function SiteGiftsBySlugPage({
       </header>
 
       {pageCoverImage ? (
-        <div className="w-full bg-black">
+        <div className="w-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-contain bg-black md:aspect-auto md:h-[78vh]" />
+          <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
         </div>
       ) : null}
 

@@ -69,8 +69,8 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
       </div>
 
       {pageCoverImage ? (
-        <div className="w-full bg-black">
-          <img src={pageCoverImage} alt={`Capa da pÃ¡gina ${pageTitle}`} className="w-full aspect-[16/9] object-contain bg-black md:aspect-auto md:h-[78vh]" />
+        <div className="w-full">
+          <img src={pageCoverImage} alt={`Capa da pÃ¡gina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
         </div>
       ) : null}
 
