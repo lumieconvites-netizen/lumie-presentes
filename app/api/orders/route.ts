@@ -4,6 +4,8 @@ import { calculateTotal } from '@/lib/utils';
 import { createCreditCardOrder, createPixOrder, getOrder } from '@/lib/pagarme';
 import { z } from 'zod';
 import { enforceRateLimit, getRequestIp } from '@/lib/rate-limit';
+import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
+import { getEffectiveAvailabilityForGift } from '@/lib/gift-availability';
 
 const orderSchema = z.object({
   giftId: z.string(),
@@ -174,6 +176,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const data = orderSchema.parse(body);
 
+    await reconcilePendingOrdersForGiftList(data.giftListId);
+
     const emailRate = await enforceRateLimit({
       key: `checkout:orders:email:${data.guestEmail.trim().toLowerCase()}`,
       requests: 12,
@@ -255,8 +259,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Presente nao encontrado' }, { status: 404 });
     }
 
-    if (gift.availableQty < data.quantity) {
-      return NextResponse.json({ error: 'Quantidade indisponivel' }, { status: 400 });
+    const effectiveAvailability = await getEffectiveAvailabilityForGift(gift.id, gift.totalQuantity);
+    if (effectiveAvailability < data.quantity) {
+      return NextResponse.json({ error: `Quantidade indisponivel. Maximo: ${effectiveAvailability}` }, { status: 400 });
     }
 
     const baseAmount = Number(gift.basePrice) * data.quantity;

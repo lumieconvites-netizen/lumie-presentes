@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
 import { getActingUserContext } from "@/lib/acting-user";
 import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
+import { reconcilePendingOrdersForGiftList } from "@/lib/order-status-reconciliation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,8 @@ export async function GET() {
 
     const primaryGiftListId = await getPrimaryGiftListIdForUser(ctx.effectiveUserId);
     if (!primaryGiftListId) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+
+    await reconcilePendingOrdersForGiftList(primaryGiftListId);
 
     const giftList = await prisma.giftList.findUnique({
       where: { id: primaryGiftListId },

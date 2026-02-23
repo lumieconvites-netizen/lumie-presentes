@@ -1,5 +1,7 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getEffectiveAvailabilityForGift } from '@/lib/gift-availability';
+import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
 
 export async function GET(request: Request, { params }: { params: { giftId: string } }) {
   try {
@@ -33,6 +35,9 @@ export async function GET(request: Request, { params }: { params: { giftId: stri
       return NextResponse.json({ error: 'Presente nao encontrado' }, { status: 404 });
     }
 
+    await reconcilePendingOrdersForGiftList(gift.giftList.id);
+    const effectiveAvailableQty = await getEffectiveAvailabilityForGift(gift.id, gift.totalQuantity);
+
     return NextResponse.json({
       gift: {
         id: gift.id,
@@ -40,7 +45,7 @@ export async function GET(request: Request, { params }: { params: { giftId: stri
         description: gift.description,
         imageUrl: gift.imageUrl,
         basePrice: Number(gift.basePrice),
-        availableQty: gift.availableQty,
+        availableQty: effectiveAvailableQty,
         totalQuantity: gift.totalQuantity,
       },
       giftList: gift.giftList,

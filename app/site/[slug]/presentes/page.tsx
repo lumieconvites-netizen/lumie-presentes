@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
+import { buildEffectiveAvailabilityMap } from "@/lib/gift-availability";
+import { reconcilePendingOrdersForGiftList } from "@/lib/order-status-reconciliation";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -29,11 +31,21 @@ export default async function SiteGiftsBySlugPage({
     where: { slug },
     include: {
       pageLayout: true,
-      gifts: { where: { isActive: true }, orderBy: { order: "asc" } },
     },
   });
 
   if (!list || !list.isPublished) return notFound();
+
+  await reconcilePendingOrdersForGiftList(list.id);
+
+  const gifts = await prisma.giftItem.findMany({
+    where: { giftListId: list.id, isActive: true },
+    orderBy: { order: "asc" },
+  });
+
+  const availabilityByGiftId = await buildEffectiveAvailabilityMap(
+    gifts.map((gift) => ({ id: gift.id, totalQuantity: gift.totalQuantity }))
+  );
 
   const theme = (list.pageLayout?.theme as any) || {};
   const primaryColor = theme.primary_color || "#C86E52";
@@ -59,20 +71,21 @@ export default async function SiteGiftsBySlugPage({
       {pageCoverImage ? (
         <div className="w-full bg-black">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={pageCoverImage} alt={`Capa da página ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
+          <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
         </div>
       ) : null}
 
       <section className="max-w-6xl mx-auto px-4 py-10">
         {pageMessage ? <p className="text-gray-600 mb-8 max-w-3xl">{pageMessage}</p> : null}
-        {list.gifts.length === 0 ? (
+        {gifts.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-600">
-            Ainda não há presentes cadastrados.
+            Ainda nao ha presentes cadastrados.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {list.gifts.map((gift) => {
-              const soldOut = gift.availableQty <= 0;
+            {gifts.map((gift) => {
+              const availableQty = availabilityByGiftId.get(gift.id) ?? Math.max(0, gift.availableQty);
+              const soldOut = availableQty <= 0;
               const displayPrice = calculateDisplayPrice(Number(gift.basePrice || 0), list.feeMode);
               return (
                 <article key={gift.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -84,14 +97,14 @@ export default async function SiteGiftsBySlugPage({
                   </div>
                   <div className="p-5">
                     <h2 className="text-xl font-semibold">{gift.name}</h2>
-                    <p className="text-sm text-gray-600 mt-2 min-h-10">{gift.description || "Sem descrição"}</p>
+                    <p className="text-sm text-gray-600 mt-2 min-h-10">{gift.description || "Sem descricao"}</p>
                     <div className="flex items-center justify-between mt-5">
                       <div>
                         <p className="text-2xl font-bold" style={{ color: primaryColor }}>
                           {formatBRL(displayPrice)}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Disponível: {gift.availableQty} de {gift.totalQuantity}
+                          Disponivel: {availableQty} de {gift.totalQuantity}
                         </p>
                       </div>
                       {soldOut ? (
