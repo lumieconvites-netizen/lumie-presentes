@@ -482,6 +482,57 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
               </div>
             )}
 
+            {block.type === 'guest-guide' && (
+              <div className={`${sectionClass} p-6 md:p-16`}>
+                <div className="max-w-5xl mx-auto">
+                  <h2 className="text-2xl md:text-4xl text-center mb-3" style={{ fontFamily: fontTitle, color: titleColor }}>
+                    {config.title || 'Manual do Convidado'}
+                  </h2>
+                  <p className="text-center text-sm md:text-base max-w-3xl mx-auto mb-6 md:mb-10" style={{ color: captionColor }}>
+                    {config.description || 'Dicas importantes para deixar a experiência dos seus convidados ainda melhor.'}
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    {(Array.isArray(config.items) && config.items.length
+                      ? config.items
+                      : [
+                          {
+                            title: 'Traje sugerido',
+                            description: 'Escolha um visual elegante para o momento especial.',
+                            image: '',
+                          },
+                          {
+                            title: 'Chegue com antecedência',
+                            description: 'Recomendamos chegar 30 minutos antes do horário de início.',
+                            image: '',
+                          },
+                          {
+                            title: 'Aproveite cada detalhe',
+                            description: 'Sua presença é muito importante para nós.',
+                            image: '',
+                          },
+                        ]).map((item: any, index: number) => (
+                      <div key={index} className="rounded-2xl border border-[#ead9cd] bg-white overflow-hidden shadow-sm">
+                        {item.image ? (
+                          <img src={item.image} alt={item.title || `Item ${index + 1}`} className="w-full h-40 object-cover" />
+                        ) : (
+                          <div className="h-40 bg-gradient-to-br from-[#f7ece5] to-[#f2ddd1]" />
+                        )}
+                        <div className="p-4 md:p-5">
+                          <h3 className="text-lg md:text-xl mb-2" style={{ fontFamily: fontTitle, color: titleColor }}>
+                            {item.title || `Item ${index + 1}`}
+                          </h3>
+                          <p className="text-sm md:text-base leading-relaxed" style={{ color: captionColor }}>
+                            {item.description || 'Descrição do item.'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {block.type === 'messages' && config.showPublicly !== false && (
               <div className={`${sectionClass} p-6 md:p-16`}>
                 <h2 className="text-2xl md:text-4xl text-center mb-6 md:mb-12" style={{ fontFamily: fontTitle, color: titleColor }}>

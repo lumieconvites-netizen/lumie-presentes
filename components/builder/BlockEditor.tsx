@@ -185,6 +185,70 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     handleChange('images', images);
   };
 
+  const getGuestGuideItems = (): Array<{ title: string; description: string; image: string }> => {
+    const raw = Array.isArray(config.items) ? config.items : [];
+    return raw.map((item: any): { title: string; description: string; image: string } => ({
+      title: item?.title || '',
+      description: item?.description || '',
+      image: item?.image || '',
+    }));
+  };
+
+  const updateGuestGuideItems = (items: Array<{ title: string; description: string; image: string }>) => {
+    handleChange('items', items);
+  };
+
+  const addGuestGuideItem = () => {
+    const items = getGuestGuideItems();
+    updateGuestGuideItems([
+      ...items,
+      { title: `Orientação ${items.length + 1}`, description: '', image: '' },
+    ]);
+  };
+
+  const updateGuestGuideItem = (index: number, key: 'title' | 'description' | 'image', value: string) => {
+    const items = getGuestGuideItems();
+    if (!items[index]) return;
+    items[index] = { ...items[index], [key]: value };
+    updateGuestGuideItems(items);
+  };
+
+  const removeGuestGuideItem = (index: number) => {
+    const items = getGuestGuideItems();
+    items.splice(index, 1);
+    updateGuestGuideItems(items);
+  };
+
+  const handleGuestGuideImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const valid = await validateImageFile(file, {
+      label: 'Imagem do manual',
+      maxWidth: 1200,
+      maxHeight: 1200,
+    });
+    if (!valid) {
+      e.target.value = '';
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const url = await uploadToServer(file, 'guest-guide');
+      updateGuestGuideItem(index, 'image', url);
+    } catch {
+      const dataUrl = await fileToDataUrl(file);
+      updateGuestGuideItem(index, 'image', dataUrl);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Hero Block */}
@@ -591,6 +655,116 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             </div>
           </div>
 
+        </>
+      )}
+
+      {/* Guest Guide Block */}
+      {block.type === 'guest-guide' && (
+        <>
+          <div>
+            <Label className="text-sm font-medium">Título</Label>
+            <Input
+              value={config.title || 'Manual do Convidado'}
+              onChange={(e) => handleChange('title', e.target.value)}
+              className="mt-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Descrição</Label>
+            <Textarea
+              value={config.description || ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              rows={3}
+              className="mt-2"
+              placeholder="Explique brevemente como os convidados devem se preparar."
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Itens do manual</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addGuestGuideItem}>
+                <Plus className="w-4 h-4 mr-1" />
+                Adicionar item
+              </Button>
+            </div>
+
+            {getGuestGuideItems().length === 0 ? (
+              <p className="text-xs text-gray-500">Adicione ao menos um item para aparecer na página.</p>
+            ) : (
+              <div className="space-y-4">
+                {getGuestGuideItems().map((item, index) => (
+                  <div key={index} className="rounded-lg border border-[#ead9cd] bg-white p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">Item {index + 1}</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-500 hover:text-red-600"
+                        onClick={() => removeGuestGuideItem(index)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    {item.image ? (
+                      <div className="relative">
+                        <img
+                          src={item.image}
+                          alt={`Imagem do item ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2"
+                          onClick={() => updateGuestGuideItem(index, 'image', '')}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                        <span className="text-xs text-gray-500">{uploading ? 'Enviando...' : 'Upload da foto'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleGuestGuideImageUpload(e, index)}
+                          className="hidden"
+                          disabled={uploading}
+                        />
+                      </label>
+                    )}
+
+                    <div>
+                      <Label className="text-xs text-gray-600">Título do item</Label>
+                      <Input
+                        value={item.title}
+                        onChange={(e) => updateGuestGuideItem(index, 'title', e.target.value)}
+                        className="mt-1"
+                        placeholder="Ex: Traje sugerido"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-xs text-gray-600">Descrição</Label>
+                      <Textarea
+                        value={item.description}
+                        onChange={(e) => updateGuestGuideItem(index, 'description', e.target.value)}
+                        className="mt-1"
+                        rows={3}
+                        placeholder="Ex: Esporte fino em tons claros."
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </>
       )}
 

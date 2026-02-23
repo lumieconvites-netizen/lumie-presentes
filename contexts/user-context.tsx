@@ -56,6 +56,7 @@ export interface PageBlock {
     | 'countdown'
     | 'gifts'
     | 'messages'
+    | 'guest-guide'
     | 'gallery'
     | 'event-info'
     | 'map'

@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BlockEditor from '@/components/builder/BlockEditor';
 import BlockPreview from '@/components/builder/BlockPreview';
-import { GripVertical, ChevronRight, Image as ImageIcon, Layout, Music2, Sparkles, Type, Video, Globe, Plus, Upload, X } from 'lucide-react';
+import { GripVertical, ChevronRight, Image as ImageIcon, Layout, Music2, Sparkles, Type, Video, Globe, Plus, Upload, X, BookOpen } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import { normalizeTemplateGiftItems } from '@/lib/template-gifts';
 
@@ -26,6 +26,7 @@ const BLOCK_TYPES = [
   { id: 'video', name: 'Video', icon: Video },
   { id: 'gifts', name: 'Lista de Presentes', icon: Layout },
   { id: 'messages', name: 'Mural de Recados', icon: Type },
+  { id: 'guest-guide', name: 'Manual do Convidado', icon: BookOpen },
   { id: 'gallery', name: 'Galeria de Fotos', icon: ImageIcon },
   { id: 'event-info', name: 'Informacoes do Evento', icon: Globe },
 ] as const;

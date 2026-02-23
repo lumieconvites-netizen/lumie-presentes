@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GripVertical, Sparkles, ChevronRight, Globe, Type, Image as ImageIcon, Layout, Save, Music2, Video, Palette, X } from 'lucide-react';
+import { GripVertical, Sparkles, ChevronRight, Globe, Type, Image as ImageIcon, Layout, Save, Music2, Video, Palette, X, BookOpen } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import BlockEditor from '@/components/builder/BlockEditor';
 import BlockPreview from '@/components/builder/BlockPreview';
@@ -26,6 +26,7 @@ const BLOCK_TYPES: Array<{ id: BlockTypeId; name: string; icon: any }> = [
   { id: 'video', name: 'Vídeo', icon: Video },
   { id: 'gifts', name: 'Lista de Presentes', icon: Layout },
   { id: 'messages', name: 'Mural de Recados', icon: Type },
+  { id: 'guest-guide', name: 'Manual do Convidado', icon: BookOpen },
   { id: 'gallery', name: 'Galeria de Fotos', icon: ImageIcon },
   { id: 'event-info', name: 'Informações do Evento', icon: Globe },
 ];

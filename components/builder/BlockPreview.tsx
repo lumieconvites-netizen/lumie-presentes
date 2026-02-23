@@ -433,6 +433,58 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
               </div>
             )}
 
+            {/* Guest Guide Block */}
+            {block.type === 'guest-guide' && (
+              <div className={`${sectionClass} p-6 md:p-16`}>
+                <div className="max-w-5xl mx-auto">
+                  <h2 className="text-2xl md:text-4xl text-center mb-3" style={{ color: titleColor, fontFamily: fontTitle }}>
+                    {config.title || 'Manual do Convidado'}
+                  </h2>
+                  <p className="text-center text-sm md:text-base max-w-3xl mx-auto mb-6 md:mb-10" style={{ color: captionColor }}>
+                    {config.description || 'Dicas rápidas para seus convidados aproveitarem o evento com conforto.'}
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    {(Array.isArray(config.items) && config.items.length
+                      ? config.items
+                      : [
+                          {
+                            title: 'Traje sugerido',
+                            description: 'Escolha um look elegante e confortável para a celebração.',
+                            image: '',
+                          },
+                          {
+                            title: 'Chegue com antecedência',
+                            description: 'Recomendamos chegar 30 minutos antes para aproveitar tudo.',
+                            image: '',
+                          },
+                          {
+                            title: 'Leve seu sorriso',
+                            description: 'Prepare seu melhor clima para celebrar esse momento especial.',
+                            image: '',
+                          },
+                        ]).map((item: any, index: number) => (
+                      <div key={index} className="rounded-2xl border border-[#ead9cd] bg-white overflow-hidden shadow-sm">
+                        {item.image ? (
+                          <img src={item.image} alt={item.title || `Item ${index + 1}`} className="w-full h-40 object-cover" />
+                        ) : (
+                          <div className="h-40 bg-gradient-to-br from-[#f7ece5] to-[#f2ddd1]" />
+                        )}
+                        <div className="p-4 md:p-5">
+                          <h3 className="text-lg md:text-xl mb-2" style={{ color: titleColor, fontFamily: fontTitle }}>
+                            {item.title || `Item ${index + 1}`}
+                          </h3>
+                          <p className="text-sm md:text-base leading-relaxed" style={{ color: captionColor }}>
+                            {item.description || 'Descrição do item do manual.'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Messages Feed Block */}
             {block.type === 'messages' && (
               <div className={`${sectionClass} p-6 md:p-16`}>
