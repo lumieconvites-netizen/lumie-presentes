@@ -33,9 +33,13 @@ type DashboardHeaderProps = {
 
 type NotificationSummary = {
   unreadCount: number;
-  unreadPayments: number;
-  unreadRsvp: number;
   latestEventAt: string | null;
+  events: Array<{
+    id: string;
+    type: 'payment' | 'message' | 'rsvp';
+    text: string;
+    at: string;
+  }>;
 };
 
 export default function DashboardHeader({ limitedMode = false, sessionUserRole }: DashboardHeaderProps) {
@@ -46,9 +50,8 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
   const [siteSlug, setSiteSlug] = useState('');
   const [notifications, setNotifications] = useState<NotificationSummary>({
     unreadCount: 0,
-    unreadPayments: 0,
-    unreadRsvp: 0,
     latestEventAt: null,
+    events: [],
   });
 
   const sessionImage = (session?.user as any)?.image as string | undefined;
@@ -115,9 +118,8 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
         if (!res.ok || cancelled) return;
         setNotifications({
           unreadCount: Number(data?.unreadCount ?? 0),
-          unreadPayments: Number(data?.unreadPayments ?? 0),
-          unreadRsvp: Number(data?.unreadRsvp ?? 0),
           latestEventAt: typeof data?.latestEventAt === 'string' ? data.latestEventAt : null,
+          events: Array.isArray(data?.events) ? data.events : [],
         });
       } catch {
         // silencioso
@@ -138,7 +140,18 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
     const storageKey = `lumie:notif:lastSeen:${siteSlug || 'default'}`;
     const reference = notifications.latestEventAt || new Date().toISOString();
     localStorage.setItem(storageKey, reference);
-    setNotifications((prev) => ({ ...prev, unreadCount: 0, unreadPayments: 0, unreadRsvp: 0 }));
+    setNotifications((prev) => ({ ...prev, unreadCount: 0 }));
+  }
+
+  function formatNotificationDate(value: string) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   async function stopImpersonation() {
@@ -215,29 +228,18 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
             <DropdownMenuContent align="end" className="w-72">
               <DropdownMenuLabel>Notificações</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {notifications.unreadCount === 0 ? (
+              {notifications.events.length === 0 ? (
                 <div className="px-2 py-3 text-sm text-muted-foreground">Sem novidades no momento.</div>
               ) : (
-                <div className="px-2 py-2 space-y-1 text-sm">
-                  {notifications.unreadPayments > 0 ? (
-                    <p>{notifications.unreadPayments} novo(s) pagamento(s) aprovado(s).</p>
-                  ) : null}
-                  {notifications.unreadRsvp > 0 ? (
-                    <p>{notifications.unreadRsvp} nova(s) confirmação(ões) de presença.</p>
-                  ) : null}
+                <div className="max-h-80 overflow-y-auto px-2 py-1 space-y-1">
+                  {notifications.events.map((event) => (
+                    <div key={event.id} className="rounded-md border border-gray-100 bg-white px-2 py-2">
+                      <p className="text-sm text-gray-800 leading-snug">{event.text}</p>
+                      <p className="text-[11px] text-gray-500 mt-1">{formatNotificationDate(event.at)}</p>
+                    </div>
+                  ))}
                 </div>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/pagamentos" className="cursor-pointer">
-                  Ver pagamentos
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/rsvp" className="cursor-pointer">
-                  Ver RSVP
-                </Link>
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
