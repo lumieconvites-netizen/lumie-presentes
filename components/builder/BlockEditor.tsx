@@ -152,7 +152,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
         const maxWidth = options.maxWidth ?? width;
         const maxHeight = options.maxHeight ?? height;
         if (width > maxWidth || height > maxHeight) {
-          alert(`${label} acima do limite recomendado de ${maxWidth}x${maxHeight}px.`);
+          alert(`${label} acima do tamanho recomendado (${maxWidth}x${maxHeight}px). Limite do arquivo: 5MB.`);
           return false;
         }
       } catch (error: any) {
@@ -840,6 +840,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                     {item.mediaType === 'image' ? (
                       <div className="space-y-2">
                         <Label className="text-xs text-gray-600">Foto</Label>
+                        <p className="text-xs text-gray-500">Recomendado: até 1200x1200px. Limite: 5MB.</p>
                         {item.image ? (
                           <div className="relative">
                             <img
