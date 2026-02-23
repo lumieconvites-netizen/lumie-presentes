@@ -20,7 +20,6 @@ export async function GET(req: Request) {
     if (!primaryGiftListId) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
 
     if (view === "dashboard") {
-      const cardLiquidationCutoff = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000);
       const giftList = await prisma.giftList.findUnique({
         where: { id: primaryGiftListId },
         select: {
@@ -94,80 +93,7 @@ export async function GET(req: Request) {
           prisma.order.count({
             where: {
               giftListId: primaryGiftListId,
-              OR: [
-                {
-                  paymentMethod: {
-                    contains: "card",
-                    mode: "insensitive",
-                  },
-                  status: { in: ["PENDING", "AUTHORIZED"] },
-                },
-                {
-                  paymentMethod: {
-                    contains: "credit",
-                    mode: "insensitive",
-                  },
-                  status: { in: ["PENDING", "AUTHORIZED"] },
-                },
-                {
-                  paymentMethod: {
-                    contains: "cartao",
-                    mode: "insensitive",
-                  },
-                  status: { in: ["PENDING", "AUTHORIZED"] },
-                },
-                {
-                  paymentMethod: {
-                    contains: "cartão",
-                    mode: "insensitive",
-                  },
-                  status: { in: ["PENDING", "AUTHORIZED"] },
-                },
-                {
-                  paymentMethod: {
-                    contains: "card",
-                    mode: "insensitive",
-                  },
-                  status: "PAID",
-                  OR: [
-                    { paidAt: { gte: cardLiquidationCutoff } },
-                    { paidAt: null, createdAt: { gte: cardLiquidationCutoff } },
-                  ],
-                },
-                {
-                  paymentMethod: {
-                    contains: "credit",
-                    mode: "insensitive",
-                  },
-                  status: "PAID",
-                  OR: [
-                    { paidAt: { gte: cardLiquidationCutoff } },
-                    { paidAt: null, createdAt: { gte: cardLiquidationCutoff } },
-                  ],
-                },
-                {
-                  paymentMethod: {
-                    contains: "cartao",
-                    mode: "insensitive",
-                  },
-                  status: "PAID",
-                  OR: [
-                    { paidAt: { gte: cardLiquidationCutoff } },
-                    { paidAt: null, createdAt: { gte: cardLiquidationCutoff } },
-                  ],
-                },
-                {
-                  paymentMethod: {
-                    contains: "cartão",
-                    mode: "insensitive",
-                  },
-                  status: "PAID",
-                  OR: [
-                    { paidAt: { gte: cardLiquidationCutoff } },
-                    { paidAt: null, createdAt: { gte: cardLiquidationCutoff } },
-                  ],
-                },
-              ],
+              status: { in: ["PENDING", "AUTHORIZED"] },
             },
           }),
         ]);
@@ -196,6 +122,7 @@ export async function GET(req: Request) {
               },
             },
             orderBy: { createdAt: "desc" },
+            take: 120,
             select: {
               id: true,
               guestName: true,

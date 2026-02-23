@@ -7,6 +7,34 @@ import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+async function getRsvpMetrics(giftListId: string) {
+  const [totalGuests, checkedIn, grouped] = await Promise.all([
+    prisma.rsvpGuest.count({ where: { giftListId } }),
+    prisma.rsvpGuest.count({ where: { giftListId, checkedInAt: { not: null } } }),
+    prisma.rsvpGuest.groupBy({
+      by: ["status"],
+      where: { giftListId },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const counts = grouped.reduce(
+    (acc, row) => {
+      acc[row.status] = row._count._all;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  return {
+    totalGuests,
+    confirmed: counts.CONFIRMED ?? 0,
+    pending: counts.PENDING ?? 0,
+    declined: counts.DECLINED ?? 0,
+    checkedIn,
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const ctx = await getActingUserContext();
@@ -37,13 +65,9 @@ export async function GET(request: Request) {
     const resolvedView = parsedUrl.searchParams.get("view");
 
     if (resolvedView === "dashboard") {
-      const [settings, totalGuests, confirmed, declined, pending, checkedIn] = await Promise.all([
+      const [settings, metrics] = await Promise.all([
         prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
-        prisma.rsvpGuest.count({ where: { giftListId: giftList.id } }),
-        prisma.rsvpGuest.count({ where: { giftListId: giftList.id, status: "CONFIRMED" } }),
-        prisma.rsvpGuest.count({ where: { giftListId: giftList.id, status: "DECLINED" } }),
-        prisma.rsvpGuest.count({ where: { giftListId: giftList.id, status: "PENDING" } }),
-        prisma.rsvpGuest.count({ where: { giftListId: giftList.id, checkedInAt: { not: null } } }),
+        getRsvpMetrics(giftList.id),
       ]);
       const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
 
@@ -67,13 +91,7 @@ export async function GET(request: Request) {
               checkInEnabled: true,
               checkInSlug: resolvedCheckInSlug,
             },
-        metrics: {
-          totalGuests,
-          confirmed,
-          pending,
-          declined,
-          checkedIn,
-        },
+        metrics,
       });
     }
 
@@ -120,17 +138,13 @@ export async function GET(request: Request) {
       });
     }
 
-    const [settings, guests, totalGuests, confirmed, declined, pending, checkedIn] = await Promise.all([
+    const [settings, guests, metrics] = await Promise.all([
       prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
       prisma.rsvpGuest.findMany({
         where: { giftListId: giftList.id },
         orderBy: [{ createdAt: "desc" }],
       }),
-      prisma.rsvpGuest.count({ where: { giftListId: giftList.id } }),
-      prisma.rsvpGuest.count({ where: { giftListId: giftList.id, status: "CONFIRMED" } }),
-      prisma.rsvpGuest.count({ where: { giftListId: giftList.id, status: "DECLINED" } }),
-      prisma.rsvpGuest.count({ where: { giftListId: giftList.id, status: "PENDING" } }),
-      prisma.rsvpGuest.count({ where: { giftListId: giftList.id, checkedInAt: { not: null } } }),
+      getRsvpMetrics(giftList.id),
     ]);
 
     const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
@@ -155,13 +169,7 @@ export async function GET(request: Request) {
             checkInEnabled: true,
             checkInSlug: resolvedCheckInSlug,
           },
-      metrics: {
-        totalGuests,
-        confirmed,
-        pending,
-        declined,
-        checkedIn,
-      },
+      metrics,
       guests,
     });
   } catch (error) {
