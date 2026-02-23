@@ -61,15 +61,29 @@ export function Navbar() {
             </a>
           </div>
 
-          <button
-            type="button"
-            className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#e8d8cc]"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Abrir menu"
-            aria-expanded={open}
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <div className="md:hidden flex items-center gap-2">
+            <a
+              href="/login"
+              className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-foreground border border-[#e8d8cc]"
+            >
+              Entrar
+            </a>
+            <a
+              href="/cadastro"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-gradient-to-r from-terracota-500 to-terracota-700 px-3 text-sm font-medium text-white"
+            >
+              Criar Conta
+            </a>
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#e8d8cc]"
+              onClick={() => setOpen((v) => !v)}
+              aria-label="Abrir menu"
+              aria-expanded={open}
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {open ? (
@@ -79,21 +93,6 @@ export function Navbar() {
               <a href="/como-funciona" className={cn('rounded-md px-3 py-2', linkClass('/como-funciona'))}>Como Funciona</a>
               <a href="/tarifas" className={cn('rounded-md px-3 py-2', linkClass('/tarifas'))}>Tarifas</a>
               <a href="/templates" className={cn('rounded-md px-3 py-2', linkClass('/templates'))}>Templates</a>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <a
-                href="/login"
-                className="inline-flex h-10 items-center justify-center rounded-md border border-[#e8d8cc] px-4 text-sm font-medium text-foreground"
-              >
-                Entrar
-              </a>
-              <a
-                href="/cadastro"
-                className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-terracota-500 to-terracota-700 px-4 text-sm font-medium text-white"
-              >
-                Criar Conta
-              </a>
             </div>
           </div>
         ) : null}
