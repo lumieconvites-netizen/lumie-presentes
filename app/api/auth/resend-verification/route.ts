@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { sendVerificationCodeEmail } from "@/lib/email";
+import { sendVerificationCodeEmailReliable } from "@/lib/email-jobs";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
 
@@ -78,13 +78,18 @@ export async function POST(request: Request) {
       });
     });
 
-    await sendVerificationCodeEmail({
+    const emailResult = await sendVerificationCodeEmailReliable({
       to: normalizedEmail,
       code,
       name: pending.name ?? undefined,
     });
 
-    return NextResponse.json({ message: "Novo codigo enviado com sucesso." });
+    return NextResponse.json({
+      message:
+        emailResult.delivery === "sent"
+          ? "Novo codigo enviado com sucesso."
+          : "Novo codigo enfileirado para envio. Aguarde alguns instantes.",
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });

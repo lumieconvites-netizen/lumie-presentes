@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { sendVerificationCodeEmail } from "@/lib/email";
+import { sendVerificationCodeEmailReliable } from "@/lib/email-jobs";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { resolveReferralForSignup } from "@/lib/referrals";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
@@ -103,11 +103,14 @@ export async function POST(request: Request) {
       }
     });
 
-    await sendVerificationCodeEmail({ to: normalizedEmail, code, name });
+    const emailResult = await sendVerificationCodeEmailReliable({ to: normalizedEmail, code, name });
 
     return NextResponse.json(
       {
-        message: "Codigo enviado para o email. Confirme para concluir o cadastro.",
+        message:
+          emailResult.delivery === "sent"
+            ? "Codigo enviado para o email. Confirme para concluir o cadastro."
+            : "Seu codigo foi enfileirado para envio. Aguarde alguns instantes e tente novamente.",
       },
       { status: 200 }
     );

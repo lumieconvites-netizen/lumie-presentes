@@ -55,6 +55,11 @@ const QUEUE_KEY = "lumie:jobs:email:v1";
 const MAX_ATTEMPTS = 5;
 const localQueue: EmailJob[] = [];
 
+function isEmailConfigurationError(error: unknown) {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return message.includes("servico de email indisponivel") || message.includes("resend_api_key");
+}
+
 function jobId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -113,6 +118,39 @@ export async function enqueuePasswordResetCodeEmailJob(payload: PasswordResetCod
   };
   await pushJob(job);
   return job.id;
+}
+
+export async function sendVerificationCodeEmailReliable(payload: VerificationCodePayload) {
+  try {
+    await sendVerificationCodeEmail(payload);
+    return { delivery: "sent" as const };
+  } catch (error) {
+    if (isEmailConfigurationError(error)) throw error;
+    await enqueueVerificationCodeEmailJob(payload);
+    return { delivery: "queued" as const };
+  }
+}
+
+export async function sendPasswordResetCodeEmailReliable(payload: PasswordResetCodePayload) {
+  try {
+    await sendPasswordResetCodeEmail(payload);
+    return { delivery: "sent" as const };
+  } catch (error) {
+    if (isEmailConfigurationError(error)) throw error;
+    await enqueuePasswordResetCodeEmailJob(payload);
+    return { delivery: "queued" as const };
+  }
+}
+
+export async function sendRsvpNotificationEmailReliable(payload: RsvpNotificationPayload) {
+  try {
+    await sendRsvpNotificationEmail(payload);
+    return { delivery: "sent" as const };
+  } catch (error) {
+    if (isEmailConfigurationError(error)) throw error;
+    await enqueueRsvpNotificationEmailJob(payload);
+    return { delivery: "queued" as const };
+  }
 }
 
 async function processJob(job: EmailJob) {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getQrImageUrl, getQrPayload } from "@/lib/rsvp";
-import { enqueueRsvpNotificationEmailJob } from "@/lib/email-jobs";
+import { sendRsvpNotificationEmailReliable } from "@/lib/email-jobs";
 
 const confirmSchema = z.object({
   guestId: z.string().min(1, "Convidado invalido"),
@@ -104,14 +104,14 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
 
     if (list.rsvpSettings.notificationEmail) {
       try {
-        await enqueueRsvpNotificationEmailJob({
+        await sendRsvpNotificationEmailReliable({
           to: list.rsvpSettings.notificationEmail,
           eventTitle: list.rsvpSettings.eventTitle || list.title,
           guestName: updated.fullName,
           status: nextStatus,
         });
       } catch (mailError) {
-        console.error("Falha ao enfileirar notificacao RSVP por e-mail:", mailError);
+        console.error("Falha ao enviar notificacao RSVP por e-mail:", mailError);
       }
     }
 
