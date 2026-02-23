@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
-import { enqueuePasswordResetCodeEmailJob } from "@/lib/email-jobs";
+import { sendPasswordResetCodeEmail } from "@/lib/email";
 import { PASSWORD_RESET_TEMPLATE_SLUG } from "@/lib/password-reset";
 
 const forgotPasswordSchema = z.object({
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       });
     });
 
-    await enqueuePasswordResetCodeEmailJob({
+    await sendPasswordResetCodeEmail({
       to: normalizedEmail,
       code,
       name: user.name ?? undefined,
@@ -64,6 +64,9 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
+    }
+    if (error instanceof Error && error.message.toLowerCase().includes("email")) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     console.error("Erro ao solicitar recuperacao de senha:", error);

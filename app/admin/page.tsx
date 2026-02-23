@@ -86,7 +86,7 @@ export default function AdminPage() {
   }
   async function patchUser(id: string, payload: any) {
     const res = await fetch(`/api/admin/users/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar usuario'); await loadAll();
+    const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar usuário'); await loadAll();
   }
   async function toggleBlockUser(user: AdminUser) {
     if (user.isBlocked) {
@@ -98,7 +98,7 @@ export default function AdminPage() {
     if (reason === null) return;
     const normalized = reason.trim();
     if (!normalized) {
-      alert('Informe o motivo para bloquear o usuario.');
+      alert('Informe o motivo para bloquear o usuário.');
       return;
     }
     await patchUser(user.id, { isBlocked: true, blockReason: normalized });
@@ -136,7 +136,7 @@ export default function AdminPage() {
       body: JSON.stringify({ userId }),
     });
     const j = await res.json();
-    if (!res.ok) throw new Error(j?.error || 'Erro ao acessar painel do usuario');
+    if (!res.ok) throw new Error(j?.error || 'Erro ao acessar painel do usuário');
     window.location.assign('/dashboard');
   }
 
@@ -151,16 +151,16 @@ export default function AdminPage() {
     <div className="space-y-6">
       <Card className="border-[#e7d8cb] bg-gradient-to-r from-[#fff3eb] via-[#fffaf6] to-[#fffdf9]">
         <CardHeader>
-          <CardTitle className="text-3xl font-display">Admin LUMIE</CardTitle>
-          <p className="text-sm text-[#8E3D2C]/80">Visao geral da operacao da plataforma.</p>
+          <CardTitle className="text-3xl font-display">Admin LUMIÊ</CardTitle>
+          <p className="text-sm text-[#8E3D2C]/80">Visão geral da operação da plataforma.</p>
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-5 xl:grid-cols-9 gap-3 text-sm">
-          <Stat icon={<Users className="w-4 h-4" />} label="Usuarios" value={overview?.usersCount || 0} />
+          <Stat icon={<Users className="w-4 h-4" />} label="Usuários" value={overview?.usersCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Admins" value={overview?.adminsCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Clientes" value={overview?.clientsCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Parceiros" value={overview?.partnersCount || 0} />
           <Stat icon={<Shield className="w-4 h-4" />} label="Embaixadores" value={overview?.ambassadorsCount || 0} />
-          <Stat icon={<Shield className="w-4 h-4" />} label="Funcionarios" value={overview?.employeesCount || 0} />
+          <Stat icon={<Shield className="w-4 h-4" />} label="Funcionários" value={overview?.employeesCount || 0} />
           <Stat icon={<Users className="w-4 h-4" />} label="Listas pub." value={overview?.publishedListsCount || 0} />
           <Stat icon={<LayoutTemplate className="w-4 h-4" />} label="Templates ativos" value={overview?.activeTemplatesCount || 0} />
           <div className="rounded-xl border p-3 bg-white"><p className="text-xs text-gray-500">Arrecadado</p><p className="text-base font-semibold">{brl(overview?.paidTotal || 0)}</p></div>
@@ -171,31 +171,31 @@ export default function AdminPage() {
         <Card className="border-[#e7d8cb] bg-[#fff7f1]">
           <CardContent className="pt-6 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-[#8E3D2C]">
-              Modo acesso ativo: {impersonation.effectiveUser.name || 'Sem nome'} ({impersonation.effectiveUser.email}) - {impersonation.effectiveUser.role}
+              Modo de acesso ativo: {impersonation.effectiveUser.name || 'Sem nome'} ({impersonation.effectiveUser.email}) - {impersonation.effectiveUser.role}
             </p>
-            <Button variant="outline" onClick={() => stopImpersonation().catch((e) => alert(e.message))}>Sair do modo acesso</Button>
+            <Button variant="outline" onClick={() => stopImpersonation().catch((e) => alert(e.message))}>Sair do modo de acesso</Button>
           </CardContent>
         </Card>
       ) : null}
 
       <Card className="border-[#e7d8cb]">
-        <CardHeader><CardTitle>Usuarios (clientes, parceiros e embaixadores)</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Usuários (clientes, parceiros e embaixadores)</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          <Input placeholder="Buscar usuario por nome/email" value={qUser} onChange={(e) => setQUser(e.target.value)} />
+          <Input placeholder="Buscar usuário por nome/e-mail" value={qUser} onChange={(e) => setQUser(e.target.value)} />
           <div className="overflow-auto rounded-lg border">
-            <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Usuario</th><th className="p-2 text-left">Papel</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
-              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p>{u.isBlocked && u.blockReason ? <p className="text-xs text-red-600 mt-1">Motivo: {u.blockReason}</p> : null}</td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'EMPLOYEE' }).catch((e) => alert(e.message))}>Virar funcionario</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => toggleBlockUser(u).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button>{u.role !== 'ADMIN' ? <Button size="sm" onClick={() => startImpersonation(u.id).catch((e) => alert(e.message))}>Acessar painel</Button> : <span className="text-xs text-gray-500">Admin</span>}</div></td></tr>)}
+            <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Usuário</th><th className="p-2 text-left">Papel</th><th className="p-2 text-left">Ações</th></tr></thead><tbody>
+              {users.map((u) => <tr key={u.id} className="border-t"><td className="p-2"><p className="font-medium">{u.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{u.email}</p>{u.isBlocked && u.blockReason ? <p className="text-xs text-red-600 mt-1">Motivo: {u.blockReason}</p> : null}</td><td className="p-2"><Badge variant="outline">{u.role}</Badge></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'PARTNER' }).catch((e) => alert(e.message))}>Virar parceiro</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'AMBASSADOR' }).catch((e) => alert(e.message))}>Virar embaixador</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'EMPLOYEE' }).catch((e) => alert(e.message))}>Virar funcionário</Button><Button size="sm" variant="outline" onClick={() => patchUser(u.id, { role: 'CLIENT' }).catch((e) => alert(e.message))}>Virar cliente</Button><Button size="sm" variant="outline" onClick={() => toggleBlockUser(u).catch((e) => alert(e.message))}>{u.isBlocked ? 'Desbloquear' : 'Bloquear'}</Button>{u.role !== 'ADMIN' ? <Button size="sm" onClick={() => startImpersonation(u.id).catch((e) => alert(e.message))}>Acessar painel</Button> : <span className="text-xs text-gray-500">Admin</span>}</div></td></tr>)}
             </tbody></table>
           </div>
         </CardContent>
       </Card>
 
       <Card className="border-[#e7d8cb]">
-        <CardHeader><CardTitle>Listas (edicao admin)</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Listas (edição admin)</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          <Input placeholder="Buscar lista por titulo/slug/email" value={qList} onChange={(e) => setQList(e.target.value)} />
+          <Input placeholder="Buscar lista por título/slug/e-mail" value={qList} onChange={(e) => setQList(e.target.value)} />
           <div className="overflow-auto rounded-lg border">
-            <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Lista</th><th className="p-2 text-left">Dono</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
+            <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Lista</th><th className="p-2 text-left">Dono</th><th className="p-2 text-left">Ações</th></tr></thead><tbody>
               {lists.map((l) => <tr key={l.id} className="border-t"><td className="p-2"><p className="font-medium">{l.title}</p><p className="text-xs text-gray-500">/{l.slug} • {l._count.gifts} presentes</p></td><td className="p-2"><p>{l.user.name || 'Sem nome'}</p><p className="text-xs text-gray-500">{l.user.email}</p></td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => patchList(l.id, { isPublished: !l.isPublished }).catch((e) => alert(e.message))}>{l.isPublished ? 'Despublicar' : 'Publicar'}</Button><a href={`/site/${l.slug}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline">Abrir</Button></a>{l._count.gifts === 0 && l._count.orders === 0 && l._count.messages === 0 ? <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => removeList(l.id).catch((e) => alert(e.message))}>Excluir</Button> : null}</div></td></tr>)}
             </tbody></table>
           </div>
@@ -203,10 +203,10 @@ export default function AdminPage() {
       </Card>
 
       <Card className="border-[#e7d8cb]">
-        <CardHeader><CardTitle>Templates (publicacao imediata)</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Templates (publicação imediata)</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="overflow-auto rounded-lg border">
-            <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Template</th><th className="p-2 text-left">Categoria</th><th className="p-2 text-left">Acoes</th></tr></thead><tbody>
+            <table className="w-full text-sm"><thead className="bg-[#faf3ee]"><tr><th className="p-2 text-left">Template</th><th className="p-2 text-left">Categoria</th><th className="p-2 text-left">Ações</th></tr></thead><tbody>
               {templates.map((t) => <tr key={t.id} className="border-t"><td className="p-2"><p className="font-medium">{t.name}</p><p className="text-xs text-gray-500">/{t.slug}</p></td><td className="p-2">{t.category}</td><td className="p-2"><div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" disabled={busyTemplateId === t.id} onClick={() => patchTemplate(t.id, { isActive: !t.isActive }).catch((e) => alert(e.message))}>{t.isActive ? 'Despublicar' : 'Publicar'}</Button><Button size="sm" variant="outline" asChild><Link href={`/admin/templates/editor/${t.id}`}>Editar</Link></Button><Button size="sm" variant="outline" asChild><Link href={`/templates/${encodeURIComponent(t.slug)}`} target="_blank" rel="noreferrer">Visualizar</Link></Button><Button size="sm" variant="outline" disabled={busyTemplateId === t.id} onClick={() => { if (confirm('Excluir template?')) removeTemplate(t.id).catch((e) => alert(e.message)); }}>Excluir</Button></div></td></tr>)}
             </tbody></table>
           </div>

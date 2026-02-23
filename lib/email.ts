@@ -163,10 +163,18 @@ function renderBrandedLayout(input: BrandedEmailLayoutInput) {
 async function sendEmail(params: { to: string; subject: string; html: string }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM ?? "LUMIÊ <onboarding@resend.dev>";
+  const usingDefaultFrom = from.toLowerCase().includes("onboarding@resend.dev");
 
   if (!apiKey) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("Servico de email indisponivel: RESEND_API_KEY nao configurada.");
+    }
     console.log(`[email-dev] ${params.subject} -> ${params.to}`);
     return { sent: false, provider: "console" as const };
+  }
+
+  if (process.env.NODE_ENV === "production" && usingDefaultFrom) {
+    throw new Error("Servico de email indisponivel: EMAIL_FROM precisa ser um remetente verificado.");
   }
 
   const response = await fetch(RESEND_API_URL, {

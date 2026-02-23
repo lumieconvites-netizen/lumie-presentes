@@ -130,7 +130,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Nao tem uma conta? </span>
+            <span className="text-muted-foreground">Não tem uma conta? </span>
             <Link href="/cadastro" className="text-terracota-600 hover:text-terracota-700 font-medium">
               Cadastre-se gratuitamente
             </Link>
@@ -138,7 +138,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-              Voltar para o inicio
+              Voltar para o início
             </Link>
           </div>
         </CardContent>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,7 +67,7 @@ export default function AmbassadorDashboardPage() {
         setCopiedCode((prev) => (prev === code ? '' : prev));
       }, 1800);
     } catch {
-      alert('Nao foi possivel copiar automaticamente.');
+      alert('Não foi possível copiar automaticamente.');
     }
   }
 
@@ -77,10 +77,10 @@ export default function AmbassadorDashboardPage() {
       try {
         const res = await fetch('/api/affiliate/ambassador/overview', { cache: 'no-store' });
         const json = await res.json();
-        if (!res.ok) throw new Error(json?.error || 'Erro ao carregar painel embaixador');
+        if (!res.ok) throw new Error(json?.error || 'Erro ao carregar painel de embaixador');
         if (!cancel) setData(json);
       } catch (error: any) {
-        if (!cancel) alert(error?.message || 'Erro ao carregar painel embaixador');
+        if (!cancel) alert(error?.message || 'Erro ao carregar painel de embaixador');
       } finally {
         if (!cancel) setLoading(false);
       }
@@ -96,8 +96,8 @@ export default function AmbassadorDashboardPage() {
     [data?.codes]
   );
 
-  if (loading) return <div className="p-4 md:p-6">Carregando painel embaixador...</div>;
-  if (!data) return <div className="p-4 md:p-6">Nao foi possivel carregar os dados.</div>;
+  if (loading) return <div className="p-4 md:p-6">Carregando painel de embaixador...</div>;
+  if (!data) return <div className="p-4 md:p-6">Não foi possível carregar os dados.</div>;
 
   return (
     <div className="space-y-6">
@@ -105,12 +105,12 @@ export default function AmbassadorDashboardPage() {
 
       <Card className="border-[#ead9cd]">
         <CardHeader>
-          <CardTitle>Seus codigos de embaixador</CardTitle>
+          <CardTitle>Seus códigos de embaixador</CardTitle>
           <p className="text-sm text-gray-600">
-            Aqui aparecem apenas os codigos que voce usa: <b>cliente direto</b> e <b>cadastrar parceiro</b>.
+            Aqui aparecem apenas os códigos que você usa: <b>cliente direto</b> e <b>cadastrar parceiro</b>.
           </p>
           <p className="text-sm text-gray-600">
-            O codigo de <b>parceiro para cliente</b> fica no painel do proprio parceiro.
+            O código de <b>parceiro para cliente</b> fica no painel do próprio parceiro.
           </p>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -119,7 +119,7 @@ export default function AmbassadorDashboardPage() {
               <p className="text-xs text-gray-500 uppercase tracking-wide">{codeMeta(code.type).label}</p>
               <p className="font-semibold text-lg break-all">{code.code}</p>
               <p className="text-xs text-gray-500 mt-1">{codeMeta(code.type).hint}</p>
-              <p className="text-sm text-gray-600">{code.usageCount} cadastros com este codigo</p>
+              <p className="text-sm text-gray-600">{code.usageCount} cadastros com este código</p>
               <div className="mt-3">
                 <Button
                   type="button"
@@ -129,7 +129,7 @@ export default function AmbassadorDashboardPage() {
                   onClick={() => handleCopyCode(code.code)}
                 >
                   {copiedCode === code.code ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                  {copiedCode === code.code ? 'Copiado' : 'Copiar codigo'}
+                  {copiedCode === code.code ? 'Copiado' : 'Copiar código'}
                 </Button>
               </div>
             </div>
@@ -142,14 +142,14 @@ export default function AmbassadorDashboardPage() {
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Clientes com lista ativa</p><p className="text-xl md:text-2xl font-bold">{data.kpis.activeClientsCount}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Parceiros indicados</p><p className="text-xl md:text-2xl font-bold">{data.kpis.partnersCount}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Volume vendido</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.grossSales)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissao recebida</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.totalCommissionPaid)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão recebida</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.totalCommissionPaid)}</p></CardContent></Card>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissao direta (clientes)</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.directClientCommission)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissao via parceiros</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.viaPartnerCommission)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão direta (clientes)</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.directClientCommission)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão via parceiros</p><p className="text-xl md:text-2xl font-bold">{brl(data.kpis.viaPartnerCommission)}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Pedidos pagos</p><p className="text-xl md:text-2xl font-bold">{data.kpis.totalOrdersPaid}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Cartoes pendentes</p><p className="text-xl md:text-2xl font-bold">{data.kpis.pendingCardOrders} • {brl(data.kpis.pendingCardAmount)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Cartões pendentes</p><p className="text-xl md:text-2xl font-bold">{data.kpis.pendingCardOrders} • {brl(data.kpis.pendingCardAmount)}</p></CardContent></Card>
       </div>
 
       <Card className="border-[#ead9cd]">
@@ -164,7 +164,7 @@ export default function AmbassadorDashboardPage() {
                 <th className="text-left p-2">Clientes indicados</th>
                 <th className="text-left p-2">Pedidos</th>
                 <th className="text-left p-2">Vendas</th>
-                <th className="text-left p-2">Comissao embaixador</th>
+                <th className="text-left p-2">Comissão embaixador</th>
               </tr>
             </thead>
             <tbody>
@@ -184,4 +184,3 @@ export default function AmbassadorDashboardPage() {
     </div>
   );
 }
-

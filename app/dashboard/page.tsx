@@ -123,7 +123,7 @@ export default function DashboardPage() {
 
   const isCardPaymentMethod = (value?: string | null) => {
     const v = String(value ?? '').toLowerCase();
-    return v.includes('credit') || v.includes('card') || v.includes('cartao');
+    return v.includes('credit') || v.includes('card') || v.includes('cartão');
   };
 
   const totalGifts = gifts.length;
@@ -171,7 +171,7 @@ export default function DashboardPage() {
         method: 'POST',
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? 'Nao foi possivel solicitar o saque.');
+      if (!res.ok) throw new Error(json?.error ?? 'Não foi possível solicitar o saque.');
       alert(json?.message ?? 'Saque solicitado com sucesso.');
       setWithdrawOpen(false);
       const summaryRes = await fetch('/api/recipient/financial-summary', { cache: 'no-store' });
@@ -260,7 +260,7 @@ export default function DashboardPage() {
             <div className="text-2xl font-bold text-foreground">
               {waitingFunds.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Em processamento (cartao)</p>
+            <p className="text-xs text-gray-500 mt-1">Em processamento (cartão)</p>
             <p className="text-xs text-gray-500">{pendingOrders.length} pedido(s) em status pendente</p>
           </CardContent>
         </Card>

@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { enqueueVerificationCodeEmailJob } from "@/lib/email-jobs";
+import { sendVerificationCodeEmail } from "@/lib/email";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { resolveReferralForSignup } from "@/lib/referrals";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       }
     });
 
-    await enqueueVerificationCodeEmailJob({ to: normalizedEmail, code, name });
+    await sendVerificationCodeEmail({ to: normalizedEmail, code, name });
 
     return NextResponse.json(
       {
@@ -117,6 +117,9 @@ export async function POST(request: Request) {
     }
     if (error instanceof Error && error.message.toLowerCase().includes("codigo")) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    if (error instanceof Error && error.message.toLowerCase().includes("email")) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     console.error("Erro ao iniciar cadastro:", error);

@@ -5,8 +5,8 @@ import AccountSettingsPanel from '@/components/account/account-settings-panel';
 export default function AmbassadorSettingsPage() {
   return (
     <AccountSettingsPanel
-      title="Configuracoes da conta"
-      subtitle="Atualize seu perfil e seus dados bancarios para recebimento."
+      title="Configurações da conta"
+      subtitle="Atualize seu perfil e seus dados bancários para recebimento."
       showBankSection
     />
   );

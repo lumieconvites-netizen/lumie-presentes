@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { enqueueVerificationCodeEmailJob } from "@/lib/email-jobs";
+import { sendVerificationCodeEmail } from "@/lib/email";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       });
     });
 
-    await enqueueVerificationCodeEmailJob({
+    await sendVerificationCodeEmail({
       to: normalizedEmail,
       code,
       name: pending.name ?? undefined,
@@ -88,6 +88,9 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
+    }
+    if (error instanceof Error && error.message.toLowerCase().includes("email")) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     console.error("Erro ao reenviar codigo:", error);

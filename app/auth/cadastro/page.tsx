@@ -36,7 +36,7 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('As senhas nao coincidem');
+      toast.error('As senhas não coincidem');
       return;
     }
 
@@ -67,7 +67,7 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Erro ao cadastrar');
       }
 
-      toast.success('Codigo enviado para seu email.');
+      toast.success('Código enviado para seu e-mail.');
       setStep('verify');
     } catch (error: any) {
       toast.error(error.message || 'Erro ao cadastrar');
@@ -80,7 +80,7 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (code.length !== 6) {
-      toast.error('Digite o codigo de 6 digitos.');
+      toast.error('Digite o código de 6 dígitos.');
       return;
     }
 
@@ -109,7 +109,7 @@ export default function RegisterPage() {
       });
 
       if (result?.error) {
-        toast.success('Email confirmado. Faca login para continuar.');
+        toast.success('E-mail confirmado. Faça login para continuar.');
         router.push('/login');
       } else {
         toast.success('Conta confirmada com sucesso.');
@@ -134,12 +134,12 @@ export default function RegisterPage() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao reenviar codigo');
+        throw new Error(data.error || 'Erro ao reenviar código');
       }
 
-      toast.success('Novo codigo enviado.');
+      toast.success('Novo código enviado.');
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao reenviar codigo');
+      toast.error(error.message || 'Erro ao reenviar código');
     } finally {
       setIsLoading(false);
     }
@@ -162,7 +162,7 @@ export default function RegisterPage() {
               ? isPartnerMode
                 ? 'Crie sua conta de parceiro e ganhe comissões por indicação.'
                 : 'Comece a criar sua lista de presentes gratuitamente'
-              : `Digite o codigo enviado para ${formData.email}`}
+              : `Digite o código enviado para ${formData.email}`}
           </CardDescription>
         </CardHeader>
 
@@ -200,7 +200,7 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Minimo 6 caracteres"
+                  placeholder="Mínimo 6 caracteres"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
@@ -224,8 +224,8 @@ export default function RegisterPage() {
               <div className="space-y-2">
                 <Label htmlFor="inviteCode">
                   {isPartnerMode
-                    ? 'Codigo do embaixador (opcional)'
-                    : 'Codigo de convite (opcional)'}
+                    ? 'Código do embaixador (opcional)'
+                    : 'Código de convite (opcional)'}
                 </Label>
                 <Input
                   id="inviteCode"
@@ -240,13 +240,13 @@ export default function RegisterPage() {
               </div>
 
               <Button type="submit" className="w-full bg-gradient-to-r from-terracota-500 to-terracota-700 hover:from-terracota-600 hover:to-terracota-800 shadow-sm" disabled={isLoading}>
-                {isLoading ? 'Enviando codigo...' : isPartnerMode ? 'Criar conta de Parceiro' : 'Criar conta'}
+                {isLoading ? 'Enviando código...' : isPartnerMode ? 'Criar conta de Parceiro' : 'Criar conta'}
               </Button>
             </form>
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="code">Codigo de confirmacao</Label>
+                <Label htmlFor="code">Código de confirmação</Label>
                 <Input
                   id="code"
                   type="text"
@@ -264,21 +264,21 @@ export default function RegisterPage() {
               </Button>
 
               <Button type="button" variant="outline" className="w-full" onClick={handleResend} disabled={isLoading}>
-                Reenviar codigo
+                Reenviar código
               </Button>
             </form>
           )}
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Ja tem uma conta? </span>
+            <span className="text-muted-foreground">Já tem uma conta? </span>
             <Link href="/login" className="text-terracota-600 hover:text-terracota-700 font-medium">
-              Faca login
+              Faça login
             </Link>
           </div>
 
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-              Voltar para o inicio
+              Voltar para o início
             </Link>
           </div>
         </CardContent>
