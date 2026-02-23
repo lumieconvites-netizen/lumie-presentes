@@ -19,8 +19,11 @@ function hasConfiguredBankAccount(bankAccount: any) {
   return required.every((field) => String(bankAccount?.[field] ?? "").trim().length > 0);
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const view = searchParams.get("view");
+
     const ctx = await getActingUserContext();
     if (!ctx) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
@@ -51,7 +54,89 @@ export async function GET() {
       }
     }
 
-    // Regra de segurança: sem conta bancária válida, lista não pode permanecer publicada.
+    if (view === "editor") {
+      const editorPayload = await prisma.giftList.findUnique({
+        where: { id: giftList.id },
+        select: {
+          id: true,
+          slug: true,
+          isPublished: true,
+          feeMode: true,
+          title: true,
+          description: true,
+          pageLayout: {
+            select: {
+              blocks: true,
+              theme: true,
+              customCss: true,
+            },
+          },
+          gifts: {
+            orderBy: { order: "asc" },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              imageUrl: true,
+              basePrice: true,
+              totalQuantity: true,
+              availableQty: true,
+              isActive: true,
+            },
+          },
+        },
+      });
+
+      return NextResponse.json(editorPayload ?? giftList);
+    }
+
+    if (view === "presentes") {
+      const [presentesPayload, recipient] = await Promise.all([
+        prisma.giftList.findUnique({
+          where: { id: giftList.id },
+          select: {
+            id: true,
+            slug: true,
+            isPublished: true,
+            feeMode: true,
+            title: true,
+            description: true,
+            pageLayout: {
+              select: {
+                blocks: true,
+                theme: true,
+                customCss: true,
+              },
+            },
+            gifts: {
+              orderBy: { order: "asc" },
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                imageUrl: true,
+                basePrice: true,
+                totalQuantity: true,
+                availableQty: true,
+                isActive: true,
+                order: true,
+              },
+            },
+          },
+        }),
+        prisma.recipient.findUnique({
+          where: { userId: ctx.effectiveUserId },
+          select: { bankAccount: true },
+        }),
+      ]);
+
+      return NextResponse.json({
+        ...(presentesPayload ?? giftList),
+        bankAccountConfigured: hasConfiguredBankAccount(recipient?.bankAccount),
+      });
+    }
+
+    // Regra de seguranca: sem conta bancaria valida, lista nao pode permanecer publicada.
     if (giftList.isPublished) {
       const recipient = await prisma.recipient.findUnique({
         where: { userId: ctx.effectiveUserId },

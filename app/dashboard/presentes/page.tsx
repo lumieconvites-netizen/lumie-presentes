@@ -29,12 +29,6 @@ type GiftDraft = {
   totalQuantity: number;
 };
 
-type RecipientPayload = {
-  recipient?: {
-    bankAccount?: Record<string, any> | null;
-  } | null;
-};
-
 const feePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
 
 function withFee(value: number, feePassedToGuest: boolean) {
@@ -63,12 +57,6 @@ async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, ti
   } finally {
     clearTimeout(timer);
   }
-}
-
-function hasConfiguredBankAccount(bankAccount: any) {
-  if (!bankAccount || typeof bankAccount !== 'object') return false;
-  const required = ['holderName', 'holderDocument', 'bankCode', 'agency', 'accountNumber', 'accountType'];
-  return required.every((field) => String(bankAccount?.[field] ?? '').trim().length > 0);
 }
 
 export default function PresentesDashboard() {
@@ -120,7 +108,7 @@ export default function PresentesDashboard() {
   async function loadGiftListAndGifts() {
     setLoading(true);
     try {
-      const glRes = await fetchWithTimeout('/api/gift-lists/my-list', { cache: 'no-store' });
+      const glRes = await fetchWithTimeout('/api/gift-lists/my-list?view=presentes', { cache: 'no-store' });
       const glData = await parseJsonSafe(glRes);
       if (!glRes.ok) throw new Error(glData?.error ?? 'Erro ao carregar lista');
       setGiftListId(glData.id);
@@ -129,39 +117,12 @@ export default function PresentesDashboard() {
       setIsPublished(Boolean(glData?.isPublished));
       setListPageTitle(glData?.title || 'Minha Lista de Presentes');
       setListPageMessage(glData?.description || '');
+      setBankAccountConfigured(Boolean(glData?.bankAccountConfigured));
 
-      try {
-        const recipientRes = await fetchWithTimeout('/api/recipient/bank-account', { cache: 'no-store' });
-        const recipientData = (await parseJsonSafe(recipientRes)) as RecipientPayload | null;
-        if (recipientRes.ok) {
-          setBankAccountConfigured(hasConfiguredBankAccount(recipientData?.recipient?.bankAccount));
-        } else {
-          setBankAccountConfigured(false);
-        }
-      } catch {
-        setBankAccountConfigured(false);
-      }
+      const theme = (glData?.pageLayout?.theme ?? {}) as Record<string, any>;
+      setListPageCoverImage(typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '');
 
-      // Layout não pode bloquear o carregamento dos presentes.
-      void (async () => {
-        try {
-          const layoutRes = await fetchWithTimeout(`/api/gift-lists/${encodeURIComponent(glData.id)}/layout`, { cache: 'no-store' });
-          const layoutData = await parseJsonSafe(layoutRes);
-          if (!layoutRes.ok) {
-            setListPageCoverImage('');
-            return;
-          }
-          const theme = (layoutData?.theme ?? {}) as Record<string, any>;
-          setListPageCoverImage(typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '');
-        } catch {
-          setListPageCoverImage('');
-        }
-      })();
-
-      const giftsRes = await fetchWithTimeout(`/api/gifts?giftListId=${encodeURIComponent(glData.id)}`, { cache: 'no-store' });
-      const giftsData = await parseJsonSafe(giftsRes);
-      if (!giftsRes.ok) throw new Error(giftsData?.error ?? 'Erro ao carregar presentes');
-      setGifts((giftsData ?? []).map((row: any) => ({
+      setGifts((glData?.gifts ?? []).map((row: any) => ({
         ...row,
         basePrice: Number(row.basePrice),
       })));

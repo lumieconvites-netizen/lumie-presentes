@@ -156,35 +156,19 @@ export default function PageBuilder() {
       try {
         setLoading(true);
 
-        const glRes = await fetch('/api/gift-lists/my-list', { cache: 'no-store' });
+        const glRes = await fetch('/api/gift-lists/my-list?view=editor', { cache: 'no-store' });
         const gl = await glRes.json();
         if (!glRes.ok) throw new Error(gl?.error ?? 'Falha ao carregar lista');
         if (cancelled) return;
         setGiftList(gl);
-
-        const giftsPromise = fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, {
-          cache: 'no-store',
-        })
-          .then(async (res) => {
-            if (!res.ok) return [];
-            return await res.json().catch(() => []);
-          })
-          .catch(() => []);
-
-        const layoutRes = await fetch(`/api/gift-lists/${gl.id}/layout`, { cache: 'no-store' });
-        const layout = await layoutRes.json();
-        if (!layoutRes.ok) throw new Error(layout?.error ?? 'Falha ao carregar layout');
+        const layout = gl?.pageLayout ?? null;
 
         if (cancelled) return;
         const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
         setPageBlocks(cleanBlocks);
         setTheme((layout?.theme ?? {}) as Theme);
+        setListGifts(Array.isArray(gl?.gifts) ? gl.gifts.map(mapGift) : []);
         setLoading(false);
-
-        giftsPromise.then((gifts) => {
-          if (cancelled) return;
-          setListGifts(Array.isArray(gifts) ? gifts.map(mapGift) : []);
-        });
 
         if (templateSlugParam) {
           void (async () => {
@@ -207,12 +191,7 @@ export default function PageBuilder() {
                 const templateGiftItems = Array.isArray(selected.giftItems) ? selected.giftItems : [];
                 if (templateGiftItems.length > 0) {
                   try {
-                    const existingGiftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, {
-                      cache: 'no-store',
-                    });
-                    const existingGifts = await existingGiftsRes.json().catch(() => []);
-                    const hasExisting = Array.isArray(existingGifts) && existingGifts.length > 0;
-
+                    const hasExisting = Array.isArray(gl?.gifts) && gl.gifts.length > 0;
                     if (!hasExisting) {
                       for (const giftItem of templateGiftItems) {
                         await fetch('/api/gifts', {
