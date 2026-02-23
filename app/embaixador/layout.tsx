@@ -21,7 +21,7 @@ export default async function AmbassadorLayout({ children }: { children: React.R
       <AffiliateSidebar role="AMBASSADOR" />
       <div className="flex-1 flex flex-col min-w-0">
         <AffiliateTopbar role="AMBASSADOR" />
-        <main className="flex-1 overflow-auto p-6 bg-[#fbf8f5]">{children}</main>
+        <main className="flex-1 overflow-auto p-4 md:p-6 bg-[#fbf8f5]">{children}</main>
       </div>
     </div>
   );

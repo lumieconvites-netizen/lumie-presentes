@@ -880,3 +880,40 @@
     width: 26px;
   }
 }
+
+/* Global mobile readability */
+@media (max-width: 640px) {
+  .font-display.text-6xl,
+  .font-display.text-5xl {
+    font-size: 2.5rem !important;
+    line-height: 1.08 !important;
+  }
+
+  .font-display.text-4xl {
+    font-size: 2rem !important;
+    line-height: 1.12 !important;
+  }
+
+  .font-display.text-3xl {
+    font-size: 1.65rem !important;
+    line-height: 1.15 !important;
+  }
+
+  p.text-lg {
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+  }
+
+  p.text-xl {
+    font-size: 1.075rem !important;
+    line-height: 1.6 !important;
+  }
+}
+
+/* Global table behavior on mobile */
+@media (max-width: 768px) {
+  .overflow-auto > table,
+  .overflow-x-auto > table {
+    min-width: 640px;
+  }
+}

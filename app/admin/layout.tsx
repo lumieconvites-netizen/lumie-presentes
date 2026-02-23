@@ -30,16 +30,16 @@ export default async function AdminLayout({
 
         <div className="flex-1 min-w-0">
           <header className="border-b border-[#E9D8C8] bg-[#fffdfb]">
-            <div className="px-6 py-5 flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-display text-[#8E3D2C]">Central Administrativa</h1>
-                <p className="text-sm text-[#8E3D2C]/70">Operacao geral da plataforma LUMIE</p>
+            <div className="px-4 md:px-6 py-5 flex items-center justify-between">
+              <div className="pl-14 md:pl-0">
+                <h1 className="text-xl md:text-2xl font-display text-[#8E3D2C]">Central Administrativa</h1>
+                <p className="text-xs md:text-sm text-[#8E3D2C]/70">Operacao geral da plataforma LUMIE</p>
               </div>
               <AdminTopbarMenu name={adminName} email={adminEmail} image={adminImage} />
             </div>
           </header>
 
-          <main className="px-6 py-6">{children}</main>
+          <main className="px-4 md:px-6 py-6">{children}</main>
         </div>
       </div>
     </div>

@@ -40,7 +40,7 @@ export default function SejaParceiroPage() {
   return (
     <div className="bg-[#f7f5f2]">
       <section className="relative overflow-hidden bg-gradient-to-br from-[#fff5ee] via-[#fdf8f4] to-[#f5ece5] border-b border-[#ecdccf]">
-        <div className="max-w-7xl mx-auto px-6 py-20 lg:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 md:py-20 lg:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#e8cdbd] bg-white px-4 py-2 text-sm text-[#4a3a33]">
@@ -48,11 +48,11 @@ export default function SejaParceiroPage() {
                 Programa de Parceiros LUMIÊ
               </span>
 
-              <h1 className="font-display text-5xl lg:text-6xl leading-tight text-[#2b2422]">
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl leading-tight text-[#2b2422]">
                 Conviteira ou cerimonialista... e se cada evento também virasse renda?
               </h1>
 
-              <p className="text-lg text-[#5f534e] max-w-2xl">
+              <p className="text-base md:text-lg text-[#5f534e] max-w-2xl">
                 A LUMIÊ transforma experiências e, agora, também transforma seus resultados. 💼🌷
                 <br />
                 Ao se tornar parceira, você recebe <strong>2% de comissão</strong> sobre todos os presentes convertidos em dinheiro nas listas dos seus clientes.
@@ -84,11 +84,11 @@ export default function SejaParceiroPage() {
         </div>
       </section>
 
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-14 md:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="font-display text-4xl text-[#2b2422] mb-3">Como funciona na prática</h2>
-            <p className="text-[#6b5f58] text-lg">Você indica. A LUMIÊ opera. Você recebe. Simples assim.</p>
+            <h2 className="font-display text-3xl md:text-4xl text-[#2b2422] mb-3">Como funciona na prática</h2>
+            <p className="text-[#6b5f58] text-base md:text-lg">Você indica. A LUMIÊ opera. Você recebe. Simples assim.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -113,11 +113,11 @@ export default function SejaParceiroPage() {
         </div>
       </section>
 
-      <section className="py-20 bg-[#f6efe9] border-y border-[#eadacf]">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-14 md:py-20 bg-[#f6efe9] border-y border-[#eadacf]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="font-display text-4xl text-[#2b2422] mb-3">Sem dor de cabeça para você</h2>
-            <p className="text-[#6b5f58] text-lg">Enquanto você brilha na frente, a LUMIÊ faz o trabalho pesado nos bastidores.</p>
+            <h2 className="font-display text-3xl md:text-4xl text-[#2b2422] mb-3">Sem dor de cabeça para você</h2>
+            <p className="text-[#6b5f58] text-base md:text-lg">Enquanto você brilha na frente, a LUMIÊ faz o trabalho pesado nos bastidores.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -156,18 +156,18 @@ export default function SejaParceiroPage() {
         </div>
       </section>
 
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-14 md:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center gap-3 mb-6">
             <BarChart3 className="w-7 h-7 text-primary" />
-            <h2 className="font-display text-4xl text-[#2b2422]">Projeção de faturamento do parceiro</h2>
+            <h2 className="font-display text-3xl md:text-4xl text-[#2b2422]">Projeção de faturamento do parceiro</h2>
           </div>
-          <p className="text-[#685b55] mb-8">
+          <p className="text-[#685b55] text-sm md:text-base mb-8">
             Cenários ilustrativos com média de {averageGiftsPerClient} presentes por cliente e ticket médio de R$ {averageGiftValue.toLocaleString('pt-BR')} por presente.
           </p>
 
           <div className="overflow-x-auto rounded-2xl border border-[#e3d2c6] bg-white">
-            <table className="w-full text-left min-w-[760px]">
+            <table className="w-full text-left text-sm md:text-base min-w-[680px]">
               <thead className="bg-[#fbf4ee]">
                 <tr className="text-[#4f3f38]">
                   <th className="px-5 py-4 font-semibold">Clientes</th>
@@ -191,10 +191,10 @@ export default function SejaParceiroPage() {
         </div>
       </section>
 
-      <section className="py-20 bg-[#f6efe9] border-t border-[#eadacf]">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="font-display text-4xl text-[#2b2422] mb-4">Mais autoridade. Mais renda. Zero complicação. 💎</h2>
-          <p className="text-lg text-[#6a5e58] mb-8">
+      <section className="py-14 md:py-20 bg-[#f6efe9] border-t border-[#eadacf]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="font-display text-3xl md:text-4xl text-[#2b2422] mb-4">Mais autoridade. Mais renda. Zero complicação. 💎</h2>
+          <p className="text-base md:text-lg text-[#6a5e58] mb-8">
             LUMIÊ: enquanto você realiza sonhos, nós potencializamos seus ganhos.
           </p>
           <Button asChild size="lg" className="rounded-xl px-8 py-6 text-base">
@@ -208,3 +208,4 @@ export default function SejaParceiroPage() {
     </div>
   );
 }
+

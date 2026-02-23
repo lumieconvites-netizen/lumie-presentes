@@ -73,7 +73,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
   }
 
   return (
-    <header className="bg-white border-b border-border px-6 py-4 space-y-3">
+    <header className="bg-white border-b border-border px-4 md:px-6 py-4 space-y-3">
       {sessionRole === 'ADMIN' && impersonation?.isImpersonating ? (
         <div className="rounded-lg border border-[#E9D8C8] bg-[#fff7f1] px-3 py-2 flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs md:text-sm text-[#8E3D2C]">
@@ -91,9 +91,9 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
       ) : null}
 
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-display text-foreground">{title}</h1>
-          <p className="text-sm text-gray-500">Acompanhe codigos, indicacoes e ganhos em tempo real</p>
+        <div className="pl-14 md:pl-0">
+          <h1 className="text-xl md:text-2xl font-display text-foreground">{title}</h1>
+          <p className="text-xs md:text-sm text-gray-500">Acompanhe codigos, indicacoes e ganhos em tempo real</p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
