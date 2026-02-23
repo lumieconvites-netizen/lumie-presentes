@@ -123,7 +123,7 @@ export default async function SiteGiftsBySlugPage({
                 }`}
                 style={activeFilter === "available" ? { backgroundColor: primaryColor } : undefined}
               >
-                Disponiveis
+                Disponíveis
               </Link>
             </div>
 
@@ -144,7 +144,9 @@ export default async function SiteGiftsBySlugPage({
                       </div>
                       <div className="p-5">
                         <h2 className="text-xl font-semibold">{gift.name}</h2>
-                        <p className="text-sm text-gray-600 mt-2 min-h-10">{gift.description || "Sem descricao"}</p>
+                        {gift.description ? (
+                          <p className="text-sm text-gray-600 mt-2 min-h-10">{gift.description}</p>
+                        ) : null}
                         <div className="flex items-center justify-between mt-5">
                           <div>
                             <p className="text-2xl font-bold" style={{ color: primaryColor }}>
