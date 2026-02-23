@@ -162,77 +162,99 @@ export default function PageBuilder() {
         if (cancelled) return;
         setGiftList(gl);
 
-        const [layoutRes, giftsRes] = await Promise.all([
-          fetch(`/api/gift-lists/${gl.id}/layout`, { cache: 'no-store' }),
-          fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' }),
-        ]);
+        const giftsPromise = fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, {
+          cache: 'no-store',
+        })
+          .then(async (res) => {
+            if (!res.ok) return [];
+            return await res.json().catch(() => []);
+          })
+          .catch(() => []);
 
+        const layoutRes = await fetch(`/api/gift-lists/${gl.id}/layout`, { cache: 'no-store' });
         const layout = await layoutRes.json();
-        const gifts = await giftsRes.json().catch(() => []);
         if (!layoutRes.ok) throw new Error(layout?.error ?? 'Falha ao carregar layout');
 
         if (cancelled) return;
         const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
         setPageBlocks(cleanBlocks);
         setTheme((layout?.theme ?? {}) as Theme);
-        setListGifts(Array.isArray(gifts) ? gifts.map(mapGift) : []);
+        setLoading(false);
+
+        giftsPromise.then((gifts) => {
+          if (cancelled) return;
+          setListGifts(Array.isArray(gifts) ? gifts.map(mapGift) : []);
+        });
 
         if (templateSlugParam) {
-          try {
-            const templateRes = await fetch(`/api/templates/by-slug/${encodeURIComponent(templateSlugParam)}`, {
-              cache: 'no-store',
-            });
-            const templateJson = await templateRes.json();
-            if (templateRes.ok && templateJson?.template) {
-              const selected = templateJson.template;
-              const nextBlocks = sanitizeBlocks(Array.isArray(selected.blocks) ? selected.blocks : []);
-              const nextTheme = (selected.theme ?? {}) as Theme;
+          void (async () => {
+            try {
+              const templateRes = await fetch(`/api/templates/by-slug/${encodeURIComponent(templateSlugParam)}`, {
+                cache: 'no-store',
+              });
+              const templateJson = await templateRes.json();
+              if (templateRes.ok && templateJson?.template) {
+                const selected = templateJson.template;
+                const nextBlocks = sanitizeBlocks(Array.isArray(selected.blocks) ? selected.blocks : []);
+                const nextTheme = (selected.theme ?? {}) as Theme;
 
-              setPageBlocks(nextBlocks);
-              setTheme(nextTheme);
-              await saveLayout(nextBlocks, nextTheme);
-
-              const templateGiftItems = Array.isArray(selected.giftItems) ? selected.giftItems : [];
-              if (templateGiftItems.length > 0 && Array.isArray(gifts) && gifts.length === 0) {
-                for (const giftItem of templateGiftItems) {
-                  await fetch('/api/gifts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      giftListId: gl.id,
-                      name: giftItem.name,
-                      description: giftItem.description || '',
-                      imageUrl: giftItem.imageUrl || '',
-                      basePrice: Number(giftItem.basePrice || 0),
-                      totalQuantity: Number(giftItem.totalQuantity || 1),
-                    }),
-                  });
+                if (!cancelled) {
+                  setPageBlocks(nextBlocks);
+                  setTheme(nextTheme);
                 }
+                await saveLayout(nextBlocks, nextTheme);
 
-                try {
-                  const refreshedGiftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' });
-                  const refreshedGifts = await refreshedGiftsRes.json().catch(() => []);
-                  if (Array.isArray(refreshedGifts)) {
-                    setListGifts(refreshedGifts.map(mapGift));
+                const templateGiftItems = Array.isArray(selected.giftItems) ? selected.giftItems : [];
+                if (templateGiftItems.length > 0) {
+                  try {
+                    const existingGiftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, {
+                      cache: 'no-store',
+                    });
+                    const existingGifts = await existingGiftsRes.json().catch(() => []);
+                    const hasExisting = Array.isArray(existingGifts) && existingGifts.length > 0;
+
+                    if (!hasExisting) {
+                      for (const giftItem of templateGiftItems) {
+                        await fetch('/api/gifts', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            giftListId: gl.id,
+                            name: giftItem.name,
+                            description: giftItem.description || '',
+                            imageUrl: giftItem.imageUrl || '',
+                            basePrice: Number(giftItem.basePrice || 0),
+                            totalQuantity: Number(giftItem.totalQuantity || 1),
+                          }),
+                        });
+                      }
+
+                      const refreshedGiftsRes = await fetch(
+                        `/api/gifts?giftListId=${encodeURIComponent(gl.id)}`,
+                        { cache: 'no-store' }
+                      );
+                      const refreshedGifts = await refreshedGiftsRes.json().catch(() => []);
+                      if (!cancelled && Array.isArray(refreshedGifts)) {
+                        setListGifts(refreshedGifts.map(mapGift));
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Erro ao recarregar presentes apos aplicar template', error);
                   }
-                } catch (error) {
-                  console.error('Erro ao recarregar presentes apos aplicar template', error);
                 }
               }
+            } catch (error) {
+              console.error('Erro ao aplicar template por URL', error);
+            } finally {
+              router.replace('/dashboard/editor');
             }
-          } catch (error) {
-            console.error('Erro ao aplicar template por URL', error);
-          } finally {
-            router.replace('/dashboard/editor');
-          }
+          })();
         }
 
         if (Array.isArray(layout?.blocks) && cleanBlocks.length !== layout.blocks.length) {
-          try {
-            await saveLayout(cleanBlocks, (layout?.theme ?? {}) as Theme);
-          } catch (error) {
+          void saveLayout(cleanBlocks, (layout?.theme ?? {}) as Theme).catch((error) => {
             console.error('Erro ao limpar bloco "map" legado', error);
-          }
+          });
         }
       } catch (error) {
         console.error(error);

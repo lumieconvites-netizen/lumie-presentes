@@ -86,7 +86,7 @@ const CARD_LIQUIDATION_WINDOW_DAYS = 45;
 export default function DashboardPage() {
   const [data, setData] = useState<FullList | null>(null);
   const [financial, setFinancial] = useState<FinancialSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingMain, setLoadingMain] = useState(true);
   const [copying, setCopying] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
@@ -96,21 +96,25 @@ export default function DashboardPage() {
 
     (async () => {
       try {
-        const [listRes, financialRes] = await Promise.all([
-          fetch('/api/gift-lists/my-list/full', { cache: 'no-store' }),
-          fetch('/api/recipient/financial-summary', { cache: 'no-store' }),
-        ]);
+        const listRes = await fetch('/api/gift-lists/my-list/full', { cache: 'no-store' });
         const listJson = await listRes.json();
-        const financialJson = await financialRes.json();
         if (!listRes.ok) throw new Error(listJson?.error ?? 'Falha ao carregar dashboard');
-        if (!cancelled) {
-          setData(listJson);
-          setFinancial(financialJson?.summary ?? null);
-        }
+        if (!cancelled) setData(listJson);
       } catch (error: any) {
         if (!cancelled) alert(error?.message ?? 'Erro ao carregar dashboard');
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadingMain(false);
+      }
+    })();
+
+    (async () => {
+      try {
+        const financialRes = await fetch('/api/recipient/financial-summary', { cache: 'no-store' });
+        const financialJson = await financialRes.json().catch(() => null);
+        if (!financialRes.ok) return;
+        if (!cancelled) setFinancial(financialJson?.summary ?? null);
+      } catch {
+        // Nao bloqueia o carregamento principal do dashboard.
       }
     })();
 
@@ -197,7 +201,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) return <div className="p-4 md:p-6">Carregando dashboard...</div>;
+  if (loadingMain) return <div className="p-4 md:p-6">Carregando dashboard...</div>;
 
   return (
     <div className="p-4 md:p-6 space-y-6 bg-[#fbf8f5]">
