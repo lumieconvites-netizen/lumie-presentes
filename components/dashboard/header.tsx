@@ -122,14 +122,21 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
     const loadNotifications = async () => {
       try {
         const sinceRaw = localStorage.getItem(storageKey);
-        const since = sinceRaw ? `?since=${encodeURIComponent(sinceRaw)}` : '';
-        const res = await fetch(`/api/notifications/summary${since}`, { cache: 'no-store' });
+        const sinceDate = sinceRaw ? new Date(sinceRaw) : null;
+        const sinceMark = sinceDate && !Number.isNaN(sinceDate.getTime()) ? sinceDate : null;
+        const sinceQuery = sinceRaw ? `?since=${encodeURIComponent(sinceRaw)}` : '';
+        const res = await fetch(`/api/notifications/summary${sinceQuery}`, { cache: 'no-store' });
         const data = await res.json().catch(() => null);
         if (!res.ok || cancelled) return;
         const incomingEvents = Array.isArray(data?.events) ? data.events : [];
         const visibleEvents = incomingEvents.filter((event: any) => !dismissedNotificationIds.includes(String(event?.id ?? '')));
+        const unreadVisibleCount = visibleEvents.filter((event: any) => {
+          if (!sinceMark) return true;
+          const eventDate = new Date(String(event?.at ?? ''));
+          return !Number.isNaN(eventDate.getTime()) && eventDate.getTime() > sinceMark.getTime();
+        }).length;
         setNotifications({
-          unreadCount: visibleEvents.length,
+          unreadCount: unreadVisibleCount,
           latestEventAt: typeof data?.latestEventAt === 'string' ? data.latestEventAt : null,
           events: visibleEvents,
         });
