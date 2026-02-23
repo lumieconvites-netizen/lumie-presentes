@@ -42,6 +42,15 @@ type GuestGuideIconId =
   | 'music'
   | 'location';
 
+type GuestGuideMediaType = 'none' | 'icon' | 'image';
+type GuestGuideItem = {
+  title: string;
+  description: string;
+  icon: GuestGuideIconId;
+  image: string;
+  mediaType: GuestGuideMediaType;
+};
+
 const GUEST_GUIDE_ICON_OPTIONS: Array<{ id: GuestGuideIconId; label: string }> = [
   { id: 'none', label: 'Sem ícone' },
   { id: 'check-user', label: 'Confirmação' },
@@ -238,16 +247,31 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     handleChange('images', images);
   };
 
-  const getGuestGuideItems = (): Array<{ title: string; description: string; icon: GuestGuideIconId }> => {
+  const getGuestGuideItems = (): GuestGuideItem[] => {
     const raw = Array.isArray(config.items) ? config.items : [];
-    return raw.map((item: any): { title: string; description: string; icon: GuestGuideIconId } => ({
-      title: item?.title || '',
-      description: item?.description || '',
-      icon: (item?.icon as GuestGuideIconId) || 'none',
-    }));
+    return raw.map((item: any): GuestGuideItem => {
+      const icon = (item?.icon as GuestGuideIconId) || 'none';
+      const image = item?.image || '';
+      const mediaType: GuestGuideMediaType =
+        item?.mediaType === 'icon' || item?.mediaType === 'image' || item?.mediaType === 'none'
+          ? item.mediaType
+          : image
+          ? 'image'
+          : icon !== 'none'
+          ? 'icon'
+          : 'none';
+
+      return {
+        title: item?.title || '',
+        description: item?.description || '',
+        icon,
+        image,
+        mediaType,
+      };
+    });
   };
 
-  const updateGuestGuideItems = (items: Array<{ title: string; description: string; icon: GuestGuideIconId }>) => {
+  const updateGuestGuideItems = (items: GuestGuideItem[]) => {
     handleChange('items', items);
   };
 
@@ -255,18 +279,18 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     const items = getGuestGuideItems();
     updateGuestGuideItems([
       ...items,
-      { title: `Orientação ${items.length + 1}`, description: '', icon: 'none' },
+      { title: `Orientação ${items.length + 1}`, description: '', icon: 'none', image: '', mediaType: 'none' },
     ]);
   };
 
   const updateGuestGuideItem = (
     index: number,
-    key: 'title' | 'description' | 'icon',
+    key: 'title' | 'description' | 'icon' | 'image' | 'mediaType',
     value: string
   ) => {
     const items = getGuestGuideItems();
     if (!items[index]) return;
-    items[index] = { ...items[index], [key]: value };
+    items[index] = { ...items[index], [key]: value as any };
     updateGuestGuideItems(items);
   };
 
@@ -274,6 +298,42 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     const items = getGuestGuideItems();
     items.splice(index, 1);
     updateGuestGuideItems(items);
+  };
+
+  const handleGuestGuideImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const valid = await validateImageFile(file, {
+      label: 'Imagem do manual',
+      maxWidth: 1200,
+      maxHeight: 1200,
+    });
+    if (!valid) {
+      e.target.value = '';
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const url = await uploadToServer(file, 'guest-guide');
+      const items = getGuestGuideItems();
+      if (!items[index]) return;
+      items[index] = { ...items[index], image: url, mediaType: 'image' };
+      updateGuestGuideItems(items);
+    } catch {
+      const dataUrl = await fileToDataUrl(file);
+      const items = getGuestGuideItems();
+      if (!items[index]) return;
+      items[index] = { ...items[index], image: dataUrl, mediaType: 'image' };
+      updateGuestGuideItems(items);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   return (
@@ -738,6 +798,30 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
 
                     <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
                       <div>
+                        <Label className="text-xs text-gray-600">Visual</Label>
+                        <select
+                          value={item.mediaType}
+                          onChange={(e) => updateGuestGuideItem(index, 'mediaType', e.target.value as GuestGuideMediaType)}
+                          className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                          <option value="none">Sem destaque</option>
+                          <option value="icon">Ícone</option>
+                          <option value="image">Foto</option>
+                        </select>
+                      </div>
+                      <div className="flex items-end">
+                        <div className="h-10 px-3 rounded-md border border-[#ead9cd] bg-[#fcf7f3] flex items-center gap-2 text-gray-700">
+                          {item.mediaType === 'icon' ? <GuestGuideIconPreview icon={item.icon} /> : null}
+                          {item.mediaType === 'image' && item.image ? (
+                            <img src={item.image} alt="Prévia" className="w-6 h-6 rounded-full object-cover" />
+                          ) : null}
+                          <span className="text-xs">Prévia</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {item.mediaType === 'icon' ? (
+                      <div>
                         <Label className="text-xs text-gray-600">Ícone</Label>
                         <select
                           value={item.icon}
@@ -751,13 +835,43 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                           ))}
                         </select>
                       </div>
-                      <div className="flex items-end">
-                        <div className="h-10 px-3 rounded-md border border-[#ead9cd] bg-[#fcf7f3] flex items-center gap-2 text-gray-700">
-                          <GuestGuideIconPreview icon={item.icon} />
-                          <span className="text-xs">Prévia</span>
-                        </div>
+                    ) : null}
+
+                    {item.mediaType === 'image' ? (
+                      <div className="space-y-2">
+                        <Label className="text-xs text-gray-600">Foto</Label>
+                        {item.image ? (
+                          <div className="relative">
+                            <img
+                              src={item.image}
+                              alt={`Imagem do item ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2"
+                              onClick={() => updateGuestGuideItem(index, 'image', '')}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                            <span className="text-xs text-gray-500">{uploading ? 'Enviando...' : 'Upload da foto'}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleGuestGuideImageUpload(e, index)}
+                              className="hidden"
+                              disabled={uploading}
+                            />
+                          </label>
+                        )}
                       </div>
-                    </div>
+                    ) : null}
 
                     <div>
                       <Label className="text-xs text-gray-600">Título do item</Label>

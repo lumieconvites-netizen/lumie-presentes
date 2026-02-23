@@ -491,13 +491,29 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                             description: '',
                             icon: 'dress',
                           },
-                        ]).map((item: any, index: number) => (
+                        ]).map((item: any, index: number) => {
+                      const mediaType =
+                        item?.mediaType === 'icon' || item?.mediaType === 'image' || item?.mediaType === 'none'
+                          ? item.mediaType
+                          : item?.image
+                          ? 'image'
+                          : item?.icon && item.icon !== 'none'
+                          ? 'icon'
+                          : 'none';
+                      return (
                       <div key={index} className="rounded-2xl border border-[#ead9cd] bg-white p-4 md:p-5 shadow-sm">
                         <div className="flex items-start gap-3 md:gap-4">
-                          {item.icon && item.icon !== 'none' ? (
+                          {mediaType === 'icon' && item.icon && item.icon !== 'none' ? (
                             <div className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-[#f5ece6] flex items-center justify-center shrink-0 mt-0.5" style={{ color: titleColor }}>
                               {renderGuestGuideIcon(item.icon, 'w-5 h-5')}
                             </div>
+                          ) : null}
+                          {mediaType === 'image' && item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.title || `Item ${index + 1}`}
+                              className="w-10 h-10 md:w-11 md:h-11 rounded-full object-cover shrink-0 mt-0.5 border border-[#ead9cd]"
+                            />
                           ) : null}
                           <p className="text-sm md:text-lg leading-relaxed" style={{ color: captionColor }}>
                             <span className="font-semibold" style={{ color: titleColor }}>
@@ -512,7 +528,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                           </p>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               </div>
