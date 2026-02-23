@@ -379,7 +379,7 @@ export default function AdminTemplateEditorPage() {
 
   async function uploadFile(file: File, folder: string) {
     if (file.size > 5 * 1024 * 1024) {
-      throw new Error('Imagem maior que 5MB. Envie um arquivo de at? 5MB.');
+      throw new Error('Imagem maior que 5MB. Envie um arquivo de até 5MB.');
     }
     const formData = new FormData();
     formData.append('file', file);
@@ -440,7 +440,7 @@ export default function AdminTemplateEditorPage() {
       setTheme((prev: any) => ({ ...prev, gifts_page_cover_image: url }));
       setDirty(true);
     } catch (error: any) {
-      alert(error?.message || 'Erro ao enviar capa da p?gina de presentes');
+      alert(error?.message || 'Erro ao enviar capa da página de presentes');
     } finally {
       setUploadingGiftsPageCover(false);
     }
@@ -484,7 +484,7 @@ export default function AdminTemplateEditorPage() {
               Adicionar presentes
             </Button>
             <Button onClick={() => saveTemplate().catch(() => null)} disabled={saving || !dirty}>
-              {saving ? 'Salvando...' : 'Salvar e publicar'}
+              {saving ? 'Salvando...' : 'Salvar e públicar'}
             </Button>
             <Button
               className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800"

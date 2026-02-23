@@ -98,7 +98,7 @@ export default function AdminTemplatesPage() {
   }
 
   async function deleteCategory(slug: string) {
-    if (!window.confirm('Excluir tipo de evento? So e permitido se n?o tiver templates.')) return;
+    if (!window.confirm('Excluir tipo de evento? Só é permitido se não tiver templates.')) return;
     const res = await fetch(`/api/admin/template-categories/${slug}`, { method: 'DELETE' });
     const json = await res.json();
     if (!res.ok) throw new Error(json?.error || 'Erro ao excluir categoria');
@@ -258,7 +258,7 @@ export default function AdminTemplatesPage() {
                   <th className="text-left p-2">Template</th>
                   <th className="text-left p-2">Categoria</th>
                   <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">Acoes</th>
+                  <th className="text-left p-2">Ações</th>
                 </tr>
               </thead>
               <tbody>

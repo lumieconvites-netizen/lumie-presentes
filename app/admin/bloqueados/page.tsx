@@ -12,7 +12,7 @@ type AdminUser = {
   role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
   isBlocked: boolean;
   blockReason?: string | null;
-  blockedAt?: string | null;
+  blockedAt: string | null;
 };
 
 export default function AdminBloqueadosPage() {
@@ -49,7 +49,7 @@ export default function AdminBloqueadosPage() {
     if (reason === null) return;
     const normalized = reason.trim();
     if (!normalized) {
-      alert('Motivo n?o pode ficar vazio.');
+      alert('Motivo não pode ficar vazio.');
       return;
     }
     await patchUser(user.id, { isBlocked: true, blockReason: normalized });
@@ -74,7 +74,7 @@ export default function AdminBloqueadosPage() {
                 <th className="p-2 text-left">Papel</th>
                 <th className="p-2 text-left">Motivo</th>
                 <th className="p-2 text-left">Bloqueado em</th>
-                <th className="p-2 text-left">Acoes</th>
+                <th className="p-2 text-left">Ações</th>
               </tr>
             </thead>
             <tbody>

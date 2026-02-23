@@ -583,7 +583,7 @@ export default function AdminGiftModelsPage() {
                   <tr>
                     <th className="p-2 text-left">Presente</th>
                     <th className="p-2 text-left">Preco</th>
-                    <th className="p-2 text-left">Acoes</th>
+                    <th className="p-2 text-left">Ações</th>
                   </tr>
                 </thead>
                 <tbody>

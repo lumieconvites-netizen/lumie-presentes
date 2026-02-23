@@ -80,7 +80,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
   ) => {
     const label = options?.label ?? 'Imagem';
     if (file.size > MAX_UPLOAD_BYTES) {
-      alert(`${label} maior que 5MB. Escolha um arquivo de at? 5MB.`);
+      alert(`${label} maior que 5MB. Escolha um arquivo de até 5MB.`);
       return false;
     }
 
@@ -540,7 +540,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
 
           <div>
             <Label className="text-sm font-medium">Fotos</Label>
-            <p className="mt-1 text-xs text-gray-500">Recomendado: fotos quadradas at? 1000x1000px. Limite de 5MB por foto.</p>
+            <p className="mt-1 text-xs text-gray-500">Recomendado: fotos quadradas até 1000x1000px. Limite de 5MB por foto.</p>
 
             <div className="mt-2 grid grid-cols-3 gap-2">
               {(config.images || []).map((img: string, index: number) => (

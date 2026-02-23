@@ -123,7 +123,7 @@ export default function AdminFinanceiroPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="card">Somente cart?o</SelectItem>
+                  <SelectItem value="card">Somente cartão</SelectItem>
                   <SelectItem value="pix">Somente PIX</SelectItem>
                 </SelectContent>
               </Select>
@@ -205,7 +205,7 @@ export default function AdminFinanceiroPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <StatCard
-          label="Cartao"
+          label="Cartão"
           value={`${data?.summary.cardCount || 0} pedidos - ${brl(data?.summary.cardAmount || 0)}`}
         />
         <StatCard
@@ -214,7 +214,7 @@ export default function AdminFinanceiroPage() {
         />
         <StatCard label="Pedidos pagos" value={String(data?.summary.ordersCount || 0)} />
         <StatCard
-          label="Cartao pendente"
+          label="Cartão pendente"
           value={`${data?.summary.pendingCardCount || 0} pedidos - ${brl(data?.summary.pendingCardAmount || 0)}`}
         />
       </div>
@@ -354,9 +354,9 @@ export default function AdminFinanceiroPage() {
 
       <Card className="border-[#e7d8cb]">
         <CardHeader>
-          <CardTitle>Cartoes de cr?dito pendentes</CardTitle>
+          <CardTitle>Cartões de crédito pendentes</CardTitle>
           <p className="text-xs text-gray-500">
-            Considera pedidos em status pendente/autorizado e cartoes pagos ainda em janela de liquidacao (at? 45 dias).
+            Considera pedidos em status pendente/autorizado e cartões pagos ainda em janela de liquidacao (até 45 dias).
           </p>
         </CardHeader>
         <CardContent>
@@ -390,7 +390,7 @@ export default function AdminFinanceiroPage() {
                 {(data?.pendingCards || []).length === 0 ? (
                   <tr>
                     <td className="p-3 text-gray-500 text-sm" colSpan={5}>
-                      Nenhum cart?o pendente para os filtros selecionados.
+                      Nenhum cartão pendente para os filtros selecionados.
                     </td>
                   </tr>
                 ) : null}

@@ -128,15 +128,15 @@ export default function ConfiguracoesPage() {
 
         if (!res.ok) {
           setSlugAvailable(false);
-          setSlugMessage(data?.error ?? 'N?o foi poss?vel validar a URL.');
+          setSlugMessage(data?.error ?? 'Não foi possível validar a URL.');
           return;
         }
 
         setSlugAvailable(Boolean(data?.available));
-        setSlugMessage(data?.available ? 'URL dispon?vel.' : data?.error || 'Essa URL j? esta em uso.');
+        setSlugMessage(data?.available ? 'URL disponível.' : data?.error || 'Essa URL já esta em uso.');
       } catch {
         setSlugAvailable(false);
-        setSlugMessage('N?o foi poss?vel validar a URL.');
+        setSlugMessage('Não foi possível validar a URL.');
       } finally {
         setSlugChecking(false);
       }
@@ -163,12 +163,12 @@ export default function ConfiguracoesPage() {
       if (!res.ok) {
         updateSettings({ feePassedToGuest: previous });
         const data = await res.json().catch(() => ({}));
-        alert(data?.error ?? 'N?o foi poss?vel salvar a configuracao de taxa.');
+        alert(data?.error ?? 'Não foi possível salvar a configuração de taxa.');
         return;
       }
     } catch {
       updateSettings({ feePassedToGuest: previous });
-      alert('Erro ao salvar configuracao de taxa.');
+      alert('Erro ao salvar configuração de taxa.');
     } finally {
       setSavingFeeMode(false);
     }
@@ -274,7 +274,7 @@ export default function ConfiguracoesPage() {
 
   const handleChangePassword = () => {
     if (newPassword !== confirmPassword) {
-      alert('As senhas n?o coincidem!');
+      alert('As senhas não coincidem!');
       return;
     }
 
@@ -296,7 +296,7 @@ export default function ConfiguracoesPage() {
       setCopyingUrl(true);
       await navigator.clipboard.writeText(publicUrl);
     } catch {
-      alert('N?o foi poss?vel copiar a URL agora.');
+      alert('Não foi possível copiar a URL agora.');
     } finally {
       setTimeout(() => setCopyingUrl(false), 900);
     }
@@ -490,7 +490,7 @@ export default function ConfiguracoesPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h3 className="font-medium text-foreground">Recados Publicos</h3>
-                  <p className="text-sm text-gray-500">Exibir recados na p?gina publica da lista</p>
+                  <p className="text-sm text-gray-500">Exibir recados na página pública da lista</p>
                 </div>
 
                 <Switch

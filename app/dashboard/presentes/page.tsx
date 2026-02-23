@@ -114,7 +114,7 @@ export default function PresentesDashboard() {
       setListPageTitle(glData?.title || 'Minha Lista de Presentes');
       setListPageMessage(glData?.description || '');
 
-      // Layout n?o pode bloquear o carregamento dos presentes.
+      // Layout não pode bloquear o carregamento dos presentes.
       void (async () => {
         try {
           const layoutRes = await fetchWithTimeout(`/api/gift-lists/${encodeURIComponent(glData.id)}/layout`, { cache: 'no-store' });
@@ -191,7 +191,7 @@ export default function PresentesDashboard() {
         });
         const layoutSaveData = await parseJsonSafe(layoutSaveRes);
         if (!layoutSaveRes.ok) {
-          throw new Error(layoutSaveData?.error ?? 'Erro ao salvar capa da p?gina de presentes');
+          throw new Error(layoutSaveData?.error ?? 'Erro ao salvar capa da página de presentes');
         }
       }
 
@@ -206,7 +206,7 @@ export default function PresentesDashboard() {
   async function handleListCoverUpload(file?: File | null) {
     if (!file) return;
     if (file.size > MAX_UPLOAD_BYTES) {
-      alert('Imagem maior que 5MB. Escolha um arquivo de at? 5MB.');
+      alert('Imagem maior que 5MB. Escolha um arquivo de até 5MB.');
       return;
     }
 
@@ -240,7 +240,7 @@ export default function PresentesDashboard() {
 
   const uploadGiftPhoto = async (file: File) => {
     if (file.size > MAX_UPLOAD_BYTES) {
-      throw new Error('Imagem maior que 5MB. Escolha um arquivo de at? 5MB.');
+      throw new Error('Imagem maior que 5MB. Escolha um arquivo de até 5MB.');
     }
 
     const form = new FormData();
@@ -260,7 +260,7 @@ export default function PresentesDashboard() {
   const handleDraftPhotoUpload = async (file?: File | null) => {
     if (!file) return;
     if (file.size > MAX_UPLOAD_BYTES) {
-      alert('Imagem maior que 5MB. Escolha um arquivo de at? 5MB.');
+      alert('Imagem maior que 5MB. Escolha um arquivo de até 5MB.');
       return;
     }
 

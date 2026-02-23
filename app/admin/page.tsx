@@ -19,7 +19,7 @@ type AdminUser = {
   role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
   isBlocked: boolean;
   blockReason?: string | null;
-  blockedAt?: string | null;
+  blockedAté: string | null;
   _count: { giftLists: number };
 };
 type AdminGiftList = { id: string; title: string; slug: string; isPublished: boolean; user: { email: string; name: string | null }; _count: { gifts: number; orders: number; messages: number } };
@@ -82,11 +82,11 @@ export default function AdminPage() {
 
   async function patchList(id: string, payload: any) {
     const res = await fetch(`/api/admin/gift-lists/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar lista'); await loadAll();
+    const j = await res.json(); if (!res.ok) throw new Error(j.error || 'Erro ao atualizar lista'); await loadAll();
   }
   async function patchUser(id: string, payload: any) {
     const res = await fetch(`/api/admin/users/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar usuário'); await loadAll();
+    const j = await res.json(); if (!res.ok) throw new Error(j.error || 'Erro ao atualizar usuário'); await loadAll();
   }
   async function toggleBlockUser(user: AdminUser) {
     if (user.isBlocked) {
@@ -107,14 +107,14 @@ export default function AdminPage() {
     if (!window.confirm('Excluir essa lista zerada?')) return;
     const res = await fetch(`/api/admin/gift-lists/${id}`, { method: 'DELETE' });
     const j = await res.json();
-    if (!res.ok) throw new Error(j?.error || 'Erro ao excluir lista');
+    if (!res.ok) throw new Error(j.error || 'Erro ao excluir lista');
     await loadAll();
   }
   async function patchTemplate(id: string, payload: any) {
     setBusyTemplateId(id);
     try {
       const res = await fetch(`/api/admin/templates/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao atualizar template'); await loadAll();
+      const j = await res.json(); if (!res.ok) throw new Error(j.error || 'Erro ao atualizar template'); await loadAll();
     } finally {
       setBusyTemplateId(null);
     }
@@ -123,7 +123,7 @@ export default function AdminPage() {
     setBusyTemplateId(id);
     try {
       const res = await fetch(`/api/admin/templates/${id}`, { method: 'DELETE' });
-      const j = await res.json(); if (!res.ok) throw new Error(j?.error || 'Erro ao excluir template'); await loadAll();
+      const j = await res.json(); if (!res.ok) throw new Error(j.error || 'Erro ao excluir template'); await loadAll();
     } finally {
       setBusyTemplateId(null);
     }
@@ -136,14 +136,14 @@ export default function AdminPage() {
       body: JSON.stringify({ userId }),
     });
     const j = await res.json();
-    if (!res.ok) throw new Error(j?.error || 'Erro ao acessar painel do usuário');
+    if (!res.ok) throw new Error(j.error || 'Erro ao acessar painel do usuário');
     window.location.assign('/dashboard');
   }
 
   async function stopImpersonation() {
     const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
     const j = await res.json();
-    if (!res.ok) throw new Error(j?.error || 'Erro ao sair do modo de acesso');
+    if (!res.ok) throw new Error(j.error || 'Erro ao sair do modo de acesso');
     await loadAll();
   }
 

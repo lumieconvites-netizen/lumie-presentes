@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GripVertical, Sparkles, ChevronRight, Globe, Type, Image as ImageIcon, Layout, Save, Music2, Video } from 'lucide-react';
+import { GripVertical, Sparkles, ChevronRight, Globe, Type, Image as ImageIcon, Layout, Save, Music2, Video, Palette, X } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import BlockEditor from '@/components/builder/BlockEditor';
 import BlockPreview from '@/components/builder/BlockPreview';
@@ -310,7 +310,7 @@ export default function PageBuilder() {
   const uploadThemeBackground = async (file?: File | null) => {
     if (!file) return;
     if (file.size > MAX_UPLOAD_BYTES) {
-      alert('Imagem maior que 5MB. Escolha um arquivo de at? 5MB.');
+      alert('Imagem maior que 5MB. Escolha um arquivo de até 5MB.');
       return;
     }
     try {
@@ -395,7 +395,7 @@ export default function PageBuilder() {
       body: JSON.stringify({ isPublished: true }),
     });
     const data = await res.json();
-    if (!res.ok) return alert(data?.error ?? 'Falha ao publicar');
+    if (!res.ok) return alert(data?.error ?? 'Falha ao públicar');
     setGiftList(data);
   };
 
@@ -406,7 +406,7 @@ export default function PageBuilder() {
       body: JSON.stringify({ isPublished: false }),
     });
     const data = await res.json();
-    if (!res.ok) return alert(data?.error ?? 'Falha ao despublicar');
+    if (!res.ok) return alert(data?.error ?? 'Falha ao despúblicar');
     setGiftList(data);
   };
 
@@ -485,6 +485,12 @@ export default function PageBuilder() {
             mobileDrawer === 'controls' ? 'translate-y-0' : 'translate-y-full md:translate-y-0'
           )}
         >
+          <div className="md:hidden sticky top-0 z-10 bg-[#fffaf7] border-b border-[#ead9cd] px-4 py-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Controles</h3>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMobileDrawer(null)}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
           <Tabs defaultValue="blocks" className="p-4">
             <TabsList className="w-full grid grid-cols-3 mb-4">
               <TabsTrigger value="blocks">Blocos</TabsTrigger>
@@ -957,10 +963,7 @@ export default function PageBuilder() {
 
       <div className="md:hidden fixed inset-x-3 bottom-4 z-30">
         <div className="mx-auto max-w-md rounded-2xl border border-[#e7d8cb] bg-white/95 backdrop-blur px-2 py-2 shadow-lg">
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" size="sm" onClick={() => setMobileDrawer('controls')} className="h-10">
-              Controles
-            </Button>
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -981,6 +984,17 @@ export default function PageBuilder() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="md:hidden fixed left-4 bottom-24 z-30">
+        <Button
+          type="button"
+          onClick={() => setMobileDrawer((prev) => (prev === 'controls' ? null : 'controls'))}
+          className="h-12 w-12 rounded-full bg-[#8e3d2c] hover:bg-[#7a3426] text-white shadow-lg"
+          aria-label="Abrir controles"
+        >
+          <Palette className="w-5 h-5" />
+        </Button>
       </div>
     </div>
   );

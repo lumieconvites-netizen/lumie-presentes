@@ -49,7 +49,7 @@ export default function AffiliateWithdrawCard() {
       setWithdrawing(true);
       const res = await fetch('/api/recipient/withdraw', { method: 'POST' });
       const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error ?? 'N?o foi poss?vel solicitar o saque.');
+      if (!res.ok) throw new Error(json?.error ?? 'Não foi possível solicitar o saque.');
       alert(json?.message ?? 'Saque solicitado com sucesso.');
       setOpen(false);
       const summaryRes = await fetch('/api/recipient/financial-summary', { cache: 'no-store' });
@@ -67,7 +67,7 @@ export default function AffiliateWithdrawCard() {
       <Card>
         <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <p className="text-sm text-gray-500">Saldo dispon?vel</p>
+            <p className="text-sm text-gray-500">Saldo disponível</p>
             <p className="text-xl md:text-2xl font-bold">
               {loading
                 ? '...'

@@ -56,7 +56,7 @@ export default function DashboardRsvpPage() {
   }
 
   if (!data) {
-    return <div className="p-4 md:p-6">N?o foi poss?vel carregar o RSVP.</div>;
+    return <div className="p-4 md:p-6">Não foi possível carregar o RSVP.</div>;
   }
 
   const { metrics } = data;
@@ -126,7 +126,7 @@ export default function DashboardRsvpPage() {
 
         <Card className="border-[#f1d6d6]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-gray-600">N?o comparecem</CardTitle>
+            <CardTitle className="text-sm text-gray-600">Não comparecem</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-[#ab3f3f] flex items-center gap-2"><UserRoundX className="w-5 h-5" /> {metrics.declined}</p>
@@ -152,8 +152,8 @@ export default function DashboardRsvpPage() {
         </CardHeader>
         <CardContent className="text-sm text-gray-600 space-y-2">
           <p>URL de confirmação: <span className="font-medium text-gray-900">{data.publicRsvpUrl}</span></p>
-          <p>URL do check-in p?blico: <span className="font-medium text-gray-900">{data.publicCheckInUrl || 'N?o dispon?vel'}</span></p>
-          <p>Email de notificações: <span className="font-medium text-gray-900">{data.settings.notificationEmail || 'N?o configurado'}</span></p>
+          <p>URL do check-in público: <span className="font-medium text-gray-900">{data.publicCheckInUrl || 'Não disponível'}</span></p>
+          <p>Email de notificações: <span className="font-medium text-gray-900">{data.settings.notificationEmail || 'Não configurado'}</span></p>
         </CardContent>
       </Card>
     </div>

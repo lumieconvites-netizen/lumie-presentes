@@ -68,7 +68,7 @@ export default function GiftModelsCategoriesPage() {
         {loading ? (
           <p className="text-sm text-gray-600">Carregando categorias...</p>
         ) : categories.length === 0 ? (
-          <Card className="p-6 border-[#ead9cd] text-sm text-gray-600">Nenhuma categoria dispon?vel no momento.</Card>
+          <Card className="p-6 border-[#ead9cd] text-sm text-gray-600">Nenhuma categoria disponível no momento.</Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {categories.map((category) => (

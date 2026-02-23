@@ -78,7 +78,7 @@ export function ConfirmClient({
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/public/rsvp/${encodeURIComponent(slug)}/search?q=${encodeURIComponent(query.trim())}`, {
+        const res = await fetch(`/api/public/rsvp/${encodeURIComponent(slug)}/searcháq=${encodeURIComponent(query.trim())}`, {
           signal: controller.signal,
         });
         const json = await res.json();
@@ -347,7 +347,7 @@ export function ConfirmClient({
                       }
                     }}
                   >
-                    Copiar c?digo
+                    Copiar código
                   </Button>
                   <Button variant="outline" onClick={() => window.print()}>
                     Salvar no celular
