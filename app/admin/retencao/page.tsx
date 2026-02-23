@@ -67,7 +67,7 @@ export default function AdminRetencaoPage() {
     <div className="space-y-6">
       <Card className="border-[#e7d8cb]">
         <CardHeader>
-          <CardTitle>Retencao de contas - Auditoria</CardTitle>
+          <CardTitle>Retenção de contas - Auditoria</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -82,7 +82,7 @@ export default function AdminRetencaoPage() {
             </div>
 
             <div className="space-y-1">
-              <p className="text-xs text-gray-500">Acao</p>
+              <p className="text-xs text-gray-500">Ação</p>
               <select
                 value={action}
                 onChange={(e) => setAction(e.target.value)}
@@ -129,7 +129,7 @@ export default function AdminRetencaoPage() {
 
       <Card className="border-[#e7d8cb]">
         <CardHeader>
-          <CardTitle>Ultimas execucoes</CardTitle>
+          <CardTitle>Últimas execuções</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-auto rounded-lg border">
@@ -154,7 +154,7 @@ export default function AdminRetencaoPage() {
                 {(data?.runSummaries || []).length === 0 ? (
                   <tr>
                     <td className="p-3 text-gray-500 text-sm" colSpan={4}>
-                      Nenhuma execucao registrada.
+                      Nenhuma execução registrada.
                     </td>
                   </tr>
                 ) : null}
@@ -175,8 +175,8 @@ export default function AdminRetencaoPage() {
                 <tr>
                   <th className="p-2 text-left">Quando</th>
                   <th className="p-2 text-left">Run ID</th>
-                  <th className="p-2 text-left">Acao</th>
-                  <th className="p-2 text-left">Usuario</th>
+                  <th className="p-2 text-left">Ação</th>
+                  <th className="p-2 text-left">Usuário</th>
                   <th className="p-2 text-left">Dry run</th>
                   <th className="p-2 text-left">Metadata</th>
                 </tr>

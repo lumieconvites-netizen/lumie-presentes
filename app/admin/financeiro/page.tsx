@@ -116,7 +116,7 @@ export default function AdminFinanceiroPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="space-y-1">
-              <p className="text-xs text-gray-500">Metodo de pagamento</p>
+              <p className="text-xs text-gray-500">Método de pagamento</p>
               <Select value={method} onValueChange={(value: MethodFilter) => setMethod(value)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -299,7 +299,7 @@ export default function AdminFinanceiroPage() {
 
       <Card className="border-[#e7d8cb]">
         <CardHeader>
-          <CardTitle>Ultimos pagamentos (max 200)</CardTitle>
+          <CardTitle>Últimos pagamentos (MÁX 200)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-auto rounded-lg border">
@@ -307,7 +307,7 @@ export default function AdminFinanceiroPage() {
               <thead className="bg-[#faf3ee]">
                 <tr>
                   <th className="p-2 text-left">Data</th>
-                  <th className="p-2 text-left">Metodo</th>
+                  <th className="p-2 text-left">Método</th>
                   <th className="p-2 text-left">Lista</th>
                   <th className="p-2 text-left">Cliente</th>
                   <th className="p-2 text-left">Total</th>
@@ -356,7 +356,7 @@ export default function AdminFinanceiroPage() {
         <CardHeader>
           <CardTitle>Cartões de crédito pendentes</CardTitle>
           <p className="text-xs text-gray-500">
-            Considera pedidos em status pendente/autorizado e cartões pagos ainda em janela de liquidacao (até 45 dias).
+            Considera pedidos em status pendente/autorizado e cartões pagos ainda em janela de liquidação (até 45 dias).
           </p>
         </CardHeader>
         <CardContent>

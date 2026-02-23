@@ -592,7 +592,7 @@ export default function HomePage() {
               ))}
             </div>
 
-            <p className="mt-10 text-center text-xs md:text-sm tracking-[0.22em] uppercase text-[#9f6a53]">simples • rapido • seguro</p>
+            <p className="mt-10 text-center text-xs md:text-sm tracking-[0.22em] uppercase text-[#9f6a53]">simples • rápido • seguro</p>
           </div>
         </div>
 

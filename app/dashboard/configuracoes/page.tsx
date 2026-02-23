@@ -382,7 +382,7 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Usuario (URL)</label>
+                <label className="text-sm font-medium mb-2 block">Usuário (URL)</label>
                 <Input
                   value={slugInput}
                   onChange={(e) => setSlugInput(e.target.value)}

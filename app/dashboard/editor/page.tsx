@@ -482,7 +482,7 @@ export default function PageBuilder() {
           className={cn(
             'bg-[#fffaf7] border-[#ead9cd] overflow-y-auto z-50',
             'fixed inset-x-0 bottom-[5.2rem] h-[44dvh] min-h-[280px] max-h-[420px] rounded-t-2xl border border-b-0 transition-transform md:static md:top-auto md:bottom-auto md:h-auto md:min-h-0 md:max-h-none md:inset-auto md:w-72 md:max-w-none md:min-w-0 md:rounded-none md:border md:border-b md:border-r',
-            mobileDrawer === 'controls' ? 'translate-y-0' : 'translate-y-full md:translate-y-0'
+            mobileDrawer === 'controls' ? 'block translate-y-0' : 'hidden md:block md:translate-y-0'
           )}
         >
           <div className="md:hidden sticky top-0 z-10 bg-[#fffaf7] border-b border-[#ead9cd] px-4 py-3 flex items-center justify-between">

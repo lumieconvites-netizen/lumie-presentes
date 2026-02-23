@@ -40,7 +40,7 @@ export default function AdminBloqueadosPage() {
       body: JSON.stringify(payload),
     });
     const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || 'Erro ao atualizar usuario');
+    if (!res.ok) throw new Error(json?.error || 'Erro ao atualizar usuário');
     await loadUsers();
   }
 
@@ -62,7 +62,7 @@ export default function AdminBloqueadosPage() {
   return (
     <Card className="border-[#e7d8cb] bg-white">
       <CardHeader>
-        <CardTitle>Usuarios bloqueados</CardTitle>
+        <CardTitle>Usuários bloqueados</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <Input placeholder="Buscar por nome ou email" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -70,7 +70,7 @@ export default function AdminBloqueadosPage() {
           <table className="w-full text-sm">
             <thead className="bg-[#faf3ee]">
               <tr>
-                <th className="p-2 text-left">Usuario</th>
+                <th className="p-2 text-left">Usuário</th>
                 <th className="p-2 text-left">Papel</th>
                 <th className="p-2 text-left">Motivo</th>
                 <th className="p-2 text-left">Bloqueado em</th>
@@ -110,7 +110,7 @@ export default function AdminBloqueadosPage() {
               {users.length === 0 ? (
                 <tr>
                   <td className="p-3 text-sm text-gray-500" colSpan={5}>
-                    Nenhum usuario bloqueado.
+                    Nenhum usuário bloqueado.
                   </td>
                 </tr>
               ) : null}
