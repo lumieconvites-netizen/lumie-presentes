@@ -167,7 +167,19 @@ export default function PageBuilder() {
         const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
         setPageBlocks(cleanBlocks);
         setTheme((layout?.theme ?? {}) as Theme);
-        setListGifts(Array.isArray(gl?.gifts) ? gl.gifts.map(mapGift) : []);
+        void fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' })
+          .then(async (res) => {
+            if (!res.ok) return [];
+            return await res.json().catch(() => []);
+          })
+          .then((gifts) => {
+            if (cancelled) return;
+            setListGifts(Array.isArray(gifts) ? gifts.map(mapGift) : []);
+          })
+          .catch(() => {
+            if (cancelled) return;
+            setListGifts([]);
+          });
         setLoading(false);
 
         if (templateSlugParam) {

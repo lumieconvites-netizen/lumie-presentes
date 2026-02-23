@@ -49,7 +49,7 @@ async function parseJsonSafe(res: Response) {
   }
 }
 
-async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, timeoutMs = 12000) {
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, timeoutMs = 30000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -130,7 +130,7 @@ export default function PresentesDashboard() {
       setSelectedIds([]);
     } catch (error: any) {
       if (error?.name === 'AbortError') {
-        alert('O carregamento demorou demais. Tente novamente em alguns segundos.');
+        console.warn('Carregamento dos presentes excedeu o timeout.');
       } else {
         alert(error?.message ?? 'Erro ao carregar presentes');
       }
