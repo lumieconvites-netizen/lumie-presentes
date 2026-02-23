@@ -3,7 +3,22 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Image as ImageIcon, Globe, Layout, Music2, Video } from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  Image as ImageIcon,
+  Globe,
+  Layout,
+  Music2,
+  Video,
+  UserCheck,
+  ClipboardCheck,
+  Shirt,
+  Clock3,
+  Users,
+  Camera,
+  Gift,
+} from 'lucide-react';
 
 interface BlockPreviewProps {
   list: any;
@@ -94,6 +109,19 @@ function heroElementStyle(point: { x: number; y: number }): React.CSSProperties 
     top: `${point.y}%`,
     transform: 'translate(-50%, -50%)',
   };
+}
+
+function renderGuestGuideIcon(iconId: string, className: string) {
+  if (iconId === 'check-user') return <UserCheck className={className} />;
+  if (iconId === 'clipboard') return <ClipboardCheck className={className} />;
+  if (iconId === 'dress') return <Shirt className={className} />;
+  if (iconId === 'clock') return <Clock3 className={className} />;
+  if (iconId === 'couple') return <Users className={className} />;
+  if (iconId === 'camera') return <Camera className={className} />;
+  if (iconId === 'gift') return <Gift className={className} />;
+  if (iconId === 'music') return <Music2 className={className} />;
+  if (iconId === 'location') return <MapPin className={className} />;
+  return null;
 }
 
 export default function BlockPreview({ list, blocks, selectedBlock, onSelectBlock, gifts }: BlockPreviewProps) {
@@ -436,7 +464,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {/* Guest Guide Block */}
             {block.type === 'guest-guide' && (
               <div className={`${sectionClass} p-6 md:p-16`}>
-                <div className="max-w-5xl mx-auto">
+                <div className="max-w-4xl mx-auto">
                   <h2 className="text-2xl md:text-4xl text-center mb-3" style={{ color: titleColor, fontFamily: fontTitle }}>
                     {config.title || 'Manual do Convidado'}
                   </h2>
@@ -444,38 +472,43 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                     {config.description || 'Dicas rápidas para seus convidados aproveitarem o evento com conforto.'}
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                  <div className="space-y-3 md:space-y-4">
                     {(Array.isArray(config.items) && config.items.length
                       ? config.items
                       : [
                           {
-                            title: 'Traje sugerido',
-                            description: 'Escolha um look elegante e confortável para a celebração.',
-                            image: '',
+                            title: 'Confirme sua presença',
+                            description: '',
+                            icon: 'check-user',
                           },
                           {
-                            title: 'Chegue com antecedência',
-                            description: 'Recomendamos chegar 30 minutos antes para aproveitar tudo.',
-                            image: '',
+                            title: 'Convidado não convida',
+                            description: '',
+                            icon: 'clipboard',
                           },
                           {
-                            title: 'Leve seu sorriso',
-                            description: 'Prepare seu melhor clima para celebrar esse momento especial.',
-                            image: '',
+                            title: 'Traje social',
+                            description: '',
+                            icon: 'dress',
                           },
                         ]).map((item: any, index: number) => (
-                      <div key={index} className="rounded-2xl border border-[#ead9cd] bg-white overflow-hidden shadow-sm">
-                        {item.image ? (
-                          <img src={item.image} alt={item.title || `Item ${index + 1}`} className="w-full h-40 object-cover" />
-                        ) : (
-                          <div className="h-40 bg-gradient-to-br from-[#f7ece5] to-[#f2ddd1]" />
-                        )}
-                        <div className="p-4 md:p-5">
-                          <h3 className="text-lg md:text-xl mb-2" style={{ color: titleColor, fontFamily: fontTitle }}>
-                            {item.title || `Item ${index + 1}`}
-                          </h3>
-                          <p className="text-sm md:text-base leading-relaxed" style={{ color: captionColor }}>
-                            {item.description || 'Descrição do item do manual.'}
+                      <div key={index} className="rounded-2xl border border-[#ead9cd] bg-white p-4 md:p-5 shadow-sm">
+                        <div className="flex items-start gap-3 md:gap-4">
+                          {item.icon && item.icon !== 'none' ? (
+                            <div className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-[#f5ece6] flex items-center justify-center shrink-0 mt-0.5" style={{ color: titleColor }}>
+                              {renderGuestGuideIcon(item.icon, 'w-5 h-5')}
+                            </div>
+                          ) : null}
+                          <p className="text-sm md:text-lg leading-relaxed" style={{ color: captionColor }}>
+                            <span className="font-semibold" style={{ color: titleColor }}>
+                              {item.title || `Item ${index + 1}`}
+                            </span>
+                            {item.description ? (
+                              <>
+                                <br />
+                                <span>{item.description}</span>
+                              </>
+                            ) : null}
                           </p>
                         </div>
                       </div>

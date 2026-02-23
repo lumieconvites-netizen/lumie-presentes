@@ -7,13 +7,66 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
-import { Trash2, Upload, X, Plus } from 'lucide-react';
+import {
+  Trash2,
+  Upload,
+  X,
+  Plus,
+  UserCheck,
+  ClipboardCheck,
+  Shirt,
+  Clock3,
+  Users,
+  Camera,
+  Gift,
+  Music2,
+  MapPin,
+} from 'lucide-react';
 
 interface BlockEditorProps {
   block: any;
   onUpdate: (config: any) => void;
   onDelete: () => void;
   list: any;
+}
+
+type GuestGuideIconId =
+  | 'none'
+  | 'check-user'
+  | 'clipboard'
+  | 'dress'
+  | 'clock'
+  | 'couple'
+  | 'camera'
+  | 'gift'
+  | 'music'
+  | 'location';
+
+const GUEST_GUIDE_ICON_OPTIONS: Array<{ id: GuestGuideIconId; label: string }> = [
+  { id: 'none', label: 'Sem ícone' },
+  { id: 'check-user', label: 'Confirmação' },
+  { id: 'clipboard', label: 'Regras' },
+  { id: 'dress', label: 'Traje' },
+  { id: 'clock', label: 'Horário' },
+  { id: 'couple', label: 'Convidados' },
+  { id: 'camera', label: 'Fotos' },
+  { id: 'gift', label: 'Presentes' },
+  { id: 'music', label: 'Música' },
+  { id: 'location', label: 'Local' },
+];
+
+function GuestGuideIconPreview({ icon }: { icon: GuestGuideIconId }) {
+  const className = 'w-4 h-4';
+  if (icon === 'check-user') return <UserCheck className={className} />;
+  if (icon === 'clipboard') return <ClipboardCheck className={className} />;
+  if (icon === 'dress') return <Shirt className={className} />;
+  if (icon === 'clock') return <Clock3 className={className} />;
+  if (icon === 'couple') return <Users className={className} />;
+  if (icon === 'camera') return <Camera className={className} />;
+  if (icon === 'gift') return <Gift className={className} />;
+  if (icon === 'music') return <Music2 className={className} />;
+  if (icon === 'location') return <MapPin className={className} />;
+  return null;
 }
 
 export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorProps) {
@@ -185,16 +238,16 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     handleChange('images', images);
   };
 
-  const getGuestGuideItems = (): Array<{ title: string; description: string; image: string }> => {
+  const getGuestGuideItems = (): Array<{ title: string; description: string; icon: GuestGuideIconId }> => {
     const raw = Array.isArray(config.items) ? config.items : [];
-    return raw.map((item: any): { title: string; description: string; image: string } => ({
+    return raw.map((item: any): { title: string; description: string; icon: GuestGuideIconId } => ({
       title: item?.title || '',
       description: item?.description || '',
-      image: item?.image || '',
+      icon: (item?.icon as GuestGuideIconId) || 'none',
     }));
   };
 
-  const updateGuestGuideItems = (items: Array<{ title: string; description: string; image: string }>) => {
+  const updateGuestGuideItems = (items: Array<{ title: string; description: string; icon: GuestGuideIconId }>) => {
     handleChange('items', items);
   };
 
@@ -202,11 +255,15 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     const items = getGuestGuideItems();
     updateGuestGuideItems([
       ...items,
-      { title: `Orientação ${items.length + 1}`, description: '', image: '' },
+      { title: `Orientação ${items.length + 1}`, description: '', icon: 'none' },
     ]);
   };
 
-  const updateGuestGuideItem = (index: number, key: 'title' | 'description' | 'image', value: string) => {
+  const updateGuestGuideItem = (
+    index: number,
+    key: 'title' | 'description' | 'icon',
+    value: string
+  ) => {
     const items = getGuestGuideItems();
     if (!items[index]) return;
     items[index] = { ...items[index], [key]: value };
@@ -217,36 +274,6 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     const items = getGuestGuideItems();
     items.splice(index, 1);
     updateGuestGuideItems(items);
-  };
-
-  const handleGuestGuideImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const valid = await validateImageFile(file, {
-      label: 'Imagem do manual',
-      maxWidth: 1200,
-      maxHeight: 1200,
-    });
-    if (!valid) {
-      e.target.value = '';
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const url = await uploadToServer(file, 'guest-guide');
-      updateGuestGuideItem(index, 'image', url);
-    } catch {
-      const dataUrl = await fileToDataUrl(file);
-      updateGuestGuideItem(index, 'image', dataUrl);
-    } finally {
-      setUploading(false);
-      e.target.value = '';
-    }
   };
 
   return (
@@ -709,36 +736,28 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                       </Button>
                     </div>
 
-                    {item.image ? (
-                      <div className="relative">
-                        <img
-                          src={item.image}
-                          alt={`Imagem do item ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2"
-                          onClick={() => updateGuestGuideItem(index, 'image', '')}
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+                      <div>
+                        <Label className="text-xs text-gray-600">Ícone</Label>
+                        <select
+                          value={item.icon}
+                          onChange={(e) => updateGuestGuideItem(index, 'icon', e.target.value as GuestGuideIconId)}
+                          className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
                         >
-                          <X className="w-4 h-4" />
-                        </Button>
+                          {GUEST_GUIDE_ICON_OPTIONS.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                        <Upload className="w-6 h-6 text-gray-400 mb-1" />
-                        <span className="text-xs text-gray-500">{uploading ? 'Enviando...' : 'Upload da foto'}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleGuestGuideImageUpload(e, index)}
-                          className="hidden"
-                          disabled={uploading}
-                        />
-                      </label>
-                    )}
+                      <div className="flex items-end">
+                        <div className="h-10 px-3 rounded-md border border-[#ead9cd] bg-[#fcf7f3] flex items-center gap-2 text-gray-700">
+                          <GuestGuideIconPreview icon={item.icon} />
+                          <span className="text-xs">Prévia</span>
+                        </div>
+                      </div>
+                    </div>
 
                     <div>
                       <Label className="text-xs text-gray-600">Título do item</Label>
