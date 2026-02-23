@@ -51,6 +51,21 @@ export async function GET() {
       }
     }
 
+    // Regra de segurança: sem conta bancária válida, lista não pode permanecer publicada.
+    if (giftList.isPublished) {
+      const recipient = await prisma.recipient.findUnique({
+        where: { userId: ctx.effectiveUserId },
+        select: { bankAccount: true },
+      });
+
+      if (!hasConfiguredBankAccount(recipient?.bankAccount)) {
+        giftList = await prisma.giftList.update({
+          where: { id: giftList.id },
+          data: { isPublished: false },
+        });
+      }
+    }
+
     return NextResponse.json(giftList);
   } catch (error) {
     console.error("Erro ao buscar lista:", error);
