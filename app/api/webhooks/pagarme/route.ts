@@ -16,12 +16,38 @@ function toOrderStatus(status: string) {
 
 function resolvePagarmeOrderId(event: any): string | null {
   return (
-    event?.data?.id ??
     event?.data?.order?.id ??
     event?.data?.order_id ??
+    event?.data?.last_transaction?.order?.id ??
     event?.data?.last_transaction?.order_id ??
+    event?.data?.id ??
     null
   );
+}
+
+function resolveLocalOrderId(event: any): string | null {
+  return (
+    event?.data?.metadata?.localOrderId ??
+    event?.data?.order?.metadata?.localOrderId ??
+    event?.data?.last_transaction?.metadata?.localOrderId ??
+    null
+  );
+}
+
+function resolveMappedStatus(event: any) {
+  const candidates = [
+    event?.data?.status,
+    event?.data?.charges?.[0]?.status,
+    event?.data?.charges?.[0]?.last_transaction?.status,
+    event?.data?.last_transaction?.status,
+  ];
+
+  for (const candidate of candidates) {
+    const mapped = mapOrderStatus(candidate);
+    if (mapped !== "unknown") return mapped;
+  }
+
+  return "unknown";
 }
 
 export async function POST(request: Request) {
@@ -44,13 +70,15 @@ export async function POST(request: Request) {
   }
 
   try {
+    const localOrderId = resolveLocalOrderId(event);
     const pagarmeOrderId = resolvePagarmeOrderId(event);
-    if (!pagarmeOrderId) {
-      return NextResponse.json({ received: true, skipped: "missing_order_id" });
-    }
 
     const dbOrder = await prisma.order.findFirst({
-      where: { pagarmeOrderId },
+      where: localOrderId
+        ? { id: localOrderId }
+        : pagarmeOrderId
+          ? { pagarmeOrderId }
+          : undefined,
       select: {
         id: true,
         status: true,
@@ -59,11 +87,15 @@ export async function POST(request: Request) {
       },
     });
 
+    if (!localOrderId && !pagarmeOrderId) {
+      return NextResponse.json({ received: true, skipped: "missing_order_reference" });
+    }
+
     if (!dbOrder) {
       return NextResponse.json({ received: true, skipped: "order_not_found" });
     }
 
-    const mapped = mapOrderStatus(event?.data?.status ?? event?.data?.charges?.[0]?.status);
+    const mapped = resolveMappedStatus(event);
     let nextStatus = toOrderStatus(mapped);
 
     // Evita regressão de estado quando já foi marcado como pago no fluxo síncrono.
