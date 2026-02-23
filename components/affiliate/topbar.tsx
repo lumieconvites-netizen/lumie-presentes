@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
@@ -30,16 +30,16 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
   const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
 
   const sessionRole = (session?.user as any)?.role;
-  const name = session?.user?.name || 'UsuÃ¡rio';
+  const name = session?.user?.name || 'Usuário';
   const email = session?.user?.email || '';
   const sessionImage = (session?.user as any)?.image as string | undefined;
 
-  const title = role === 'PARTNER' ? 'Ãrea do Parceiro' : 'Ãrea do Embaixador';
+  const title = role === 'PARTNER' ? 'Área do Parceiro' : 'Área do Embaixador';
   const base = role === 'PARTNER' ? '/parceiro' : '/embaixador';
 
   const displayName =
     sessionRole === 'ADMIN' && impersonation?.isImpersonating
-      ? impersonation.effectiveUser?.name || 'UsuÃ¡rio'
+      ? impersonation.effectiveUser?.name || 'Usuário'
       : name;
   const displayEmail =
     sessionRole === 'ADMIN' && impersonation?.isImpersonating
@@ -69,7 +69,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
   async function stopImpersonation() {
     const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
     if (!res.ok) {
-      alert('NÃ£o foi possÃ­vel sair do modo de acesso.');
+      alert('Não foi possível sair do modo de acesso.');
       return;
     }
     window.location.assign('/admin');
@@ -96,7 +96,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
       <div className="flex items-center justify-between">
         <div className="pl-14 md:pl-0">
           <h1 className="text-xl md:text-2xl font-display text-foreground">{title}</h1>
-          <p className="text-xs md:text-sm text-gray-500">Acompanhe cÃ³digos, indicaÃ§Ãµes e ganhos em tempo real</p>
+          <p className="text-xs md:text-sm text-gray-500">Acompanhe códigos, indicações e ganhos em tempo real</p>
         </div>
 
         <DropdownMenu>
@@ -122,7 +122,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
             <DropdownMenuItem asChild>
               <Link href={`${base}/configuracoes`} className="cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" />
-                ConfiguraÃ§Ãµes
+                Configurações
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
@@ -35,14 +35,14 @@ export default function DashboardHeader() {
   const [siteSlug, setSiteSlug] = useState('');
 
   const sessionImage = (session?.user as any)?.image as string | undefined;
-  const sessionName = session?.user?.name ?? user?.name ?? 'UsuÃ¡rio';
+  const sessionName = session?.user?.name ?? user?.name ?? 'Usuário';
   const sessionEmail = session?.user?.email ?? user?.email ?? '';
   const avatarSrc = sessionImage || user?.photo;
   const role = (session?.user as any)?.role;
 
   const displayName =
     role === 'ADMIN' && impersonation?.isImpersonating
-      ? impersonation.effectiveUser?.name || 'UsuÃ¡rio'
+      ? impersonation.effectiveUser?.name || 'Usuário'
       : sessionName;
   const displayEmail =
     role === 'ADMIN' && impersonation?.isImpersonating
@@ -78,7 +78,7 @@ export default function DashboardHeader() {
   async function stopImpersonation() {
     const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
     if (!res.ok) {
-      alert('NÃ£o foi possÃ­vel sair do modo de acesso.');
+      alert('Não foi possível sair do modo de acesso.');
       return;
     }
     window.location.assign('/admin');
@@ -105,10 +105,10 @@ export default function DashboardHeader() {
       <div className="flex items-center justify-between">
         <div className="pl-16 md:pl-0">
           <h1 className="text-2xl font-display text-foreground flex items-center gap-2">
-            <span>OlÃ¡, {firstName}!</span>
+            <span>Olá, {firstName}!</span>
             <Sparkles className="h-4 w-4 text-[#c65a3a]" />
           </h1>
-          <p className="text-sm text-gray-500">Veja como estÃ¡ indo sua lista de presentes</p>
+          <p className="text-sm text-gray-500">Veja como está indo sua lista de presentes</p>
         </div>
 
         <DropdownMenu>
@@ -154,7 +154,7 @@ export default function DashboardHeader() {
             <DropdownMenuItem asChild>
               <Link href="/dashboard/configuracoes" className="cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" />
-                ConfiguraÃ§Ãµes
+                Configurações
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

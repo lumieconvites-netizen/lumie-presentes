@@ -10,7 +10,7 @@ const items = [
   { href: '/admin', label: 'Geral', icon: Blocks },
   { href: '/admin/financeiro', label: 'Financeiro', icon: CreditCard },
   { href: '/admin/bloqueados', label: 'Bloqueados', icon: ShieldBan },
-  { href: '/admin/retencao', label: 'Retencao', icon: ClipboardList },
+  { href: '/admin/retencao', label: 'Retenção', icon: ClipboardList },
   { href: '/admin/templates', label: 'Templates', icon: LayoutTemplate },
   { href: '/admin/lista-presentes', label: 'Lista de presentes', icon: Gift },
 ];
@@ -39,7 +39,7 @@ export default function AdminSidebar() {
       <aside
         className={cn(
           'border-r border-[#E9D8C8] bg-white/95 backdrop-blur-sm z-50',
-          'fixed inset-y-0 left-0 w-72 transition-transform md:static md:translate-x-0',
+          'fixed inset-y-0 left-0 w-[42vw] min-w-[190px] max-w-[260px] transition-transform md:static md:w-72 md:translate-x-0',
           open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
@@ -47,7 +47,7 @@ export default function AdminSidebar() {
           <p className="text-xs uppercase tracking-wide text-[#8E3D2C]/70">Painel</p>
           <h2 className="font-display text-2xl text-[#8E3D2C] flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
-            Admin LUMIE
+            Admin LUMIÊ
           </h2>
         </div>
 

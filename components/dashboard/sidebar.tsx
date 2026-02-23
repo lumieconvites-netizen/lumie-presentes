@@ -81,7 +81,7 @@ export default function DashboardSidebar() {
       <aside
         className={cn(
           'bg-white border-r border-border flex flex-col z-50',
-          'fixed inset-y-0 left-0 w-72 transition-transform md:static md:w-64 md:translate-x-0',
+          'fixed inset-y-0 left-0 w-[42vw] min-w-[190px] max-w-[260px] transition-transform md:static md:w-64 md:translate-x-0',
           open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
