@@ -111,7 +111,7 @@ export default function HomePage() {
                   Transforme presentes em <span className="text-primary">sonhos realizados</span>
                 </h1>
                 <p className="text-lg text-muted-foreground max-w-lg">
-                  Crie sua lista de presentes online e receba o valor diretamente na sua conta.
+                  Crie sua lista de presentes gratuitamente e receba o valor diretamente na sua conta.
                   Simples, elegante e sem complicações.
                 </p>
               </div>
