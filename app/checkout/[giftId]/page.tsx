@@ -303,13 +303,13 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-xl font-semibold">{gift.name}</div>
-                  <div className="text-sm text-gray-600 mt-1">{gift.description || 'Sem descricao'}</div>
+                  <div className="text-sm text-gray-600 mt-1">{gift.description || 'Sem descrição'}</div>
                 </div>
-                <Badge variant={soldOut ? 'secondary' : 'default'}>{soldOut ? 'Esgotado' : 'Disponivel'}</Badge>
+                <Badge variant={soldOut ? 'secondary' : 'default'}>{soldOut ? 'Esgotado' : 'Disponível'}</Badge>
               </div>
 
               <div className="mt-4 text-sm text-gray-500">
-                Disponivel: <b>{gift.availableQty}</b> de {gift.totalQuantity}
+                Disponível: <b>{gift.availableQty}</b> de {gift.totalQuantity}
               </div>
 
               <div className="mt-4">
@@ -354,14 +354,20 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
               />
 
               <div className="grid grid-cols-2 gap-3">
-                <Input
-                  type="number"
-                  min={1}
-                  max={qtyMax}
-                  value={qty}
-                  onChange={(e) => setQty(Number(e.target.value))}
-                />
-                <Input disabled value={`Max: ${qtyMax}`} />
+                <div className="space-y-1">
+                  <div className="text-xs text-gray-500">Quantidade de presentes</div>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={qtyMax}
+                    value={qty}
+                    onChange={(e) => setQty(Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs text-gray-500">Disponível neste presente</div>
+                  <Input disabled value={`Máx: ${qtyMax} unidades`} />
+                </div>
               </div>
 
               {giftList.allowMessages ? (
@@ -398,14 +404,17 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
                     />
                     <Input placeholder="CVV" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} />
                   </div>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={12}
-                    placeholder="Parcelas"
-                    value={cardInstallments}
-                    onChange={(e) => setCardInstallments(Math.max(1, Math.min(12, Number(e.target.value) || 1)))}
-                  />
+                  <div className="space-y-1">
+                    <div className="text-xs text-gray-500">Parcelas (1 = à vista)</div>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={12}
+                      placeholder="Número de parcelas"
+                      value={cardInstallments}
+                      onChange={(e) => setCardInstallments(Math.max(1, Math.min(12, Number(e.target.value) || 1)))}
+                    />
+                  </div>
                 </div>
               ) : null}
             </div>

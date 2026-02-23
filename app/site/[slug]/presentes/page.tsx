@@ -84,14 +84,14 @@ export default async function SiteGiftsBySlugPage({
                   </div>
                   <div className="p-5">
                     <h2 className="text-xl font-semibold">{gift.name}</h2>
-                    <p className="text-sm text-gray-600 mt-2 min-h-10">{gift.description || "Sem descricao"}</p>
+                    <p className="text-sm text-gray-600 mt-2 min-h-10">{gift.description || "Sem descrição"}</p>
                     <div className="flex items-center justify-between mt-5">
                       <div>
                         <p className="text-2xl font-bold" style={{ color: primaryColor }}>
                           {formatBRL(displayPrice)}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Disponivel: {gift.availableQty} de {gift.totalQuantity}
+                          Disponível: {gift.availableQty} de {gift.totalQuantity}
                         </p>
                       </div>
                       {soldOut ? (
