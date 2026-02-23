@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
@@ -9,10 +10,15 @@ import { cn } from '@/lib/utils';
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const hideOnTemplatePreview = /^\/templates\/[^/]+(?:\/presentes)?$/.test(pathname ?? '');
 
   useEffect(() => {
     setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    setNavigating(false);
   }, [pathname]);
 
   if (hideOnTemplatePreview) {
@@ -33,47 +39,51 @@ export function Navbar() {
       <div className="container mx-auto px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6 md:gap-12">
-            <a href="/" className="relative w-16 h-8 shrink-0 pointer-events-auto">
-              <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" />
-            </a>
+            <Link href="/" className="relative w-16 h-8 shrink-0 pointer-events-auto">
+              <Image src="/logo.png" alt="LUMIE" fill className="object-contain" />
+            </Link>
 
             <div className="hidden md:flex items-center gap-8 text-sm">
-              <a href="/" className={linkClass('/')}>Inicio</a>
-              <a href="/como-funciona" className={linkClass('/como-funciona')}>Como Funciona</a>
-              <a href="/tarifas" className={linkClass('/tarifas')}>Tarifas</a>
-              <a href="/templates" className={linkClass('/templates')}>Templates</a>
+              <Link href="/" className={linkClass('/')}>Inicio</Link>
+              <Link href="/como-funciona" className={linkClass('/como-funciona')}>Como Funciona</Link>
+              <Link href="/tarifas" className={linkClass('/tarifas')}>Tarifas</Link>
+              <Link href="/templates" className={linkClass('/templates')}>Templates</Link>
             </div>
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="/login"
+            <Link
+              href="/auth/login"
               className="pointer-events-auto inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              onClick={() => setNavigating(true)}
             >
               Entrar
-            </a>
+            </Link>
 
-            <a
-              href="/cadastro"
+            <Link
+              href="/auth/cadastro"
               className="pointer-events-auto inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-terracota-500 to-terracota-700 px-5 text-sm font-medium text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm transition-colors"
+              onClick={() => setNavigating(true)}
             >
               Criar Conta
-            </a>
+            </Link>
           </div>
 
           <div className="md:hidden flex items-center gap-2">
-            <a
-              href="/login"
+            <Link
+              href="/auth/login"
               className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-foreground border border-[#e8d8cc]"
+              onClick={() => setNavigating(true)}
             >
               Entrar
-            </a>
-            <a
-              href="/cadastro"
+            </Link>
+            <Link
+              href="/auth/cadastro"
               className="inline-flex h-9 items-center justify-center rounded-full bg-gradient-to-r from-terracota-500 to-terracota-700 px-3 text-sm font-medium text-white"
+              onClick={() => setNavigating(true)}
             >
               Criar Conta
-            </a>
+            </Link>
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#e8d8cc]"
@@ -89,14 +99,22 @@ export function Navbar() {
         {open ? (
           <div className="md:hidden mt-3 rounded-xl border border-[#ead9cd] bg-white p-3 shadow-sm">
             <div className="flex flex-col text-sm">
-              <a href="/" className={cn('rounded-md px-3 py-2', linkClass('/'))}>Inicio</a>
-              <a href="/como-funciona" className={cn('rounded-md px-3 py-2', linkClass('/como-funciona'))}>Como Funciona</a>
-              <a href="/tarifas" className={cn('rounded-md px-3 py-2', linkClass('/tarifas'))}>Tarifas</a>
-              <a href="/templates" className={cn('rounded-md px-3 py-2', linkClass('/templates'))}>Templates</a>
+              <Link href="/" className={cn('rounded-md px-3 py-2', linkClass('/'))}>Inicio</Link>
+              <Link href="/como-funciona" className={cn('rounded-md px-3 py-2', linkClass('/como-funciona'))}>Como Funciona</Link>
+              <Link href="/tarifas" className={cn('rounded-md px-3 py-2', linkClass('/tarifas'))}>Tarifas</Link>
+              <Link href="/templates" className={cn('rounded-md px-3 py-2', linkClass('/templates'))}>Templates</Link>
             </div>
           </div>
         ) : null}
       </div>
+
+      {navigating ? (
+        <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+          <div className="rounded-xl border border-[#ead9cd] bg-white px-5 py-3 text-sm font-medium text-[#4a3a33] shadow-sm">
+            Carregando...
+          </div>
+        </div>
+      ) : null}
     </nav>
   );
 }

@@ -118,7 +118,7 @@ export default function HomePage() {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm rounded-xl px-8 py-6 text-base">
-                  <Link href="/cadastro">Criar Minha Lista</Link>
+                  <Link href="/auth/cadastro">Criar Minha Lista</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="rounded-xl px-8 py-6 text-base border-[#dfc7b7] hover:bg-[#fff7f1]">
                   <Link href="/como-funciona">Como Funciona</Link>
@@ -291,7 +291,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-5 flex gap-3">
-                  <Link href="/cadastro" className="flex-1 rounded-xl bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white text-center py-3 font-semibold hover:brightness-105 transition">
+                  <Link href="/auth/cadastro" className="flex-1 rounded-xl bg-gradient-to-r from-[#a5482d] to-[#c65a3a] text-white text-center py-3 font-semibold hover:brightness-105 transition">
                     Criar lista
                   </Link>
                   <Link href="/templates" className="flex-1 rounded-xl border border-[#d7b7a3] bg-white text-[#8e3d2c] text-center py-3 font-semibold hover:bg-[#fff8f3] transition">
@@ -623,7 +623,7 @@ export default function HomePage() {
               Rápido para criar, elegante para compartilhar.
             </p>
             <Button asChild variant="outline" size="lg" className="mt-8 bg-white text-[#a5482d] border-white/70 hover:bg-[#fff3ec] hover:text-[#8f3c24] rounded-xl px-8 font-semibold shadow-lg">
-              <Link href="/cadastro" className="text-[#a5482d]">Criar Minha Lista Grátis</Link>
+              <Link href="/auth/cadastro" className="text-[#a5482d]">Criar Minha Lista Grátis</Link>
             </Button>
           </div>
         </div>
@@ -632,5 +632,4 @@ export default function HomePage() {
     </div>
   );
 }
-
 

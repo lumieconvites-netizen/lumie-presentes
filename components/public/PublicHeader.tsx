@@ -54,7 +54,7 @@ export default function PublicHeader() {
         {/* Direita: Entrar OU Avatar */}
         {status !== 'authenticated' ? (
           <Link
-            href="/login"
+            href="/auth/login"
             className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm border border-terracota-200 text-terracota-800 hover:bg-terracota-50"
           >
             Entrar

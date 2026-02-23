@@ -74,7 +74,7 @@ export default function PricingPage() {
 
                 <div className="mt-7">
                   <Link
-                    href="/cadastro"
+                    href="/auth/cadastro"
                     className="inline-flex items-center gap-2 rounded-xl bg-[#c65a3a] px-6 py-3 font-semibold text-white transition hover:brightness-105"
                   >
                     Criar Minha Lista
@@ -168,7 +168,7 @@ export default function PricingPage() {
             Crie sua lista agora e pague apenas quando começar a receber.
           </p>
           <Link
-            href="/cadastro"
+            href="/auth/cadastro"
             className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 font-semibold text-[#c65a3a] transition hover:bg-[#fff3ea]"
           >
             Criar Minha Lista Grátis

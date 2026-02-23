@@ -174,7 +174,7 @@ export default function FAQ() {
         <div className="max-w-4xl mx-auto">
           <h2 className="font-display text-3xl md:text-5xl text-white mb-6">Pronto para criar sua lista?</h2>
           <Link
-            href="/cadastro"
+            href="/auth/cadastro"
             className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-[#c65a3a] shadow-[0_10px_24px_rgba(74,39,25,0.24)] transition hover:bg-[#fff3ea]"
           >
             Começar Agora

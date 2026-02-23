@@ -185,7 +185,7 @@ export default function HowItWorks() {
             É grátis para criar!
           </p>
           <Link
-            href="/cadastro"
+            href="/auth/cadastro"
             className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold text-[#c65a3a] shadow-[0_8px_20px_rgba(67,39,28,0.2)] transition hover:bg-[#fff3ea]"
           >
             Criar Minha Lista

@@ -271,7 +271,7 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Já tem uma conta? </span>
-            <Link href="/login" className="text-terracota-600 hover:text-terracota-700 font-medium">
+            <Link href="/auth/login" className="text-terracota-600 hover:text-terracota-700 font-medium">
               Faça login
             </Link>
           </div>
@@ -286,5 +286,4 @@ export default function RegisterPage() {
     </div>
   );
 }
-
 

@@ -59,7 +59,7 @@ export default function SejaParceiroPage() {
               </p>
 
               <Button asChild size="lg" className="rounded-xl px-8 py-6 text-base">
-                <Link href="/cadastro?tipo=parceiro">
+                <Link href="/auth/cadastro?tipo=parceiro">
                   Seja Nossa Parceira
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
@@ -198,7 +198,7 @@ export default function SejaParceiroPage() {
             LUMIÊ: enquanto você realiza sonhos, nós potencializamos seus ganhos.
           </p>
           <Button asChild size="lg" className="rounded-xl px-8 py-6 text-base">
-            <Link href="/cadastro?tipo=parceiro">
+            <Link href="/auth/cadastro?tipo=parceiro">
               Tornar-se parceiro
               <Rocket className="w-5 h-5 ml-2" />
             </Link>

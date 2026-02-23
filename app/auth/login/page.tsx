@@ -131,7 +131,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Não tem uma conta? </span>
-            <Link href="/cadastro" className="text-terracota-600 hover:text-terracota-700 font-medium">
+            <Link href="/auth/cadastro" className="text-terracota-600 hover:text-terracota-700 font-medium">
               Cadastre-se gratuitamente
             </Link>
           </div>
@@ -146,5 +146,4 @@ export default function LoginPage() {
     </div>
   );
 }
-
 
