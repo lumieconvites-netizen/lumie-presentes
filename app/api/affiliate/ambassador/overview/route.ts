@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActingUserContext } from "@/lib/acting-user";
 import { ensureDefaultReferralCodesForUser } from "@/lib/referrals";
@@ -6,22 +6,6 @@ import { calculateSplitFromOrder, cardPaymentMethodWhere, isRealRecipientId } fr
 import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter";
 
 const CARD_LIQUIDATION_WINDOW_DAYS = 45;
-
-function isCardMethod(value?: string | null) {
-  const method = String(value ?? "").toLowerCase();
-  return method.includes("credit") || method.includes("card") || method.includes("cartao") || method.includes("cartão");
-}
-
-function isCardStillPending(params: {
-  paymentMethod?: string | null;
-  paidAt?: Date | null;
-  createdAt: Date;
-  cutoff: Date;
-}) {
-  if (!isCardMethod(params.paymentMethod)) return false;
-  const referenceDate = params.paidAt ?? params.createdAt;
-  return referenceDate >= params.cutoff;
-}
 
 export async function GET(request: Request) {
   const ctx = await getActingUserContext();
@@ -48,7 +32,7 @@ export async function GET(request: Request) {
         name: true,
         email: true,
         role: true,
-        recipient: { select: { pagarmeRecipientId: true, createdAt: true } },
+        recipient: { select: { pagarmeRecipientId: true } },
       },
     }),
     prisma.referralCode.findMany({
@@ -100,14 +84,8 @@ export async function GET(request: Request) {
                 email: true,
                 acquisitionSource: true,
                 referredByPartnerId: true,
-                recipient: { select: { pagarmeRecipientId: true, createdAt: true } },
-                referredByPartner: {
-                  select: {
-                    recipient: {
-                      select: { pagarmeRecipientId: true, createdAt: true },
-                    },
-                  },
-                },
+                recipient: { select: { pagarmeRecipientId: true } },
+                referredByPartner: { select: { recipient: { select: { pagarmeRecipientId: true } } } },
               },
             },
           },
@@ -183,47 +161,26 @@ export async function GET(request: Request) {
     totalGrossSales += totalAmount;
 
     const user = order.giftList.user;
-    const clientRecipientReadyAtOrder =
-      isRealRecipientId(user.recipient?.pagarmeRecipientId) &&
-      Boolean(user.recipient?.createdAt && user.recipient.createdAt <= order.createdAt);
-    const partnerRecipientReadyAtOrder =
-      isRealRecipientId(user.referredByPartner?.recipient?.pagarmeRecipientId) &&
-      Boolean(
-        user.referredByPartner?.recipient?.createdAt &&
-          user.referredByPartner.recipient.createdAt <= order.createdAt
-      );
-    const ambassadorRecipientReadyAtOrder =
-      isRealRecipientId(ambassadorUser.recipient?.pagarmeRecipientId) &&
-      Boolean(ambassadorUser.recipient?.createdAt && ambassadorUser.recipient.createdAt <= order.createdAt);
-
     const split = calculateSplitFromOrder({
       baseAmount,
       totalAmount,
       acquisitionSource: user.acquisitionSource,
-      hasClientRecipient: clientRecipientReadyAtOrder,
-      hasPartnerRecipient: partnerRecipientReadyAtOrder,
-      hasAmbassadorRecipient: ambassadorRecipientReadyAtOrder,
-      paymentMethod: isCardMethod(order.paymentMethod) ? "CREDIT_CARD" : "PIX",
+      hasClientRecipient: isRealRecipientId(user.recipient?.pagarmeRecipientId),
+      hasPartnerRecipient: isRealRecipientId(user.referredByPartner?.recipient?.pagarmeRecipientId),
+      hasAmbassadorRecipient: isRealRecipientId(ambassadorUser.recipient?.pagarmeRecipientId),
+      paymentMethod: String(order.paymentMethod || "").toLowerCase().includes("pix") ? "PIX" : "CREDIT_CARD",
     });
 
-    const commissionGenerated = split.ambassadorInCents / 100;
-    const commissionReceived = isCardStillPending({
-      paymentMethod: order.paymentMethod,
-      paidAt: order.paidAt,
-      createdAt: order.createdAt,
-      cutoff: cardLiquidationCutoff,
-    })
-      ? 0
-      : commissionGenerated;
-    totalCommissionPaid += commissionReceived;
-    if (user.referredByPartnerId) viaPartnerCommission += commissionReceived;
-    else directClientCommission += commissionReceived;
+    const commission = split.ambassadorInCents / 100;
+    totalCommissionPaid += commission;
+    if (user.referredByPartnerId) viaPartnerCommission += commission;
+    else directClientCommission += commission;
 
     if (user.referredByPartnerId) {
       const partnerLine = partnersMap.get(user.referredByPartnerId);
       if (partnerLine) {
         partnerLine.sales += totalAmount;
-        partnerLine.commission += commissionReceived;
+        partnerLine.commission += commission;
         partnerLine.orders += 1;
         partnersMap.set(user.referredByPartnerId, partnerLine);
       }
@@ -238,7 +195,7 @@ export async function GET(request: Request) {
       orders: 0,
     };
     currentClient.sales += totalAmount;
-    currentClient.commission += commissionReceived;
+    currentClient.commission += commission;
     currentClient.orders += 1;
     clientsMap.set(user.id, currentClient);
   }
