@@ -371,6 +371,45 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             />
           </div>
 
+          <div>
+            <Label className="text-sm font-medium">Cor do label</Label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="color"
+                value={config.labelColor || '#FFFFFF'}
+                onChange={(e) => handleChange('labelColor', e.target.value)}
+                className="h-10 w-12 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
+              />
+              <Input value={config.labelColor || '#FFFFFF'} onChange={(e) => handleChange('labelColor', e.target.value)} />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Cor do título</Label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="color"
+                value={config.titleColor || '#FFFFFF'}
+                onChange={(e) => handleChange('titleColor', e.target.value)}
+                className="h-10 w-12 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
+              />
+              <Input value={config.titleColor || '#FFFFFF'} onChange={(e) => handleChange('titleColor', e.target.value)} />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Cor do subtítulo</Label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="color"
+                value={config.subtitleColor || '#FFFFFF'}
+                onChange={(e) => handleChange('subtitleColor', e.target.value)}
+                className="h-10 w-12 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
+              />
+              <Input value={config.subtitleColor || '#FFFFFF'} onChange={(e) => handleChange('subtitleColor', e.target.value)} />
+            </div>
+          </div>
+
           <div className="space-y-4 rounded-lg border border-[#ead9cd] bg-white p-3">
             <p className="text-sm font-medium">Posição individual dos textos</p>
 

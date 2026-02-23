@@ -325,6 +325,9 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
 
       {enabledBlocks.map((block, index) => {
         const config = block.config || {};
+        const heroLabelColor = config.labelColor || '#FFFFFF';
+        const heroTitleColor = config.titleColor || '#FFFFFF';
+        const heroSubtitleColor = config.subtitleColor || '#FFFFFF';
         const sectionClass = 'lp-section';
         const showDivider = dividerEnabled && index > 0 && enabledBlocks[index - 1]?.type !== 'hero';
 
@@ -350,21 +353,21 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       {config.label && (
                         <p
                           className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
-                          style={heroElementStyle(getHeroPoint(config, 'label'))}
+                          style={{ ...heroElementStyle(getHeroPoint(config, 'label')), color: heroLabelColor }}
                         >
                           {config.label}
                         </p>
                       )}
                       <h1
                         className="text-4xl md:text-7xl font-bold text-center whitespace-pre leading-[1.05] max-w-none"
-                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle }}
+                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle, color: heroTitleColor }}
                       >
                         {config.title || 'Meu Evento Especial'}
                       </h1>
                       {config.subtitle && (
                         <p
                           className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
-                          style={heroElementStyle(getHeroPoint(config, 'subtitle'))}
+                          style={{ ...heroElementStyle(getHeroPoint(config, 'subtitle')), color: heroSubtitleColor }}
                         >
                           {config.subtitle}
                         </p>
@@ -386,21 +389,21 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       {config.label && (
                         <p
                           className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
-                          style={heroElementStyle(getHeroPoint(config, 'label'))}
+                          style={{ ...heroElementStyle(getHeroPoint(config, 'label')), color: heroLabelColor }}
                         >
                           {config.label}
                         </p>
                       )}
                       <h1
                         className="text-4xl md:text-7xl font-bold text-center whitespace-pre leading-[1.05] max-w-none"
-                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle }}
+                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle, color: heroTitleColor }}
                       >
                         {config.title || 'Meu Evento Especial'}
                       </h1>
                       {config.subtitle && (
                         <p
                           className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
-                          style={heroElementStyle(getHeroPoint(config, 'subtitle'))}
+                          style={{ ...heroElementStyle(getHeroPoint(config, 'subtitle')), color: heroSubtitleColor }}
                         >
                           {config.subtitle}
                         </p>
