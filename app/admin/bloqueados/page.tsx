@@ -49,7 +49,7 @@ export default function AdminBloqueadosPage() {
     if (reason === null) return;
     const normalized = reason.trim();
     if (!normalized) {
-      alert('Motivo nao pode ficar vazio.');
+      alert('Motivo n?o pode ficar vazio.');
       return;
     }
     await patchUser(user.id, { isBlocked: true, blockReason: normalized });

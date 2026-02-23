@@ -379,7 +379,7 @@ export default function AdminTemplateEditorPage() {
 
   async function uploadFile(file: File, folder: string) {
     if (file.size > 5 * 1024 * 1024) {
-      throw new Error('Imagem maior que 5MB. Envie um arquivo de ate 5MB.');
+      throw new Error('Imagem maior que 5MB. Envie um arquivo de at? 5MB.');
     }
     const formData = new FormData();
     formData.append('file', file);
@@ -440,7 +440,7 @@ export default function AdminTemplateEditorPage() {
       setTheme((prev: any) => ({ ...prev, gifts_page_cover_image: url }));
       setDirty(true);
     } catch (error: any) {
-      alert(error?.message || 'Erro ao enviar capa da pagina de presentes');
+      alert(error?.message || 'Erro ao enviar capa da p?gina de presentes');
     } finally {
       setUploadingGiftsPageCover(false);
     }
@@ -723,7 +723,7 @@ export default function AdminTemplateEditorPage() {
               </div>
               <div className="space-y-1">
                 <Label>Texto da marca</Label>
-                <Input value={theme?.header?.brandText || 'LUMIE'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, header: { ...(prev?.header || {}), brandText: e.target.value } })); setDirty(true); }} />
+                <Input value={theme?.header?.brandText || 'LUMIÊ'} onChange={(e) => { setTheme((prev: any) => ({ ...prev, header: { ...(prev?.header || {}), brandText: e.target.value } })); setDirty(true); }} />
               </div>
               <div className="space-y-1">
                 <Label>Cor de fundo</Label>

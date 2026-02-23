@@ -34,13 +34,13 @@ export default function RecuperarSenhaPage() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao solicitar codigo');
+        throw new Error(data.error || 'Erro ao solicitar c?digo');
       }
 
-      toast.success('Se o email existir, enviaremos um codigo de recuperacao.');
+      toast.success('Se o email existir, enviaremos um c?digo de recuperacao.');
       setStep('reset');
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao solicitar codigo');
+      toast.error(error.message || 'Erro ao solicitar c?digo');
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +56,7 @@ export default function RecuperarSenhaPage() {
     }
 
     if (password !== confirmPassword) {
-      toast.error('As senhas nao coincidem');
+      toast.error('As senhas n?o coincidem');
       return;
     }
 
@@ -101,12 +101,12 @@ export default function RecuperarSenhaPage() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao reenviar codigo');
+        throw new Error(data.error || 'Erro ao reenviar c?digo');
       }
 
-      toast.success('Codigo reenviado.');
+      toast.success('C?digo reenviado.');
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao reenviar codigo');
+      toast.error(error.message || 'Erro ao reenviar c?digo');
     } finally {
       setIsLoading(false);
     }
@@ -126,8 +126,8 @@ export default function RecuperarSenhaPage() {
           </CardTitle>
           <CardDescription className="text-center">
             {step === 'request'
-              ? 'Informe seu email para receber um codigo de recuperacao'
-              : `Digite o codigo enviado para ${email}`}
+              ? 'Informe seu email para receber um c?digo de recuperacao'
+              : `Digite o c?digo enviado para ${email}`}
           </CardDescription>
         </CardHeader>
 
@@ -153,13 +153,13 @@ export default function RecuperarSenhaPage() {
                 className="w-full bg-gradient-to-r from-terracota-500 to-terracota-700 hover:from-terracota-600 hover:to-terracota-800 shadow-sm"
                 disabled={isLoading}
               >
-                {isLoading ? 'Enviando codigo...' : 'Enviar codigo'}
+                {isLoading ? 'Enviando c?digo...' : 'Enviar c?digo'}
               </Button>
             </form>
           ) : (
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="code">Codigo de recuperacao</Label>
+                <Label htmlFor="code">C?digo de recuperacao</Label>
                 <Input
                   id="code"
                   type="text"
@@ -215,7 +215,7 @@ export default function RecuperarSenhaPage() {
                 onClick={handleResendCode}
                 disabled={isLoading}
               >
-                Reenviar codigo
+                Reenviar c?digo
               </Button>
 
               <Button

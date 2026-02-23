@@ -71,7 +71,7 @@ function buildCheckoutErrorMessage(data: any) {
   const orderId = data?.orderId ? ` Pedido: ${data.orderId}.` : '';
   const statusHint =
     data?.transactionStatus === 'not_authorized'
-      ? ' Cartao nao autorizado pelo emissor. Tente outro cartao ou PIX.'
+      ? ' Cartao n?o autorizado pelo emissor. Tente outro cart?o ou PIX.'
       : '';
   const detail = data?.details ? ` ${data.details}` : '';
   return `${baseError}${detail}${statusHint}${orderId}`.trim();
@@ -119,7 +119,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
         const data = await parseJsonSafe(res);
 
         if (!res.ok) {
-          throw new Error(data?.error ?? 'Presente nao encontrado');
+          throw new Error(data?.error ?? 'Presente n?o encontrado');
         }
 
         if (!cancelled) setGiftData(data as GiftResponse);
@@ -162,7 +162,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
     if (!guestEmail.trim()) return alert('Digite seu email.');
     if (quantity > available) return alert(`Quantidade indisponivel. Maximo: ${available}.`);
     if (paymentMethod === 'CREDIT_CARD') {
-      if (!cardNumber.trim()) return alert('Digite o numero do cartao.');
+      if (!cardNumber.trim()) return alert('Digite o numero do cart?o.');
       if (!cardHolderName.trim()) return alert('Digite o nome do titular.');
       if (!cardExpMonth.trim()) return alert('Digite o mes de validade.');
       if (!cardExpYear.trim()) return alert('Digite o ano de validade.');
@@ -224,7 +224,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
       }
 
       if (data?.mode === 'pagarme_credit_card') {
-        alert('Pagamento em cartao enviado com sucesso. Ele pode ficar em processamento ate a confirmacao.');
+        alert('Pagamento em cart?o enviado com sucesso. Ele pode ficar em processamento at? a confirmacao.');
         router.push(`/site/${giftData.giftList.slug}`);
         router.refresh();
         return;
@@ -252,7 +252,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <Card className="p-8 max-w-md w-full text-center">
-          <div className="text-lg font-semibold">Presente nao encontrado</div>
+          <div className="text-lg font-semibold">Presente n?o encontrado</div>
           <div className="text-sm text-gray-500 mt-1">Volte para a lista e tente novamente.</div>
           <Button className="mt-6" onClick={() => router.push('/site')}>
             Voltar
@@ -274,9 +274,9 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
     if (!pixData?.qrCode) return;
     try {
       await navigator.clipboard.writeText(pixData.qrCode);
-      alert('Codigo PIX copiado.');
+      alert('C?digo PIX copiado.');
     } catch {
-      alert('Nao foi possivel copiar automaticamente. Copie manualmente o codigo.');
+      alert('N?o foi poss?vel copiar automaticamente. Copie manualmente o c?digo.');
     }
   }
 
@@ -336,7 +336,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
                   variant={paymentMethod === 'CREDIT_CARD' ? 'default' : 'outline'}
                   onClick={() => setPaymentMethod('CREDIT_CARD')}
                 >
-                  Cartao de credito
+                  Cartao de cr?dito
                 </Button>
               </div>
 
@@ -374,9 +374,9 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
 
               {paymentMethod === 'CREDIT_CARD' ? (
                 <div className="space-y-3 rounded-lg border bg-white p-3">
-                  <div className="text-sm font-medium">Dados do cartao</div>
+                  <div className="text-sm font-medium">Dados do cart?o</div>
                   <Input
-                    placeholder="Numero do cartao"
+                    placeholder="Numero do cart?o"
                     value={cardNumber}
                     onChange={(e) => setCardNumber(e.target.value)}
                   />
@@ -420,7 +420,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
             {pixData ? (
               <div className="mt-6 border rounded-lg p-4 space-y-3">
                 <div className="font-medium">PIX gerado</div>
-                {pixExpiresLabel ? <div className="text-xs text-gray-500">Valido ate {pixExpiresLabel}</div> : null}
+                {pixExpiresLabel ? <div className="text-xs text-gray-500">Valido at? {pixExpiresLabel}</div> : null}
                 {pixQrImageSrc ? (
                   <div className="bg-white rounded border p-2 flex justify-center">
                     <img
@@ -455,7 +455,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
 
                 {!pixData.qrCode && !pixData.qrCodeUrl && !pixData.checkoutUrl ? (
                   <p className="text-xs text-amber-700">
-                    Nao foi possivel exibir o QR/copia e cola neste pedido. Gere um novo pagamento.
+                    N?o foi poss?vel exibir o QR/copia e cola neste pedido. Gere um novo pagamento.
                   </p>
                 ) : null}
 
@@ -464,7 +464,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
                 </Button>
                 {!pixData.splitApplied ? (
                   <p className="text-[11px] text-amber-700">
-                    Aviso interno: split nao aplicado ({pixData.splitReason ?? 'desconhecido'}).
+                    Aviso interno: split n?o aplicado ({pixData.splitReason ?? 'desconhecido'}).
                   </p>
                 ) : null}
               </div>

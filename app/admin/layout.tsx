@@ -33,7 +33,7 @@ export default async function AdminLayout({
             <div className="px-4 md:px-6 py-5 flex items-center justify-between">
               <div className="pl-14 md:pl-0">
                 <h1 className="text-xl md:text-2xl font-display text-[#8E3D2C]">Central Administrativa</h1>
-                <p className="text-xs md:text-sm text-[#8E3D2C]/70">Operacao geral da plataforma LUMIE</p>
+                <p className="text-xs md:text-sm text-[#8E3D2C]/70">Operação geral da plataforma LUMIÊ</p>
               </div>
               <AdminTopbarMenu name={adminName} email={adminEmail} image={adminImage} />
             </div>

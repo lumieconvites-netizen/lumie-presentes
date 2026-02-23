@@ -156,7 +156,7 @@ export function CheckInConsole({
         if (!res.ok) throw new Error(json?.error || 'Falha no check-in');
 
         if (json?.alreadyCheckedIn) {
-          pushFeedback({ type: 'warn', text: `${json.guest?.fullName || 'Convidado'} ja tinha check-in.` });
+          pushFeedback({ type: 'warn', text: `${json.guest?.fullName || 'Convidado'} j? tinha check-in.` });
         } else {
           pushFeedback({ type: 'ok', text: `Check-in confirmado: ${json.guest?.fullName || 'Convidado'}.` });
         }
@@ -255,7 +255,7 @@ export function CheckInConsole({
         rafRef.current = requestAnimationFrame(scanLoopJsQr);
       }
     } catch {
-      pushFeedback({ type: 'error', text: 'Nao foi possivel acessar a camera.' });
+      pushFeedback({ type: 'error', text: 'N?o foi poss?vel acessar a camera.' });
       stopScanner();
     }
   }, [pushFeedback, scanLoopBarcodeDetector, scanLoopJsQr, scannerSupported, stopScanner]);
@@ -313,7 +313,7 @@ export function CheckInConsole({
   }
 
   if (!data) {
-    return <div className="p-4 md:p-6">Nao foi possivel carregar o check-in.</div>;
+    return <div className="p-4 md:p-6">N?o foi poss?vel carregar o check-in.</div>;
   }
 
   return (
@@ -465,10 +465,10 @@ export function CheckInConsole({
               </div>
 
               <div className="pt-2 border-t border-[#efe3da]">
-                <p className="text-sm font-medium mb-2">Entrada manual (QR/token/codigo)</p>
+                <p className="text-sm font-medium mb-2">Entrada manual (QR/token/c?digo)</p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Input
-                    placeholder="Cole o conteudo do QR ou digite o codigo"
+                    placeholder="Cole o conte?do do QR ou digite o c?digo"
                     value={manualCode}
                     onChange={(e) => setManualCode(e.target.value)}
                   />
@@ -488,7 +488,7 @@ export function CheckInConsole({
           ) : (
             <div className="space-y-3">
               <Input
-                placeholder="Buscar por nome ou codigo de check-in"
+                placeholder="Buscar por nome ou c?digo de check-in"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -502,9 +502,9 @@ export function CheckInConsole({
                         {guest.status === 'CONFIRMED'
                           ? 'Confirmado'
                           : guest.status === 'DECLINED'
-                            ? 'Nao vai'
+                            ? 'N?o vai'
                             : 'Pendente'}
-                        {guest.checkInCode ? ` • Codigo: ${guest.checkInCode}` : ''}
+                        {guest.checkInCode ? ` • C?digo: ${guest.checkInCode}` : ''}
                       </p>
                     </div>
 

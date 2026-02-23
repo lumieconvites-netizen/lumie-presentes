@@ -347,7 +347,7 @@ export function ConfirmClient({
                       }
                     }}
                   >
-                    Copiar codigo
+                    Copiar c?digo
                   </Button>
                   <Button variant="outline" onClick={() => window.print()}>
                     Salvar no celular

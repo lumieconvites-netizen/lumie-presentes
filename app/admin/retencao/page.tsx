@@ -191,7 +191,7 @@ export default function AdminRetencaoPage() {
                       <p>{log.userEmail || '-'}</p>
                       <p className="text-xs text-gray-500">{log.userId || '-'}</p>
                     </td>
-                    <td className="p-2">{log.dryRun ? 'Sim' : 'Nao'}</td>
+                    <td className="p-2">{log.dryRun ? 'Sim' : 'N?o'}</td>
                     <td className="p-2">
                       <pre className="text-xs whitespace-pre-wrap break-all max-w-[440px]">
                         {log.metadata ? JSON.stringify(log.metadata, null, 2) : '-'}

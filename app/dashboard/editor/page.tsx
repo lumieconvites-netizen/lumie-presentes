@@ -310,7 +310,7 @@ export default function PageBuilder() {
   const uploadThemeBackground = async (file?: File | null) => {
     if (!file) return;
     if (file.size > MAX_UPLOAD_BYTES) {
-      alert('Imagem maior que 5MB. Escolha um arquivo de ate 5MB.');
+      alert('Imagem maior que 5MB. Escolha um arquivo de at? 5MB.');
       return;
     }
     try {
@@ -481,8 +481,8 @@ export default function PageBuilder() {
         <div
           className={cn(
             'bg-[#fffaf7] border-[#ead9cd] overflow-y-auto z-50',
-            'fixed left-0 top-[5.2rem] bottom-[5.2rem] w-[42vw] min-w-[190px] max-w-[270px] rounded-r-2xl border border-l-0 transition-transform md:static md:top-auto md:bottom-auto md:w-72 md:max-w-none md:min-w-0 md:rounded-none md:border md:border-b md:border-r',
-            mobileDrawer === 'controls' ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+            'fixed inset-x-0 bottom-[5.2rem] h-[44dvh] min-h-[280px] max-h-[420px] rounded-t-2xl border border-b-0 transition-transform md:static md:top-auto md:bottom-auto md:h-auto md:min-h-0 md:max-h-none md:inset-auto md:w-72 md:max-w-none md:min-w-0 md:rounded-none md:border md:border-b md:border-r',
+            mobileDrawer === 'controls' ? 'translate-y-0' : 'translate-y-full md:translate-y-0'
           )}
         >
           <Tabs defaultValue="blocks" className="p-4">
@@ -931,8 +931,8 @@ export default function PageBuilder() {
           <div
             className={cn(
               'bg-white border-[#ead9cd] p-4 overflow-y-auto z-50',
-              'fixed right-0 top-[5.2rem] bottom-[5.2rem] w-[92vw] max-w-[520px] rounded-l-2xl border border-r-0 transition-transform md:static md:inset-auto md:top-auto md:bottom-auto md:w-80 md:max-w-none md:rounded-none md:border md:border-b md:border-l',
-              mobileDrawer === 'selected' ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
+              'fixed inset-x-0 bottom-[5.2rem] h-[44dvh] min-h-[280px] max-h-[420px] rounded-t-2xl border border-b-0 transition-transform md:static md:inset-auto md:top-auto md:bottom-auto md:h-auto md:min-h-0 md:max-h-none md:w-80 md:max-w-none md:rounded-none md:border md:border-b md:border-l',
+              mobileDrawer === 'selected' ? 'translate-y-0' : 'translate-y-full md:translate-y-0'
             )}
           >
             <div className="flex items-center justify-between mb-4">

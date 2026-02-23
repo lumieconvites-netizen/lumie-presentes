@@ -123,7 +123,7 @@ export default function AdminFinanceiroPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="card">Somente cartao</SelectItem>
+                  <SelectItem value="card">Somente cart?o</SelectItem>
                   <SelectItem value="pix">Somente PIX</SelectItem>
                 </SelectContent>
               </Select>
@@ -197,7 +197,7 @@ export default function AdminFinanceiroPage() {
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <StatCard label="Total de presentes" value={brl(data?.summary.totalPaidAmount || 0)} />
         <StatCard label="Total recebido Pagar.me" value={brl(data?.summary.totalPagarmeReceived || 0)} />
-        <StatCard label="Total recebido LUMIE (liquido)" value={brl(data?.summary.totalLumieNetReceived || 0)} />
+        <StatCard label="Total recebido LUMIÊ (líquido)" value={brl(data?.summary.totalLumieNetReceived || 0)} />
         <StatCard label="Total recebido clientes" value={brl(data?.summary.totalClientReceived || 0)} />
         <StatCard label="Total recebido parceiros" value={brl(data?.summary.totalPartnerReceived || 0)} />
         <StatCard label="Total recebido embaixadores" value={brl(data?.summary.totalAmbassadorReceived || 0)} />
@@ -312,7 +312,7 @@ export default function AdminFinanceiroPage() {
                   <th className="p-2 text-left">Cliente</th>
                   <th className="p-2 text-left">Total</th>
                   <th className="p-2 text-left">Pagar.me</th>
-                  <th className="p-2 text-left">LUMIE (liquido)</th>
+                  <th className="p-2 text-left">LUMIÊ (líquido)</th>
                   <th className="p-2 text-left">Cliente</th>
                   <th className="p-2 text-left">Parceiro</th>
                   <th className="p-2 text-left">Embaixador</th>
@@ -354,9 +354,9 @@ export default function AdminFinanceiroPage() {
 
       <Card className="border-[#e7d8cb]">
         <CardHeader>
-          <CardTitle>Cartoes de credito pendentes</CardTitle>
+          <CardTitle>Cartoes de cr?dito pendentes</CardTitle>
           <p className="text-xs text-gray-500">
-            Considera pedidos em status pendente/autorizado e cartoes pagos ainda em janela de liquidacao (ate 45 dias).
+            Considera pedidos em status pendente/autorizado e cartoes pagos ainda em janela de liquidacao (at? 45 dias).
           </p>
         </CardHeader>
         <CardContent>
@@ -390,7 +390,7 @@ export default function AdminFinanceiroPage() {
                 {(data?.pendingCards || []).length === 0 ? (
                   <tr>
                     <td className="p-3 text-gray-500 text-sm" colSpan={5}>
-                      Nenhum cartao pendente para os filtros selecionados.
+                      Nenhum cart?o pendente para os filtros selecionados.
                     </td>
                   </tr>
                 ) : null}

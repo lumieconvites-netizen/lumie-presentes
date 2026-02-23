@@ -409,7 +409,7 @@ export default function HomePage() {
               <h3 className="font-display text-5xl text-foreground leading-tight">Ajudando seus convidados a chegar</h3>
               <p className="mt-4 text-xl text-muted-foreground leading-relaxed">
                 Local do evento no Google Maps ou Waze, agenda e rota no seu site.
-                Tudo para ninguem perder o grande dia.
+                Tudo para ningu?m perder o grande dia.
               </p>
             </div>
 
@@ -619,11 +619,11 @@ export default function HomePage() {
           <div className="container mx-auto px-6 text-center">
             <h3 className="font-display text-4xl md:text-5xl text-white">Pronto para criar sua lista?</h3>
             <p className="mt-4 text-white/90 max-w-2xl mx-auto text-lg">
-              Comece agora e transforme seus presentes em creditos.
-              Rapido para criar, elegante para compartilhar.
+              Comece agora e transforme seus presentes em cr?ditos.
+              R?pido para criar, elegante para compartilhar.
             </p>
             <Button asChild variant="outline" size="lg" className="mt-8 bg-white text-[#a5482d] border-white/70 hover:bg-[#fff3ec] hover:text-[#8f3c24] rounded-xl px-8 font-semibold shadow-lg">
-              <Link href="/cadastro" className="text-[#a5482d]">Criar Minha Lista Gratis</Link>
+              <Link href="/cadastro" className="text-[#a5482d]">Criar Minha Lista Gr?tis</Link>
             </Button>
           </div>
         </div>

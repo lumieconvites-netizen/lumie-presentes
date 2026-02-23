@@ -176,7 +176,7 @@ export default function GiftModelDetailsPage({ params }: { params: { slug: strin
           <p className="text-sm text-gray-600">Carregando presentes da categoria...</p>
         ) : !category || category.items.length === 0 ? (
           <Card className="p-6 border-[#ead9cd] text-sm text-gray-600">
-            Ainda nao ha presentes cadastrados nesta categoria.
+            Ainda n?o ha presentes cadastrados nesta categoria.
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

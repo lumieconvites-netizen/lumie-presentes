@@ -108,7 +108,7 @@ export default function BancoDashboardPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Codigo do banco</label>
+              <label className="text-sm font-medium mb-2 block">C?digo do banco</label>
               <Input value={form.bankCode} onChange={(e) => setForm((p) => ({ ...p, bankCode: e.target.value }))} />
             </div>
             <div>
@@ -149,7 +149,7 @@ export default function BancoDashboardPage() {
           </div>
 
           <div className="text-sm text-gray-500">
-            Status atual de validacao: <strong>{status ?? "nao enviado"}</strong>
+            Status atual de valida??o: <strong>{status ?? "n?o enviado"}</strong>
           </div>
 
           <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">

@@ -59,7 +59,7 @@ export default async function SiteGiftsBySlugPage({
       {pageCoverImage ? (
         <div className="w-full bg-black">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
+          <img src={pageCoverImage} alt={`Capa da p?gina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
         </div>
       ) : null}
 
@@ -67,7 +67,7 @@ export default async function SiteGiftsBySlugPage({
         {pageMessage ? <p className="text-gray-600 mb-8 max-w-3xl">{pageMessage}</p> : null}
         {list.gifts.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-600">
-            Ainda nao ha presentes cadastrados.
+            Ainda n?o ha presentes cadastrados.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -297,13 +297,13 @@ export default function RsvpConfigPage() {
         }
 
         if (json.available) {
-          setSlugCheck({ status: 'available', message: 'Slug disponivel para uso.' });
+          setSlugCheck({ status: 'available', message: 'Slug dispon?vel para uso.' });
         } else {
-          setSlugCheck({ status: 'taken', message: json?.message || 'Este slug ja esta em uso.' });
+          setSlugCheck({ status: 'taken', message: json?.message || 'Este slug j? esta em uso.' });
         }
       } catch (error: any) {
         if (error?.name !== 'AbortError') {
-          setSlugCheck({ status: 'error', message: 'Nao foi possivel validar o slug agora.' });
+          setSlugCheck({ status: 'error', message: 'N?o foi poss?vel validar o slug agora.' });
         }
       }
     }, 350);
@@ -322,7 +322,7 @@ export default function RsvpConfigPage() {
       return;
     }
     if (slugCheck.status === 'checking') {
-      alert('Aguarde a validacao do slug terminar.');
+      alert('Aguarde a valida??o do slug terminar.');
       return;
     }
 
@@ -560,7 +560,7 @@ export default function RsvpConfigPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Slug da pagina publica de check-in</label>
+              <label className="text-sm font-medium">Slug da p?gina publica de check-in</label>
               <Input
                 value={settings.checkInSlug}
                 onChange={(e) => setSettings((s) => ({ ...s, checkInSlug: e.target.value }))}
@@ -573,7 +573,7 @@ export default function RsvpConfigPage() {
               <p className={`text-xs ${slugInfoClassName}`}>{slugCheck.message}</p>
               {previewCheckInUrl ? (
                 <a href={previewCheckInUrl} target="_blank" rel="noopener noreferrer" className={linkClassName}>
-                  Abrir pagina publica de check-in
+                  Abrir p?gina publica de check-in
                 </a>
               ) : null}
             </div>

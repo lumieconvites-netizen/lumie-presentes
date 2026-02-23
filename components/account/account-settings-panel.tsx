@@ -197,7 +197,7 @@ export default function AccountSettingsPanel({
               {uploadingPhoto ? 'Enviando foto...' : 'Enviar foto'}
               <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e.target.files?.[0])} disabled={uploadingPhoto} />
             </label>
-            <p className="text-xs text-gray-500">JPG/PNG, ate 5MB.</p>
+            <p className="text-xs text-gray-500">JPG/PNG, at? 5MB.</p>
           </div>
 
           <div>
@@ -234,7 +234,7 @@ export default function AccountSettingsPanel({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Codigo banco</label>
+                <label className="text-sm font-medium mb-2 block">C?digo banco</label>
                 <Input value={bank.bankCode} onChange={(e) => setBank((p) => ({ ...p, bankCode: e.target.value }))} />
               </div>
               <div>
@@ -275,7 +275,7 @@ export default function AccountSettingsPanel({
             </div>
 
             <p className="text-sm text-gray-500">
-              Status atual de validacao: <b>{bankStatus ?? 'nao enviado'}</b>
+              Status atual de valida??o: <b>{bankStatus ?? 'n?o enviado'}</b>
             </p>
 
             <Button className="w-full sm:w-auto" onClick={() => saveBank()} disabled={savingBank}>

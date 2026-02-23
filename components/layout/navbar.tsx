@@ -34,7 +34,7 @@ export function Navbar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6 md:gap-12">
             <a href="/" className="relative w-16 h-8 shrink-0 pointer-events-auto">
-              <Image src="/logo.png" alt="LUMIE" fill className="object-contain" />
+              <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" />
             </a>
 
             <div className="hidden md:flex items-center gap-8 text-sm">

@@ -128,15 +128,15 @@ export default function ConfiguracoesPage() {
 
         if (!res.ok) {
           setSlugAvailable(false);
-          setSlugMessage(data?.error ?? 'Nao foi possivel validar a URL.');
+          setSlugMessage(data?.error ?? 'N?o foi poss?vel validar a URL.');
           return;
         }
 
         setSlugAvailable(Boolean(data?.available));
-        setSlugMessage(data?.available ? 'URL disponivel.' : data?.error || 'Essa URL ja esta em uso.');
+        setSlugMessage(data?.available ? 'URL dispon?vel.' : data?.error || 'Essa URL j? esta em uso.');
       } catch {
         setSlugAvailable(false);
-        setSlugMessage('Nao foi possivel validar a URL.');
+        setSlugMessage('N?o foi poss?vel validar a URL.');
       } finally {
         setSlugChecking(false);
       }
@@ -163,7 +163,7 @@ export default function ConfiguracoesPage() {
       if (!res.ok) {
         updateSettings({ feePassedToGuest: previous });
         const data = await res.json().catch(() => ({}));
-        alert(data?.error ?? 'Nao foi possivel salvar a configuracao de taxa.');
+        alert(data?.error ?? 'N?o foi poss?vel salvar a configuracao de taxa.');
         return;
       }
     } catch {
@@ -274,7 +274,7 @@ export default function ConfiguracoesPage() {
 
   const handleChangePassword = () => {
     if (newPassword !== confirmPassword) {
-      alert('As senhas nao coincidem!');
+      alert('As senhas n?o coincidem!');
       return;
     }
 
@@ -296,7 +296,7 @@ export default function ConfiguracoesPage() {
       setCopyingUrl(true);
       await navigator.clipboard.writeText(publicUrl);
     } catch {
-      alert('Nao foi possivel copiar a URL agora.');
+      alert('N?o foi poss?vel copiar a URL agora.');
     } finally {
       setTimeout(() => setCopyingUrl(false), 900);
     }
@@ -309,7 +309,7 @@ export default function ConfiguracoesPage() {
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Configuracoes</h1>
+        <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Configurações</h1>
         <p className="text-gray-500">Gerencie suas preferencias e dados da conta</p>
       </div>
 
@@ -490,7 +490,7 @@ export default function ConfiguracoesPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h3 className="font-medium text-foreground">Recados Publicos</h3>
-                  <p className="text-sm text-gray-500">Exibir recados na pagina publica da lista</p>
+                  <p className="text-sm text-gray-500">Exibir recados na p?gina publica da lista</p>
                 </div>
 
                 <Switch
