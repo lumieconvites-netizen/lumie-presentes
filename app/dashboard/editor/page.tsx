@@ -268,6 +268,16 @@ export default function PageBuilder() {
     return () => window.removeEventListener('resize', onResize);
   }, [mobileDrawer]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!dirty) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [dirty]);
+
   async function saveLayout(nextBlocks: PageBlock[], nextTheme: Theme) {
     if (!giftList?.id) return;
 
@@ -454,6 +464,13 @@ export default function PageBuilder() {
               </Button>
             )}
           </div>
+          {published ? (
+            <div className="md:hidden mt-2">
+              <Button variant="outline" onClick={unpublishList} className="w-full border-yellow-500 text-yellow-700">
+                Despublicar
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -947,7 +964,7 @@ export default function PageBuilder() {
 
       <div className="md:hidden fixed inset-x-3 bottom-4 z-30">
         <div className="mx-auto max-w-md rounded-2xl border border-[#e7d8cb] bg-white/95 backdrop-blur px-2 py-2 shadow-lg">
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid ${published ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
             <Button
               variant="outline"
               size="sm"
@@ -958,9 +975,19 @@ export default function PageBuilder() {
               Bloco
             </Button>
             {published ? (
-              <Button size="sm" onClick={copyPublishedLink} className="h-10 bg-[#8e3d2c] hover:bg-[#7a3426] text-white">
-                Copiar Link
-              </Button>
+              <>
+                <Button size="sm" onClick={copyPublishedLink} className="h-10 bg-[#8e3d2c] hover:bg-[#7a3426] text-white">
+                  Copiar Link
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={unpublishList}
+                  className="h-10 border-yellow-500 text-yellow-700"
+                >
+                  Despublicar
+                </Button>
+              </>
             ) : (
               <Button size="sm" onClick={publishList} className="h-10 bg-[#8e3d2c] hover:bg-[#7a3426] text-white">
                 Publicar
