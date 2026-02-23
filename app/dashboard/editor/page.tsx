@@ -964,7 +964,7 @@ export default function PageBuilder() {
 
       <div className="md:hidden fixed inset-x-3 bottom-4 z-30">
         <div className="mx-auto max-w-md rounded-2xl border border-[#e7d8cb] bg-white/95 backdrop-blur px-2 py-2 shadow-lg">
-          <div className={`grid ${published ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -978,14 +978,6 @@ export default function PageBuilder() {
               <>
                 <Button size="sm" onClick={copyPublishedLink} className="h-10 bg-[#8e3d2c] hover:bg-[#7a3426] text-white">
                   Copiar Link
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={unpublishList}
-                  className="h-10 border-yellow-500 text-yellow-700"
-                >
-                  Despublicar
                 </Button>
               </>
             ) : (
