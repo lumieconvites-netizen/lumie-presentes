@@ -66,7 +66,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
   async function stopImpersonation() {
     const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
     if (!res.ok) {
-      alert('Nao foi possivel sair do modo acesso.');
+      alert('Não foi possível sair do modo de acesso.');
       return;
     }
     window.location.assign('/admin');
@@ -118,7 +118,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
             <DropdownMenuItem asChild>
               <Link href={`${base}/configuracoes`} className="cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" />
-                Configuracoes
+                Configurações
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>

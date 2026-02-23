@@ -6,15 +6,13 @@ import PublicPageView from '@/components/public/PublicPageView';
 
 export default function PublicSitePage() {
   const { pageBlocks, gifts, messages, settings } = useUser();
-
   const [mounted, setMounted] = useState(false);
 
-  // 1️⃣ Sempre declarar hooks primeiro
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // 2️⃣ Sync ao abrir /site (editor aberto em outra aba)
+  // Sincroniza ao abrir /site quando o editor está aberto em outra aba.
   useEffect(() => {
     try {
       const ch = new BroadcastChannel('lumie_preview');
@@ -23,7 +21,6 @@ export default function PublicSitePage() {
     } catch {}
   }, []);
 
-  // 3️⃣ Só depois pode fazer return condicional
   if (!mounted) return null;
 
   return (

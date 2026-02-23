@@ -16,8 +16,8 @@ export default function AffiliateSidebar({ role }: { role: AffiliateRole }) {
 
   const base = role === 'PARTNER' ? '/parceiro' : '/embaixador';
   const items = [
-    { href: base, label: 'Visao Geral', icon: BarChart3 },
-    { href: `${base}/configuracoes`, label: 'Configuracoes', icon: Settings },
+    { href: base, label: 'Visão Geral', icon: BarChart3 },
+    { href: `${base}/configuracoes`, label: 'Configurações', icon: Settings },
   ];
 
   useEffect(() => {

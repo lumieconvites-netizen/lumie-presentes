@@ -54,7 +54,7 @@ export default function AdminTopbarMenu({ name, email, image }: AdminTopbarMenuP
         <DropdownMenuItem asChild>
           <Link href="/admin/configuracoes" className="cursor-pointer">
             <Settings className="w-4 h-4 mr-2" />
-            Configuracoes da conta
+            Configurações da conta
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -72,4 +72,3 @@ export default function AdminTopbarMenu({ name, email, image }: AdminTopbarMenuP
     </DropdownMenu>
   );
 }
-

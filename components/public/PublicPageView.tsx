@@ -215,7 +215,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
   const showMap = header.showMap !== false;
   const menuMeuSite = String(header.menuMeuSite || 'Meu Site').toUpperCase();
   const menuGifts = String(header.menuGifts || 'Lista de Presentes').toUpperCase();
-  const menuRsvp = String(header.menuRsvp || 'Confirmar Presenca').toUpperCase();
+  const menuRsvp = String(header.menuRsvp || 'Confirmar Presença').toUpperCase();
   const menuMap = String(header.menuMap || 'Como Chegar').toUpperCase();
 
   return (
@@ -451,7 +451,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                         {config.title || 'Lista de Presentes'}
                       </h2>
                       <p className="max-w-2xl mb-4 md:mb-5 text-sm md:text-base" style={{ color: config.descriptionColor || 'rgba(255,255,255,0.9)' }}>
-                        {config.description || 'Esta e nossa lista de presentes. Ficamos felizes em compartilhar esse momento com voce.'}
+                        {config.description || 'Esta é nossa lista de presentes. Ficamos felizes em compartilhar esse momento com você.'}
                       </p>
                       {isTemplatePreview ? (
                         <Link
@@ -542,7 +542,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
             {block.type === 'event-info' && (
               <div id="como-chegar-section" className={`${sectionClass} p-12 md:p-16`}>
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ fontFamily: fontTitle, color: titleColor }}>
-                  {config.title || 'Informacoes do Evento'}
+                  {config.title || 'Informações do Evento'}
                 </h2>
                 <div className="max-w-3xl mx-auto space-y-6">
                   {config.datetime && (

@@ -201,7 +201,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           </div>
 
           <div>
-            <Label className="text-sm font-medium">TÃ­tulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
               value={config.title || ''}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -211,11 +211,11 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           </div>
 
           <div>
-            <Label className="text-sm font-medium">SubtÃ­tulo</Label>
+            <Label className="text-sm font-medium">Subtítulo</Label>
             <Input
               value={config.subtitle || ''}
               onChange={(e) => handleChange('subtitle', e.target.value)}
-              placeholder="Ex: 10 de marÃ§o de 2026"
+              placeholder="Ex: 10 de março de 2026"
               className="mt-2"
             />
           </div>
@@ -466,9 +466,9 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       {block.type === 'message' && (
         <>
           <div>
-            <Label className="text-sm font-medium">TÃ­tulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
-              value={config.title || 'Nossa HistÃ³ria'}
+              value={config.title || 'Nossa História'}
               onChange={(e) => handleChange('title', e.target.value)}
               className="mt-2"
             />
@@ -488,7 +488,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             <Input
               value={config.signature || ''}
               onChange={(e) => handleChange('signature', e.target.value)}
-              placeholder="Ex: â€” Com amor, Maria e JoÃ£o"
+              placeholder="Ex: — Com amor, Maria e João"
               className="mt-2"
             />
           </div>
@@ -511,7 +511,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       {block.type === 'countdown' && (
         <>
           <div>
-            <Label className="text-sm font-medium">TÃ­tulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
               value={config.title || 'Falta Pouco!'}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -530,7 +530,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       {block.type === 'gallery' && (
         <>
           <div>
-            <Label className="text-sm font-medium">TÃ­tulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
               value={config.title || 'Galeria de Fotos'}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -598,9 +598,9 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       {block.type === 'event-info' && (
         <>
           <div>
-            <Label className="text-sm font-medium">TÃ­tulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
-              value={config.title || 'InformaÃ§Ãµes do Evento'}
+              value={config.title || 'Informações do Evento'}
               onChange={(e) => handleChange('title', e.target.value)}
               className="mt-2"
             />
@@ -617,13 +617,13 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             <Input
               value={config.location || ''}
               onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="Ex: EspaÃ§o Villa Bella"
+              placeholder="Ex: Espaço Villa Bella"
               className="mt-2"
             />
           </div>
 
           <div>
-            <Label className="text-sm font-medium">EndereÃ§o</Label>
+            <Label className="text-sm font-medium">Endereço</Label>
             <Input
               value={config.address || ''}
               onChange={(e) => handleChange('address', e.target.value)}
@@ -781,7 +781,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       {block.type === 'messages' && (
         <>
           <div>
-            <Label className="text-sm font-medium">TÃ­tulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
               value={config.title || 'Recados Especiais'}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -792,7 +792,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           <div className="flex items-center justify-between py-2">
             <div>
               <Label className="text-sm font-medium">Exibir Publicamente</Label>
-              <p className="text-xs text-gray-500">Mostrar recados na pÃ¡gina</p>
+              <p className="text-xs text-gray-500">Mostrar recados na página</p>
             </div>
             <Switch
               checked={config.showPublicly !== false}

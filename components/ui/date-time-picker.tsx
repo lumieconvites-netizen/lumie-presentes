@@ -66,7 +66,7 @@ export function DateTimePicker({ value, onChange, label }: DateTimePickerProps) 
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900">Selecione Data e Hora</p>
-                <p className="text-xs text-gray-500">Escolha o dia e horÃ¡rio do evento</p>
+                <p className="text-xs text-gray-500">Escolha o dia e horário do evento</p>
               </div>
             </div>
             

@@ -31,6 +31,7 @@ export default function DashboardHeader() {
   const { data: session } = useSession();
   const router = useRouter();
   const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
+  const [siteSlug, setSiteSlug] = useState<string>('');
 
   const sessionImage = (session?.user as any)?.image as string | undefined;
   const sessionName = session?.user?.name ?? user?.name ?? 'Usuario';
@@ -60,10 +61,19 @@ export default function DashboardHeader() {
       .catch(() => null);
   }, [role]);
 
+  useEffect(() => {
+    fetch('/api/gift-lists/my-list', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.slug) setSiteSlug(String(data.slug));
+      })
+      .catch(() => null);
+  }, []);
+
   async function stopImpersonation() {
     const res = await fetch('/api/admin/impersonation', { method: 'DELETE' });
     if (!res.ok) {
-      alert('Nao foi possivel sair do modo acesso.');
+      alert('Não foi possível sair do modo de acesso.');
       return;
     }
 
@@ -91,10 +101,10 @@ export default function DashboardHeader() {
       <div className="flex items-center justify-between">
         <div className="pl-16 md:pl-0">
           <h1 className="text-2xl font-display text-foreground flex items-center gap-2">
-            <span>Ola, {firstName}!</span>
+            <span>Olá, {firstName}!</span>
             <Sparkles className="h-4 w-4 text-[#c65a3a]" />
           </h1>
-          <p className="text-sm text-gray-500">Veja como esta indo sua lista de presentes</p>
+          <p className="text-sm text-gray-500">Veja como está indo sua lista de presentes</p>
         </div>
 
         <DropdownMenu>
@@ -124,7 +134,7 @@ export default function DashboardHeader() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/preview" className="cursor-pointer">
+              <Link href={siteSlug ? `/site/${encodeURIComponent(siteSlug)}` : '/site'} className="cursor-pointer">
                 <Globe className="w-4 h-4 mr-2" />
                 Ver Site
               </Link>
@@ -140,7 +150,7 @@ export default function DashboardHeader() {
             <DropdownMenuItem asChild>
               <Link href="/dashboard/configuracoes" className="cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" />
-                Configuracoes
+                Configurações
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

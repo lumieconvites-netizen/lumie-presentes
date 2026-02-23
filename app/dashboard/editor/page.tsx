@@ -14,6 +14,7 @@ import { GripVertical, Sparkles, ChevronRight, Globe, Type, Image as ImageIcon, 
 import { Reorder } from 'framer-motion';
 import BlockEditor from '@/components/builder/BlockEditor';
 import BlockPreview from '@/components/builder/BlockPreview';
+import { cn } from '@/lib/utils';
 
 type BlockTypeId = PageBlock['type'];
 
@@ -135,6 +136,7 @@ export default function PageBuilder() {
     },
   });
   const [selectedBlock, setSelectedBlock] = useState<PageBlock | null>(null);
+  const [mobileDrawer, setMobileDrawer] = useState<'controls' | 'selected' | null>(null);
   const [themeVersion, setThemeVersion] = useState<number>(0);
   const [listGifts, setListGifts] = useState<any[]>([]);
   const [dirty, setDirty] = useState(false);
@@ -249,6 +251,22 @@ export default function PageBuilder() {
   useEffect(() => {
     setThemeVersion((prev) => prev + 1);
   }, [theme]);
+
+  useEffect(() => {
+    if (!selectedBlock && mobileDrawer === 'selected') {
+      setMobileDrawer(null);
+    }
+  }, [mobileDrawer, selectedBlock]);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 768 && mobileDrawer) {
+        setMobileDrawer(null);
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [mobileDrawer]);
 
   async function saveLayout(nextBlocks: PageBlock[], nextTheme: Theme) {
     if (!giftList?.id) return;
@@ -398,22 +416,22 @@ export default function PageBuilder() {
       alert('Link copiado.');
   };
 
-  if (loading) return <div className="p-6">Carregando editor...</div>;
+  if (loading) return <div className="p-4 md:p-6">Carregando editor...</div>;
 
   const published = Boolean(giftList?.isPublished);
 
   return (
-    <div className="h-full bg-[#fbf8f5]">
+    <div className="min-h-full bg-[#fbf8f5]">
       <div className="sticky top-0 z-40 bg-[#fbf8f5] border-b border-[#ead9cd] px-4 md:px-6 py-4">
-        <div className="flex items-center justify-between rounded-2xl border border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9] px-4 py-3">
-          <div className="flex items-center gap-4">
-            <h1 className="font-display text-2xl text-foreground">Editor de Página</h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 rounded-2xl border border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-xl md:text-2xl text-foreground">Editor de Página</h1>
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
               {published ? 'Publicada' : 'Rascunho'}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
             <Button variant="outline" asChild>
               <Link href={siteHref} target="_blank">
                 <Globe className="w-4 h-4 mr-2" />
@@ -437,11 +455,36 @@ export default function PageBuilder() {
               </Button>
             )}
           </div>
+
+          <div className="md:hidden flex items-center gap-2">
+            <Button variant="outline" className="flex-1" asChild>
+              <Link href={siteHref} target="_blank">Ver Site</Link>
+            </Button>
+            {published ? (
+              <Button className="flex-1" variant="outline" onClick={saveNow} disabled={!dirty}>
+                {dirty ? 'Salvar' : 'Salvo'}
+              </Button>
+            ) : (
+              <Button className="flex-1 bg-gradient-to-r from-terracota-500 to-terracota-700 text-white" onClick={publishList}>
+                Publicar
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex h-[calc(100vh-5rem)]">
-        <div className="w-72 bg-[#fffaf7] border-r border-[#ead9cd] overflow-y-auto">
+      {mobileDrawer ? (
+        <div className="md:hidden fixed inset-0 z-40 bg-black/35" onClick={() => setMobileDrawer(null)} />
+      ) : null}
+
+      <div className="flex min-h-[calc(100vh-5rem)]">
+        <div
+          className={cn(
+            'bg-[#fffaf7] border-[#ead9cd] overflow-y-auto z-50',
+            'fixed inset-x-0 bottom-0 top-[14%] rounded-t-2xl border border-b-0 transition-transform md:static md:top-auto md:inset-auto md:rounded-none md:border-b md:border-r md:w-72',
+            mobileDrawer === 'controls' ? 'translate-y-0' : 'translate-y-full md:translate-y-0'
+          )}
+        >
           <Tabs defaultValue="blocks" className="p-4">
             <TabsList className="w-full grid grid-cols-3 mb-4">
               <TabsTrigger value="blocks">Blocos</TabsTrigger>
@@ -854,16 +897,42 @@ export default function PageBuilder() {
         </div>
 
         <div className="flex-1 overflow-y-auto bg-[#f7efe8]">
-          <div className="max-w-5xl mx-auto px-6 pb-6">
-            <BlockPreview key={themeVersion} list={{ theme, slug: giftList?.slug }} blocks={pageBlocks} selectedBlock={selectedBlock} onSelectBlock={setSelectedBlock} gifts={listGifts} />
+          <div className="max-w-6xl mx-auto px-3 md:px-6 pb-28 md:pb-6">
+            <BlockPreview
+              key={themeVersion}
+              list={{ theme, slug: giftList?.slug }}
+              blocks={pageBlocks}
+              selectedBlock={selectedBlock}
+              onSelectBlock={(block) => {
+                setSelectedBlock(block);
+                if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                  setMobileDrawer('selected');
+                }
+              }}
+              gifts={listGifts}
+            />
           </div>
         </div>
 
         {selectedBlock && (
-          <div className="w-80 bg-white border-l border-[#ead9cd] p-4 overflow-y-auto">
+          <div
+            className={cn(
+              'bg-white border-[#ead9cd] p-4 overflow-y-auto z-50',
+              'fixed inset-x-0 bottom-0 top-[18%] rounded-t-2xl border border-b-0 transition-transform md:static md:inset-auto md:top-auto md:rounded-none md:border-b md:border-l md:w-80',
+              mobileDrawer === 'selected' ? 'translate-y-0' : 'translate-y-full md:translate-y-0'
+            )}
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-medium text-foreground">Configurações</h3>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedBlock(null)} className="h-8 w-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSelectedBlock(null);
+                  setMobileDrawer(null);
+                }}
+                className="h-8 w-8"
+              >
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -871,6 +940,34 @@ export default function PageBuilder() {
             <BlockEditor block={selectedBlock} onUpdate={(config) => updateBlockSettings(selectedBlock.id, config)} onDelete={() => removeBlock(selectedBlock.id)} list={{ theme }} />
           </div>
         )}
+      </div>
+
+      <div className="md:hidden fixed inset-x-3 bottom-4 z-30">
+        <div className="mx-auto max-w-md rounded-2xl border border-[#e7d8cb] bg-white/95 backdrop-blur px-2 py-2 shadow-lg">
+          <div className="grid grid-cols-3 gap-2">
+            <Button variant="outline" size="sm" onClick={() => setMobileDrawer('controls')} className="h-10">
+              Controles
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMobileDrawer('selected')}
+              className="h-10"
+              disabled={!selectedBlock}
+            >
+              Bloco
+            </Button>
+            {published ? (
+              <Button size="sm" onClick={copyPublishedLink} className="h-10 bg-[#8e3d2c] hover:bg-[#7a3426] text-white">
+                Copiar Link
+              </Button>
+            ) : (
+              <Button size="sm" onClick={publishList} className="h-10 bg-[#8e3d2c] hover:bg-[#7a3426] text-white">
+                Publicar
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

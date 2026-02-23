@@ -198,10 +198,10 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
           <Layout className="w-10 h-10 text-gray-400" />
         </div>
         <h3 className="text-2xl font-semibold text-gray-700 mb-3">
-          Sua PÃ¡gina EstÃ¡ Vazia
+          Sua Página Está Vazia
         </h3>
         <p className="text-gray-500 max-w-md mb-6">
-          Adicione blocos usando a barra lateral Ã  esquerda para comeÃ§ar a construir sua pÃ¡gina de presentes
+          Adicione blocos usando a barra lateral à esquerda para começar a construir sua página de presentes
         </p>
         <div className="flex gap-2 text-sm text-gray-400">
           <span className="px-3 py-1 bg-white rounded-full">Capa</span>
@@ -352,10 +352,10 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                   className="text-3xl md:text-4xl mb-6" 
                   style={{ color: titleColor, fontFamily: fontTitle }}
                 >
-                  {config.title || 'Nossa HistÃ³ria'}
+                  {config.title || 'Nossa História'}
                 </h2>
                 <p className="text-base md:text-lg mb-4 max-w-3xl mx-auto leading-relaxed whitespace-pre-wrap" style={{ color: captionColor }}>
-                  {config.message || 'Escreva aqui uma mensagem especial para seus convidados. Conte sua histÃ³ria, compartilhe seus sonhos e torne este momento ainda mais especial.'}
+                  {config.message || 'Escreva aqui uma mensagem especial para seus convidados. Conte sua história, compartilhe seus sonhos e torne este momento ainda mais especial.'}
                 </p>
                 {config.signature && (
                   <div className="max-w-3xl mx-auto">
@@ -523,7 +523,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {block.type === 'event-info' && (
               <div className={`${sectionClass} p-12 md:p-16`}>
                 <h2 className="text-3xl md:text-4xl text-center mb-12" style={{ color: titleColor, fontFamily: fontTitle }}>
-                  {config.title || 'InformaÃ§Ãµes do Evento'}
+                  {config.title || 'Informações do Evento'}
                 </h2>
                 <div className="max-w-3xl mx-auto space-y-6">
                   <div className="flex items-start gap-6 p-8 bg-white rounded-2xl shadow-sm">
@@ -543,7 +543,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                               hour: '2-digit',
                               minute: '2-digit'
                             })
-                          : '10 de marÃ§o de 2026 Ã s 19:00'}
+                          : '10 de março de 2026 às 19:00'}
                       </p>
                     </div>
                   </div>
@@ -557,7 +557,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                         {config.location || 'Local do Evento'}
                       </p>
                       <p className="mb-3" style={{ color: captionColor }}>
-                        {config.address || 'EndereÃ§o serÃ¡ informado em breve'}
+                        {config.address || 'Endereço será informado em breve'}
                       </p>
                       {config.mapLink && (
                         <a 

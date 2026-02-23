@@ -21,12 +21,12 @@ import { cn } from '@/lib/utils';
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/presentes', label: 'Presentes', icon: Gift },
-  { href: '/dashboard/editor', label: 'Editor de PÃ¡gina', icon: Palette },
-  { href: '/dashboard/rsvp', label: 'RSVP (Confirmar PresenÃ§a)', icon: CalendarCheck },
+  { href: '/dashboard/editor', label: 'Editor de Página', icon: Palette },
+  { href: '/dashboard/rsvp', label: 'RSVP (Confirmar Presença)', icon: CalendarCheck },
   { href: '/dashboard/recados', label: 'Recados', icon: MessageSquare },
   { href: '/dashboard/pagamentos', label: 'Pagamentos', icon: CreditCard },
-  { href: '/dashboard/banco', label: 'Conta BancÃ¡ria', icon: Landmark },
-  { href: '/dashboard/configuracoes', label: 'ConfiguraÃ§Ãµes', icon: Settings },
+  { href: '/dashboard/banco', label: 'Conta Bancária', icon: Landmark },
+  { href: '/dashboard/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
 function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
