@@ -452,8 +452,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                     : [
                         { name: 'Maria Silva', message: 'Parabéns! Que esse dia seja repleto de alegrias e momentos inesquecíveis.', time: '2 dias atrás' },
                         { name: 'João Santos', message: 'Felicidades! Desejo tudo de melhor nesta nova fase.', time: '3 dias atrás' },
-                        { name: 'Ana Costa', message: 'Muitas bênçãos e sucesso! Você merece toda a felicidade do mundo.', time: '5 dias atrás' },
-                        { name: 'Pedro Lima', message: 'Que lindo! Desejo muito amor e prosperidade sempre.', time: '1 semana atrás' }
+                        { name: 'Ana Costa', message: 'Muitas bênçãos e sucesso! Você merece toda a felicidade do mundo.', time: '5 dias atrás' }
                       ]).map((msg, i) => (
                     <Card key={i} className="p-4 md:p-6 bg-white">
                       <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">

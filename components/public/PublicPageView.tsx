@@ -490,7 +490,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                 <div className="grid grid-cols-1 gap-3 md:gap-6 max-w-5xl mx-auto">
                   {messages
                     .filter((m) => m.isPublic)
-                    .slice(0, showAllMessages ? undefined : 4)
+                    .slice(0, showAllMessages ? undefined : 3)
                     .map((msg, i) => (
                       <Card key={i} className="p-4 md:p-6 bg-white">
                         <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
@@ -507,7 +507,7 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       </Card>
                     ))}
                 </div>
-                {messages.filter((m) => m.isPublic).length > 4 && (
+                {messages.filter((m) => m.isPublic).length > 3 && (
                   <div className="mt-4 text-center">
                     <Button
                       type="button"
