@@ -46,7 +46,10 @@ function SidebarNav({
   return (
     <nav className="flex-1 p-4 space-y-1">
       {items.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const isDashboardRoot = item.href === '/dashboard';
+        const isActive = isDashboardRoot
+          ? pathname === '/dashboard'
+          : pathname === item.href || pathname.startsWith(`${item.href}/`);
         const Icon = item.icon;
 
         return (
