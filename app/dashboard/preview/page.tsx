@@ -39,7 +39,7 @@ export default function PreviewPage() {
 
     async function load() {
       try {
-        const res = await fetch('/api/gift-lists/my-list/full', { cache: 'no-store' });
+        const res = await fetch('/api/gift-lists/my-list/full?view=preview', { cache: 'no-store' });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error ?? 'Erro ao carregar preview');
         if (!cancelled) setGiftList(data);

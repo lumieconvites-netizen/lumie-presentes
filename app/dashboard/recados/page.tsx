@@ -27,7 +27,7 @@ export default function RecadosPage() {
   async function loadMessages() {
     setLoading(true);
     try {
-      const res = await fetch('/api/gift-lists/my-list/full', { cache: 'no-store' });
+      const res = await fetch('/api/gift-lists/my-list/full?view=recados', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? 'Falha ao carregar recados');
       setMessages(data?.messages ?? []);

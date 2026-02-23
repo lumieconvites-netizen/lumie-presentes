@@ -25,7 +25,7 @@ export default function PagamentosPage() {
 
     (async () => {
       try {
-        const res = await fetch('/api/gift-lists/my-list/full', { cache: 'no-store' });
+        const res = await fetch('/api/gift-lists/my-list/full?view=pagamentos', { cache: 'no-store' });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error ?? 'Erro ao carregar pagamentos');
         if (!cancelled) setOrders(data?.orders ?? []);

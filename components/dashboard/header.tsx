@@ -98,7 +98,7 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
   }, [role]);
 
   useEffect(() => {
-    fetch('/api/gift-lists/my-list', { cache: 'no-store' })
+    fetch('/api/gift-lists/my-list?view=header', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data?.slug) setSiteSlug(String(data.slug));

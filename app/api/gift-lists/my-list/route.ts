@@ -77,6 +77,17 @@ export async function GET(req: Request) {
       return NextResponse.json(editorPayload ?? giftList);
     }
 
+    if (view === "header") {
+      const headerPayload = await prisma.giftList.findUnique({
+        where: { id: giftList.id },
+        select: {
+          id: true,
+          slug: true,
+        },
+      });
+      return NextResponse.json(headerPayload ?? { id: giftList.id, slug: giftList.slug });
+    }
+
     if (view === "presentes") {
       const [presentesPayload, recipient] = await Promise.all([
         prisma.giftList.findUnique({

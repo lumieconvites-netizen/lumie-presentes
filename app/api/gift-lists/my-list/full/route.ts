@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
 import { getActingUserContext } from "@/lib/acting-user";
 import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
-import { reconcilePendingOrdersForGiftList } from "@/lib/order-status-reconciliation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,10 +18,6 @@ export async function GET(req: Request) {
 
     const primaryGiftListId = await getPrimaryGiftListIdForUser(ctx.effectiveUserId);
     if (!primaryGiftListId) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
-
-    if (view !== "dashboard") {
-      await reconcilePendingOrdersForGiftList(primaryGiftListId);
-    }
 
     if (view === "dashboard") {
       const cardLiquidationCutoff = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000);
@@ -187,6 +182,116 @@ export async function GET(req: Request) {
           recentMessages,
         },
       });
+    }
+
+    if (view === "recados") {
+      const giftList = await prisma.giftList.findUnique({
+        where: { id: primaryGiftListId },
+        select: {
+          id: true,
+          messages: {
+            where: {
+              order: {
+                status: { in: ["PAID", "AUTHORIZED"] },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              guestName: true,
+              content: true,
+              signature: true,
+              isPublic: true,
+              isFavorite: true,
+              createdAt: true,
+              order: {
+                select: {
+                  totalAmount: true,
+                  giftItem: {
+                    select: { name: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      if (!giftList) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+      return NextResponse.json(giftList);
+    }
+
+    if (view === "pagamentos") {
+      const giftList = await prisma.giftList.findUnique({
+        where: { id: primaryGiftListId },
+        select: {
+          id: true,
+          orders: {
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              guestName: true,
+              guestEmail: true,
+              totalAmount: true,
+              feeAmount: true,
+              status: true,
+              createdAt: true,
+              giftItem: {
+                select: { id: true, name: true },
+              },
+            },
+          },
+        },
+      });
+      if (!giftList) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+      return NextResponse.json(giftList);
+    }
+
+    if (view === "preview") {
+      const giftList = await prisma.giftList.findUnique({
+        where: { id: primaryGiftListId },
+        select: {
+          id: true,
+          slug: true,
+          pageLayout: {
+            select: {
+              blocks: true,
+              theme: true,
+            },
+          },
+          gifts: {
+            orderBy: { order: "asc" },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              imageUrl: true,
+              basePrice: true,
+              totalQuantity: true,
+              availableQty: true,
+              isActive: true,
+              order: true,
+            },
+          },
+          messages: {
+            where: {
+              order: {
+                status: { in: ["PAID", "AUTHORIZED"] },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              guestName: true,
+              content: true,
+              createdAt: true,
+              isPublic: true,
+              isFavorite: true,
+            },
+          },
+        },
+      });
+      if (!giftList) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+      return NextResponse.json(giftList);
     }
 
     const giftList = await prisma.giftList.findUnique({
