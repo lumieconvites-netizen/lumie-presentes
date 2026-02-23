@@ -34,36 +34,138 @@ export async function GET(req: Request) {
           isPublished: true,
           title: true,
           description: true,
-          gifts: {
-            select: {
-              id: true,
-              availableQty: true,
-            },
-          },
-          messages: {
+        },
+      });
+      if (!giftList) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+
+      const [totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount] =
+        await Promise.all([
+          prisma.giftItem.count({
             where: {
+              giftListId: primaryGiftListId,
+            },
+          }),
+          prisma.giftItem.count({
+            where: {
+              giftListId: primaryGiftListId,
+              availableQty: { gt: 0 },
+            },
+          }),
+          prisma.message.findMany({
+            where: {
+              giftListId: primaryGiftListId,
               order: {
                 status: { in: ["PAID", "AUTHORIZED"] },
               },
             },
-            orderBy: { createdAt: "desc" },
-            take: 5,
-            include: {
+            select: {
+              id: true,
+              guestName: true,
+              content: true,
+              createdAt: true,
               order: {
                 select: {
-                  totalAmount: true,
                   giftItem: {
-                    select: { id: true, name: true },
+                    select: {
+                      name: true,
+                    },
                   },
                 },
               },
             },
-          },
-          orders: {
+            orderBy: { createdAt: "desc" },
+            take: 5,
+          }),
+          prisma.order.findMany({
             where: {
+              giftListId: primaryGiftListId,
+              status: "PAID",
+            },
+            select: {
+              id: true,
+              guestName: true,
+              totalAmount: true,
+              feeAmount: true,
+              createdAt: true,
+              giftItem: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 6,
+          }),
+          prisma.order.count({
+            where: {
+              giftListId: primaryGiftListId,
               OR: [
-                { status: { in: ["PENDING", "AUTHORIZED"] } },
                 {
+                  paymentMethod: {
+                    contains: "card",
+                    mode: "insensitive",
+                  },
+                  status: { in: ["PENDING", "AUTHORIZED"] },
+                },
+                {
+                  paymentMethod: {
+                    contains: "credit",
+                    mode: "insensitive",
+                  },
+                  status: { in: ["PENDING", "AUTHORIZED"] },
+                },
+                {
+                  paymentMethod: {
+                    contains: "cartao",
+                    mode: "insensitive",
+                  },
+                  status: { in: ["PENDING", "AUTHORIZED"] },
+                },
+                {
+                  paymentMethod: {
+                    contains: "cartão",
+                    mode: "insensitive",
+                  },
+                  status: { in: ["PENDING", "AUTHORIZED"] },
+                },
+                {
+                  paymentMethod: {
+                    contains: "card",
+                    mode: "insensitive",
+                  },
+                  status: "PAID",
+                  OR: [
+                    { paidAt: { gte: cardLiquidationCutoff } },
+                    { paidAt: null, createdAt: { gte: cardLiquidationCutoff } },
+                  ],
+                },
+                {
+                  paymentMethod: {
+                    contains: "credit",
+                    mode: "insensitive",
+                  },
+                  status: "PAID",
+                  OR: [
+                    { paidAt: { gte: cardLiquidationCutoff } },
+                    { paidAt: null, createdAt: { gte: cardLiquidationCutoff } },
+                  ],
+                },
+                {
+                  paymentMethod: {
+                    contains: "cartao",
+                    mode: "insensitive",
+                  },
+                  status: "PAID",
+                  OR: [
+                    { paidAt: { gte: cardLiquidationCutoff } },
+                    { paidAt: null, createdAt: { gte: cardLiquidationCutoff } },
+                  ],
+                },
+                {
+                  paymentMethod: {
+                    contains: "cartão",
+                    mode: "insensitive",
+                  },
                   status: "PAID",
                   OR: [
                     { paidAt: { gte: cardLiquidationCutoff } },
@@ -72,19 +174,19 @@ export async function GET(req: Request) {
                 },
               ],
             },
-            orderBy: { createdAt: "desc" },
-            take: 120,
-            include: {
-              giftItem: {
-                select: { id: true, name: true },
-              },
-            },
-          },
+          }),
+        ]);
+
+      return NextResponse.json({
+        ...giftList,
+        summary: {
+          totalGifts,
+          activeGifts,
+          pendingOrdersCount,
+          recentPayments,
+          recentMessages,
         },
       });
-
-      if (!giftList) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
-      return NextResponse.json(giftList);
     }
 
     const giftList = await prisma.giftList.findUnique({

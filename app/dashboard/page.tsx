@@ -25,39 +25,35 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-type Gift = { id: string; availableQty: number };
-type Message = {
-  id: string;
-  guestName: string;
-  content: string;
-  signature?: string | null;
-  isPublic: boolean;
-  createdAt: string;
-  order?: {
+type DashboardSummary = {
+  totalGifts: number;
+  activeGifts: number;
+  pendingOrdersCount: number;
+  recentPayments: Array<{
+    id: string;
+    guestName: string;
     totalAmount: number | string;
-    giftItem?: { id: string; name: string } | null;
-  } | null;
-};
-type Order = {
-  id: string;
-  guestName: string;
-  totalAmount: number | string;
-  feeAmount: number | string;
-  paymentMethod?: string | null;
-  status: 'PENDING' | 'PAID' | 'AUTHORIZED' | 'REFUSED' | 'REFUNDED' | 'CHARGEBACK';
-  createdAt: string;
-  paidAt?: string | null;
-  giftItem?: { name?: string } | null;
+    feeAmount: number | string;
+    createdAt: string;
+    giftItem?: { name?: string } | null;
+  }>;
+  recentMessages: Array<{
+    id: string;
+    guestName: string;
+    content: string;
+    createdAt: string;
+    order?: {
+      giftItem?: { name?: string } | null;
+    } | null;
+  }>;
 };
 
-type FullList = {
+type DashboardData = {
   slug: string;
   isPublished: boolean;
   title: string;
   description: string | null;
-  gifts: Gift[];
-  messages: Message[];
-  orders: Order[];
+  summary: DashboardSummary;
 };
 
 type FinancialSummary = {
@@ -81,10 +77,8 @@ function toNumber(v: number | string) {
 }
 
 const WITHDRAW_FEE_CENTS = 367;
-const CARD_LIQUIDATION_WINDOW_DAYS = 45;
-
 export default function DashboardPage() {
-  const [data, setData] = useState<FullList | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [financial, setFinancial] = useState<FinancialSummary | null>(null);
   const [loadingMain, setLoadingMain] = useState(true);
   const [copying, setCopying] = useState(false);
@@ -123,35 +117,12 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const gifts = data?.gifts ?? [];
-  const messages = data?.messages ?? [];
-  const orders = data?.orders ?? [];
-
-  const isCardPaymentMethod = (value?: string | null) => {
-    const v = String(value ?? '').toLowerCase();
-    return v.includes('credit') || v.includes('card') || v.includes('cartão');
-  };
-
-  const totalGifts = gifts.length;
-  const activeGifts = gifts.filter((g) => g.availableQty > 0).length;
-  const paidOrders = orders.filter((o) => o.status === 'PAID');
-  const cardLiquidationCutoff = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - CARD_LIQUIDATION_WINDOW_DAYS);
-    return date;
-  }, []);
-  const pendingOrders = orders.filter((o) => {
-    if (!isCardPaymentMethod(o.paymentMethod)) return false;
-    if (o.status === 'PENDING' || o.status === 'AUTHORIZED') return true;
-    if (o.status === 'PAID') {
-      const paidDate = o.paidAt ? new Date(o.paidAt) : new Date(o.createdAt);
-      return !Number.isNaN(paidDate.getTime()) && paidDate >= cardLiquidationCutoff;
-    }
-    return false;
-  });
-  const totalPaid = paidOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
-  const recentPayments = paidOrders.slice(0, 6);
-  const recentMessages = messages.slice(0, 5);
+  const summary = data?.summary;
+  const totalGifts = Number(summary?.totalGifts ?? 0);
+  const activeGifts = Number(summary?.activeGifts ?? 0);
+  const pendingOrdersCount = Number(summary?.pendingOrdersCount ?? 0);
+  const recentPayments = summary?.recentPayments ?? [];
+  const recentMessages = summary?.recentMessages ?? [];
   const availableNow = Math.max(0, Number(financial?.available ?? 0)) / 100;
   const waitingFunds = Math.max(0, Number(financial?.waitingFunds ?? 0)) / 100;
   const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0)) / 100;
@@ -278,7 +249,7 @@ export default function DashboardPage() {
               {waitingFunds.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
             <p className="text-xs text-gray-500 mt-1">Em processamento (cartão)</p>
-            <p className="text-xs text-gray-500">{pendingOrders.length} pedido(s) em status pendente</p>
+            <p className="text-xs text-gray-500">{pendingOrdersCount} pedido(s) em status pendente</p>
           </CardContent>
         </Card>
 
@@ -460,4 +431,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
