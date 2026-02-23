@@ -938,7 +938,7 @@ export default function PageBuilder() {
             className={cn(
               'bg-white border-[#ead9cd] p-4 overflow-y-auto z-50',
               'fixed inset-x-0 bottom-[5.2rem] h-[44dvh] min-h-[280px] max-h-[420px] rounded-t-2xl border border-b-0 transition-transform md:static md:inset-auto md:top-auto md:bottom-auto md:h-auto md:min-h-0 md:max-h-none md:w-80 md:max-w-none md:rounded-none md:border md:border-b md:border-l',
-              mobileDrawer === 'selected' ? 'translate-y-0' : 'translate-y-full md:translate-y-0'
+              mobileDrawer === 'selected' ? 'block translate-y-0' : 'hidden md:block md:translate-y-0'
             )}
           >
             <div className="flex items-center justify-between mb-4">
