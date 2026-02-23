@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -221,7 +221,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           </div>
 
           <div className="space-y-4 rounded-lg border border-[#ead9cd] bg-white p-3">
-            <p className="text-sm font-medium">Posicao individual dos textos</p>
+            <p className="text-sm font-medium">Posição individual dos textos</p>
 
             <div>
               <Label className="text-xs text-gray-600">Label horizontal ({Math.min(100, Math.max(0, Number(config.labelX ?? 50)))}%)</Label>
@@ -247,7 +247,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             </div>
 
             <div>
-              <Label className="text-xs text-gray-600">Titulo horizontal ({Math.min(100, Math.max(0, Number(config.titleX ?? 50)))}%)</Label>
+              <Label className="text-xs text-gray-600">Título horizontal ({Math.min(100, Math.max(0, Number(config.titleX ?? 50)))}%)</Label>
               <input
                 type="range"
                 min={0}
@@ -257,7 +257,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                 onChange={(e) => handleChange('titleX', Number(e.target.value))}
                 className="mt-1 w-full"
               />
-              <Label className="text-xs text-gray-600">Titulo vertical ({Math.min(100, Math.max(0, Number(config.titleY ?? 44)))}%)</Label>
+              <Label className="text-xs text-gray-600">Título vertical ({Math.min(100, Math.max(0, Number(config.titleY ?? 44)))}%)</Label>
               <input
                 type="range"
                 min={0}
@@ -270,7 +270,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             </div>
 
             <div>
-              <Label className="text-xs text-gray-600">Subtitulo horizontal ({Math.min(100, Math.max(0, Number(config.subtitleX ?? 50)))}%)</Label>
+              <Label className="text-xs text-gray-600">Subtítulo horizontal ({Math.min(100, Math.max(0, Number(config.subtitleX ?? 50)))}%)</Label>
               <input
                 type="range"
                 min={0}
@@ -280,7 +280,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
                 onChange={(e) => handleChange('subtitleX', Number(e.target.value))}
                 className="mt-1 w-full"
               />
-              <Label className="text-xs text-gray-600">Subtitulo vertical ({Math.min(100, Math.max(0, Number(config.subtitleY ?? 56)))}%)</Label>
+              <Label className="text-xs text-gray-600">Subtítulo vertical ({Math.min(100, Math.max(0, Number(config.subtitleY ?? 56)))}%)</Label>
               <input
                 type="range"
                 min={0}
@@ -350,7 +350,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
               {config.overlayMode === 'gradient' && (
                 <>
                   <div>
-                    <Label className="text-sm font-medium">Direcao do degrade</Label>
+                    <Label className="text-sm font-medium">Direção do degradê</Label>
                     <select
                       value={config.overlayDirection || 'bottom'}
                       onChange={(e) => handleChange('overlayDirection', e.target.value)}
@@ -365,7 +365,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
 
                   <div>
                     <Label className="text-sm font-medium">
-                      Cobertura do degrade ({Math.min(100, Math.max(10, Number(config.overlayCoverage ?? 55)))}%)
+                      Cobertura do degradê ({Math.min(100, Math.max(10, Number(config.overlayCoverage ?? 55)))}%)
                     </Label>
                     <input
                       type="range"
@@ -488,7 +488,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             <Input
               value={config.signature || ''}
               onChange={(e) => handleChange('signature', e.target.value)}
-              placeholder="Ex: — Com amor, Maria e João"
+              placeholder="Ex: â€” Com amor, Maria e João"
               className="mt-2"
             />
           </div>
@@ -643,7 +643,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Texto do Botao de mapa</Label>
+            <Label className="text-sm font-medium">Texto do Botão do mapa</Label>
             <Input
               value={config.mapButtonText || 'Abrir no mapa'}
               onChange={(e) => handleChange('mapButtonText', e.target.value)}
@@ -657,7 +657,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       {block.type === 'map' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Titulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
               value={config.title || 'Como chegar'}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -665,7 +665,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             />
           </div>
           <div>
-            <Label className="text-sm font-medium">Subtitulo</Label>
+            <Label className="text-sm font-medium">Subtítulo</Label>
             <Input
               value={config.subtitle || ''}
               onChange={(e) => handleChange('subtitle', e.target.value)}
@@ -674,7 +674,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             />
           </div>
           <div>
-            <Label className="text-sm font-medium">Endereco</Label>
+            <Label className="text-sm font-medium">Endereço</Label>
             <Input
               value={config.address || ''}
               onChange={(e) => handleChange('address', e.target.value)}
@@ -707,7 +707,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       {block.type === 'music' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Titulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
               value={config.title || 'Nossa trilha sonora'}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -715,13 +715,13 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             />
           </div>
           <div>
-            <Label className="text-sm font-medium">Descricao</Label>
+            <Label className="text-sm font-medium">Descrição</Label>
             <Textarea
               value={config.description || ''}
               onChange={(e) => handleChange('description', e.target.value)}
               rows={3}
               className="mt-2"
-              placeholder="Uma musica especial para esse momento"
+              placeholder="Uma música especial para esse momento"
             />
           </div>
           <div>
@@ -749,15 +749,15 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       {block.type === 'video' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Titulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
-              value={config.title || 'Nosso video'}
+              value={config.title || 'Nosso vídeo'}
               onChange={(e) => handleChange('title', e.target.value)}
               className="mt-2"
             />
           </div>
           <div>
-            <Label className="text-sm font-medium">Descricao</Label>
+            <Label className="text-sm font-medium">Descrição</Label>
             <Textarea
               value={config.description || ''}
               onChange={(e) => handleChange('description', e.target.value)}
@@ -806,7 +806,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       {block.type === 'gifts' && (
         <>
           <div>
-            <Label className="text-sm font-medium">Titulo</Label>
+            <Label className="text-sm font-medium">Título</Label>
             <Input
               value={config.title || 'Lista de Presentes'}
               onChange={(e) => handleChange('title', e.target.value)}
@@ -815,7 +815,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Texto da secao</Label>
+            <Label className="text-sm font-medium">Texto da seção</Label>
             <Textarea
               value={config.description || ''}
               onChange={(e) => handleChange('description', e.target.value)}
@@ -857,7 +857,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Texto do botao</Label>
+            <Label className="text-sm font-medium">Texto do botão</Label>
             <Input
               value={config.buttonText || 'Presentear'}
               onChange={(e) => handleChange('buttonText', e.target.value)}
@@ -866,7 +866,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Cor do titulo</Label>
+            <Label className="text-sm font-medium">Cor do título</Label>
             <div className="mt-2 flex items-center gap-2">
               <input
                 type="color"
@@ -892,7 +892,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Cor do botao</Label>
+            <Label className="text-sm font-medium">Cor do botão</Label>
             <div className="mt-2 flex items-center gap-2">
               <input
                 type="color"
@@ -905,7 +905,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Cor do texto do botao</Label>
+            <Label className="text-sm font-medium">Cor do texto do botão</Label>
             <div className="mt-2 flex items-center gap-2">
               <input
                 type="color"
@@ -932,3 +932,4 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     </div>
   );
 }
+

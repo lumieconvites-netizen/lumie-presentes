@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -337,18 +337,18 @@ export default function AdminGiftModelsPage() {
     const nextName = window.prompt('Nome do presente:', item.name);
     if (nextName === null) return;
 
-    const nextDescription = window.prompt('Descricao do presente:', item.description || '');
+    const nextDescription = window.prompt('Descrição do presente:', item.description || '');
     if (nextDescription === null) return;
 
     const nextImageUrl = window.prompt('URL da imagem:', item.imageUrl || '');
     if (nextImageUrl === null) return;
 
-    const nextPriceRaw = window.prompt('Preco (entre 50 e 400):', String(item.basePrice));
+    const nextPriceRaw = window.prompt('Preço (entre 50 e 400):', String(item.basePrice));
     if (nextPriceRaw === null) return;
 
     const nextPrice = Number(nextPriceRaw);
     if (!Number.isFinite(nextPrice) || nextPrice < 50 || nextPrice > 400) {
-      alert('Preco invalido. Informe um valor entre 50 e 400.');
+      alert('Preço inválido. Informe um valor entre 50 e 400.');
       return;
     }
 
@@ -357,7 +357,7 @@ export default function AdminGiftModelsPage() {
 
     const nextQty = Number(nextQtyRaw);
     if (!Number.isInteger(nextQty) || nextQty <= 0) {
-      alert('Quantidade invalida.');
+      alert('Quantidade inválida.');
       return;
     }
 
@@ -399,7 +399,7 @@ export default function AdminGiftModelsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-gray-600">
-            Gerencie os temas de presentes prontos que aparecem no botao "Modelos prontos" do dashboard do cliente.
+            Gerencie os temas de presentes prontos que aparecem no botão "Modelos prontos" do dashboard do cliente.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -461,7 +461,7 @@ export default function AdminGiftModelsPage() {
                 />
               </div>
               <div>
-                <Label>Slug (tambem nome da pasta)</Label>
+                <Label>Slug (também nome da pasta)</Label>
                 <Input
                   value={selectedCategory.slug}
                   onChange={(e) => setSelectedCategory((prev) => (prev ? { ...prev, slug: e.target.value } : prev))}
@@ -552,7 +552,7 @@ export default function AdminGiftModelsPage() {
                   onChange={(e) => setItemDraft((prev) => ({ ...prev, imageUrl: e.target.value }))}
                 />
                 <Input
-                  placeholder="Descricao"
+                  placeholder="Descrição"
                   value={itemDraft.description}
                   onChange={(e) => setItemDraft((prev) => ({ ...prev, description: e.target.value }))}
                 />
@@ -560,7 +560,7 @@ export default function AdminGiftModelsPage() {
                   type="number"
                   min={50}
                   max={400}
-                  placeholder="Preco"
+                  placeholder="Preço"
                   value={itemDraft.basePrice}
                   onChange={(e) => setItemDraft((prev) => ({ ...prev, basePrice: Number(e.target.value) }))}
                 />
@@ -582,7 +582,7 @@ export default function AdminGiftModelsPage() {
                 <thead className="bg-[#faf3ee]">
                   <tr>
                     <th className="p-2 text-left">Presente</th>
-                    <th className="p-2 text-left">Preco</th>
+                    <th className="p-2 text-left">Preço</th>
                     <th className="p-2 text-left">Ações</th>
                   </tr>
                 </thead>
@@ -591,7 +591,7 @@ export default function AdminGiftModelsPage() {
                     <tr key={item.id} className="border-t">
                       <td className="p-2">
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-xs text-gray-500">{item.description || 'Sem descricao'}</p>
+                        <p className="text-xs text-gray-500">{item.description || 'Sem descrição'}</p>
                         <p className="text-xs text-gray-500">{item.imageUrl || 'Sem imagem'}</p>
                       </td>
                       <td className="p-2">R$ {item.basePrice.toFixed(2)}</td>
@@ -629,3 +629,4 @@ export default function AdminGiftModelsPage() {
     </div>
   );
 }
+
