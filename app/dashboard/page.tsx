@@ -80,7 +80,6 @@ const WITHDRAW_FEE_CENTS = 367;
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [financial, setFinancial] = useState<FinancialSummary | null>(null);
-  const [loadingMain, setLoadingMain] = useState(true);
   const [copying, setCopying] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
@@ -96,8 +95,6 @@ export default function DashboardPage() {
         if (!cancelled) setData(listJson);
       } catch (error: any) {
         if (!cancelled) alert(error?.message ?? 'Erro ao carregar dashboard');
-      } finally {
-        if (!cancelled) setLoadingMain(false);
       }
     })();
 
@@ -171,8 +168,6 @@ export default function DashboardPage() {
       setWithdrawing(false);
     }
   };
-
-  if (loadingMain) return <div className="p-4 md:p-6">Carregando dashboard...</div>;
 
   return (
     <div className="p-4 md:p-6 space-y-6 bg-[#fbf8f5]">

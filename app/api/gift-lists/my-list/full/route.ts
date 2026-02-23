@@ -68,7 +68,7 @@ export async function GET(req: Request) {
               },
             },
             orderBy: { createdAt: "desc" },
-            take: 5,
+            take: 4,
           }),
           prisma.order.findMany({
             where: {
@@ -88,7 +88,7 @@ export async function GET(req: Request) {
               },
             },
             orderBy: { createdAt: "desc" },
-            take: 6,
+            take: 4,
           }),
           prisma.order.count({
             where: {
@@ -154,6 +154,7 @@ export async function GET(req: Request) {
           id: true,
           orders: {
             orderBy: { createdAt: "desc" },
+            take: 120,
             select: {
               id: true,
               guestName: true,

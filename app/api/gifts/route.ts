@@ -40,6 +40,17 @@ export async function GET(request: Request) {
     const gifts = await prisma.giftItem.findMany({
       where: { giftListId },
       orderBy: { order: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        imageUrl: true,
+        basePrice: true,
+        totalQuantity: true,
+        availableQty: true,
+        isActive: true,
+        order: true,
+      },
     });
 
     return NextResponse.json(gifts);

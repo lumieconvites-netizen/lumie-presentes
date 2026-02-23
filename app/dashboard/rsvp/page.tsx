@@ -51,15 +51,13 @@ export default function DashboardRsvpPage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  if (loading) {
-    return <div className="p-4 md:p-6">Carregando RSVP...</div>;
-  }
-
-  if (!data) {
-    return <div className="p-4 md:p-6">Não foi possível carregar o RSVP.</div>;
-  }
-
-  const { metrics } = data;
+  const metrics = data?.metrics ?? {
+    totalGuests: 0,
+    confirmed: 0,
+    pending: 0,
+    declined: 0,
+    checkedIn: 0,
+  };
 
   return (
     <div className="p-4 md:p-6 space-y-6 bg-[#fbf8f5] min-h-screen">
@@ -68,11 +66,11 @@ export default function DashboardRsvpPage() {
           <div>
             <h1 className="text-2xl md:text-3xl font-display text-foreground">RSVP</h1>
             <p className="text-gray-600 mt-1">Controle de convidados, confirmações e check-in</p>
-            <p className="text-sm text-gray-500 mt-1">Evento: {data.list.title}</p>
+            <p className="text-sm text-gray-500 mt-1">Evento: {data?.list?.title ?? 'Carregando...'}</p>
           </div>
 
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-            {!data.settings.enabled ? (
+            {!data?.settings?.enabled ? (
               <Button asChild className="bg-[#c65a3a] hover:bg-[#b34f32] text-white w-full sm:w-auto">
                 <Link href="/dashboard/rsvp/config">Criar RSVP</Link>
               </Button>
@@ -146,14 +144,15 @@ export default function DashboardRsvpPage() {
       <Card className="border-[#e7d8cb]">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Status do RSVP</CardTitle>
-          <Badge variant={data.settings.enabled ? 'default' : 'secondary'}>
-            {data.settings.enabled ? 'Ativo' : 'Inativo'}
+          <Badge variant={data?.settings?.enabled ? 'default' : 'secondary'}>
+            {data?.settings?.enabled ? 'Ativo' : 'Inativo'}
           </Badge>
         </CardHeader>
         <CardContent className="text-sm text-gray-600 space-y-2">
-          <p>URL de confirmação: <span className="font-medium text-gray-900">{data.publicRsvpUrl}</span></p>
-          <p>URL do check-in público: <span className="font-medium text-gray-900">{data.publicCheckInUrl || 'Não disponível'}</span></p>
-          <p>Email de notificações: <span className="font-medium text-gray-900">{data.settings.notificationEmail || 'Não configurado'}</span></p>
+          <p>URL de confirmação: <span className="font-medium text-gray-900">{data?.publicRsvpUrl ?? '-'}</span></p>
+          <p>URL do check-in público: <span className="font-medium text-gray-900">{data?.publicCheckInUrl || 'Não disponível'}</span></p>
+          <p>Email de notificações: <span className="font-medium text-gray-900">{data?.settings?.notificationEmail || 'Não configurado'}</span></p>
+          {loading ? <p className="text-xs text-gray-500">Carregando dados...</p> : null}
         </CardContent>
       </Card>
     </div>

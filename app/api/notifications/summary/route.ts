@@ -35,9 +35,10 @@ export async function GET(request: Request) {
         where: {
           giftListId,
           status: { in: ["PAID", "AUTHORIZED"] },
+          ...(since ? { createdAt: { gt: since } } : {}),
         },
         orderBy: { createdAt: "desc" },
-        take: 20,
+        take: 8,
         select: {
           id: true,
           guestName: true,
@@ -50,9 +51,10 @@ export async function GET(request: Request) {
           order: {
             status: { in: ["PAID", "AUTHORIZED"] },
           },
+          ...(since ? { createdAt: { gt: since } } : {}),
         },
         orderBy: { createdAt: "desc" },
-        take: 20,
+        take: 8,
         select: {
           id: true,
           guestName: true,
@@ -64,9 +66,10 @@ export async function GET(request: Request) {
           giftListId,
           status: "CONFIRMED",
           confirmedAt: { not: null },
+          ...(since ? { confirmedAt: { gt: since } } : {}),
         },
         orderBy: { confirmedAt: "desc" },
-        take: 20,
+        take: 8,
         select: {
           id: true,
           fullName: true,
@@ -102,7 +105,7 @@ export async function GET(request: Request) {
       })),
     ]
       .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
-      .slice(0, 20);
+      .slice(0, 8);
 
     const latestEventAt = allEvents[0]?.at ?? null;
     const unreadCount = since
@@ -112,7 +115,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       unreadCount,
       latestEventAt,
-      events: allEvents.slice(0, 8),
+      events: allEvents,
     });
   } catch (error) {
     console.error("Erro ao carregar resumo de notificacoes:", error);

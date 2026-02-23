@@ -146,11 +146,12 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
       }
     };
 
-    loadNotifications();
-    const interval = setInterval(loadNotifications, 20000);
+    const initialTimer = window.setTimeout(loadNotifications, 2500);
+    const interval = setInterval(loadNotifications, 30000);
 
     return () => {
       cancelled = true;
+      clearTimeout(initialTimer);
       clearInterval(interval);
     };
   }, [siteSlug, dismissedNotificationIds]);

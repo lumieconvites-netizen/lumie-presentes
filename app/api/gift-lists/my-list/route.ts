@@ -132,6 +132,36 @@ export async function GET(req: Request) {
       });
     }
 
+    if (view === "presentes-meta") {
+      const [presentesMeta, recipient] = await Promise.all([
+        prisma.giftList.findUnique({
+          where: { id: giftList.id },
+          select: {
+            id: true,
+            slug: true,
+            isPublished: true,
+            feeMode: true,
+            title: true,
+            description: true,
+            pageLayout: {
+              select: {
+                theme: true,
+              },
+            },
+          },
+        }),
+        prisma.recipient.findUnique({
+          where: { userId: ctx.effectiveUserId },
+          select: { bankAccount: true },
+        }),
+      ]);
+
+      return NextResponse.json({
+        ...(presentesMeta ?? giftList),
+        bankAccountConfigured: hasConfiguredBankAccount(recipient?.bankAccount),
+      });
+    }
+
     // Regra de seguranca: sem conta bancaria valida, lista nao pode permanecer publicada.
     if (giftList.isPublished) {
       const recipient = await prisma.recipient.findUnique({

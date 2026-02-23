@@ -66,6 +66,7 @@ export default function PresentesDashboard() {
   const [giftListFeeMode, setGiftListFeeMode] = useState<'PASS_TO_GUEST' | 'ABSORB'>('PASS_TO_GUEST');
   const [gifts, setGifts] = useState<GiftRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [giftsLoading, setGiftsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   const [openCreate, setOpenCreate] = useState(false);
@@ -105,10 +106,28 @@ export default function PresentesDashboard() {
     return gifts.filter((g) => g.name.toLowerCase().includes(q) || (g.description ?? '').toLowerCase().includes(q));
   }, [gifts, searchTerm]);
 
+  async function loadGifts(listId: string) {
+    if (!listId) return;
+    setGiftsLoading(true);
+    try {
+      const giftsRes = await fetchWithTimeout(`/api/gifts?giftListId=${encodeURIComponent(listId)}`, { cache: 'no-store' });
+      const giftsData = await parseJsonSafe(giftsRes);
+      if (!giftsRes.ok) throw new Error(giftsData?.error ?? 'Erro ao carregar presentes');
+      setGifts((Array.isArray(giftsData) ? giftsData : []).map((row: any) => ({
+        ...row,
+        basePrice: Number(row.basePrice),
+      })));
+    } catch (error: any) {
+      alert(error?.message ?? 'Erro ao carregar presentes');
+    } finally {
+      setGiftsLoading(false);
+    }
+  }
+
   async function loadGiftListAndGifts() {
     setLoading(true);
     try {
-      const glRes = await fetchWithTimeout('/api/gift-lists/my-list?view=presentes', { cache: 'no-store' });
+      const glRes = await fetchWithTimeout('/api/gift-lists/my-list?view=presentes-meta', { cache: 'no-store' });
       const glData = await parseJsonSafe(glRes);
       if (!glRes.ok) throw new Error(glData?.error ?? 'Erro ao carregar lista');
       setGiftListId(glData.id);
@@ -121,11 +140,8 @@ export default function PresentesDashboard() {
 
       const theme = (glData?.pageLayout?.theme ?? {}) as Record<string, any>;
       setListPageCoverImage(typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '');
-
-      setGifts((glData?.gifts ?? []).map((row: any) => ({
-        ...row,
-        basePrice: Number(row.basePrice),
-      })));
+      setGifts([]);
+      void loadGifts(glData.id);
       setSelectionMode(false);
       setSelectedIds([]);
     } catch (error: any) {
@@ -461,10 +477,10 @@ export default function PresentesDashboard() {
                   </Button>
                 </>
               )}
-              <Button variant="outline" className="w-full sm:w-auto" asChild disabled={loading}>
+              <Button variant="outline" className="w-full sm:w-auto" asChild disabled={loading || giftsLoading}>
                 <Link href="/dashboard/presentes/modelos">Modelos prontos</Link>
               </Button>
-              <Button onClick={() => setOpenCreate(true)} style={{ backgroundColor: primary }} className="text-white hover:opacity-90 w-full sm:w-auto" disabled={loading}>
+              <Button onClick={() => setOpenCreate(true)} style={{ backgroundColor: primary }} className="text-white hover:opacity-90 w-full sm:w-auto" disabled={loading || giftsLoading}>
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Presente
               </Button>
@@ -557,8 +573,8 @@ export default function PresentesDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading ? (
-          <p className="text-gray-600">Carregando...</p>
+        {loading || giftsLoading ? (
+          <p className="text-gray-600">Carregando presentes...</p>
         ) : filteredGifts.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🎀</div>

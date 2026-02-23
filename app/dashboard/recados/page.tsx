@@ -55,8 +55,6 @@ export default function RecadosPage() {
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...payload } : m)));
   }
 
-  if (loading) return <div className="p-4 md:p-6">Carregando recados...</div>;
-
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div>
@@ -65,7 +63,11 @@ export default function RecadosPage() {
       </div>
 
       <div className="space-y-4">
-        {messages.length === 0 ? (
+        {loading ? (
+          <Card>
+            <CardContent className="p-10 text-center text-gray-500">Carregando recados...</CardContent>
+          </Card>
+        ) : messages.length === 0 ? (
           <Card>
             <CardContent className="p-10 text-center text-gray-500">Nenhum recado ainda.</CardContent>
           </Card>

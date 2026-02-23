@@ -61,8 +61,6 @@ export default function PagamentosPage() {
 
   const successfulOrders = orders.filter((order) => order.status === 'PAID' || order.status === 'AUTHORIZED');
 
-  if (loading) return <div className="p-4 md:p-6">Carregando pagamentos...</div>;
-
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div>
@@ -71,7 +69,11 @@ export default function PagamentosPage() {
       </div>
 
       <div className="space-y-4">
-        {successfulOrders.length === 0 ? (
+        {loading ? (
+          <Card>
+            <CardContent className="p-10 text-center text-gray-500">Carregando pagamentos...</CardContent>
+          </Card>
+        ) : successfulOrders.length === 0 ? (
           <Card>
             <CardContent className="p-10 text-center text-gray-500">Nenhum pagamento aprovado ainda.</CardContent>
           </Card>
