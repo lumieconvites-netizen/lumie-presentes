@@ -108,6 +108,9 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
     splitReason: string | null;
     orderId: string;
   } | null>(null);
+  const [pixOrderStatus, setPixOrderStatus] = useState<
+    'PENDING' | 'PAID' | 'AUTHORIZED' | 'REFUSED' | 'REFUNDED' | 'CHARGEBACK' | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -136,6 +139,53 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
       cancelled = true;
     };
   }, [params.giftId, slugParam]);
+
+  useEffect(() => {
+    if (!pixData?.orderId) return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const pollStatus = async () => {
+      try {
+        const emailParam = guestEmail.trim()
+          ? `?email=${encodeURIComponent(guestEmail.trim())}`
+          : '';
+        const res = await fetch(`/api/public/orders/${pixData.orderId}/status${emailParam}`, {
+          cache: 'no-store',
+        });
+        const data = await parseJsonSafe(res);
+        if (!res.ok || cancelled) return;
+
+        const status = (data?.status ?? null) as
+          | 'PENDING'
+          | 'PAID'
+          | 'AUTHORIZED'
+          | 'REFUSED'
+          | 'REFUNDED'
+          | 'CHARGEBACK'
+          | null;
+        setPixOrderStatus(status);
+
+        if (status && ['PAID', 'AUTHORIZED', 'REFUSED', 'REFUNDED', 'CHARGEBACK'].includes(status)) {
+          if (timer) {
+            clearInterval(timer);
+            timer = null;
+          }
+        }
+      } catch {
+        // Ignora falhas transientes de rede no polling.
+      }
+    };
+
+    pollStatus();
+    timer = setInterval(pollStatus, 5000);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
+  }, [pixData?.orderId, guestEmail]);
 
   const feeMode = giftData?.giftList.feeMode ?? 'PASS_TO_GUEST';
   const available = giftData?.gift.availableQty ?? 0;
@@ -429,7 +479,23 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
             {pixData ? (
               <div className="mt-6 border rounded-lg p-4 space-y-3">
                 <div className="font-medium">PIX gerado</div>
+                <p className="text-xs text-gray-500">Depois de pagar no app do banco, volte para esta tela para confirmar.</p>
                 {pixExpiresLabel ? <div className="text-xs text-gray-500">Valido até {pixExpiresLabel}</div> : null}
+                {pixOrderStatus === 'PAID' || pixOrderStatus === 'AUTHORIZED' ? (
+                  <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+                    Pagamento efetuado com sucesso.
+                  </div>
+                ) : null}
+                {pixOrderStatus === 'REFUSED' || pixOrderStatus === 'REFUNDED' || pixOrderStatus === 'CHARGEBACK' ? (
+                  <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    Pagamento nao confirmado. Gere um novo PIX para concluir.
+                  </div>
+                ) : null}
+                {!pixOrderStatus || pixOrderStatus === 'PENDING' ? (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                    Aguardando confirmacao do pagamento...
+                  </div>
+                ) : null}
                 {pixQrImageSrc ? (
                   <div className="bg-white rounded border p-2 flex justify-center">
                     <img
@@ -469,7 +535,7 @@ export default function CheckoutPage({ params }: { params: { giftId: string } })
                 ) : null}
 
                 <Button type="button" className="w-full" onClick={() => router.push(`/site/${giftData.giftList.slug}`)}>
-                  Voltar para lista
+                  Voltar para site do evento
                 </Button>
                 {!pixData.splitApplied ? (
                   <p className="text-[11px] text-amber-700">
