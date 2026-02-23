@@ -118,6 +118,36 @@ async function pagarmeFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+async function pagarmeFetchWithMethodFallback<T>(
+  path: string,
+  body: string,
+  methods: Array<"PATCH" | "POST" | "PUT">
+): Promise<T> {
+  let lastError: unknown = null;
+
+  for (const method of methods) {
+    try {
+      return await pagarmeFetch<T>(path, {
+        method,
+        body,
+      });
+    } catch (error: any) {
+      const message = String(error?.message ?? "");
+      const isMethodNotAllowed =
+        message.includes("Pagar.me error 405") ||
+        message.includes("UnsupportedApiVersion");
+
+      if (!isMethodNotAllowed) {
+        throw error;
+      }
+
+      lastError = error;
+    }
+  }
+
+  throw lastError ?? new Error("Falha ao comunicar com a Pagar.me");
+}
+
 export async function getOrder(orderId: string) {
   return pagarmeFetch<any>(`/orders/${orderId}`, { method: "GET" });
 }
@@ -286,11 +316,13 @@ export async function updateRecipientDefaultBankAccount(params: {
   bankAccount: RecipientBankAccountInput;
 }) {
   const payload = buildDefaultBankAccount(params.bankAccount);
+  const body = JSON.stringify(payload);
 
-  return pagarmeFetch<any>(`/recipients/${params.recipientId}/default-bank-account`, {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  });
+  return pagarmeFetchWithMethodFallback<any>(
+    `/recipients/${params.recipientId}/default-bank-account`,
+    body,
+    ["PATCH", "POST", "PUT"]
+  );
 }
 
 type CreatePixOrderInput = {

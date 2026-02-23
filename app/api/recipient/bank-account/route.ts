@@ -102,7 +102,8 @@ export async function PUT(request: Request) {
         }
         nextStatus = "active";
       } catch (error: any) {
-        warning = error?.message || "Falha ao sincronizar recebedor na Pagar.me.";
+        console.error("Falha ao sincronizar recebedor na Pagar.me:", error);
+        warning = "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
       }
     }
 
