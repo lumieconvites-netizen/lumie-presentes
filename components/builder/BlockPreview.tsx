@@ -434,11 +434,11 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
             {block.type === 'gifts' && (
               <div className={`${sectionClass} p-3 md:p-16`} id="lista-presentes-section">
                 <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden border border-gray-200">
-                  <div className="relative h-[320px] md:h-[420px]">
+                  <div className="relative">
                     {config.coverImage ? (
-                      <img src={config.coverImage} alt="Lista de presentes" className="w-full h-full object-cover" />
+                      <img src={config.coverImage} alt="Lista de presentes" className="w-full h-auto object-contain" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-700" />
+                      <div className="h-[320px] md:h-[420px] w-full bg-gradient-to-br from-zinc-900 to-zinc-700" />
                     )}
                     <div className="absolute inset-0 bg-black/35" />
                     <div className="absolute left-4 right-4 bottom-4 md:left-8 md:right-8 md:bottom-8">
