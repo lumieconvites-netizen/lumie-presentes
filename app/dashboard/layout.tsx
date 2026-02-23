@@ -5,6 +5,7 @@ import DashboardSidebar from '@/components/dashboard/sidebar';
 import DashboardHeader from '@/components/dashboard/header';
 import { getActingUserContext } from '@/lib/acting-user';
 import AffiliateLimitedGuard from '@/components/dashboard/affiliate-limited-guard';
+import { UserProviderGate } from '@/components/providers/user-provider-gate';
 
 export default async function DashboardLayout({
   children,
@@ -49,13 +50,15 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <DashboardSidebar limitedMode={isLimitedMode} />
-      <div className="flex-1 flex flex-col">
-        <DashboardHeader limitedMode={isLimitedMode} sessionUserRole={ctx.sessionUserRole} />
-        <AffiliateLimitedGuard enabled={isLimitedMode} />
-        <main className="flex-1 overflow-auto">{children}</main>
+    <UserProviderGate>
+      <div className="min-h-screen bg-background flex">
+        <DashboardSidebar limitedMode={isLimitedMode} />
+        <div className="flex-1 flex flex-col">
+          <DashboardHeader limitedMode={isLimitedMode} sessionUserRole={ctx.sessionUserRole} />
+          <AffiliateLimitedGuard enabled={isLimitedMode} />
+          <main className="flex-1 overflow-auto">{children}</main>
+        </div>
       </div>
-    </div>
+    </UserProviderGate>
   );
 }

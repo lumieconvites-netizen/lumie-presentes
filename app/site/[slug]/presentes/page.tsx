@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
@@ -87,9 +88,15 @@ export default async function SiteGiftsBySlugPage({
       </header>
 
       {pageCoverImage ? (
-        <div className="w-full">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={pageCoverImage} alt={`Capa da pagina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
+        <div className="relative w-full aspect-[16/9] md:aspect-auto md:h-[78vh]">
+          <Image
+            src={pageCoverImage}
+            alt={`Capa da pagina ${pageTitle}`}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
         </div>
       ) : null}
 
@@ -136,10 +143,15 @@ export default async function SiteGiftsBySlugPage({
                 {visibleGifts.map(({ gift, availableQty, soldOut, displayPrice }) => {
                   return (
                     <article key={gift.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                      <div className="h-52 bg-gray-100">
+                      <div className="relative h-52 bg-gray-100">
                         {gift.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={gift.imageUrl} alt={gift.name} className="w-full h-full object-cover" />
+                          <Image
+                            src={gift.imageUrl}
+                            alt={gift.name}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover"
+                          />
                         ) : null}
                       </div>
                       <div className="p-5">

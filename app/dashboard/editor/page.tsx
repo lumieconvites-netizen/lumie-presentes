@@ -138,7 +138,6 @@ export default function PageBuilder() {
   });
   const [selectedBlock, setSelectedBlock] = useState<PageBlock | null>(null);
   const [mobileDrawer, setMobileDrawer] = useState<'controls' | 'selected' | null>(null);
-  const [themeVersion, setThemeVersion] = useState<number>(0);
   const [listGifts, setListGifts] = useState<any[]>([]);
   const [dirty, setDirty] = useState(false);
   const [uploadingThemeBg, setUploadingThemeBg] = useState(false);
@@ -247,10 +246,6 @@ export default function PageBuilder() {
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    setThemeVersion((prev) => prev + 1);
-  }, [theme]);
 
   useEffect(() => {
     if (!selectedBlock && mobileDrawer === 'selected') {
@@ -908,7 +903,6 @@ export default function PageBuilder() {
             <div className="mx-auto w-full max-w-[390px] rounded-2xl border border-[#ead9cd] bg-white shadow-xl overflow-hidden">
               <div className="h-[76vh] max-h-[780px] overflow-y-auto bg-white">
                 <BlockPreview
-                  key={themeVersion}
                   list={{ theme, slug: giftList?.slug }}
                   blocks={pageBlocks}
                   selectedBlock={selectedBlock}
@@ -924,7 +918,6 @@ export default function PageBuilder() {
 
           <div className="hidden md:block max-w-6xl mx-auto px-6 pb-6">
             <BlockPreview
-              key={themeVersion}
               list={{ theme, slug: giftList?.slug }}
               blocks={pageBlocks}
               selectedBlock={selectedBlock}

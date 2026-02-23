@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { UserProviderGate } from '@/components/providers/user-provider-gate';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -25,7 +26,7 @@ function formatBRL(v: number) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-export default function SitePresentesPage() {
+function SitePresentesPageContent() {
   const { gifts, settings } = useUser();
 
   const [mounted, setMounted] = useState(false);
@@ -225,5 +226,13 @@ export default function SitePresentesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SitePresentesPage() {
+  return (
+    <UserProviderGate>
+      <SitePresentesPageContent />
+    </UserProviderGate>
   );
 }

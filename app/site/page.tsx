@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '@/contexts/user-context';
 import PublicPageView from '@/components/public/PublicPageView';
+import { UserProviderGate } from '@/components/providers/user-provider-gate';
 
-export default function PublicSitePage() {
+function PublicSitePageContent() {
   const { pageBlocks, gifts, messages, settings } = useUser();
   const [mounted, setMounted] = useState(false);
 
@@ -31,5 +32,13 @@ export default function PublicSitePage() {
       settings={settings}
       theme={settings?.theme || {}}
     />
+  );
+}
+
+export default function PublicSitePage() {
+  return (
+    <UserProviderGate>
+      <PublicSitePageContent />
+    </UserProviderGate>
   );
 }
