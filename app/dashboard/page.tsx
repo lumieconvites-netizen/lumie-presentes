@@ -46,6 +46,7 @@ type Order = {
   paymentMethod?: string | null;
   status: 'PENDING' | 'PAID' | 'AUTHORIZED' | 'REFUSED' | 'REFUNDED' | 'CHARGEBACK';
   createdAt: string;
+  paidAt?: string | null;
   giftItem?: { name?: string } | null;
 };
 
@@ -80,6 +81,7 @@ function toNumber(v: number | string) {
 }
 
 const WITHDRAW_FEE_CENTS = 367;
+const CARD_LIQUIDATION_WINDOW_DAYS = 45;
 
 export default function DashboardPage() {
   const [data, setData] = useState<FullList | null>(null);
@@ -129,9 +131,20 @@ export default function DashboardPage() {
   const totalGifts = gifts.length;
   const activeGifts = gifts.filter((g) => g.availableQty > 0).length;
   const paidOrders = orders.filter((o) => o.status === 'PAID');
-  const pendingOrders = orders.filter(
-    (o) => (o.status === 'PENDING' || o.status === 'AUTHORIZED') && isCardPaymentMethod(o.paymentMethod)
-  );
+  const cardLiquidationCutoff = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - CARD_LIQUIDATION_WINDOW_DAYS);
+    return date;
+  }, []);
+  const pendingOrders = orders.filter((o) => {
+    if (!isCardPaymentMethod(o.paymentMethod)) return false;
+    if (o.status === 'PENDING' || o.status === 'AUTHORIZED') return true;
+    if (o.status === 'PAID') {
+      const paidDate = o.paidAt ? new Date(o.paidAt) : new Date(o.createdAt);
+      return !Number.isNaN(paidDate.getTime()) && paidDate >= cardLiquidationCutoff;
+    }
+    return false;
+  });
   const totalPaid = paidOrders.reduce((sum, o) => sum + (toNumber(o.totalAmount) - toNumber(o.feeAmount)), 0);
   const recentPayments = paidOrders.slice(0, 6);
   const recentMessages = messages.slice(0, 5);
