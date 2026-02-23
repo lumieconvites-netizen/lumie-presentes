@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useUser } from '@/contexts/user-context';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,6 @@ type ImpersonationData = {
 export default function DashboardHeader() {
   const { user } = useUser();
   const { data: session } = useSession();
-  const router = useRouter();
 
   const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
   const [siteSlug, setSiteSlug] = useState('');
@@ -161,8 +159,7 @@ export default function DashboardHeader() {
             <DropdownMenuItem
               onClick={async () => {
                 await signOut({ redirect: false });
-                router.push('/login');
-                router.refresh();
+                window.location.assign('/auth/login');
               }}
               className="text-red-600 focus:text-red-600 cursor-pointer"
             >

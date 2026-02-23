@@ -135,7 +135,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
             <DropdownMenuItem
               onClick={async () => {
                 await signOut({ redirect: false });
-                window.location.assign('/login');
+                window.location.assign('/auth/login');
               }}
               className="text-red-600 focus:text-red-600 cursor-pointer"
             >

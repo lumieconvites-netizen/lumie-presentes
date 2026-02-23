@@ -61,7 +61,7 @@ export default function AdminTopbarMenu({ name, email, image }: AdminTopbarMenuP
         <DropdownMenuItem
           onClick={async () => {
             await signOut({ redirect: false });
-            window.location.assign('/login');
+            window.location.assign('/auth/login');
           }}
           className="text-red-600 focus:text-red-600 cursor-pointer"
         >

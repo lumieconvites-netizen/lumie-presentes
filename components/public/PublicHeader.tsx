@@ -19,6 +19,7 @@ export default function PublicHeader() {
 
   // dropdown
   const [open, setOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -103,7 +104,12 @@ export default function PublicHeader() {
 
            <button
            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-           onClick={() => signOut({ callbackUrl: '/' })}
+           onClick={async () => {
+             setIsSigningOut(true);
+             setOpen(false);
+             await signOut({ redirect: false });
+             window.location.assign('/auth/login');
+           }}
            >
             Sair
            </button>
@@ -112,6 +118,14 @@ export default function PublicHeader() {
           </div>
         )}
       </div>
+
+      {isSigningOut ? (
+        <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+          <div className="rounded-xl border border-[#ead9cd] bg-white px-5 py-3 text-sm font-medium text-[#4a3a33] shadow-sm">
+            Saindo...
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }
