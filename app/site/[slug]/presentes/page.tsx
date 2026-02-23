@@ -22,10 +22,13 @@ export const dynamic = "force-dynamic";
 
 export default async function SiteGiftsBySlugPage({
   params,
+  searchParams,
 }: {
   params: { slug: string };
+  searchParams?: { f?: string };
 }) {
   const slug = decodeURIComponent(params.slug);
+  const activeFilter = searchParams?.f === "available" ? "available" : "all";
 
   const list = await prisma.giftList.findUnique({
     where: { slug },
@@ -53,6 +56,21 @@ export default async function SiteGiftsBySlugPage({
   const pageTitle = list.title || "Lista de Presentes";
   const pageMessage = list.description || "Escolha um presente especial e participe desse momento.";
   const pageCoverImage = typeof theme.gifts_page_cover_image === "string" ? theme.gifts_page_cover_image : "";
+  const giftsWithAvailability = gifts.map((gift) => {
+    const availableQty = availabilityByGiftId.get(gift.id) ?? Math.max(0, gift.availableQty);
+    const soldOut = availableQty <= 0;
+    const displayPrice = calculateDisplayPrice(Number(gift.basePrice || 0), list.feeMode);
+    return {
+      gift,
+      availableQty,
+      soldOut,
+      displayPrice,
+    };
+  });
+  const visibleGifts =
+    activeFilter === "available"
+      ? giftsWithAvailability.filter((entry) => !entry.soldOut)
+      : giftsWithAvailability;
 
   return (
     <main className="min-h-screen bg-[#faf7f5]">
@@ -82,55 +100,86 @@ export default async function SiteGiftsBySlugPage({
             Ainda nao ha presentes cadastrados.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {gifts.map((gift) => {
-              const availableQty = availabilityByGiftId.get(gift.id) ?? Math.max(0, gift.availableQty);
-              const soldOut = availableQty <= 0;
-              const displayPrice = calculateDisplayPrice(Number(gift.basePrice || 0), list.feeMode);
-              return (
-                <article key={gift.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                  <div className="h-52 bg-gray-100">
-                    {gift.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={gift.imageUrl} alt={gift.name} className="w-full h-full object-cover" />
-                    ) : null}
-                  </div>
-                  <div className="p-5">
-                    <h2 className="text-xl font-semibold">{gift.name}</h2>
-                    <p className="text-sm text-gray-600 mt-2 min-h-10">{gift.description || "Sem descricao"}</p>
-                    <div className="flex items-center justify-between mt-5">
-                      <div>
-                        <p className="text-2xl font-bold" style={{ color: primaryColor }}>
-                          {formatBRL(displayPrice)}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Disponivel: {availableQty} de {gift.totalQuantity}
-                        </p>
+          <>
+            <div className="mb-6 flex items-center gap-2">
+              <span className="text-sm text-gray-600">Filtrar:</span>
+              <Link
+                href={`/site/${encodeURIComponent(slug)}/presentes?f=all`}
+                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                  activeFilter === "all"
+                    ? "text-white border-transparent"
+                    : "text-gray-700 border-gray-300 hover:bg-gray-100"
+                }`}
+                style={activeFilter === "all" ? { backgroundColor: primaryColor } : undefined}
+              >
+                Todos
+              </Link>
+              <Link
+                href={`/site/${encodeURIComponent(slug)}/presentes?f=available`}
+                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                  activeFilter === "available"
+                    ? "text-white border-transparent"
+                    : "text-gray-700 border-gray-300 hover:bg-gray-100"
+                }`}
+                style={activeFilter === "available" ? { backgroundColor: primaryColor } : undefined}
+              >
+                Disponiveis
+              </Link>
+            </div>
+
+            {visibleGifts.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-600">
+                Nenhum presente disponivel no momento.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {visibleGifts.map(({ gift, availableQty, soldOut, displayPrice }) => {
+                  return (
+                    <article key={gift.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                      <div className="h-52 bg-gray-100">
+                        {gift.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={gift.imageUrl} alt={gift.name} className="w-full h-full object-cover" />
+                        ) : null}
                       </div>
-                      {soldOut ? (
-                        <button
-                          type="button"
-                          className="px-4 py-2 rounded-lg text-sm font-medium text-white opacity-60 cursor-not-allowed"
-                          style={{ backgroundColor: primaryColor }}
-                          disabled
-                        >
-                          Esgotado
-                        </button>
-                      ) : (
-                        <Link
-                          href={`/checkout/${gift.id}?slug=${encodeURIComponent(slug)}`}
-                          className="px-4 py-2 rounded-lg text-sm font-medium text-white"
-                          style={{ backgroundColor: primaryColor }}
-                        >
-                          Presentear
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                      <div className="p-5">
+                        <h2 className="text-xl font-semibold">{gift.name}</h2>
+                        <p className="text-sm text-gray-600 mt-2 min-h-10">{gift.description || "Sem descricao"}</p>
+                        <div className="flex items-center justify-between mt-5">
+                          <div>
+                            <p className="text-2xl font-bold" style={{ color: primaryColor }}>
+                              {formatBRL(displayPrice)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Disponivel: {availableQty} de {gift.totalQuantity}
+                            </p>
+                          </div>
+                          {soldOut ? (
+                            <button
+                              type="button"
+                              className="px-4 py-2 rounded-lg text-sm font-medium text-white opacity-60 cursor-not-allowed"
+                              style={{ backgroundColor: primaryColor }}
+                              disabled
+                            >
+                              Esgotado
+                            </button>
+                          ) : (
+                            <Link
+                              href={`/checkout/${gift.id}?slug=${encodeURIComponent(slug)}`}
+                              className="px-4 py-2 rounded-lg text-sm font-medium text-white"
+                              style={{ backgroundColor: primaryColor }}
+                            >
+                              Presentear
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </section>
     </main>
