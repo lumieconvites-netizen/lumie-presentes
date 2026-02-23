@@ -28,20 +28,32 @@ export default async function DashboardLayout({
     ctx.effectiveUser.role === 'CLIENT' &&
     (ctx.sessionUserRole === 'PARTNER' || ctx.sessionUserRole === 'AMBASSADOR');
 
-  if (!isAffiliateLimitedMode && ctx.effectiveUser.role === 'PARTNER') {
+  const isEmployeeLimitedMode =
+    ctx.impersonationMode === 'EMPLOYEE' &&
+    ctx.isImpersonating &&
+    ctx.effectiveUser.role === 'CLIENT' &&
+    ctx.sessionUserRole === 'EMPLOYEE';
+
+  const isLimitedMode = isAffiliateLimitedMode || isEmployeeLimitedMode;
+
+  if (!isLimitedMode && ctx.effectiveUser.role === 'PARTNER') {
     redirect('/parceiro');
   }
 
-  if (!isAffiliateLimitedMode && ctx.effectiveUser.role === 'AMBASSADOR') {
+  if (!isLimitedMode && ctx.effectiveUser.role === 'AMBASSADOR') {
     redirect('/embaixador');
+  }
+
+  if (!isLimitedMode && ctx.effectiveUser.role === 'EMPLOYEE') {
+    redirect('/funcionario');
   }
 
   return (
     <div className="min-h-screen bg-background flex">
-      <DashboardSidebar limitedMode={isAffiliateLimitedMode} />
+      <DashboardSidebar limitedMode={isLimitedMode} />
       <div className="flex-1 flex flex-col">
-        <DashboardHeader limitedMode={isAffiliateLimitedMode} sessionUserRole={ctx.sessionUserRole} />
-        <AffiliateLimitedGuard enabled={isAffiliateLimitedMode} />
+        <DashboardHeader limitedMode={isLimitedMode} sessionUserRole={ctx.sessionUserRole} />
+        <AffiliateLimitedGuard enabled={isLimitedMode} />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>

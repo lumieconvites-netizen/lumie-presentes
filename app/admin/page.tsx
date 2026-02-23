@@ -133,6 +133,7 @@ export default function AdminPage() {
   }
 
   async function startImpersonation(userId: string) {
+    const targetRole = users.find((u) => u.id === userId)?.role;
     const res = await fetch('/api/admin/impersonation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -140,6 +141,18 @@ export default function AdminPage() {
     });
     const j = await res.json();
     if (!res.ok) throw new Error(j.error || 'Erro ao acessar painel do usuário');
+    if (targetRole === 'PARTNER') {
+      window.location.assign('/parceiro');
+      return;
+    }
+    if (targetRole === 'AMBASSADOR') {
+      window.location.assign('/embaixador');
+      return;
+    }
+    if (targetRole === 'EMPLOYEE') {
+      window.location.assign('/funcionario');
+      return;
+    }
     window.location.assign('/dashboard');
   }
 

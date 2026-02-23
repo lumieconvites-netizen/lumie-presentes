@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export const ADMIN_IMPERSONATION_COOKIE = "lumie_admin_act_as";
 export const AFFILIATE_IMPERSONATION_COOKIE = "lumie_affiliate_act_as";
+export const EMPLOYEE_IMPERSONATION_COOKIE = "lumie_employee_act_as";
 
 type SafeUser = {
   id: string;
@@ -20,7 +21,7 @@ export type ActingUserContext = {
   effectiveUserId: string;
   effectiveUser: SafeUser;
   isImpersonating: boolean;
-  impersonationMode: "ADMIN" | "AFFILIATE" | null;
+  impersonationMode: "ADMIN" | "AFFILIATE" | "EMPLOYEE" | null;
 };
 
 function isValidUserId(value: string) {
@@ -68,6 +69,30 @@ export async function getActingUserContext(): Promise<ActingUserContext | null> 
             effectiveUser: targetUser,
             isImpersonating: true,
             impersonationMode: "AFFILIATE",
+          };
+        }
+      }
+    }
+
+    if (sessionUser.role === "EMPLOYEE") {
+      const employeeActAsId = cookies().get(EMPLOYEE_IMPERSONATION_COOKIE)?.value?.trim();
+      if (employeeActAsId && isValidUserId(employeeActAsId) && employeeActAsId !== sessionUserId) {
+        const targetUser = await prisma.user.findFirst({
+          where: {
+            id: employeeActAsId,
+            role: "CLIENT",
+          },
+          select: { id: true, name: true, email: true, image: true, role: true },
+        });
+
+        if (targetUser) {
+          return {
+            sessionUserId,
+            sessionUserRole: sessionUser.role,
+            effectiveUserId: targetUser.id,
+            effectiveUser: targetUser,
+            isImpersonating: true,
+            impersonationMode: "EMPLOYEE",
           };
         }
       }

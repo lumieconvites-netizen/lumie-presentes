@@ -89,8 +89,9 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
   }, [role]);
 
   useEffect(() => {
-    if (role !== 'PARTNER' && role !== 'AMBASSADOR') return;
-    fetch('/api/affiliate/impersonation', { cache: 'no-store' })
+    if (role !== 'PARTNER' && role !== 'AMBASSADOR' && role !== 'EMPLOYEE') return;
+    const url = role === 'EMPLOYEE' ? '/api/employee/impersonation' : '/api/affiliate/impersonation';
+    fetch(url, { cache: 'no-store' })
       .then((r) => r.json())
       .then((data) => setImpersonation(data))
       .catch(() => null);
@@ -195,6 +196,8 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
         ? '/api/admin/impersonation'
         : role === 'PARTNER' || role === 'AMBASSADOR'
           ? '/api/affiliate/impersonation'
+          : role === 'EMPLOYEE'
+            ? '/api/employee/impersonation'
           : null;
 
     if (!route) return;
@@ -210,8 +213,10 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
       return;
     }
 
-    const roleToReturn = sessionUserRole ?? (role as 'PARTNER' | 'AMBASSADOR' | undefined);
-    const backTo = roleToReturn === 'PARTNER' ? '/parceiro' : '/embaixador';
+    const roleToReturn =
+      sessionUserRole ?? (role as 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE' | undefined);
+    const backTo =
+      roleToReturn === 'PARTNER' ? '/parceiro' : roleToReturn === 'AMBASSADOR' ? '/embaixador' : '/funcionario';
     window.location.assign(backTo);
   }
 
@@ -229,7 +234,17 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
               </Button>
             ) : (
               <Button size="sm" variant="outline" asChild>
-                <Link href={(sessionUserRole ?? role) === 'PARTNER' ? '/parceiro' : '/embaixador'}>Voltar ao painel</Link>
+                <Link
+                  href={
+                    (sessionUserRole ?? role) === 'PARTNER'
+                      ? '/parceiro'
+                      : (sessionUserRole ?? role) === 'AMBASSADOR'
+                        ? '/embaixador'
+                        : '/funcionario'
+                  }
+                >
+                  Voltar ao painel
+                </Link>
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={() => stopImpersonation().catch(() => null)}>

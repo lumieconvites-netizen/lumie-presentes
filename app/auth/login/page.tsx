@@ -62,6 +62,10 @@ export default function LoginPage() {
             window.location.assign('/embaixador');
             return;
           }
+          if (role === 'EMPLOYEE') {
+            window.location.assign('/funcionario');
+            return;
+          }
         } catch {
           // fallback para fluxo padrao
         }

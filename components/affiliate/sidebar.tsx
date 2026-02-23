@@ -3,18 +3,18 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { BarChart3, Handshake, Shield, Settings, Menu, X } from 'lucide-react';
+import { BarChart3, Handshake, Shield, Settings, Menu, X, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type AffiliateRole = 'PARTNER' | 'AMBASSADOR';
+type AffiliateRole = 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
 
 export default function AffiliateSidebar({ role }: { role: AffiliateRole }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const label = role === 'PARTNER' ? 'Painel Parceiro' : 'Painel Embaixador';
-  const Icon = role === 'PARTNER' ? Handshake : Shield;
+  const label = role === 'PARTNER' ? 'Painel Parceiro' : role === 'AMBASSADOR' ? 'Painel Embaixador' : 'Painel Funcionário';
+  const Icon = role === 'PARTNER' ? Handshake : role === 'AMBASSADOR' ? Shield : Briefcase;
 
-  const base = role === 'PARTNER' ? '/parceiro' : '/embaixador';
+  const base = role === 'PARTNER' ? '/parceiro' : role === 'AMBASSADOR' ? '/embaixador' : '/funcionario';
   const items = [
     { href: base, label: 'Visão Geral', icon: BarChart3 },
     { href: `${base}/configuracoes`, label: 'Configurações', icon: Settings },

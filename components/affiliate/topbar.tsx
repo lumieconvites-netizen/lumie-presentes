@@ -25,7 +25,7 @@ type ImpersonationData = {
   };
 };
 
-export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADOR' }) {
+export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE' }) {
   const { data: session } = useSession();
   const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
 
@@ -34,8 +34,12 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
   const email = session?.user?.email || '';
   const sessionImage = (session?.user as any)?.image as string | undefined;
 
-  const title = role === 'PARTNER' ? 'Área do Parceiro' : 'Área do Embaixador';
-  const base = role === 'PARTNER' ? '/parceiro' : '/embaixador';
+  const title = role === 'PARTNER' ? 'Área do Parceiro' : role === 'AMBASSADOR' ? 'Área do Embaixador' : 'Área do Funcionário';
+  const subtitle =
+    role === 'EMPLOYEE'
+      ? 'Acesse contas de clientes e edite presentes, página e RSVP'
+      : 'Acompanhe códigos, indicações e ganhos em tempo real';
+  const base = role === 'PARTNER' ? '/parceiro' : role === 'AMBASSADOR' ? '/embaixador' : '/funcionario';
 
   const displayName =
     sessionRole === 'ADMIN' && impersonation?.isImpersonating
@@ -96,7 +100,7 @@ export default function AffiliateTopbar({ role }: { role: 'PARTNER' | 'AMBASSADO
       <div className="flex items-center justify-between">
         <div className="pl-14 md:pl-0">
           <h1 className="text-xl md:text-2xl font-display text-foreground">{title}</h1>
-          <p className="text-xs md:text-sm text-gray-500">Acompanhe códigos, indicações e ganhos em tempo real</p>
+          <p className="text-xs md:text-sm text-gray-500">{subtitle}</p>
         </div>
 
         <DropdownMenu>

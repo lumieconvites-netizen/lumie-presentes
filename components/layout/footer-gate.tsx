@@ -10,7 +10,7 @@ export function FooterGate() {
     return null;
   }
 
-  if (pathname.startsWith('/parceiro') || pathname.startsWith('/embaixador')) {
+  if (pathname.startsWith('/parceiro') || pathname.startsWith('/embaixador') || pathname.startsWith('/funcionario')) {
     return null;
   }
 
