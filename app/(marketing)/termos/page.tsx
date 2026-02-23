@@ -7,7 +7,7 @@ export default function TermosPage() {
         <div className="container mx-auto px-6 py-16 md:py-20 text-center">
           <h1 className="font-display text-4xl md:text-6xl text-primary leading-tight">Termos de Uso</h1>
           <p className="mx-auto mt-5 max-w-4xl text-lg md:text-xl text-[#5f4b42] leading-relaxed">
-            Ao utilizar a Lumiê, você concorda com as condições abaixo para uso da plataforma, gestão da sua lista,
+            Ao utilizar a Lumi&ecirc;, você concorda com as condições abaixo para uso da plataforma, gestão da sua lista,
             recebimento de valores e segurança das operações.
           </p>
           <p className="mt-5 text-sm text-[#7a665c]">Última atualização: 19 de fevereiro de 2026</p>
@@ -42,9 +42,9 @@ export default function TermosPage() {
               <div className="flex items-start gap-3">
                 <UserCheck className="mt-1 h-6 w-6 text-[#c65a3a]" />
                 <div>
-                  <h2 className="font-display text-3xl text-primary">1. Sobre a Lumiê e uso da plataforma</h2>
+                  <h2 className="font-display text-3xl text-primary">1. Sobre a Lumi&ecirc; e uso da plataforma</h2>
                   <p className="mt-3 text-[#5f4b42] leading-relaxed">
-                    A Lumiê é uma plataforma digital para criação de listas de presentes simbólicos, em que os
+                    A Lumi&ecirc; é uma plataforma digital para criação de listas de presentes simbólicos, em que os
                     convidados contribuem financeiramente e o titular recebe os valores em dinheiro. O uso da conta é
                     pessoal, e o titular é responsável por manter dados corretos e atualizados.
                   </p>
@@ -58,7 +58,7 @@ export default function TermosPage() {
                 <div>
                   <h2 className="font-display text-3xl text-primary">2. Acesso, login e senha</h2>
                   <p className="mt-3 text-[#5f4b42] leading-relaxed">
-                    O titular da conta é responsável pela confidencialidade de login e senha. A Lumiê não recomenda o
+                    O titular da conta é responsável pela confidencialidade de login e senha. A Lumi&ecirc; não recomenda o
                     compartilhamento de credenciais com terceiros. Qualquer atividade realizada na conta será
                     considerada de responsabilidade do titular até comunicação de uso indevido ao suporte.
                   </p>
@@ -101,7 +101,7 @@ export default function TermosPage() {
                   <h2 className="font-display text-3xl text-primary">4. Pagar.me e processamento financeiro</h2>
                   <div className="mt-3 space-y-3 text-[#5f4b42] leading-relaxed">
                     <p>
-                      A Lumiê utiliza a Pagar.me como parceira de pagamentos para processar transações, validar
+                      A Lumi&ecirc; utiliza a Pagar.me como parceira de pagamentos para processar transações, validar
                       operações, mitigar risco de fraude e executar repasses.
                     </p>
                     <p>
@@ -125,7 +125,7 @@ export default function TermosPage() {
                   <div className="mt-3 space-y-2 text-[#5f4b42] leading-relaxed">
                     <p>Não é permitido utilizar a plataforma para fraude, golpe, lavagem de dinheiro ou ato ilícito.</p>
                     <p>Também é vedada a publicação de conteúdo ofensivo, discriminatório ou que viole direitos de terceiros.</p>
-                    <p>A Lumiê pode restringir recursos, suspender ou encerrar contas em caso de violação destes termos.</p>
+                    <p>A Lumi&ecirc; pode restringir recursos, suspender ou encerrar contas em caso de violação destes termos.</p>
                   </div>
                 </div>
               </div>
@@ -200,5 +200,3 @@ export default function TermosPage() {
     </main>
   );
 }
-
-
