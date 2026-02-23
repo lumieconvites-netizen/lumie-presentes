@@ -12,6 +12,7 @@ type NotificationEvent = {
   guestName: string;
   text: string;
   at: string;
+  href: string;
 };
 
 export async function GET(request: Request) {
@@ -81,6 +82,7 @@ export async function GET(request: Request) {
         guestName: order.guestName || "Convidado",
         text: `Voce recebeu um presente de ${order.guestName || "Convidado"}.`,
         at: new Date(order.createdAt).toISOString(),
+        href: "/dashboard/pagamentos",
       })),
       ...recentMessages.map((message) => ({
         id: `message:${message.id}`,
@@ -88,6 +90,7 @@ export async function GET(request: Request) {
         guestName: message.guestName || "Convidado",
         text: `${message.guestName || "Convidado"} deixou um recado.`,
         at: new Date(message.createdAt).toISOString(),
+        href: "/dashboard/recados",
       })),
       ...recentRsvp.map((guest) => ({
         id: `rsvp:${guest.id}`,
@@ -95,6 +98,7 @@ export async function GET(request: Request) {
         guestName: guest.fullName || "Convidado",
         text: `${guest.fullName || "Convidado"} confirmou presenca.`,
         at: new Date(guest.confirmedAt as Date).toISOString(),
+        href: "/dashboard/rsvp",
       })),
     ]
       .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())

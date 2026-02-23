@@ -39,6 +39,7 @@ type NotificationSummary = {
     type: 'payment' | 'message' | 'rsvp';
     text: string;
     at: string;
+    href: string;
   }>;
 };
 
@@ -233,10 +234,16 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
               ) : (
                 <div className="max-h-80 overflow-y-auto px-2 py-1 space-y-1">
                   {notifications.events.map((event) => (
-                    <div key={event.id} className="rounded-md border border-gray-100 bg-white px-2 py-2">
-                      <p className="text-sm text-gray-800 leading-snug">{event.text}</p>
-                      <p className="text-[11px] text-gray-500 mt-1">{formatNotificationDate(event.at)}</p>
-                    </div>
+                    <DropdownMenuItem key={event.id} asChild className="p-0 focus:bg-transparent">
+                      <Link
+                        href={event.href || '/dashboard'}
+                        onClick={() => markNotificationsAsSeen()}
+                        className="block w-full rounded-md border border-gray-100 bg-white px-2 py-2 cursor-pointer hover:bg-gray-50"
+                      >
+                        <p className="text-sm text-gray-800 leading-snug whitespace-normal">{event.text}</p>
+                        <p className="text-[11px] text-gray-500 mt-1">{formatNotificationDate(event.at)}</p>
+                      </Link>
+                    </DropdownMenuItem>
                   ))}
                 </div>
               )}
