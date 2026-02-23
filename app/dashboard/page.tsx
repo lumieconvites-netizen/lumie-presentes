@@ -293,7 +293,7 @@ export default function DashboardPage() {
 
         <Card className="border-[#dae6ff] bg-gradient-to-br from-[#f5f9ff] to-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 gap-3">
-            <CardTitle className="text-sm font-medium text-gray-700">Saque em processamento</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-700">Transferência em processamento</CardTitle>
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#e5efff] text-[#2f67cc]">
               <Landmark className="w-5 h-5" />
             </span>
@@ -303,7 +303,9 @@ export default function DashboardPage() {
               {pendingTransferAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {pendingTransferCount > 0 ? `${pendingTransferCount} saque(s) aguardando transferencia` : 'Nenhum saque aguardando transferencia'}
+              {pendingTransferCount > 0
+                ? `${pendingTransferCount} transferência(s) aguardando processamento`
+                : 'Nenhuma transferência aguardando processamento'}
             </p>
           </CardContent>
         </Card>
