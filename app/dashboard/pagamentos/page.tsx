@@ -67,7 +67,7 @@ export default function PagamentosPage() {
     <div className="p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Pagamentos</h1>
-        <p className="text-gray-500">Historico de pagamentos recebidos</p>
+        <p className="text-gray-500">Histórico de pagamentos recebidos</p>
       </div>
 
       <div className="space-y-4">

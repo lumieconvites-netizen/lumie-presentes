@@ -310,7 +310,7 @@ export default function ConfiguracoesPage() {
     <div className="p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Configurações</h1>
-        <p className="text-gray-500">Gerencie suas preferencias e dados da conta</p>
+        <p className="text-gray-500">Gerencie suas preferências e dados da conta</p>
       </div>
 
       <Tabs defaultValue="perfil" className="space-y-6">
@@ -368,7 +368,7 @@ export default function ConfiguracoesPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Informacoes Pessoais</CardTitle>
+              <CardTitle>Informações Pessoais</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -410,7 +410,7 @@ export default function ConfiguracoesPage() {
                 disabled={!name || uploading || savingProfile || slugChecking || !slugAvailable}
                 className="w-full sm:w-auto"
               >
-                {savingProfile ? 'Salvando...' : 'Salvar Alteracoes'}
+                {savingProfile ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             </CardContent>
           </Card>
@@ -443,7 +443,7 @@ export default function ConfiguracoesPage() {
         <TabsContent value="taxas">
           <Card>
             <CardHeader>
-              <CardTitle>Configuracao de Taxa</CardTitle>
+              <CardTitle>Configuração de Taxa</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
@@ -466,12 +466,12 @@ export default function ConfiguracoesPage() {
                   {settings.feePassedToGuest ? (
                     <div className="text-sm space-y-1">
                       <p>- Convidado paga: <strong className="text-primary">R$ 111,99</strong></p>
-                      <p>- Voce recebe: <strong className="text-green-600">R$ 100,00</strong></p>
+                      <p>- Você recebe: <strong className="text-green-600">R$ 100,00</strong></p>
                     </div>
                   ) : (
                     <div className="text-sm space-y-1">
                       <p>- Convidado paga: <strong className="text-primary">R$ 100,00</strong></p>
-                      <p>- Voce recebe: <strong className="text-green-600">R$ 88,01</strong></p>
+                      <p>- Você recebe: <strong className="text-green-600">R$ 88,01</strong></p>
                       <p className="text-xs text-gray-500">Taxa de R$ 11,99 descontada</p>
                     </div>
                   )}
@@ -489,7 +489,7 @@ export default function ConfiguracoesPage() {
             <CardContent className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <h3 className="font-medium text-foreground">Recados Publicos</h3>
+                  <h3 className="font-medium text-foreground">Recados Públicos</h3>
                   <p className="text-sm text-gray-500">Exibir recados na página pública da lista</p>
                 </div>
 
