@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -30,7 +30,14 @@ export default async function SiteGiftsBySlugPage({
   searchParams?: { f?: string };
 }) {
   const slug = decodeURIComponent(params.slug);
-  const activeFilter = searchParams?.f === "available" ? "available" : "all";
+  const rawFilter = (searchParams?.f || "").toLowerCase();
+  const activeFilter: "all" | "available" | "price_desc" | "price_asc" | "name_asc" =
+    rawFilter === "available" ||
+    rawFilter === "price_desc" ||
+    rawFilter === "price_asc" ||
+    rawFilter === "name_asc"
+      ? (rawFilter as "available" | "price_desc" | "price_asc" | "name_asc")
+      : "all";
 
   const list = await prisma.giftList.findUnique({
     where: { slug },
@@ -89,7 +96,23 @@ export default async function SiteGiftsBySlugPage({
   const visibleGifts =
     activeFilter === "available"
       ? giftsWithAvailability.filter((entry) => !entry.soldOut)
-      : giftsWithAvailability;
+      : activeFilter === "price_desc"
+        ? [...giftsWithAvailability].sort((a, b) => b.displayPrice - a.displayPrice)
+        : activeFilter === "price_asc"
+          ? [...giftsWithAvailability].sort((a, b) => a.displayPrice - b.displayPrice)
+          : activeFilter === "name_asc"
+            ? [...giftsWithAvailability].sort((a, b) => a.gift.name.localeCompare(b.gift.name, "pt-BR"))
+            : giftsWithAvailability;
+  const filterLabel =
+    activeFilter === "available"
+      ? "DisponÃ­veis"
+      : activeFilter === "price_desc"
+        ? "Valor: maior para menor"
+        : activeFilter === "price_asc"
+          ? "Valor: menor para maior"
+          : activeFilter === "name_asc"
+            ? "Nome: A-Z"
+            : "Todos";
 
   return (
     <main className="min-h-screen bg-[#faf7f5]">
@@ -144,30 +167,33 @@ export default async function SiteGiftsBySlugPage({
           </div>
         ) : (
           <>
-            <div className="mb-6 flex items-center gap-2">
+                        <div className="mb-6 flex items-center gap-2">
               <span className="text-sm text-gray-600">Filtrar:</span>
-              <Link
-                href={`/site/${encodeURIComponent(slug)}/presentes?f=all`}
-                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                  activeFilter === "all"
-                    ? "text-white border-transparent"
-                    : "text-gray-700 border-gray-300 hover:bg-gray-100"
-                }`}
-                style={activeFilter === "all" ? { backgroundColor: primaryColor } : undefined}
-              >
-                Todos
-              </Link>
-              <Link
-                href={`/site/${encodeURIComponent(slug)}/presentes?f=available`}
-                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                  activeFilter === "available"
-                    ? "text-white border-transparent"
-                    : "text-gray-700 border-gray-300 hover:bg-gray-100"
-                }`}
-                style={activeFilter === "available" ? { backgroundColor: primaryColor } : undefined}
-              >
-                Disponíveis
-              </Link>
+              <details className="relative">
+                <summary
+                  className="list-none cursor-pointer px-3 py-1.5 rounded-full text-sm border border-transparent text-white"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  {filterLabel}
+                </summary>
+                <div className="absolute left-0 mt-2 z-20 w-64 rounded-xl border border-gray-200 bg-white shadow-lg p-2">
+                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=all`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Todos
+                  </Link>
+                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=available`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Disponíveis
+                  </Link>
+                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=price_desc`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Valor: maior para menor
+                  </Link>
+                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=price_asc`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Valor: menor para maior
+                  </Link>
+                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=name_asc`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Nome: A-Z
+                  </Link>
+                </div>
+              </details>
             </div>
 
             {visibleGifts.length === 0 ? (
@@ -235,3 +261,4 @@ export default async function SiteGiftsBySlugPage({
     </main>
   );
 }
+
