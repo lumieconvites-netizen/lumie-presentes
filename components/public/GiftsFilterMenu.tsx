@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 
 type GiftFilter = 'all' | 'available' | 'price_desc' | 'price_asc' | 'name_asc';
 
@@ -19,8 +19,7 @@ const OPTIONS: Array<{ value: GiftFilter; label: string }> = [
 ];
 
 export default function GiftsFilterMenu({ activeFilter, primaryColor }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const dropdownRef = useRef<HTMLDetailsElement | null>(null);
   const [open, setOpen] = useState(false);
 
   const activeLabel = useMemo(
@@ -28,42 +27,42 @@ export default function GiftsFilterMenu({ activeFilter, primaryColor }: Props) {
     [activeFilter]
   );
 
-  const applyFilter = (value: GiftFilter) => {
-    const nextUrl = value === 'all' ? pathname : `${pathname}?f=${value}`;
-    setOpen(false);
-    router.push(nextUrl, { scroll: false });
-  };
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (!dropdownRef.current) return;
+      if (!dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    window.addEventListener('pointerdown', onPointerDown);
+    return () => window.removeEventListener('pointerdown', onPointerDown);
+  }, []);
 
   return (
     <div className="mb-6 flex items-center gap-2">
       <span className="text-sm text-gray-600">Filtrar:</span>
-      <div className="relative">
-        <button
-          type="button"
-          className="px-3 py-1.5 rounded-full text-sm border border-transparent text-white"
+      <details ref={dropdownRef} className="relative" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
+        <summary
+          className="list-none cursor-pointer px-3 py-1.5 rounded-full text-sm border border-transparent text-white"
           style={{ backgroundColor: primaryColor }}
-          onClick={() => setOpen((prev) => !prev)}
-          aria-expanded={open}
-          aria-haspopup="listbox"
         >
           {activeLabel}
-        </button>
-
+        </summary>
         {open ? (
           <div className="absolute left-0 mt-2 z-20 w-64 rounded-xl border border-gray-200 bg-white shadow-lg p-2">
             {OPTIONS.map((option) => (
-              <button
+              <Link
                 key={option.value}
-                type="button"
-                onClick={() => applyFilter(option.value)}
-                className="block w-full text-left rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                href={option.value === 'all' ? '?' : `?f=${option.value}`}
+                onClick={() => setOpen(false)}
+                className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
                 {option.label}
-              </button>
+              </Link>
             ))}
           </div>
         ) : null}
-      </div>
+      </details>
     </div>
   );
 }
