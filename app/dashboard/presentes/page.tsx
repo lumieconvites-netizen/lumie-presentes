@@ -269,6 +269,18 @@ export default function PresentesDashboard() {
 
     setGifts((prev) => [draftGift, ...prev]);
     setExpandedIds((prev) => (prev.includes(localId) ? prev : [...prev, localId]));
+
+    // Scroll to the newly created card so mobile users can edit it immediately.
+    window.requestAnimationFrame(() => {
+      setTimeout(() => {
+        const card = document.getElementById(`gift-card-${localId}`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const nameInput = card.querySelector('input[placeholder="Nome do presente"]') as HTMLInputElement | null;
+          nameInput?.focus();
+        }
+      }, 120);
+    });
   }
 
   function toggleExpanded(localId: string) {
@@ -555,6 +567,7 @@ export default function PresentesDashboard() {
               return (
                 <Card
                   key={gift.localId}
+                  id={`gift-card-${gift.localId}`}
                   className={`overflow-hidden border-[#ead9cd] bg-white transition-shadow ${gift.dirty || gift.isNew ? 'ring-1 ring-[#d7b49e]' : ''}`}
                 >
                   <div className="relative w-full h-56 bg-gradient-to-br from-[#f5eadf] to-[#f1e3d6]">
@@ -601,7 +614,7 @@ export default function PresentesDashboard() {
                           onChange={(e) => updateGift(gift.localId, { basePrice: Number(e.target.value || 0) })}
                           disabled={savingAll}
                         />
-                        <p className="mt-1 text-[11px] text-gray-500">Valor base do presente (sem taxa)</p>
+                        <p className="mt-1 text-[11px] text-gray-500">Valor</p>
                       </div>
                       <div>
                         <Input
