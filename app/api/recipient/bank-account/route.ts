@@ -69,8 +69,9 @@ export async function PUT(request: Request) {
       select: { id: true, pagarmeRecipientId: true },
     });
 
+    const hasRealRecipient = isRealRecipientId(existingRecipient?.pagarmeRecipientId);
     let nextRecipientId = existingRecipient?.pagarmeRecipientId ?? `pending_${ctx.effectiveUserId}`;
-    let nextStatus = "pending";
+    let nextStatus = hasRealRecipient ? "active" : "pending";
     let warning: string | null = null;
 
     const ownerDocument = digitsOnly(bankAccount.holderDocument);
@@ -80,7 +81,7 @@ export async function PUT(request: Request) {
       warning = "Conta salva, mas Pagar.me nao esta configurada no ambiente.";
     } else {
       try {
-        if (isRealRecipientId(existingRecipient?.pagarmeRecipientId)) {
+        if (hasRealRecipient) {
           await updateRecipientDefaultBankAccount({
             recipientId: existingRecipient!.pagarmeRecipientId,
             bankAccount,
@@ -103,7 +104,9 @@ export async function PUT(request: Request) {
         nextStatus = "active";
       } catch (error: any) {
         console.error("Falha ao sincronizar recebedor na Pagar.me:", error);
-        warning = "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
+        if (!hasRealRecipient) {
+          warning = "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
+        }
       }
     }
 
