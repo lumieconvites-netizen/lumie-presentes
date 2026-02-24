@@ -111,14 +111,36 @@ export default function BancoDashboardPage() {
           <CardTitle>Dados para repasse</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <p className="font-semibold">Atenção ao preencher os dados bancários</p>
+            <p>
+              Preencha com máxima atenção. Qualquer erro pode causar falha na transferência bancária e cobrança
+              indevida de tarifa pela instituição financeira.
+            </p>
+            <p className="mt-1">
+              O CPF/CNPJ e o titular devem ser exatamente os mesmos da conta bancária informada.
+            </p>
+          </div>
+
           <div>
             <label className="text-sm font-medium mb-2 block">Titular</label>
-            <Input value={form.holderName} onChange={(e) => setForm((p) => ({ ...p, holderName: e.target.value }))} />
+            <Input
+              value={form.holderName}
+              onChange={(e) => setForm((p) => ({ ...p, holderName: e.target.value }))}
+              placeholder="Ex.: Maria da Silva Souza"
+            />
           </div>
 
           <div>
             <label className="text-sm font-medium mb-2 block">CPF/CNPJ</label>
-            <Input value={form.holderDocument} onChange={(e) => setForm((p) => ({ ...p, holderDocument: e.target.value }))} />
+            <Input
+              value={form.holderDocument}
+              onChange={(e) => setForm((p) => ({ ...p, holderDocument: e.target.value }))}
+              placeholder="Ex.: 12345678901 ou 12345678000199"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Use apenas o documento do titular da conta.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -149,22 +171,38 @@ export default function BancoDashboardPage() {
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Agência</label>
-              <Input value={form.agency} onChange={(e) => setForm((p) => ({ ...p, agency: e.target.value }))} />
+              <Input
+                value={form.agency}
+                onChange={(e) => setForm((p) => ({ ...p, agency: e.target.value }))}
+                placeholder="Ex.: 1234"
+              />
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Dígito agência</label>
-              <Input value={form.agencyDigit} onChange={(e) => setForm((p) => ({ ...p, agencyDigit: e.target.value }))} />
+              <Input
+                value={form.agencyDigit}
+                onChange={(e) => setForm((p) => ({ ...p, agencyDigit: e.target.value }))}
+                placeholder="Ex.: 0 (se houver)"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Conta</label>
-              <Input value={form.accountNumber} onChange={(e) => setForm((p) => ({ ...p, accountNumber: e.target.value }))} />
+              <Input
+                value={form.accountNumber}
+                onChange={(e) => setForm((p) => ({ ...p, accountNumber: e.target.value }))}
+                placeholder="Ex.: 1234567"
+              />
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Dígito conta</label>
-              <Input value={form.accountDigit} onChange={(e) => setForm((p) => ({ ...p, accountDigit: e.target.value }))} />
+              <Input
+                value={form.accountDigit}
+                onChange={(e) => setForm((p) => ({ ...p, accountDigit: e.target.value }))}
+                placeholder="Ex.: 8"
+              />
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Tipo</label>
