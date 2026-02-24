@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import type { PageBlock } from '@/contexts/user-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +13,17 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GripVertical, Sparkles, ChevronRight, Globe, Type, Image as ImageIcon, Layout, Save, Music2, Video, Palette, X, BookOpen } from 'lucide-react';
 import { Reorder } from 'framer-motion';
-import BlockEditor from '@/components/builder/BlockEditor';
-import BlockPreview from '@/components/builder/BlockPreview';
 import { cn } from '@/lib/utils';
+
+const BlockEditor = dynamic(() => import('@/components/builder/BlockEditor'), {
+  ssr: false,
+  loading: () => <div className="p-4 text-sm text-gray-600">Carregando editor de bloco...</div>,
+});
+
+const BlockPreview = dynamic(() => import('@/components/builder/BlockPreview'), {
+  ssr: false,
+  loading: () => <div className="p-4 text-sm text-gray-600">Carregando preview...</div>,
+});
 
 type BlockTypeId = PageBlock['type'];
 
@@ -167,17 +176,27 @@ export default function PageBuilder() {
         const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
         setPageBlocks(cleanBlocks);
         setTheme((layout?.theme ?? {}) as Theme);
-        const giftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' });
-        const giftsJson = giftsRes.ok ? await giftsRes.json().catch(() => []) : [];
-        const currentGifts = Array.isArray(giftsJson) ? giftsJson : [];
-        if (!cancelled) {
-          setListGifts(currentGifts.map(mapGift));
-        }
         setLoading(false);
+
+        const loadCurrentGifts = async () => {
+          const giftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' });
+          const giftsJson = giftsRes.ok ? await giftsRes.json().catch(() => []) : [];
+          const currentGifts = Array.isArray(giftsJson) ? giftsJson : [];
+          if (!cancelled) {
+            setListGifts(currentGifts.map(mapGift));
+          }
+          return currentGifts;
+        };
+
+        const currentGiftsPromise = loadCurrentGifts().catch((error) => {
+          console.error('Erro ao carregar presentes da lista', error);
+          return [];
+        });
 
         if (templateSlugParam) {
           void (async () => {
             try {
+              const currentGifts = await currentGiftsPromise;
               const templateRes = await fetch(`/api/templates/by-slug/${encodeURIComponent(templateSlugParam)}`, {
                 cache: 'no-store',
               });
