@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
 import { buildEffectiveAvailabilityMap } from "@/lib/gift-availability";
 import { reconcilePendingOrdersForGiftList } from "@/lib/order-status-reconciliation";
+import { resolveThemeTitleFont } from "@/lib/theme-fonts";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -53,7 +54,7 @@ export default async function SiteGiftsBySlugPage({
 
   const theme = (list.pageLayout?.theme as any) || {};
   const primaryColor = theme.primary_color || "#C86E52";
-  const fontTitle = theme.font_title || "Cormorant Garamond";
+  const fontTitle = resolveThemeTitleFont(theme.font_title);
   const pageTitle = list.title || "Lista de Presentes";
   const pageMessage = list.description || "Escolha um presente especial e participe desse momento.";
   const pageCoverImage = typeof theme.gifts_page_cover_image === "string" ? theme.gifts_page_cover_image : "";

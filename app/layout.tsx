@@ -1,6 +1,15 @@
 ﻿import type { Metadata } from 'next';
 import {
   Inter,
+  Lato,
+  Open_Sans,
+  Roboto,
+  Nunito,
+  Raleway,
+  Poppins,
+  Montserrat,
+  Great_Vibes,
+  Allura,
   Playfair_Display,
   Work_Sans,
   Dancing_Script,
@@ -41,6 +50,69 @@ const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
   display: 'swap',
   weight: ['300', '400', '500', '600', '700'],
+});
+
+const lato = Lato({
+  subsets: ['latin'],
+  variable: '--font-lato',
+  display: 'swap',
+  weight: ['400', '700'],
+});
+
+const openSans = Open_Sans({
+  subsets: ['latin'],
+  variable: '--font-open-sans',
+  display: 'swap',
+  weight: ['400', '600', '700'],
+});
+
+const roboto = Roboto({
+  subsets: ['latin'],
+  variable: '--font-roboto',
+  display: 'swap',
+  weight: ['400', '500', '700'],
+});
+
+const nunito = Nunito({
+  subsets: ['latin'],
+  variable: '--font-nunito',
+  display: 'swap',
+  weight: ['400', '600', '700'],
+});
+
+const raleway = Raleway({
+  subsets: ['latin'],
+  variable: '--font-raleway',
+  display: 'swap',
+  weight: ['400', '600', '700'],
+});
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  variable: '--font-poppins',
+  display: 'swap',
+  weight: ['400', '600', '700'],
+});
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  variable: '--font-montserrat',
+  display: 'swap',
+  weight: ['400', '600', '700'],
+});
+
+const greatVibes = Great_Vibes({
+  subsets: ['latin'],
+  variable: '--font-great-vibes',
+  display: 'swap',
+  weight: ['400'],
+});
+
+const allura = Allura({
+  subsets: ['latin'],
+  variable: '--font-allura',
+  display: 'swap',
+  weight: ['400'],
 });
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -91,6 +163,15 @@ export default function RootLayout({
           ${workSans.variable}
           ${dancing.variable}
           ${cormorant.variable}
+          ${lato.variable}
+          ${openSans.variable}
+          ${roboto.variable}
+          ${nunito.variable}
+          ${raleway.variable}
+          ${poppins.variable}
+          ${montserrat.variable}
+          ${greatVibes.variable}
+          ${allura.variable}
           font-sans antialiased overflow-x-hidden
         `}
       >

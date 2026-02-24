@@ -21,6 +21,7 @@ import {
   Gift,
 } from 'lucide-react';
 import Link from 'next/link';
+import { resolveThemeBodyFont, resolveThemeTitleFont } from '@/lib/theme-fonts';
 
 interface PublicPageViewProps {
   blocks: any[];
@@ -170,8 +171,8 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
   const backgroundImage = theme.background_image || '';
   const overlayPercent = Math.min(100, Math.max(0, Number(theme.background_overlay_opacity ?? 50)));
   const themeOverlay = toRgba(backgroundColor, overlayPercent / 100);
-  const fontTitle = theme.font_title || 'Cormorant Garamond';
-  const fontBody = theme.font_body || 'Inter';
+  const fontTitle = resolveThemeTitleFont(theme.font_title);
+  const fontBody = resolveThemeBodyFont(theme.font_body);
   const header = theme.header || {};
   const pageBackgroundStyle: React.CSSProperties = backgroundImage
     ? {
@@ -253,8 +254,8 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
       className="list-font-scope"
       style={
         {
-          ['--list-font-title' as any]: `"${fontTitle}"`,
-          ['--list-font-body' as any]: `"${fontBody}"`,
+          ['--list-font-title' as any]: fontTitle,
+          ['--list-font-body' as any]: fontBody,
           ['--lp-divider-color' as any]: toRgba(dividerColor, 0.42),
           ...pageBackgroundStyle,
         } as React.CSSProperties
