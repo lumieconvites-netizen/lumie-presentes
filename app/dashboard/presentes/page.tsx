@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, Pencil, Copy, Trash2, Boxes, Upload, Loader2, Check, RotateCcw } from 'lucide-react';
 import { useUser } from '@/contexts/user-context';
 import Link from 'next/link';
+import { resolveThemeBodyFont, resolveThemeTitleFont } from '@/lib/theme-fonts';
 
 type GiftRow = {
   id: string;
@@ -119,6 +120,8 @@ export default function PresentesDashboard() {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
   const primary = settings?.theme?.primary_color ?? '#C86E52';
+  const previewTitleFont = resolveThemeTitleFont(listPageTitleFont);
+  const previewMessageFont = resolveThemeBodyFont(listPageMessageFont);
 
   const filteredGifts = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -575,7 +578,7 @@ export default function PresentesDashboard() {
                     <div className="absolute inset-0 flex items-center justify-center px-3">
                       <p
                         className="text-center text-2xl leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]"
-                        style={{ fontFamily: listPageTitleFont, color: listPageTitleColor }}
+                        style={{ fontFamily: previewTitleFont, color: listPageTitleColor }}
                       >
                         {listPageTitle || 'Minha Lista de Presentes'}
                       </p>
@@ -604,6 +607,7 @@ export default function PresentesDashboard() {
               placeholder="Mensagem especial para os convidados"
               rows={3}
               disabled={savingAll}
+              style={{ fontFamily: previewMessageFont, color: listPageMessageColor }}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border border-[#ead9cd] p-3 bg-[#fffdfb]">
               <div className="space-y-2">
