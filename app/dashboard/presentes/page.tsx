@@ -96,11 +96,6 @@ export default function PresentesDashboard() {
   const [savingAll, setSavingAll] = useState(false);
   const [uploadingGiftId, setUploadingGiftId] = useState<string | null>(null);
   const [uploadingListCover, setUploadingListCover] = useState(false);
-  const [publishingPresents, setPublishingPresents] = useState(false);
-
-  const [bankAccountConfigured, setBankAccountConfigured] = useState(false);
-  const [isPublished, setIsPublished] = useState(false);
-
   const [listPageTitle, setListPageTitle] = useState('Minha Lista de Presentes');
   const [listPageMessage, setListPageMessage] = useState('Ajude a realizar nossos sonhos!');
   const [listPageCoverImage, setListPageCoverImage] = useState('');
@@ -166,8 +161,6 @@ export default function PresentesDashboard() {
       setGiftListId(glData.id);
       setGiftListSlug(glData.slug || '');
       setGiftListFeeMode(glData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
-      setIsPublished(Boolean(glData?.isPublished));
-      setBankAccountConfigured(Boolean(glData?.bankAccountConfigured));
 
       const title = glData?.title || 'Minha Lista de Presentes';
       const message = glData?.description || '';
@@ -462,37 +455,6 @@ export default function PresentesDashboard() {
     }
   }
 
-  async function handlePublishPresents() {
-    if (!bankAccountConfigured) {
-      alert('Cadastre a conta bancária antes de publicar os presentes.');
-      return;
-    }
-
-    setPublishingPresents(true);
-    try {
-      if (pendingChangesCount > 0) {
-        await handleSaveAllChanges();
-      }
-
-      const publishRes = await fetch('/api/gift-lists/my-list', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublished: true }),
-      });
-      const publishData = await parseJsonSafe(publishRes);
-      if (!publishRes.ok) {
-        throw new Error(publishData?.error ?? 'Erro ao publicar presentes');
-      }
-
-      setIsPublished(true);
-      alert('Presentes publicados com sucesso.');
-    } catch (error: any) {
-      alert(error?.message ?? 'Erro ao publicar presentes');
-    } finally {
-      setPublishingPresents(false);
-    }
-  }
-
   return (
     <div className="min-h-screen bg-[#fbf8f5]">
       <div className="bg-[#fbf8f5] border-b border-[#ead9cd] sticky top-0 z-10">
@@ -508,23 +470,6 @@ export default function PresentesDashboard() {
             <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
               <Button variant="outline" className="w-full sm:w-auto" asChild disabled={loading || giftsLoading || savingAll}>
                 <Link href="/dashboard/presentes/modelos">Modelos prontos</Link>
-              </Button>
-              <Button
-                onClick={addDraftGift}
-                style={{ backgroundColor: primary }}
-                className="text-white hover:opacity-90 w-full sm:w-auto"
-                disabled={loading || giftsLoading || savingAll}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Presente
-              </Button>
-              <Button
-                onClick={handleSaveAllChanges}
-                className="w-full sm:w-auto"
-                disabled={loading || giftsLoading || savingAll || uploadingListCover || uploadingGiftId !== null || pendingChangesCount === 0}
-              >
-                {savingAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
-                {savingAll ? 'Publicando alterações...' : `Publicar alterações (${pendingChangesCount})`}
               </Button>
             </div>
           </div>
@@ -578,23 +523,10 @@ export default function PresentesDashboard() {
               rows={3}
               disabled={savingAll}
             />
-            {!bankAccountConfigured ? (
-              <p className="text-xs text-amber-700">
-                Cadastre sua conta bancária em <b>Conta Bancária</b> para publicar os presentes.
-              </p>
-            ) : null}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-gray-500">
                 Dica: faça todas as edições nos cards abaixo e depois clique em <b>Publicar alterações</b> uma única vez.
               </p>
-              <Button
-                onClick={handlePublishPresents}
-                style={{ backgroundColor: primary }}
-                className="text-white hover:opacity-90"
-                disabled={savingAll || publishingPresents || uploadingListCover || !bankAccountConfigured || isPublished}
-              >
-                {isPublished ? 'Presentes publicados' : publishingPresents ? 'Publicando...' : 'Publicar presentes'}
-              </Button>
             </div>
           </div>
         </div>
@@ -661,21 +593,27 @@ export default function PresentesDashboard() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        type="number"
-                        placeholder="Valor"
-                        value={gift.basePrice}
-                        onChange={(e) => updateGift(gift.localId, { basePrice: Number(e.target.value || 0) })}
-                        disabled={savingAll}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Quantidade"
-                        value={gift.totalQuantity}
-                        min={1}
-                        onChange={(e) => updateGift(gift.localId, { totalQuantity: Number(e.target.value || 1) })}
-                        disabled={savingAll}
-                      />
+                      <div>
+                        <Input
+                          type="number"
+                          placeholder="Valor"
+                          value={gift.basePrice}
+                          onChange={(e) => updateGift(gift.localId, { basePrice: Number(e.target.value || 0) })}
+                          disabled={savingAll}
+                        />
+                        <p className="mt-1 text-[11px] text-gray-500">Valor base do presente (sem taxa)</p>
+                      </div>
+                      <div>
+                        <Input
+                          type="number"
+                          placeholder="Quantidade"
+                          value={gift.totalQuantity}
+                          min={1}
+                          onChange={(e) => updateGift(gift.localId, { totalQuantity: Number(e.target.value || 1) })}
+                          disabled={savingAll}
+                        />
+                        <p className="mt-1 text-[11px] text-gray-500">Quantidade total disponível para compra</p>
+                      </div>
                     </div>
 
                     <div className="flex items-end justify-between gap-3">
@@ -756,6 +694,30 @@ export default function PresentesDashboard() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="fixed inset-x-3 bottom-3 z-40 sm:inset-x-auto sm:right-6 sm:bottom-6">
+        <div className="rounded-2xl border border-[#ead9cd] bg-white/95 backdrop-blur p-2 shadow-lg">
+          <div className="grid grid-cols-[auto,1fr] gap-2 items-center">
+            <Button
+              onClick={addDraftGift}
+              style={{ backgroundColor: primary }}
+              className="h-11 w-11 rounded-full text-white hover:opacity-90 p-0"
+              disabled={loading || giftsLoading || savingAll}
+              title="Novo presente"
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+            <Button
+              onClick={handleSaveAllChanges}
+              className="h-11"
+              disabled={loading || giftsLoading || savingAll || uploadingListCover || uploadingGiftId !== null || pendingChangesCount === 0}
+            >
+              {savingAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+              {savingAll ? 'Publicando...' : `Publicar alterações (${pendingChangesCount})`}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
