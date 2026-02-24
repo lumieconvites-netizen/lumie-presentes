@@ -167,19 +167,12 @@ export default function PageBuilder() {
         const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
         setPageBlocks(cleanBlocks);
         setTheme((layout?.theme ?? {}) as Theme);
-        void fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' })
-          .then(async (res) => {
-            if (!res.ok) return [];
-            return await res.json().catch(() => []);
-          })
-          .then((gifts) => {
-            if (cancelled) return;
-            setListGifts(Array.isArray(gifts) ? gifts.map(mapGift) : []);
-          })
-          .catch(() => {
-            if (cancelled) return;
-            setListGifts([]);
-          });
+        const giftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' });
+        const giftsJson = giftsRes.ok ? await giftsRes.json().catch(() => []) : [];
+        const currentGifts = Array.isArray(giftsJson) ? giftsJson : [];
+        if (!cancelled) {
+          setListGifts(currentGifts.map(mapGift));
+        }
         setLoading(false);
 
         if (templateSlugParam) {
@@ -191,6 +184,22 @@ export default function PageBuilder() {
               const templateJson = await templateRes.json();
               if (templateRes.ok && templateJson?.template) {
                 const selected = templateJson.template;
+                const templateGiftItems = Array.isArray(selected.giftItems) ? selected.giftItems : [];
+                const hasPublished = Boolean(gl?.isPublished);
+                const hasGifts = currentGifts.length > 0;
+                const hasCustomBlocks = cleanBlocks.some((block) => block.type !== 'gifts');
+                const hasExistingContent = hasPublished || hasGifts || hasCustomBlocks;
+
+                if (hasExistingContent) {
+                  const shouldReplace = window.confirm(
+                    'Você já tem templates/presentes publicados. Gostaria de substituir pelo template selecionado?'
+                  );
+                  if (!shouldReplace) {
+                    router.replace('/dashboard/editor');
+                    return;
+                  }
+                }
+
                 const nextBlocks = sanitizeBlocks(Array.isArray(selected.blocks) ? selected.blocks : []);
                 const nextTheme = (selected.theme ?? {}) as Theme;
 
@@ -200,34 +209,34 @@ export default function PageBuilder() {
                 }
                 await saveLayout(nextBlocks, nextTheme);
 
-                const templateGiftItems = Array.isArray(selected.giftItems) ? selected.giftItems : [];
                 if (templateGiftItems.length > 0) {
                   try {
-                    const hasExisting = Array.isArray(gl?.gifts) && gl.gifts.length > 0;
-                    if (!hasExisting) {
-                      for (const giftItem of templateGiftItems) {
-                        await fetch('/api/gifts', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            giftListId: gl.id,
-                            name: giftItem.name,
-                            description: giftItem.description || '',
-                            imageUrl: giftItem.imageUrl || '',
-                            basePrice: Number(giftItem.basePrice || 0),
-                            totalQuantity: Number(giftItem.totalQuantity || 1),
-                          }),
-                        });
-                      }
+                    for (const existingGift of currentGifts) {
+                      await fetch(`/api/gifts/${encodeURIComponent(existingGift.id)}`, { method: 'DELETE' });
+                    }
 
-                      const refreshedGiftsRes = await fetch(
-                        `/api/gifts?giftListId=${encodeURIComponent(gl.id)}`,
-                        { cache: 'no-store' }
-                      );
-                      const refreshedGifts = await refreshedGiftsRes.json().catch(() => []);
-                      if (!cancelled && Array.isArray(refreshedGifts)) {
-                        setListGifts(refreshedGifts.map(mapGift));
-                      }
+                    for (const giftItem of templateGiftItems) {
+                      await fetch('/api/gifts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          giftListId: gl.id,
+                          name: giftItem.name,
+                          description: giftItem.description || '',
+                          imageUrl: giftItem.imageUrl || '',
+                          basePrice: Number(giftItem.basePrice || 0),
+                          totalQuantity: Number(giftItem.totalQuantity || 1),
+                        }),
+                      });
+                    }
+
+                    const refreshedGiftsRes = await fetch(
+                      `/api/gifts?giftListId=${encodeURIComponent(gl.id)}`,
+                      { cache: 'no-store' }
+                    );
+                    const refreshedGifts = await refreshedGiftsRes.json().catch(() => []);
+                    if (!cancelled && Array.isArray(refreshedGifts)) {
+                      setListGifts(refreshedGifts.map(mapGift));
                     }
                   } catch (error) {
                     console.error('Erro ao recarregar presentes apos aplicar template', error);
@@ -435,6 +444,11 @@ export default function PageBuilder() {
 
           <div className="hidden md:flex items-center gap-2">
             <Button variant="outline" asChild>
+              <Link href="/templates">
+                Templates prontos
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
               <Link href={siteHref} target="_blank">
                 <Globe className="w-4 h-4 mr-2" />
                 Ver Site
@@ -459,6 +473,9 @@ export default function PageBuilder() {
           </div>
 
           <div className="md:hidden flex items-center gap-2">
+            <Button variant="outline" className="flex-1" asChild>
+              <Link href="/templates">Templates</Link>
+            </Button>
             <Button variant="outline" className="flex-1" asChild>
               <Link href={siteHref} target="_blank">Ver Site</Link>
             </Button>

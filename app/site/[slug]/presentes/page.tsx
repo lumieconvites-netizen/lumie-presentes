@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { buildEffectiveAvailabilityMap } from "@/lib/gift-availability";
 import { reconcilePendingOrdersForGiftList } from "@/lib/order-status-reconciliation";
 import { resolveThemeBodyFont, resolveThemeTitleFont } from "@/lib/theme-fonts";
+import GiftsFilterMenu from "@/components/public/GiftsFilterMenu";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -103,17 +104,6 @@ export default async function SiteGiftsBySlugPage({
           : activeFilter === "name_asc"
             ? [...giftsWithAvailability].sort((a, b) => a.gift.name.localeCompare(b.gift.name, "pt-BR"))
             : giftsWithAvailability;
-  const filterLabel =
-    activeFilter === "available"
-      ? "DisponÃ­veis"
-      : activeFilter === "price_desc"
-        ? "Valor: maior para menor"
-        : activeFilter === "price_asc"
-          ? "Valor: menor para maior"
-          : activeFilter === "name_asc"
-            ? "Nome: A-Z"
-            : "Todos";
-
   return (
     <main className="min-h-screen bg-[#faf7f5]">
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
@@ -167,34 +157,7 @@ export default async function SiteGiftsBySlugPage({
           </div>
         ) : (
           <>
-                        <div className="mb-6 flex items-center gap-2">
-              <span className="text-sm text-gray-600">Filtrar:</span>
-              <details className="relative">
-                <summary
-                  className="list-none cursor-pointer px-3 py-1.5 rounded-full text-sm border border-transparent text-white"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  {filterLabel}
-                </summary>
-                <div className="absolute left-0 mt-2 z-20 w-64 rounded-xl border border-gray-200 bg-white shadow-lg p-2">
-                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=all`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Todos
-                  </Link>
-                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=available`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Disponíveis
-                  </Link>
-                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=price_desc`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Valor: maior para menor
-                  </Link>
-                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=price_asc`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Valor: menor para maior
-                  </Link>
-                  <Link href={`/site/${encodeURIComponent(slug)}/presentes?f=name_asc`} className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Nome: A-Z
-                  </Link>
-                </div>
-              </details>
-            </div>
+            <GiftsFilterMenu activeFilter={activeFilter} primaryColor={primaryColor} />
 
             {visibleGifts.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-600">
