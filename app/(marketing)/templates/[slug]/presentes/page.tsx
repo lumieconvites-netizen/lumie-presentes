@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { isCategoryMetaTemplate } from '@/lib/template-categories';
 import { extractTemplateGiftItemsFromBlocks } from '@/lib/template-gifts';
 import { resolveThemeBodyFont, resolveThemeTitleFont } from '@/lib/theme-fonts';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -13,6 +15,7 @@ function formatBRL(value: number) {
 }
 
 export default async function TemplateGiftsPreviewPage({ params }: { params: { slug: string } }) {
+  const session = await getServerSession(authOptions);
   const slug = decodeURIComponent(params.slug || '').trim().toLowerCase();
   if (!slug) return notFound();
 
@@ -59,6 +62,9 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
     (typeof theme?.gifts_page_cover_image === 'string' && theme.gifts_page_cover_image) ||
     (typeof giftsConfig?.coverImage === 'string' && giftsConfig.coverImage) ||
     '';
+  const chooseHref = session?.user?.id
+    ? `/dashboard/editor?template=${encodeURIComponent(template.slug)}`
+    : `/auth/cadastro?template=${encodeURIComponent(template.slug)}`;
 
   return (
     <div className="min-h-screen bg-[#FAF4EF] py-8">
@@ -77,7 +83,7 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
                 Voltar ao preview
               </Link>
               <Link
-                href={`/auth/cadastro?template=${encodeURIComponent(template.slug)}`}
+                href={chooseHref}
                 className="inline-flex h-10 items-center rounded-md bg-[#C65A3A] px-3 text-sm text-white hover:bg-[#8E3D2C]"
               >
                 Usar modelo

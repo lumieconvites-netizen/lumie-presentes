@@ -192,7 +192,7 @@ export default function PageBuilder() {
 
                 if (hasExistingContent) {
                   const shouldReplace = window.confirm(
-                    'Você já tem templates/presentes publicados. Gostaria de substituir pelo template selecionado?'
+                    'Você já tem conteúdo publicado. Deseja aplicar este template na página e adicionar os presentes do modelo à sua lista atual?'
                   );
                   if (!shouldReplace) {
                     router.replace('/dashboard/editor');
@@ -211,10 +211,6 @@ export default function PageBuilder() {
 
                 if (templateGiftItems.length > 0) {
                   try {
-                    for (const existingGift of currentGifts) {
-                      await fetch(`/api/gifts/${encodeURIComponent(existingGift.id)}`, { method: 'DELETE' });
-                    }
-
                     for (const giftItem of templateGiftItems) {
                       await fetch('/api/gifts', {
                         method: 'POST',
