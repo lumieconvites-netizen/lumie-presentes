@@ -90,12 +90,12 @@ export default function AffiliateWithdrawCard() {
           <DialogHeader>
             <DialogTitle>Confirmar saque</DialogTitle>
             <DialogDescription>
-              A taxa de transferencia e de{' '}
+              A taxa de transferência é de{' '}
               {(WITHDRAW_FEE_CENTS / 100).toLocaleString('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',
               })}
-              . Saques solicitados ate 15h caem no mesmo dia; apos 15h, caem no proximo dia util. Deseja continuar com o saque?
+              . Saques solicitados até 15h caem no mesmo dia; após 15h, caem no próximo dia útil. Deseja continuar com o saque?
             </DialogDescription>
           </DialogHeader>
 
