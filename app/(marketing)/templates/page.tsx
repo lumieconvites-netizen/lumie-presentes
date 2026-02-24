@@ -5,6 +5,7 @@ import { isCategoryMetaTemplate, normalizeCategorySlug, parseCategoryMarkerName,
 import { isGiftModelTemplate } from '@/lib/gift-models';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import TemplatesCategoryFilter from '@/components/marketing/TemplatesCategoryFilter';
 
 type TemplateCard = {
   slug: string;
@@ -124,32 +125,11 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
             </div>
 
             <div className="flex items-center justify-end gap-2">
-              <details className="relative">
-                <summary className="list-none cursor-pointer inline-flex h-10 items-center rounded-md border border-[#d7b7a3] px-4 text-sm text-[#8E3D2C] hover:bg-[#fff7f1]">
-                  Tipos de evento
-                </summary>
-                <div className="absolute right-0 mt-2 z-20 w-72 max-h-72 overflow-auto rounded-xl border border-[#ead9cd] bg-white shadow-lg p-2">
-                  <Link
-                    href="/templates"
-                    className={`block rounded-md px-3 py-2 text-sm ${!selectedCategory ? 'bg-[#fff0e7] text-[#8E3D2C] font-medium' : 'text-gray-700 hover:bg-[#f8f4f0]'}`}
-                  >
-                    Todos ({templateCards.length})
-                  </Link>
-                  {categories.map((category) => (
-                    <Link
-                      key={category.slug}
-                      href={`/templates?categoria=${encodeURIComponent(category.slug)}`}
-                      className={`block rounded-md px-3 py-2 text-sm ${
-                        selectedCategory === category.slug
-                          ? 'bg-[#fff0e7] text-[#8E3D2C] font-medium'
-                          : 'text-gray-700 hover:bg-[#f8f4f0]'
-                      }`}
-                    >
-                      {category.name} ({category.count})
-                    </Link>
-                  ))}
-                </div>
-              </details>
+              <TemplatesCategoryFilter
+                categories={categories}
+                selectedCategory={selectedCategory}
+                totalCount={templateCards.length}
+              />
             </div>
           </div>
         </div>
