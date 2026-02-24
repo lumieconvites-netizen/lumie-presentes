@@ -115,7 +115,20 @@ async function pagarmeFetch<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(`Pagar.me error ${res.status}: ${txt}`);
   }
 
-  return (await res.json()) as T;
+  if (res.status === 204) {
+    return {} as T;
+  }
+
+  const raw = await res.text().catch(() => "");
+  if (!raw || !raw.trim()) {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return {} as T;
+  }
 }
 
 async function pagarmeFetchWithMethodFallback<T>(
@@ -146,6 +159,15 @@ async function pagarmeFetchWithMethodFallback<T>(
   }
 
   throw lastError ?? new Error("Falha ao comunicar com a Pagar.me");
+}
+
+function isRecoverablePagarmeRouteError(error: unknown): boolean {
+  const message = String((error as any)?.message ?? "");
+  return (
+    message.includes("Pagar.me error 404") ||
+    message.includes("Pagar.me error 405") ||
+    message.includes("UnsupportedApiVersion")
+  );
 }
 
 export async function getOrder(orderId: string) {
@@ -315,14 +337,42 @@ export async function updateRecipientDefaultBankAccount(params: {
   recipientId: string;
   bankAccount: RecipientBankAccountInput;
 }) {
-  const payload = buildDefaultBankAccount(params.bankAccount);
-  const body = JSON.stringify(payload);
+  const defaultBankAccount = buildDefaultBankAccount(params.bankAccount);
+  const recipientPatchBody = JSON.stringify({
+    default_bank_account: defaultBankAccount,
+  });
 
-  return pagarmeFetchWithMethodFallback<any>(
+  // Core v5: atualizacao recomendada no proprio recurso de recipient.
+  try {
+    return await pagarmeFetch<any>(`/recipients/${params.recipientId}`, {
+      method: "PATCH",
+      body: recipientPatchBody,
+    });
+  } catch (error) {
+    if (!isRecoverablePagarmeRouteError(error)) {
+      throw error;
+    }
+  }
+
+  const directBody = JSON.stringify(defaultBankAccount);
+  const fallbackRoutes = [
     `/recipients/${params.recipientId}/default-bank-account`,
-    body,
-    ["PATCH", "POST", "PUT"]
-  );
+    `/recipients/${params.recipientId}/default_bank_account`,
+  ];
+
+  let lastError: unknown = null;
+  for (const route of fallbackRoutes) {
+    try {
+      return await pagarmeFetchWithMethodFallback<any>(route, directBody, ["PATCH", "POST", "PUT"]);
+    } catch (error) {
+      lastError = error;
+      if (!isRecoverablePagarmeRouteError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError ?? new Error("Falha ao atualizar conta bancaria na Pagar.me");
 }
 
 type CreatePixOrderInput = {
