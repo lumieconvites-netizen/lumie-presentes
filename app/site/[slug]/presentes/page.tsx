@@ -54,10 +54,24 @@ export default async function SiteGiftsBySlugPage({
 
   const theme = (list.pageLayout?.theme as any) || {};
   const primaryColor = theme.primary_color || "#C86E52";
-  const fontTitle = resolveThemeTitleFont(theme.gifts_page_title_font || theme.font_title);
-  const fontBody = resolveThemeBodyFont(theme.gifts_page_message_font || theme.font_body);
-  const titleColor = theme.gifts_page_title_color || theme.title_color || "#FFFFFF";
-  const messageColor = theme.gifts_page_message_color || theme.caption_color || "#5F4A41";
+  const fontTitle = resolveThemeTitleFont(
+    typeof theme.gifts_page_title_font === "string" && theme.gifts_page_title_font.trim()
+      ? theme.gifts_page_title_font
+      : "Cormorant Garamond"
+  );
+  const fontBody = resolveThemeBodyFont(
+    typeof theme.gifts_page_message_font === "string" && theme.gifts_page_message_font.trim()
+      ? theme.gifts_page_message_font
+      : "Inter"
+  );
+  const titleColor =
+    typeof theme.gifts_page_title_color === "string" && theme.gifts_page_title_color.trim()
+      ? theme.gifts_page_title_color
+      : "#FFFFFF";
+  const messageColor =
+    typeof theme.gifts_page_message_color === "string" && theme.gifts_page_message_color.trim()
+      ? theme.gifts_page_message_color
+      : "#5F4A41";
   const pageTitle = list.title || "Lista de Presentes";
   const pageMessage = list.description || "Escolha um presente especial e participe desse momento.";
   const pageCoverImage = typeof theme.gifts_page_cover_image === "string" ? theme.gifts_page_cover_image : "";
@@ -99,10 +113,10 @@ export default async function SiteGiftsBySlugPage({
             className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
+          <div className="absolute inset-0 p-6 md:p-10 flex items-center justify-center">
             <div className="max-w-6xl mx-auto">
               <h1
-                className="text-3xl md:text-5xl leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
+                className="text-3xl md:text-5xl leading-tight text-center drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
                 style={{ fontFamily: fontTitle, color: titleColor }}
               >
                 {pageTitle}

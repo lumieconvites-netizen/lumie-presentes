@@ -197,10 +197,22 @@ export default function PresentesDashboard() {
       const message = glData?.description || '';
       const theme = (glData?.pageLayout?.theme ?? {}) as Record<string, any>;
       const cover = typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '';
-      const titleColor = typeof theme.gifts_page_title_color === 'string' ? theme.gifts_page_title_color : '#FFFFFF';
-      const titleFont = typeof theme.gifts_page_title_font === 'string' ? theme.gifts_page_title_font : (typeof theme.font_title === 'string' ? theme.font_title : 'Cormorant Garamond');
-      const messageColor = typeof theme.gifts_page_message_color === 'string' ? theme.gifts_page_message_color : (typeof theme.caption_color === 'string' ? theme.caption_color : '#5F4A41');
-      const messageFont = typeof theme.gifts_page_message_font === 'string' ? theme.gifts_page_message_font : (typeof theme.font_body === 'string' ? theme.font_body : 'Inter');
+      const titleColor =
+        typeof theme.gifts_page_title_color === 'string' && theme.gifts_page_title_color.trim()
+          ? theme.gifts_page_title_color
+          : '#FFFFFF';
+      const titleFont =
+        typeof theme.gifts_page_title_font === 'string' && theme.gifts_page_title_font.trim()
+          ? theme.gifts_page_title_font
+          : 'Cormorant Garamond';
+      const messageColor =
+        typeof theme.gifts_page_message_color === 'string' && theme.gifts_page_message_color.trim()
+          ? theme.gifts_page_message_color
+          : '#5F4A41';
+      const messageFont =
+        typeof theme.gifts_page_message_font === 'string' && theme.gifts_page_message_font.trim()
+          ? theme.gifts_page_message_font
+          : 'Inter';
 
       setListPageTitle(title);
       setInitialListPageTitle(title);
@@ -557,7 +569,18 @@ export default function PresentesDashboard() {
               <p className="text-xs text-gray-600">Foto de capa da página de presentes (recomendado: horizontal 16:9, até 5MB)</p>
               {listPageCoverImage ? (
                 <div className="space-y-2">
-                  <img src={listPageCoverImage} alt="Prévia da capa da página de presentes" className="h-36 w-full rounded-md object-cover border border-[#ead9cd]" />
+                  <div className="relative h-36 w-full rounded-md border border-[#ead9cd] overflow-hidden">
+                    <img src={listPageCoverImage} alt="Prévia da capa da página de presentes" className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="absolute inset-0 flex items-center justify-center px-3">
+                      <p
+                        className="text-center text-2xl leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]"
+                        style={{ fontFamily: listPageTitleFont, color: listPageTitleColor }}
+                      >
+                        {listPageTitle || 'Minha Lista de Presentes'}
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <label className="h-10 px-3 border rounded-md text-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50">
                       <Upload className="w-4 h-4" /> {uploadingListCover ? 'Enviando capa...' : 'Trocar capa'}
