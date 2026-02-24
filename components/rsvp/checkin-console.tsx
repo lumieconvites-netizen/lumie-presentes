@@ -202,15 +202,17 @@ export function CheckInConsole({
 
     try {
       const now = Date.now();
-      if (now - lastReadAtRef.current > 700 && video.videoWidth > 0 && video.videoHeight > 0) {
+      if (now - lastReadAtRef.current > 350 && video.videoWidth > 0 && video.videoHeight > 0) {
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (ctx) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          const maxDimension = 960;
+          const scale = Math.min(1, maxDimension / Math.max(video.videoWidth, video.videoHeight));
+          canvas.width = Math.max(1, Math.floor(video.videoWidth * scale));
+          canvas.height = Math.max(1, Math.floor(video.videoHeight * scale));
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const decoded = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: 'dontInvert',
+            inversionAttempts: 'attemptBoth',
           });
 
           if (decoded?.data) {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getQrImageUrl, getQrPayload } from "@/lib/rsvp";
+import { createCheckInCode, createQrToken, getQrImageUrl, getQrPayload } from "@/lib/rsvp";
 import { sendRsvpNotificationEmailReliable } from "@/lib/email-jobs";
 
 const confirmSchema = z.object({
@@ -83,6 +83,8 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
     const updated = await prisma.rsvpGuest.update({
       where: { id: guest.id },
       data: {
+        qrToken: guest.qrToken || createQrToken(),
+        checkInCode: guest.checkInCode || createCheckInCode(),
         status: nextStatus,
         confirmedAt: nextStatus === "CONFIRMED" ? new Date() : null,
         confirmedAdults: nextStatus === "CONFIRMED" ? adultsCompanions + 1 : null,
@@ -103,19 +105,17 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
     });
 
     if (list.rsvpSettings.notificationEmail) {
-      try {
-        await sendRsvpNotificationEmailReliable({
+      void sendRsvpNotificationEmailReliable({
           to: list.rsvpSettings.notificationEmail,
           eventTitle: list.rsvpSettings.eventTitle || list.title,
           guestName: updated.fullName,
           status: nextStatus,
+        }).catch((mailError) => {
+          console.error("Falha ao enviar notificacao RSVP por e-mail:", mailError);
         });
-      } catch (mailError) {
-        console.error("Falha ao enviar notificacao RSVP por e-mail:", mailError);
-      }
     }
 
-    const payload = getQrPayload(updated.qrToken, list.slug);
+    const payload = updated.qrToken ? getQrPayload(updated.qrToken, list.slug) : String(updated.checkInCode || "");
 
     return NextResponse.json({
       guest: updated,
