@@ -112,25 +112,46 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
           <p className="text-gray-600">Escolha o tipo e depois selecione o template ideal para sua lista.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link
-            href="/templates"
-            className={`rounded-2xl border p-4 bg-white ${!selectedCategory ? 'border-[#c65a3a] ring-2 ring-[#f1d8cc]' : 'border-[#ead9cd]'}`}
-          >
-            <p className="font-semibold text-[#8E3D2C]">Todos</p>
-            <p className="text-sm text-gray-500">{templateCards.length} templates</p>
-          </Link>
+        <div className="rounded-2xl border border-[#ead9cd] bg-white p-4 md:p-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm text-gray-500">Tipo de evento</p>
+              <p className="font-semibold text-[#8E3D2C]">
+                {selectedCategory
+                  ? categories.find((category) => category.slug === selectedCategory)?.name || 'Todos'
+                  : 'Todos'}
+              </p>
+            </div>
 
-          {categories.map((category) => (
-            <Link
-              key={category.slug}
-              href={`/templates?categoria=${encodeURIComponent(category.slug)}`}
-              className={`rounded-2xl border p-4 bg-white ${selectedCategory === category.slug ? 'border-[#c65a3a] ring-2 ring-[#f1d8cc]' : 'border-[#ead9cd]'}`}
-            >
-              <p className="font-semibold text-[#8E3D2C]">{category.name}</p>
-              <p className="text-sm text-gray-500">{category.count} templates</p>
-            </Link>
-          ))}
+            <div className="flex items-center gap-2">
+              <details className="relative">
+                <summary className="list-none cursor-pointer inline-flex h-10 items-center rounded-md border border-[#d7b7a3] px-4 text-sm text-[#8E3D2C] hover:bg-[#fff7f1]">
+                  Tipos de evento
+                </summary>
+                <div className="absolute right-0 mt-2 z-20 w-72 max-h-72 overflow-auto rounded-xl border border-[#ead9cd] bg-white shadow-lg p-2">
+                  <Link
+                    href="/templates"
+                    className={`block rounded-md px-3 py-2 text-sm ${!selectedCategory ? 'bg-[#fff0e7] text-[#8E3D2C] font-medium' : 'text-gray-700 hover:bg-[#f8f4f0]'}`}
+                  >
+                    Todos ({templateCards.length})
+                  </Link>
+                  {categories.map((category) => (
+                    <Link
+                      key={category.slug}
+                      href={`/templates?categoria=${encodeURIComponent(category.slug)}`}
+                      className={`block rounded-md px-3 py-2 text-sm ${
+                        selectedCategory === category.slug
+                          ? 'bg-[#fff0e7] text-[#8E3D2C] font-medium'
+                          : 'text-gray-700 hover:bg-[#f8f4f0]'
+                      }`}
+                    >
+                      {category.name} ({category.count})
+                    </Link>
+                  ))}
+                </div>
+              </details>
+            </div>
+          </div>
         </div>
 
         {templateCards.length === 0 ? (
@@ -150,9 +171,11 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
                   <article key={template.slug} className="bg-white border rounded-2xl overflow-hidden shadow-sm">
                     <div className="h-40" style={{ background: template.preview }} />
                     <div className="p-5 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-lg">{template.name}</h3>
-                        <span className="text-xs px-2 py-1 rounded-full bg-[#F1E3D6] text-[#8E3D2C]">{category.name}</span>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-lg leading-tight min-w-0">{template.name}</h3>
+                        <span className="shrink-0 whitespace-nowrap text-[11px] leading-none px-2.5 py-1.5 rounded-full bg-[#F1E3D6] text-[#8E3D2C]">
+                          {category.name}
+                        </span>
                       </div>
                       <p className="text-sm text-gray-600 min-h-[40px]">{template.description}</p>
 
