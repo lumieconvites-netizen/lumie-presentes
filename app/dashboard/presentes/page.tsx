@@ -12,6 +12,7 @@ import { Plus, Search, Pencil, Copy, Trash2, Boxes, Upload, Loader2, Check, Rota
 import { useUser } from '@/contexts/user-context';
 import Link from 'next/link';
 import { resolveThemeBodyFont, resolveThemeTitleFont } from '@/lib/theme-fonts';
+import { isLegacySupabaseStorageUrl } from '@/lib/storage-url';
 
 type GiftRow = {
   id: string;
@@ -29,6 +30,7 @@ type EditableGift = {
   name: string;
   description: string;
   imageUrl: string;
+  originalImageUrl: string;
   basePrice: number;
   totalQuantity: number;
   availableQty: number;
@@ -77,6 +79,7 @@ function toEditableGift(gift: GiftRow): EditableGift {
     name: gift.name,
     description: gift.description ?? '',
     imageUrl: gift.imageUrl ?? '',
+    originalImageUrl: gift.imageUrl ?? '',
     basePrice: Number(gift.basePrice),
     totalQuantity: gift.totalQuantity,
     availableQty: gift.availableQty,
@@ -317,6 +320,7 @@ export default function PresentesDashboard() {
       name: '',
       description: '',
       imageUrl: '',
+      originalImageUrl: '',
       basePrice: 150,
       totalQuantity: 1,
       availableQty: 1,
@@ -378,6 +382,7 @@ export default function PresentesDashboard() {
       localId: newId,
       serverId: null,
       name: `${source.name} (cópia)`,
+      originalImageUrl: source.imageUrl,
       availableQty: source.totalQuantity,
       isNew: true,
       dirty: true,
@@ -488,16 +493,26 @@ export default function PresentesDashboard() {
       }
 
       for (const gift of updates) {
+        const trimmedImageUrl = (gift.imageUrl || '').trim();
+        const originalTrimmedImageUrl = (gift.originalImageUrl || '').trim();
+        const imageChanged = trimmedImageUrl !== originalTrimmedImageUrl;
+        const shouldSendImageUrl = imageChanged || !isLegacySupabaseStorageUrl(trimmedImageUrl);
+
+        const payload: Record<string, unknown> = {
+          name: gift.name.trim(),
+          description: gift.description.trim() || undefined,
+          basePrice: Number(gift.basePrice),
+          totalQuantity: Math.max(1, Number(gift.totalQuantity || 1)),
+        };
+
+        if (shouldSendImageUrl) {
+          payload.imageUrl = trimmedImageUrl || '';
+        }
+
         const res = await fetch(`/api/gifts/${gift.serverId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: gift.name.trim(),
-            description: gift.description.trim() || undefined,
-            imageUrl: gift.imageUrl || '',
-            basePrice: Number(gift.basePrice),
-            totalQuantity: Math.max(1, Number(gift.totalQuantity || 1)),
-          }),
+          body: JSON.stringify(payload),
         });
         const data = await parseJsonSafe(res);
         if (!res.ok) throw new Error(data?.error ?? `Erro ao atualizar presente ${gift.name || ''}`.trim());
