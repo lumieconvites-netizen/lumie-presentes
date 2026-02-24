@@ -8,6 +8,7 @@ import AffiliateWithdrawCard from '@/components/affiliate/withdraw-card';
 
 type PartnerOverview = {
   partner: { id: string; name: string; email: string; ambassador?: { name: string | null; email: string } | null };
+  bankAccountConfigured: boolean;
   codes: { id: string; code: string; type: string; usageCount: number }[];
   kpis: {
     clientsCount: number;
@@ -100,14 +101,30 @@ export default function PartnerDashboardPage() {
         <CardHeader>
           <CardTitle>Seus códigos de parceiro</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          {data.codes.map((code) => (
-            <div key={code.id} className="rounded-lg border border-[#ead9cd] p-3 bg-white">
-              <p className="text-xs text-gray-500">{code.type}</p>
-              <p className="font-semibold text-lg">{code.code}</p>
-              <p className="text-sm text-gray-600">{code.usageCount} cadastros com este código</p>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-gray-600">Compartilhe esse código com os seus clientes.</p>
+
+          {data.bankAccountConfigured ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {data.codes.map((code) => (
+                <div key={code.id} className="rounded-lg border border-[#ead9cd] p-3 bg-white">
+                  <p className="text-xs text-gray-500">{code.type}</p>
+                  <p className="font-semibold text-lg">{code.code}</p>
+                  <p className="text-sm text-gray-600">{code.usageCount} cadastros com este código</p>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm font-medium text-amber-900">Cadastre sua conta bancária para liberar seus códigos.</p>
+              <p className="text-sm text-amber-800 mt-1">Depois do cadastro, seus códigos de parceiro aparecem automaticamente.</p>
+              <div className="mt-3">
+                <Button asChild className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white">
+                  <a href="/parceiro/configuracoes">Cadastrar conta bancária</a>
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -7,6 +7,12 @@ import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter"
 
 const CARD_LIQUIDATION_WINDOW_DAYS = 45;
 
+function hasConfiguredBankAccount(bankAccount: any) {
+  if (!bankAccount || typeof bankAccount !== "object") return false;
+  const required = ["holderName", "holderDocument", "bankCode", "agency", "accountNumber", "accountType"];
+  return required.every((field) => String(bankAccount?.[field] ?? "").trim().length > 0);
+}
+
 function isCardMethod(value?: string | null) {
   const method = String(value ?? "").toLowerCase();
   return method.includes("credit") || method.includes("card") || method.includes("cartao") || method.includes("cartão");
@@ -49,7 +55,7 @@ export async function GET(request: Request) {
         email: true,
         role: true,
         partnerAmbassador: { select: { id: true, name: true, email: true } },
-        recipient: { select: { pagarmeRecipientId: true, createdAt: true } },
+        recipient: { select: { pagarmeRecipientId: true, createdAt: true, bankAccount: true } },
       },
     }),
     prisma.referralCode.findMany({
@@ -136,6 +142,7 @@ export async function GET(request: Request) {
   ]);
 
   if (!partnerUser) return NextResponse.json({ error: "Parceiro nao encontrado" }, { status: 404 });
+  const bankAccountConfigured = hasConfiguredBankAccount(partnerUser.recipient?.bankAccount);
 
   let totalCommissionPaid = 0;
   let totalGrossSales = 0;
@@ -223,6 +230,7 @@ export async function GET(request: Request) {
       email: partnerUser.email,
       ambassador: partnerUser.partnerAmbassador,
     },
+    bankAccountConfigured,
     codes: codeUsage,
     kpis: {
       clientsCount: referredClients.length,
