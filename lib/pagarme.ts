@@ -355,19 +355,39 @@ export async function updateRecipientDefaultBankAccount(params: {
   }
 
   const directBody = JSON.stringify(defaultBankAccount);
+  const wrappedBankAccountBody = JSON.stringify({
+    bank_account: defaultBankAccount,
+  });
+  const wrappedDefaultBankAccountBody = JSON.stringify({
+    default_bank_account: defaultBankAccount,
+  });
+  const wrappedTransferBody = JSON.stringify({
+    payment_mode: "bank_transfer",
+    bank_account: defaultBankAccount,
+  });
+
   const fallbackRoutes = [
     `/recipients/${params.recipientId}/default-bank-account`,
     `/recipients/${params.recipientId}/default_bank_account`,
   ];
 
   let lastError: unknown = null;
+  const fallbackBodies = [
+    directBody,
+    wrappedBankAccountBody,
+    wrappedDefaultBankAccountBody,
+    wrappedTransferBody,
+  ];
+
   for (const route of fallbackRoutes) {
-    try {
-      return await pagarmeFetchWithMethodFallback<any>(route, directBody, ["PATCH", "POST", "PUT"]);
-    } catch (error) {
-      lastError = error;
-      if (!isRecoverablePagarmeRouteError(error)) {
-        throw error;
+    for (const body of fallbackBodies) {
+      try {
+        return await pagarmeFetchWithMethodFallback<any>(route, body, ["PATCH", "POST", "PUT"]);
+      } catch (error) {
+        lastError = error;
+        if (!isRecoverablePagarmeRouteError(error)) {
+          throw error;
+        }
       }
     }
   }
