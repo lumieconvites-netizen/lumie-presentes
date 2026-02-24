@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
 import { buildEffectiveAvailabilityMap } from "@/lib/gift-availability";
 import { reconcilePendingOrdersForGiftList } from "@/lib/order-status-reconciliation";
-import { resolveThemeTitleFont } from "@/lib/theme-fonts";
+import { resolveThemeBodyFont, resolveThemeTitleFont } from "@/lib/theme-fonts";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -54,7 +54,10 @@ export default async function SiteGiftsBySlugPage({
 
   const theme = (list.pageLayout?.theme as any) || {};
   const primaryColor = theme.primary_color || "#C86E52";
-  const fontTitle = resolveThemeTitleFont(theme.font_title);
+  const fontTitle = resolveThemeTitleFont(theme.gifts_page_title_font || theme.font_title);
+  const fontBody = resolveThemeBodyFont(theme.gifts_page_message_font || theme.font_body);
+  const titleColor = theme.gifts_page_title_color || theme.title_color || "#FFFFFF";
+  const messageColor = theme.gifts_page_message_color || theme.caption_color || "#5F4A41";
   const pageTitle = list.title || "Lista de Presentes";
   const pageMessage = list.description || "Escolha um presente especial e participe desse momento.";
   const pageCoverImage = typeof theme.gifts_page_cover_image === "string" ? theme.gifts_page_cover_image : "";
@@ -81,9 +84,6 @@ export default async function SiteGiftsBySlugPage({
           <Link href={`/site/${encodeURIComponent(slug)}`} aria-label="Voltar ao site" className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-2xl" style={{ fontFamily: fontTitle }}>
-            {pageTitle}
-          </h1>
           <span className="w-10" />
         </div>
       </header>
@@ -98,11 +98,32 @@ export default async function SiteGiftsBySlugPage({
             sizes="100vw"
             className="object-cover"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
+            <div className="max-w-6xl mx-auto">
+              <h1
+                className="text-3xl md:text-5xl leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
+                style={{ fontFamily: fontTitle, color: titleColor }}
+              >
+                {pageTitle}
+              </h1>
+            </div>
+          </div>
         </div>
-      ) : null}
+      ) : (
+        <section className="max-w-6xl mx-auto px-4 pt-8">
+          <h1 className="text-3xl md:text-5xl leading-tight" style={{ fontFamily: fontTitle, color: titleColor }}>
+            {pageTitle}
+          </h1>
+        </section>
+      )}
 
       <section className="max-w-6xl mx-auto px-4 py-10">
-        {pageMessage ? <p className="text-gray-600 mb-8 max-w-3xl">{pageMessage}</p> : null}
+        {pageMessage ? (
+          <p className="mb-8 max-w-3xl" style={{ fontFamily: fontBody, color: messageColor }}>
+            {pageMessage}
+          </p>
+        ) : null}
         {gifts.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-600">
             Ainda nao ha presentes cadastrados.

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Pencil, Copy, Trash2, Boxes, Upload, Loader2, Check, RotateCcw } from 'lucide-react';
 import { useUser } from '@/contexts/user-context';
 import Link from 'next/link';
@@ -36,6 +38,8 @@ type EditableGift = {
 
 const feePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const TITLE_FONTS = ['Playfair Display', 'Cormorant Garamond', 'Great Vibes', 'Dancing Script', 'Allura', 'Poppins', 'Montserrat'] as const;
+const BODY_FONTS = ['Inter', 'Lato', 'Open Sans', 'Roboto', 'Nunito', 'Work Sans', 'Raleway'] as const;
 
 function withFee(value: number, feePassedToGuest: boolean) {
   if (!feePassedToGuest) return value;
@@ -99,10 +103,18 @@ export default function PresentesDashboard() {
   const [listPageTitle, setListPageTitle] = useState('Minha Lista de Presentes');
   const [listPageMessage, setListPageMessage] = useState('Ajude a realizar nossos sonhos!');
   const [listPageCoverImage, setListPageCoverImage] = useState('');
+  const [listPageTitleColor, setListPageTitleColor] = useState('#FFFFFF');
+  const [listPageTitleFont, setListPageTitleFont] = useState('Cormorant Garamond');
+  const [listPageMessageColor, setListPageMessageColor] = useState('#5F4A41');
+  const [listPageMessageFont, setListPageMessageFont] = useState('Inter');
 
   const [initialListPageTitle, setInitialListPageTitle] = useState('Minha Lista de Presentes');
   const [initialListPageMessage, setInitialListPageMessage] = useState('Ajude a realizar nossos sonhos!');
   const [initialListPageCoverImage, setInitialListPageCoverImage] = useState('');
+  const [initialListPageTitleColor, setInitialListPageTitleColor] = useState('#FFFFFF');
+  const [initialListPageTitleFont, setInitialListPageTitleFont] = useState('Cormorant Garamond');
+  const [initialListPageMessageColor, setInitialListPageMessageColor] = useState('#5F4A41');
+  const [initialListPageMessageFont, setInitialListPageMessageFont] = useState('Inter');
 
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
@@ -121,8 +133,27 @@ export default function PresentesDashboard() {
     () =>
       listPageTitle.trim() !== initialListPageTitle.trim() ||
       listPageMessage.trim() !== initialListPageMessage.trim() ||
-      listPageCoverImage !== initialListPageCoverImage,
-    [listPageTitle, initialListPageTitle, listPageMessage, initialListPageMessage, listPageCoverImage, initialListPageCoverImage]
+      listPageCoverImage !== initialListPageCoverImage ||
+      listPageTitleColor !== initialListPageTitleColor ||
+      listPageTitleFont !== initialListPageTitleFont ||
+      listPageMessageColor !== initialListPageMessageColor ||
+      listPageMessageFont !== initialListPageMessageFont,
+    [
+      listPageTitle,
+      initialListPageTitle,
+      listPageMessage,
+      initialListPageMessage,
+      listPageCoverImage,
+      initialListPageCoverImage,
+      listPageTitleColor,
+      initialListPageTitleColor,
+      listPageTitleFont,
+      initialListPageTitleFont,
+      listPageMessageColor,
+      initialListPageMessageColor,
+      listPageMessageFont,
+      initialListPageMessageFont,
+    ]
   );
 
   const pendingChangesCount = pendingGiftChanges + (listMetaDirty ? 1 : 0);
@@ -166,6 +197,10 @@ export default function PresentesDashboard() {
       const message = glData?.description || '';
       const theme = (glData?.pageLayout?.theme ?? {}) as Record<string, any>;
       const cover = typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '';
+      const titleColor = typeof theme.gifts_page_title_color === 'string' ? theme.gifts_page_title_color : '#FFFFFF';
+      const titleFont = typeof theme.gifts_page_title_font === 'string' ? theme.gifts_page_title_font : (typeof theme.font_title === 'string' ? theme.font_title : 'Cormorant Garamond');
+      const messageColor = typeof theme.gifts_page_message_color === 'string' ? theme.gifts_page_message_color : (typeof theme.caption_color === 'string' ? theme.caption_color : '#5F4A41');
+      const messageFont = typeof theme.gifts_page_message_font === 'string' ? theme.gifts_page_message_font : (typeof theme.font_body === 'string' ? theme.font_body : 'Inter');
 
       setListPageTitle(title);
       setInitialListPageTitle(title);
@@ -173,6 +208,14 @@ export default function PresentesDashboard() {
       setInitialListPageMessage(message);
       setListPageCoverImage(cover);
       setInitialListPageCoverImage(cover);
+      setListPageTitleColor(titleColor);
+      setInitialListPageTitleColor(titleColor);
+      setListPageTitleFont(titleFont);
+      setInitialListPageTitleFont(titleFont);
+      setListPageMessageColor(messageColor);
+      setInitialListPageMessageColor(messageColor);
+      setListPageMessageFont(messageFont);
+      setInitialListPageMessageFont(messageFont);
 
       void loadGifts(glData.id);
     } catch (error: any) {
@@ -386,6 +429,10 @@ export default function PresentesDashboard() {
           theme: {
             ...currentTheme,
             gifts_page_cover_image: listPageCoverImage || '',
+            gifts_page_title_color: listPageTitleColor || '#FFFFFF',
+            gifts_page_title_font: listPageTitleFont || 'Cormorant Garamond',
+            gifts_page_message_color: listPageMessageColor || '#5F4A41',
+            gifts_page_message_font: listPageMessageFont || 'Inter',
           },
         }),
       });
@@ -535,6 +582,61 @@ export default function PresentesDashboard() {
               rows={3}
               disabled={savingAll}
             />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border border-[#ead9cd] p-3 bg-[#fffdfb]">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-gray-700">Cor do título (na capa)</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={listPageTitleColor}
+                    onChange={(e) => setListPageTitleColor(e.target.value)}
+                    className="h-10 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
+                    disabled={savingAll}
+                  />
+                  <Input value={listPageTitleColor} onChange={(e) => setListPageTitleColor(e.target.value)} disabled={savingAll} />
+                </div>
+                <Label className="text-xs font-semibold text-gray-700">Fonte do título (na capa)</Label>
+                <Select value={listPageTitleFont} onValueChange={setListPageTitleFont} disabled={savingAll}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-80">
+                    {TITLE_FONTS.map((fontName) => (
+                      <SelectItem key={fontName} value={fontName} style={{ fontFamily: fontName }}>
+                        {fontName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-gray-700">Cor da frase</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={listPageMessageColor}
+                    onChange={(e) => setListPageMessageColor(e.target.value)}
+                    className="h-10 w-11 rounded-md border border-[#d8c6b7] bg-white p-1 cursor-pointer"
+                    disabled={savingAll}
+                  />
+                  <Input value={listPageMessageColor} onChange={(e) => setListPageMessageColor(e.target.value)} disabled={savingAll} />
+                </div>
+                <Label className="text-xs font-semibold text-gray-700">Fonte da frase</Label>
+                <Select value={listPageMessageFont} onValueChange={setListPageMessageFont} disabled={savingAll}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-80">
+                    {BODY_FONTS.map((fontName) => (
+                      <SelectItem key={fontName} value={fontName} style={{ fontFamily: fontName }}>
+                        {fontName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-gray-500">
                 Dica: faça todas as edições nos cards abaixo e depois clique em <b>Publicar alterações</b> uma única vez.

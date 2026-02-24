@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { isCategoryMetaTemplate } from '@/lib/template-categories';
 import { extractTemplateGiftItemsFromBlocks } from '@/lib/template-gifts';
+import { resolveThemeBodyFont, resolveThemeTitleFont } from '@/lib/theme-fonts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -34,6 +35,10 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
   const giftsBlock = blocks.find((block) => block?.type === 'gifts');
   const giftsConfig = (giftsBlock?.config as any) || {};
   const theme = (template.defaultTheme as any) || {};
+  const fontTitle = resolveThemeTitleFont(theme?.gifts_page_title_font || theme?.font_title);
+  const fontBody = resolveThemeBodyFont(theme?.gifts_page_message_font || theme?.font_body);
+  const titleColor = theme?.gifts_page_title_color || theme?.title_color || '#FFFFFF';
+  const messageColor = theme?.gifts_page_message_color || theme?.caption_color || '#5F4A41';
   const pageTitle = giftsConfig?.title || 'Lista de Presentes';
   const pageMessage = giftsConfig?.description || '';
   const pageCoverImage =
@@ -69,20 +74,40 @@ export default async function TemplateGiftsPreviewPage({ params }: { params: { s
       </div>
 
       {pageCoverImage ? (
-        <div className="w-full">
-          <img src={pageCoverImage} alt={`Capa da pÃ¡gina ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
+        <div className="relative w-full">
+          <img src={pageCoverImage} alt={`Capa da página ${pageTitle}`} className="w-full aspect-[16/9] object-cover md:aspect-auto md:h-[78vh]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
+            <div className="max-w-6xl mx-auto">
+              <h2
+                className="text-3xl md:text-5xl leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
+                style={{ fontFamily: fontTitle, color: titleColor }}
+              >
+                {pageTitle}
+              </h2>
+            </div>
+          </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="max-w-6xl mx-auto px-4 pt-6">
+          <h2 className="text-3xl md:text-5xl leading-tight" style={{ fontFamily: fontTitle, color: titleColor }}>
+            {pageTitle}
+          </h2>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto space-y-6 px-4 py-6">
-        <div className="rounded-2xl border border-[#e8dbcf] bg-white p-4 md:p-6">
-          <h2 className="font-display text-2xl text-[#8E3D2C]">{pageTitle}</h2>
-          {pageMessage ? <p className="mt-2 text-[#6f584d]">{pageMessage}</p> : null}
-        </div>
+        {pageMessage ? (
+          <div className="rounded-2xl border border-[#e8dbcf] bg-white p-4 md:p-6">
+            <p className="mt-1" style={{ fontFamily: fontBody, color: messageColor }}>
+              {pageMessage}
+            </p>
+          </div>
+        ) : null}
 
         {gifts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[#d9b9a4] bg-white p-8 text-center text-[#8E3D2C]">
-            Este modelo ainda nÃ£o possui presentes cadastrados.
+            Este modelo ainda não possui presentes cadastrados.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
