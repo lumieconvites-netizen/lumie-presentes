@@ -78,15 +78,16 @@ export function ConfirmClient({
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/public/rsvp/${encodeURIComponent(slug)}/searcháq=${encodeURIComponent(query.trim())}`, {
+        const res = await fetch(`/api/public/rsvp/${encodeURIComponent(slug)}/search?q=${encodeURIComponent(query.trim())}`, {
           signal: controller.signal,
         });
-        const json = await res.json();
+        const text = await res.text();
+        const json = text ? JSON.parse(text) : {};
         if (!res.ok) throw new Error(json?.error || 'Erro ao buscar convidados.');
         setResults(Array.isArray(json?.results) ? json.results : []);
       } catch (error: any) {
         if (error?.name !== 'AbortError') {
-          alert(error?.message || 'Erro ao buscar convidados.');
+          alert('Erro ao buscar convidados. Tente novamente em instantes.');
         }
       } finally {
         setSearching(false);

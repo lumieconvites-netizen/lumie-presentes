@@ -72,6 +72,21 @@ type Theme = {
   };
 };
 
+const EDITOR_CACHE_KEY = 'lumie:editor-cache:v1';
+
+type EditorCachePayload = {
+  giftList: {
+    id: string;
+    slug: string;
+    isPublished: boolean;
+    title?: string | null;
+    description?: string | null;
+    feeMode?: string | null;
+  };
+  blocks: PageBlock[];
+  theme: Theme;
+};
+
 function sanitizeBlocks(blocks: PageBlock[] = []) {
   const cleaned = blocks
     .filter((block) => block.type !== 'map')
@@ -106,6 +121,28 @@ function mapGift(gift: any) {
     quantityAvailable: gift.availableQty,
     status: gift.isActive ? 'active' : 'inactive',
   };
+}
+
+function readEditorCache(): EditorCachePayload | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    const raw = window.localStorage.getItem(EDITOR_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as EditorCachePayload;
+    if (!parsed?.giftList?.id || !parsed?.giftList?.slug) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeEditorCache(payload: EditorCachePayload) {
+  try {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(EDITOR_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore cache write errors
+  }
 }
 
 export default function PageBuilder() {
@@ -159,6 +196,15 @@ export default function PageBuilder() {
   }, [giftList?.slug]);
 
   useEffect(() => {
+    const cached = readEditorCache();
+    if (!cached) return;
+    setGiftList((prev: any) => prev ?? cached.giftList);
+    setPageBlocks(sanitizeBlocks(Array.isArray(cached.blocks) ? cached.blocks : []));
+    setTheme((cached.theme ?? {}) as Theme);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function boot() {
@@ -176,6 +222,18 @@ export default function PageBuilder() {
         const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
         setPageBlocks(cleanBlocks);
         setTheme((layout?.theme ?? {}) as Theme);
+        writeEditorCache({
+          giftList: {
+            id: gl.id,
+            slug: gl.slug,
+            isPublished: Boolean(gl.isPublished),
+            title: gl.title ?? null,
+            description: gl.description ?? null,
+            feeMode: gl.feeMode ?? null,
+          },
+          blocks: cleanBlocks,
+          theme: (layout?.theme ?? {}) as Theme,
+        });
         setLoading(false);
 
         const loadCurrentGifts = async () => {
@@ -442,12 +500,17 @@ export default function PageBuilder() {
       alert('Link copiado.');
   };
 
-  if (loading) return <div className="p-4 md:p-6">Carregando editor...</div>;
-
   const published = Boolean(giftList?.isPublished);
 
   return (
     <div className="min-h-full bg-[#fbf8f5]">
+      {loading ? (
+        <div className="px-4 md:px-6 pt-4">
+          <div className="rounded-xl border border-[#ead9cd] bg-white px-4 py-2 text-sm text-gray-600">
+            Carregando editor...
+          </div>
+        </div>
+      ) : null}
       <div className="sticky top-0 z-40 bg-[#fbf8f5] border-b border-[#ead9cd] px-4 md:px-6 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 rounded-2xl border border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9] px-4 py-3">
           <div className="flex items-center gap-3">
