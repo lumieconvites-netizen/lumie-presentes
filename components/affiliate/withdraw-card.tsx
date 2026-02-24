@@ -95,7 +95,7 @@ export default function AffiliateWithdrawCard() {
                 style: 'currency',
                 currency: 'BRL',
               })}
-              . Deseja continuar com o saque?
+              . Saques solicitados ate 15h caem no mesmo dia; apos 15h, caem no proximo dia util. Deseja continuar com o saque?
             </DialogDescription>
           </DialogHeader>
 
