@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createRecipient, updateRecipientDefaultBankAccount } from "@/lib/pagarme";
 import { z } from "zod";
 import { getActingUserContext } from "@/lib/acting-user";
+import { isSupportedBankCode, normalizeBankCode } from "@/lib/bank-institutions";
 
 const bankAccountSchema = z.object({
   holderName: z.string().min(3, "Nome do titular invalido"),
@@ -53,7 +54,17 @@ export async function PUT(request: Request) {
 
     const body = await request.json();
     const parsed = bankAccountSchema.parse(body);
-    const bankAccount = parsed;
+    const normalizedBankCode = normalizeBankCode(parsed.bankCode);
+    if (!isSupportedBankCode(normalizedBankCode)) {
+      return NextResponse.json(
+        { error: "Codigo do banco invalido. Selecione uma instituicao oficial da lista." },
+        { status: 400 }
+      );
+    }
+    const bankAccount = {
+      ...parsed,
+      bankCode: normalizedBankCode,
+    };
 
     const user = await prisma.user.findUnique({
       where: { id: ctx.effectiveUserId },

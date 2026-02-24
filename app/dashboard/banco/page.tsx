@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  BANK_INSTITUTIONS,
+  getBankNameByCode,
+  isSupportedBankCode,
+  normalizeBankCode,
+} from "@/lib/bank-institutions";
 
 type BankAccountForm = {
   holderName: string;
@@ -44,7 +50,7 @@ export default function BancoDashboardPage() {
           setForm({
             holderName: bankAccount.holderName ?? "",
             holderDocument: bankAccount.holderDocument ?? "",
-            bankCode: bankAccount.bankCode ?? "",
+            bankCode: normalizeBankCode(bankAccount.bankCode ?? ""),
             agency: bankAccount.agency ?? "",
             agencyDigit: bankAccount.agencyDigit ?? "",
             accountNumber: bankAccount.accountNumber ?? "",
@@ -62,12 +68,21 @@ export default function BancoDashboardPage() {
   }, []);
 
   async function handleSave() {
+    const normalizedBankCode = normalizeBankCode(form.bankCode);
+    if (!isSupportedBankCode(normalizedBankCode)) {
+      alert("Código do banco inválido. Selecione uma instituição da lista.");
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await fetch("/api/recipient/bank-account", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          bankCode: normalizedBankCode,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Erro ao salvar");
@@ -108,8 +123,29 @@ export default function BancoDashboardPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Código do banco</label>
-              <Input value={form.bankCode} onChange={(e) => setForm((p) => ({ ...p, bankCode: e.target.value }))} />
+              <label className="text-sm font-medium mb-2 block">Instituição financeira</label>
+              <select
+                className="w-full border rounded-md h-10 px-3 text-sm bg-white"
+                value={normalizeBankCode(form.bankCode)}
+                onChange={(e) => setForm((p) => ({ ...p, bankCode: e.target.value }))}
+              >
+                <option value="">Selecione o banco</option>
+                {BANK_INSTITUTIONS.map((bankOption) => (
+                  <option key={bankOption.code} value={bankOption.code}>
+                    {bankOption.code} - {bankOption.name}
+                  </option>
+                ))}
+              </select>
+              {form.bankCode && !isSupportedBankCode(form.bankCode) ? (
+                <p className="text-xs text-red-600 mt-2">
+                  Código inválido. Selecione uma instituição oficial.
+                </p>
+              ) : null}
+              {isSupportedBankCode(form.bankCode) ? (
+                <p className="text-xs text-gray-500 mt-2">
+                  Código selecionado: {normalizeBankCode(form.bankCode)} - {getBankNameByCode(form.bankCode)}
+                </p>
+              ) : null}
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Agência</label>
