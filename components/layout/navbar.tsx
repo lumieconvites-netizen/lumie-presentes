@@ -6,12 +6,15 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSession } from 'next-auth/react';
 
 export function Navbar() {
   const pathname = usePathname();
+  const { status } = useSession();
   const [open, setOpen] = useState(false);
   const [navigating, setNavigating] = useState(false);
   const hideOnTemplatePreview = /^\/templates\/[^/]+(?:\/presentes)?$/.test(pathname ?? '');
+  const hideOnTemplatesWhenLogged = (pathname ?? '') === '/templates' && status === 'authenticated';
 
   useEffect(() => {
     setOpen(false);
@@ -21,7 +24,7 @@ export function Navbar() {
     setNavigating(false);
   }, [pathname]);
 
-  if (hideOnTemplatePreview) {
+  if (hideOnTemplatePreview || hideOnTemplatesWhenLogged) {
     return null;
   }
 

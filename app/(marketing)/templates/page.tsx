@@ -123,7 +123,7 @@ export default async function TemplatesPage({ searchParams }: TemplatesPageProps
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-end gap-2">
               <details className="relative">
                 <summary className="list-none cursor-pointer inline-flex h-10 items-center rounded-md border border-[#d7b7a3] px-4 text-sm text-[#8E3D2C] hover:bg-[#fff7f1]">
                   Tipos de evento
