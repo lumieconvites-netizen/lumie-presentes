@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import BankInstitutionCombobox from "@/components/account/bank-institution-combobox";
 import {
-  BANK_INSTITUTIONS,
   getBankNameByCode,
   isSupportedBankCode,
   normalizeBankCode,
@@ -146,18 +146,10 @@ export default function BancoDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Instituição financeira</label>
-              <select
-                className="w-full border rounded-md h-10 px-3 text-sm bg-white"
-                value={normalizeBankCode(form.bankCode)}
-                onChange={(e) => setForm((p) => ({ ...p, bankCode: e.target.value }))}
-              >
-                <option value="">Selecione o banco</option>
-                {BANK_INSTITUTIONS.map((bankOption) => (
-                  <option key={bankOption.code} value={bankOption.code}>
-                    {bankOption.code} - {bankOption.name}
-                  </option>
-                ))}
-              </select>
+              <BankInstitutionCombobox
+                value={form.bankCode}
+                onChange={(value) => setForm((p) => ({ ...p, bankCode: value }))}
+              />
               {form.bankCode && !isSupportedBankCode(form.bankCode) ? (
                 <p className="text-xs text-red-600 mt-2">
                   Código inválido. Selecione uma instituição oficial.
