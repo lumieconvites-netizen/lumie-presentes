@@ -166,6 +166,7 @@ function isRecoverablePagarmeRouteError(error: unknown): boolean {
   return (
     message.includes("Pagar.me error 404") ||
     message.includes("Pagar.me error 405") ||
+    message.includes("Pagar.me error 422") ||
     message.includes("UnsupportedApiVersion")
   );
 }
@@ -344,11 +345,10 @@ export async function updateRecipientDefaultBankAccount(params: {
 
   // Core v5: tenta atualizar no proprio recurso do recebedor.
   try {
-    return await pagarmeFetchWithMethodFallback<any>(
-      `/recipients/${params.recipientId}`,
-      recipientPatchBody,
-      ["PATCH", "PUT"]
-    );
+    return await pagarmeFetch<any>(`/recipients/${params.recipientId}`, {
+      method: "PATCH",
+      body: recipientPatchBody,
+    });
   } catch (error) {
     if (!isRecoverablePagarmeRouteError(error)) {
       throw error;
