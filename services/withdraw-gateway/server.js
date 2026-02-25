@@ -198,6 +198,81 @@ app.get("/health", (_req, res) => {
   return res.json({ ok: true, service: "withdraw-gateway" });
 });
 
+app.post("/orders/pix", async (req, res) => {
+  if (!pagarmeSecretKey) return fail(res, 500, "PAGARME_SECRET_KEY nao configurada");
+  if (!gatewayToken) return fail(res, 500, "WITHDRAW_GATEWAY_TOKEN nao configurada");
+  const token = readAuthToken(req);
+  if (!token || token !== gatewayToken) return fail(res, 401, "Nao autorizado");
+
+  try {
+    const { response, parsed } = await pagarmeRequest("/orders", {
+      method: "POST",
+      body: req.body || {},
+    });
+    if (!response.ok) {
+      return res.status(response.status).json({
+        ok: false,
+        provider: "pagarme",
+        status: response.status,
+        result: parsed,
+      });
+    }
+    return res.json(parsed);
+  } catch (error) {
+    return fail(res, 500, String(error && error.message ? error.message : "Erro no gateway"));
+  }
+});
+
+app.post("/orders/credit-card", async (req, res) => {
+  if (!pagarmeSecretKey) return fail(res, 500, "PAGARME_SECRET_KEY nao configurada");
+  if (!gatewayToken) return fail(res, 500, "WITHDRAW_GATEWAY_TOKEN nao configurada");
+  const token = readAuthToken(req);
+  if (!token || token !== gatewayToken) return fail(res, 401, "Nao autorizado");
+
+  try {
+    const { response, parsed } = await pagarmeRequest("/orders", {
+      method: "POST",
+      body: req.body || {},
+    });
+    if (!response.ok) {
+      return res.status(response.status).json({
+        ok: false,
+        provider: "pagarme",
+        status: response.status,
+        result: parsed,
+      });
+    }
+    return res.json(parsed);
+  } catch (error) {
+    return fail(res, 500, String(error && error.message ? error.message : "Erro no gateway"));
+  }
+});
+
+app.get("/orders/:orderId", async (req, res) => {
+  if (!pagarmeSecretKey) return fail(res, 500, "PAGARME_SECRET_KEY nao configurada");
+  if (!gatewayToken) return fail(res, 500, "WITHDRAW_GATEWAY_TOKEN nao configurada");
+  const token = readAuthToken(req);
+  if (!token || token !== gatewayToken) return fail(res, 401, "Nao autorizado");
+
+  const orderId = String(req.params.orderId || "").trim();
+  if (!orderId) return fail(res, 400, "orderId obrigatorio");
+
+  try {
+    const { response, parsed } = await pagarmeGet(`/orders/${encodeURIComponent(orderId)}`);
+    if (!response.ok) {
+      return res.status(response.status).json({
+        ok: false,
+        provider: "pagarme",
+        status: response.status,
+        result: parsed,
+      });
+    }
+    return res.json(parsed);
+  } catch (error) {
+    return fail(res, 500, String(error && error.message ? error.message : "Erro no gateway"));
+  }
+});
+
 app.get("/egress-ip", async (req, res) => {
   if (!gatewayToken) return fail(res, 500, "WITHDRAW_GATEWAY_TOKEN nao configurada");
   const token = readAuthToken(req);

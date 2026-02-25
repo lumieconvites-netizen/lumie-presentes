@@ -1,6 +1,8 @@
 ﻿import crypto from "crypto";
 
 const PAGARME_API_BASE = process.env.PAGARME_API_BASE ?? "https://api.pagar.me/core/v5";
+const WITHDRAW_GATEWAY_URL = process.env.WITHDRAW_GATEWAY_URL?.trim() ?? "";
+const WITHDRAW_GATEWAY_TOKEN = process.env.WITHDRAW_GATEWAY_TOKEN?.trim() ?? "";
 
 function getApiKey() {
   const key = process.env.PAGARME_SECRET_KEY;
@@ -131,6 +133,45 @@ async function pagarmeFetch<T>(path: string, init?: RequestInit): Promise<T> {
   }
 }
 
+async function gatewayFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  if (!WITHDRAW_GATEWAY_URL) {
+    throw new Error("WITHDRAW_GATEWAY_URL nao configurada");
+  }
+  if (!WITHDRAW_GATEWAY_TOKEN) {
+    throw new Error("WITHDRAW_GATEWAY_TOKEN nao configurada");
+  }
+
+  const res = await fetch(`${WITHDRAW_GATEWAY_URL.replace(/\/+$/, "")}${path}`, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      Authorization: `Bearer ${WITHDRAW_GATEWAY_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`Withdraw gateway error ${res.status}: ${txt}`);
+  }
+
+  if (res.status === 204) {
+    return {} as T;
+  }
+
+  const raw = await res.text().catch(() => "");
+  if (!raw || !raw.trim()) {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return {} as T;
+  }
+}
+
 async function pagarmeFetchWithMethodFallback<T>(
   path: string,
   body: string,
@@ -172,6 +213,9 @@ function isRecoverablePagarmeRouteError(error: unknown): boolean {
 }
 
 export async function getOrder(orderId: string) {
+  if (WITHDRAW_GATEWAY_URL) {
+    return gatewayFetch<any>(`/orders/${encodeURIComponent(orderId)}`, { method: "GET" });
+  }
   return pagarmeFetch<any>(`/orders/${orderId}`, { method: "GET" });
 }
 
@@ -465,6 +509,13 @@ export async function createPixOrder(input: CreatePixOrderInput) {
     metadata: input.metadata ?? {},
   };
 
+  if (WITHDRAW_GATEWAY_URL) {
+    return gatewayFetch<any>("/orders/pix", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
   return pagarmeFetch<any>("/orders", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -562,6 +613,13 @@ export async function createCreditCardOrder(input: CreateCreditCardOrderInput) {
     ],
     metadata: input.metadata ?? {},
   };
+
+  if (WITHDRAW_GATEWAY_URL) {
+    return gatewayFetch<any>("/orders/credit-card", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
 
   return pagarmeFetch<any>("/orders", {
     method: "POST",
