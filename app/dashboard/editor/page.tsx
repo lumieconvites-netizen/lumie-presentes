@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import type { PageBlock } from '@/contexts/user-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,17 +12,9 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GripVertical, Sparkles, ChevronRight, Globe, Type, Image as ImageIcon, Layout, Save, Music2, Video, Palette, X, BookOpen } from 'lucide-react';
 import { Reorder } from 'framer-motion';
+import BlockEditor from '@/components/builder/BlockEditor';
+import BlockPreview from '@/components/builder/BlockPreview';
 import { cn } from '@/lib/utils';
-
-const BlockEditor = dynamic(() => import('@/components/builder/BlockEditor'), {
-  ssr: false,
-  loading: () => <div className="p-4 text-sm text-gray-600">Carregando editor de bloco...</div>,
-});
-
-const BlockPreview = dynamic(() => import('@/components/builder/BlockPreview'), {
-  ssr: false,
-  loading: () => <div className="p-4 text-sm text-gray-600">Carregando preview...</div>,
-});
 
 type BlockTypeId = PageBlock['type'];
 
@@ -72,21 +63,6 @@ type Theme = {
   };
 };
 
-const EDITOR_CACHE_KEY = 'lumie:editor-cache:v1';
-
-type EditorCachePayload = {
-  giftList: {
-    id: string;
-    slug: string;
-    isPublished: boolean;
-    title?: string | null;
-    description?: string | null;
-    feeMode?: string | null;
-  };
-  blocks: PageBlock[];
-  theme: Theme;
-};
-
 function sanitizeBlocks(blocks: PageBlock[] = []) {
   const cleaned = blocks
     .filter((block) => block.type !== 'map')
@@ -121,28 +97,6 @@ function mapGift(gift: any) {
     quantityAvailable: gift.availableQty,
     status: gift.isActive ? 'active' : 'inactive',
   };
-}
-
-function readEditorCache(): EditorCachePayload | null {
-  try {
-    if (typeof window === 'undefined') return null;
-    const raw = window.localStorage.getItem(EDITOR_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as EditorCachePayload;
-    if (!parsed?.giftList?.id || !parsed?.giftList?.slug) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function writeEditorCache(payload: EditorCachePayload) {
-  try {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(EDITOR_CACHE_KEY, JSON.stringify(payload));
-  } catch {
-    // ignore cache write errors
-  }
 }
 
 export default function PageBuilder() {
@@ -196,15 +150,6 @@ export default function PageBuilder() {
   }, [giftList?.slug]);
 
   useEffect(() => {
-    const cached = readEditorCache();
-    if (!cached) return;
-    setGiftList((prev: any) => prev ?? cached.giftList);
-    setPageBlocks(sanitizeBlocks(Array.isArray(cached.blocks) ? cached.blocks : []));
-    setTheme((cached.theme ?? {}) as Theme);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
 
     async function boot() {
@@ -222,39 +167,17 @@ export default function PageBuilder() {
         const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
         setPageBlocks(cleanBlocks);
         setTheme((layout?.theme ?? {}) as Theme);
-        writeEditorCache({
-          giftList: {
-            id: gl.id,
-            slug: gl.slug,
-            isPublished: Boolean(gl.isPublished),
-            title: gl.title ?? null,
-            description: gl.description ?? null,
-            feeMode: gl.feeMode ?? null,
-          },
-          blocks: cleanBlocks,
-          theme: (layout?.theme ?? {}) as Theme,
-        });
+        const giftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' });
+        const giftsJson = giftsRes.ok ? await giftsRes.json().catch(() => []) : [];
+        const currentGifts = Array.isArray(giftsJson) ? giftsJson : [];
+        if (!cancelled) {
+          setListGifts(currentGifts.map(mapGift));
+        }
         setLoading(false);
-
-        const loadCurrentGifts = async () => {
-          const giftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' });
-          const giftsJson = giftsRes.ok ? await giftsRes.json().catch(() => []) : [];
-          const currentGifts = Array.isArray(giftsJson) ? giftsJson : [];
-          if (!cancelled) {
-            setListGifts(currentGifts.map(mapGift));
-          }
-          return currentGifts;
-        };
-
-        const currentGiftsPromise = loadCurrentGifts().catch((error) => {
-          console.error('Erro ao carregar presentes da lista', error);
-          return [];
-        });
 
         if (templateSlugParam) {
           void (async () => {
             try {
-              const currentGifts = await currentGiftsPromise;
               const templateRes = await fetch(`/api/templates/by-slug/${encodeURIComponent(templateSlugParam)}`, {
                 cache: 'no-store',
               });
@@ -500,17 +423,12 @@ export default function PageBuilder() {
       alert('Link copiado.');
   };
 
+  if (loading) return <div className="p-4 md:p-6">Carregando editor...</div>;
+
   const published = Boolean(giftList?.isPublished);
 
   return (
     <div className="min-h-full bg-[#fbf8f5]">
-      {loading ? (
-        <div className="px-4 md:px-6 pt-4">
-          <div className="rounded-xl border border-[#ead9cd] bg-white px-4 py-2 text-sm text-gray-600">
-            Carregando editor...
-          </div>
-        </div>
-      ) : null}
       <div className="sticky top-0 z-40 bg-[#fbf8f5] border-b border-[#ead9cd] px-4 md:px-6 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 rounded-2xl border border-[#e7d8cb] bg-gradient-to-r from-[#fff7f1] to-[#fffdf9] px-4 py-3">
           <div className="flex items-center gap-3">
