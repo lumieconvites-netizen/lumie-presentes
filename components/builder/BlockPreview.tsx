@@ -672,7 +672,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                           style={{ color: captionColor }}
                         >
                           <Globe className="w-4 h-4" />
-                          Ver no mapa
+                          {config.mapButtonText || 'Ver no mapa'}
                         </a>
                       )}
                     </div>
