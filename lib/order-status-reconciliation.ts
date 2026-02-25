@@ -131,7 +131,8 @@ async function reconcileSingleOrder(order: ReconcileCandidate) {
 }
 
 export async function reconcilePendingOrdersForGiftList(giftListId: string, options?: ReconcileOptions) {
-  if (!process.env.PAGARME_SECRET_KEY) return false;
+  const hasGateway = Boolean(process.env.WITHDRAW_GATEWAY_URL?.trim());
+  if (!process.env.PAGARME_SECRET_KEY && !hasGateway) return false;
 
   const throttleKey = options?.throttleKey || giftListId;
   const minIntervalMs = Math.max(0, Number(options?.minIntervalMs ?? 0));
@@ -152,12 +153,11 @@ export async function reconcilePendingOrdersForGiftList(giftListId: string, opti
   const task = (async () => {
     lastRunMap.set(throttleKey, Date.now());
 
-    const lookbackDate = new Date(Date.now() - 72 * 60 * 60 * 1000);
+    const lookbackDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const pendingOrders = await prisma.order.findMany({
       where: {
         giftListId,
         status: { in: ["PENDING", "AUTHORIZED"] },
-        paymentMethod: "pix",
         pagarmeOrderId: { not: null },
         createdAt: { gte: lookbackDate },
       },
@@ -184,7 +184,7 @@ export async function reconcilePendingOrdersForGiftList(giftListId: string, opti
         });
         changed = changed || updated;
       } catch (error) {
-        console.error("Falha ao reconciliar pedido PIX", {
+        console.error("Falha ao reconciliar pedido pendente", {
           localOrderId: pendingOrder.id,
           pagarmeOrderId: pendingOrder.pagarmeOrderId,
           error,
