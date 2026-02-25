@@ -25,6 +25,15 @@ function isRealRecipientId(value?: string | null) {
   return !value.startsWith("pending_");
 }
 
+function isRecipientNotFoundError(error: unknown) {
+  const message = String((error as any)?.message ?? "").toLowerCase();
+  return (
+    message.includes("pagar.me error 404") ||
+    (message.includes("recipient") && message.includes("not found")) ||
+    (message.includes("recebedor") && message.includes("nao encontrado"))
+  );
+}
+
 export async function GET() {
   const ctx = await getActingUserContext();
   if (!ctx) {
@@ -84,12 +93,15 @@ export async function PUT(request: Request) {
     let nextRecipientId = existingRecipient?.pagarmeRecipientId ?? `pending_${ctx.effectiveUserId}`;
     let nextStatus = hasRealRecipient ? "active" : "pending";
     let warning: string | null = null;
+    let message = "Dados bancarios salvos e sincronizados com sucesso.";
 
     const ownerDocument = digitsOnly(bankAccount.holderDocument);
     if (!ownerDocument) {
       warning = "Conta salva, mas CPF/CNPJ invalido para sincronizar na Pagar.me.";
+      message = "Dados bancarios salvos. Sincronizacao pendente.";
     } else if (!process.env.PAGARME_SECRET_KEY) {
       warning = "Conta salva, mas Pagar.me nao esta configurada no ambiente.";
+      message = "Dados bancarios salvos. Sincronizacao pendente.";
     } else {
       try {
         if (hasRealRecipient) {
@@ -115,9 +127,38 @@ export async function PUT(request: Request) {
         nextStatus = "active";
       } catch (error: any) {
         console.error("Falha ao sincronizar recebedor na Pagar.me:", error);
-        warning = hasRealRecipient
-          ? "Conta salva, mas a atualizacao dos dados bancarios na Pagar.me falhou. Tente novamente."
-          : "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
+
+        if (hasRealRecipient && isRecipientNotFoundError(error)) {
+          try {
+            const recreated = await createRecipient({
+              owner: {
+                name: user.name?.trim() || bankAccount.holderName.trim(),
+                email: user.email,
+                document: ownerDocument,
+              },
+              bankAccount,
+              metadata: {
+                userId: user.id,
+                recreatedFromRecipientId: existingRecipient?.pagarmeRecipientId,
+              },
+            });
+
+            nextRecipientId = recreated?.id ?? nextRecipientId;
+            nextStatus = "active";
+            warning = "Recebedor anterior nao encontrado na Pagar.me. Um novo recebedor foi criado e vinculado.";
+            message = warning;
+          } catch (recreateError: any) {
+            console.error("Falha ao recriar recebedor na Pagar.me:", recreateError);
+            warning =
+              "Conta salva, mas a atualizacao dos dados bancarios na Pagar.me falhou e nao foi possivel recriar o recebedor.";
+            message = "Dados bancarios salvos. Sincronizacao pendente.";
+          }
+        } else {
+          warning = hasRealRecipient
+            ? "Conta salva, mas a atualizacao dos dados bancarios na Pagar.me falhou. Tente novamente."
+            : "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
+          message = "Dados bancarios salvos. Sincronizacao pendente.";
+        }
       }
     }
 
@@ -144,7 +185,7 @@ export async function PUT(request: Request) {
     });
 
     return NextResponse.json({
-      message: warning ? "Dados bancarios salvos. Sincronizacao pendente." : "Dados bancarios salvos e sincronizados com sucesso.",
+      message,
       warning,
       recipient,
     });
