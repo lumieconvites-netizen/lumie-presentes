@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createRecipient, getRecipientBalanceSummary } from "@/lib/pagarme";
+import { createRecipient, updateRecipientDefaultBankAccount } from "@/lib/pagarme";
 import { z } from "zod";
 import { getActingUserContext } from "@/lib/acting-user";
 import { isSupportedBankCode, normalizeBankCode } from "@/lib/bank-institutions";
@@ -96,46 +96,31 @@ export async function PUT(request: Request) {
     } else {
       try {
         if (hasRealRecipient && existingRecipient?.pagarmeRecipientId) {
-          const { available, waitingFunds } = await getRecipientBalanceSummary(existingRecipient.pagarmeRecipientId);
-          const totalRetained = Math.max(available, 0) + Math.max(waitingFunds, 0);
-          if (totalRetained > 0) {
-            return NextResponse.json(
-              {
-                error:
-                  "Nao foi possivel trocar o recebedor porque existe saldo vinculado ao recebedor atual. Realize o saque/repasse do saldo atual antes de alterar os dados bancarios.",
-                details: {
-                  availableInCents: available,
-                  waitingFundsInCents: waitingFunds,
-                },
-              },
-              { status: 409 }
-            );
-          }
-        }
-
-        const created = await createRecipient({
-          owner: {
-            name: user.name?.trim() || bankAccount.holderName.trim(),
-            email: user.email,
-            document: ownerDocument,
-          },
-          bankAccount,
-          metadata: {
-            userId: user.id,
-            previousRecipientId: hasRealRecipient ? existingRecipient?.pagarmeRecipientId : null,
-          },
-        });
-
-        nextRecipientId = created?.id ?? nextRecipientId;
-        nextStatus = "active";
-        if (hasRealRecipient) {
-          warning = "Dados bancarios atualizados com novo recebedor na Pagar.me.";
-          message = warning;
+          await updateRecipientDefaultBankAccount({
+            recipientId: existingRecipient.pagarmeRecipientId,
+            bankAccount,
+          });
+          nextRecipientId = existingRecipient.pagarmeRecipientId;
+          nextStatus = "active";
+        } else {
+          const created = await createRecipient({
+            owner: {
+              name: user.name?.trim() || bankAccount.holderName.trim(),
+              email: user.email,
+              document: ownerDocument,
+            },
+            bankAccount,
+            metadata: {
+              userId: user.id,
+            },
+          });
+          nextRecipientId = created?.id ?? nextRecipientId;
+          nextStatus = "active";
         }
       } catch (error: any) {
         console.error("Falha ao sincronizar recebedor na Pagar.me:", error);
         warning = hasRealRecipient
-          ? "Conta salva, mas a criacao do novo recebedor na Pagar.me falhou. Tente novamente."
+          ? "Conta salva, mas a atualizacao dos dados bancarios no recebedor atual da Pagar.me falhou. Nenhum novo recebedor foi criado."
           : "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
         message = "Dados bancarios salvos. Sincronizacao pendente.";
       }
