@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getActingUserContext } from '@/lib/acting-user';
 import { getLegacyStorageRejectMessage, isLegacySupabaseStorageUrl } from '@/lib/storage-url';
 import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
+import { buildEffectiveAvailabilityMap } from '@/lib/gift-availability';
 
 const giftSchema = z.object({
   name: z.string().min(1, 'Nome e obrigatorio'),
@@ -65,7 +66,19 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json(gifts);
+    const effectiveByGiftId = await buildEffectiveAvailabilityMap(
+      gifts.map((gift) => ({
+        id: gift.id,
+        totalQuantity: gift.totalQuantity,
+      }))
+    );
+
+    return NextResponse.json(
+      gifts.map((gift) => ({
+        ...gift,
+        availableQty: effectiveByGiftId.get(gift.id) ?? Math.max(0, gift.availableQty),
+      }))
+    );
   } catch (error) {
     console.error('Erro ao buscar presentes:', error);
     return NextResponse.json({ error: 'Erro ao buscar presentes' }, { status: 500 });
