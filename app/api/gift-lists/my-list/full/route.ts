@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       });
       if (!giftList) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
 
-      const [totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount] =
+      const [totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount, pendingCardOrdersCount] =
         await Promise.all([
           prisma.giftItem.count({
             where: {
@@ -108,6 +108,13 @@ export async function GET(req: Request) {
               status: { in: ["PENDING", "AUTHORIZED"] },
             },
           }),
+          prisma.order.count({
+            where: {
+              giftListId: primaryGiftListId,
+              paymentMethod: "credit_card",
+              status: { in: ["PENDING", "AUTHORIZED"] },
+            },
+          }),
         ]);
 
       return NextResponse.json({
@@ -116,6 +123,7 @@ export async function GET(req: Request) {
           totalGifts,
           activeGifts,
           pendingOrdersCount,
+          pendingCardOrdersCount,
           recentPayments,
           recentMessages,
         },
