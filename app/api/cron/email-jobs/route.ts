@@ -5,6 +5,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function isAuthorized(request: Request) {
+  const vercelCronHeader = request.headers.get("x-vercel-cron");
+  if (vercelCronHeader) return true;
+
   const secret = process.env.CRON_SECRET || process.env.ACCOUNT_RETENTION_CRON_SECRET;
   if (!secret) return process.env.NODE_ENV !== "production";
 
