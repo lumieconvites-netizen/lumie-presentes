@@ -478,6 +478,8 @@ export default function PresentesDashboard() {
 
     setSavingAll(true);
     try {
+      let hadMissingItems = false;
+
       if (listMetaDirty) {
         await saveListMeta();
       }
@@ -489,7 +491,13 @@ export default function PresentesDashboard() {
       for (const gift of deletions) {
         const res = await fetch(`/api/gifts/${gift.serverId}`, { method: 'DELETE' });
         const data = await parseJsonSafe(res);
-        if (!res.ok) throw new Error(data?.error ?? `Erro ao excluir presente ${gift.name || ''}`.trim());
+        if (!res.ok) {
+          if (res.status === 404) {
+            hadMissingItems = true;
+            continue;
+          }
+          throw new Error(data?.error ?? `Erro ao excluir presente ${gift.name || ''}`.trim());
+        }
       }
 
       for (const gift of updates) {
@@ -515,7 +523,13 @@ export default function PresentesDashboard() {
           body: JSON.stringify(payload),
         });
         const data = await parseJsonSafe(res);
-        if (!res.ok) throw new Error(data?.error ?? `Erro ao atualizar presente ${gift.name || ''}`.trim());
+        if (!res.ok) {
+          if (res.status === 404) {
+            hadMissingItems = true;
+            continue;
+          }
+          throw new Error(data?.error ?? `Erro ao atualizar presente ${gift.name || ''}`.trim());
+        }
       }
 
       for (const gift of creations) {
@@ -536,7 +550,11 @@ export default function PresentesDashboard() {
       }
 
       await loadGiftListAndGifts();
-      alert('Alterações publicadas com sucesso.');
+      if (hadMissingItems) {
+        alert('Alguns presentes não existiam mais e foram sincronizados. Lista atualizada com sucesso.');
+      } else {
+        alert('Alterações publicadas com sucesso.');
+      }
     } catch (error: any) {
       alert(error?.message ?? 'Erro ao publicar alterações dos presentes');
     } finally {
