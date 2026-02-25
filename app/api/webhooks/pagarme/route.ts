@@ -103,42 +103,66 @@ export async function POST(request: Request) {
       nextStatus = "PAID";
     }
 
-    await prisma.order.update({
-      where: { id: dbOrder.id },
-      data: {
-        status: nextStatus,
-        paidAt: nextStatus === "PAID" && dbOrder.status !== "PAID" ? new Date() : undefined,
-        refundedAt: nextStatus === "REFUNDED" ? new Date() : undefined,
-      },
+    await prisma.$transaction(async (tx) => {
+      if (nextStatus === "PAID") {
+        const transition = await tx.order.updateMany({
+          where: { id: dbOrder.id, status: { not: "PAID" } },
+          data: {
+            status: "PAID",
+            paidAt: new Date(),
+          },
+        });
+
+        if (transition.count > 0) {
+          await tx.giftItem.update({
+            where: { id: dbOrder.giftItemId },
+            data: {
+              availableQty: { decrement: dbOrder.quantity },
+            },
+          });
+
+          await tx.message.updateMany({
+            where: { orderId: dbOrder.id },
+            data: { isPublic: true },
+          });
+        }
+
+        return;
+      }
+
+      if (eventType === "charge.chargeback" || nextStatus === "REFUNDED") {
+        const transition = await tx.order.updateMany({
+          where: { id: dbOrder.id, status: "PAID" },
+          data: {
+            status: "REFUNDED",
+            refundedAt: new Date(),
+          },
+        });
+
+        if (transition.count > 0) {
+          await tx.giftItem.update({
+            where: { id: dbOrder.giftItemId },
+            data: {
+              availableQty: { increment: dbOrder.quantity },
+            },
+          });
+
+          await tx.message.updateMany({
+            where: { orderId: dbOrder.id },
+            data: { isPublic: false },
+          });
+        }
+
+        return;
+      }
+
+      await tx.order.update({
+        where: { id: dbOrder.id },
+        data: {
+          status: nextStatus,
+        },
+      });
     });
-
-    if (nextStatus === "PAID" && dbOrder.status !== "PAID") {
-      await prisma.giftItem.update({
-        where: { id: dbOrder.giftItemId },
-        data: {
-          availableQty: { decrement: dbOrder.quantity },
-        },
-      });
-
-      await prisma.message.updateMany({
-        where: { orderId: dbOrder.id },
-        data: { isPublic: true },
-      });
-    }
-
-    if ((eventType === "charge.chargeback" || nextStatus === "REFUNDED") && dbOrder.status === "PAID") {
-      await prisma.giftItem.update({
-        where: { id: dbOrder.giftItemId },
-        data: {
-          availableQty: { increment: dbOrder.quantity },
-        },
-      });
-
-      await prisma.message.updateMany({
-        where: { orderId: dbOrder.id },
-        data: { isPublic: false },
-      });
-    }
 
     return NextResponse.json({ received: true });
   } catch (error) {

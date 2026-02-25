@@ -495,19 +495,18 @@ export async function POST(request: Request) {
             });
             if (!currentOrder) return;
 
-            const wasPaid = currentOrder.status === "PAID";
-            await tx.order.update({
-              where: { id: order.id },
+            const transition = await tx.order.updateMany({
+              where: { id: order.id, status: { not: "PAID" } },
               data: {
                 pagarmeOrderId: latestOrder?.id ?? null,
                 pagarmeChargeId: charge?.id ?? null,
                 paymentMethod: data.paymentMethod === 'CREDIT_CARD' ? 'credit_card' : 'pix',
                 status: "PAID",
-                paidAt: wasPaid ? undefined : new Date(),
+                paidAt: new Date(),
               },
             });
 
-            if (!wasPaid) {
+            if (transition.count > 0) {
               await tx.giftItem.update({
                 where: { id: currentOrder.giftItemId },
                 data: { availableQty: { decrement: currentOrder.quantity } },
@@ -515,6 +514,15 @@ export async function POST(request: Request) {
               await tx.message.updateMany({
                 where: { orderId: currentOrder.id },
                 data: { isPublic: true },
+              });
+            } else {
+              await tx.order.update({
+                where: { id: order.id },
+                data: {
+                  pagarmeOrderId: latestOrder?.id ?? null,
+                  pagarmeChargeId: charge?.id ?? null,
+                  paymentMethod: data.paymentMethod === 'CREDIT_CARD' ? 'credit_card' : 'pix',
+                },
               });
             }
           });
