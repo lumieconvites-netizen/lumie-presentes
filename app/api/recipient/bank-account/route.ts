@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createRecipient } from "@/lib/pagarme";
+import { createRecipient, getRecipientBalanceSummary } from "@/lib/pagarme";
 import { z } from "zod";
 import { getActingUserContext } from "@/lib/acting-user";
 import { isSupportedBankCode, normalizeBankCode } from "@/lib/bank-institutions";
@@ -95,6 +95,24 @@ export async function PUT(request: Request) {
       message = "Dados bancarios salvos. Sincronizacao pendente.";
     } else {
       try {
+        if (hasRealRecipient && existingRecipient?.pagarmeRecipientId) {
+          const { available, waitingFunds } = await getRecipientBalanceSummary(existingRecipient.pagarmeRecipientId);
+          const totalRetained = Math.max(available, 0) + Math.max(waitingFunds, 0);
+          if (totalRetained > 0) {
+            return NextResponse.json(
+              {
+                error:
+                  "Nao foi possivel trocar o recebedor porque existe saldo vinculado ao recebedor atual. Realize o saque/repasse do saldo atual antes de alterar os dados bancarios.",
+                details: {
+                  availableInCents: available,
+                  waitingFundsInCents: waitingFunds,
+                },
+              },
+              { status: 409 }
+            );
+          }
+        }
+
         const created = await createRecipient({
           owner: {
             name: user.name?.trim() || bankAccount.holderName.trim(),
