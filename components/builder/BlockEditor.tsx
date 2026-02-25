@@ -121,6 +121,82 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
       reader.readAsDataURL(file);
     });
 
+  const loadImageFromFile = (file: File) =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new window.Image();
+      image.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(image);
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Não foi possível processar a imagem.'));
+      };
+      image.src = objectUrl;
+    });
+
+  const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality?: number) =>
+    new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Falha ao processar imagem.'));
+          return;
+        }
+        resolve(blob);
+      }, type, quality);
+    });
+
+  const normalizeGalleryImageFile = async (file: File) => {
+    const image = await loadImageFromFile(file);
+    const sourceWidth = Math.max(1, image.naturalWidth || image.width);
+    const sourceHeight = Math.max(1, image.naturalHeight || image.height);
+    const cropSide = Math.min(sourceWidth, sourceHeight);
+    const offsetX = Math.max(0, Math.floor((sourceWidth - cropSide) / 2));
+    const offsetY = Math.max(0, Math.floor((sourceHeight - cropSide) / 2));
+
+    const targetSize = 1000;
+    const canvas = document.createElement('canvas');
+    canvas.width = targetSize;
+    canvas.height = targetSize;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Falha ao preparar imagem.');
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(
+      image,
+      offsetX,
+      offsetY,
+      cropSide,
+      cropSide,
+      0,
+      0,
+      targetSize,
+      targetSize
+    );
+
+    const qualities = [0.92, 0.86, 0.8, 0.74, 0.68, 0.62, 0.56];
+    let bestBlob: Blob | null = null;
+
+    for (const quality of qualities) {
+      const blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+      bestBlob = blob;
+      if (blob.size <= MAX_UPLOAD_BYTES) break;
+    }
+
+    if (!bestBlob || bestBlob.size > MAX_UPLOAD_BYTES) {
+      throw new Error('Não foi possível ajustar a foto para até 5MB. Tente outra imagem.');
+    }
+
+    const originalName = file.name.replace(/\.[^/.]+$/, '') || 'foto-galeria';
+    return new File([bestBlob], `${originalName}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+  };
+
   const readImageDimensions = (file: File) =>
     new Promise<{ width: number; height: number }>((resolve, reject) => {
       const objectUrl = URL.createObjectURL(file);
@@ -205,19 +281,18 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
 
       // faz upload 1 a 1 (mais seguro e simples)
       for (const file of files) {
-        const valid = await validateImageFile(file, {
-          label: 'Foto da galeria',
-          maxWidth: 1000,
-          maxHeight: 1000,
-        });
-        if (!valid) continue;
-
         try {
-          const url = await uploadToServer(file, 'gallery');
+          const normalizedFile = await normalizeGalleryImageFile(file);
+          const url = await uploadToServer(normalizedFile, 'gallery');
           uploaded.push(url);
         } catch {
-          const dataUrl = await fileToDataUrl(file);
-          uploaded.push(dataUrl);
+          try {
+            const normalizedFile = await normalizeGalleryImageFile(file);
+            const dataUrl = await fileToDataUrl(normalizedFile);
+            uploaded.push(dataUrl);
+          } catch (error: any) {
+            alert(error?.message ?? 'Erro ao ajustar foto da galeria.');
+          }
         }
       }
 
@@ -730,7 +805,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
 
           <div>
             <Label className="text-sm font-medium">Fotos</Label>
-            <p className="mt-1 text-xs text-gray-500">Recomendado: fotos quadradas até 1000x1000px. Limite de 5MB por foto.</p>
+            <p className="mt-1 text-xs text-gray-500">As fotos são ajustadas automaticamente para quadrado (1000x1000), com corte central e limite de 5MB.</p>
 
             <div className="mt-2 grid grid-cols-3 gap-2">
               {(config.images || []).map((img: string, index: number) => (
