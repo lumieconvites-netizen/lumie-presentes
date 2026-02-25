@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createRecipient, updateRecipientDefaultBankAccount } from "@/lib/pagarme";
+import {
+  createRecipientWithGateway,
+  updateRecipientDefaultBankAccountWithGateway,
+} from "@/lib/withdraw-gateway";
 import { z } from "zod";
 import { getActingUserContext } from "@/lib/acting-user";
 import { isSupportedBankCode, normalizeBankCode } from "@/lib/bank-institutions";
@@ -96,14 +99,14 @@ export async function PUT(request: Request) {
     } else {
       try {
         if (hasRealRecipient && existingRecipient?.pagarmeRecipientId) {
-          await updateRecipientDefaultBankAccount({
+          await updateRecipientDefaultBankAccountWithGateway({
             recipientId: existingRecipient.pagarmeRecipientId,
             bankAccount,
           });
           nextRecipientId = existingRecipient.pagarmeRecipientId;
           nextStatus = "active";
         } else {
-          const created = await createRecipient({
+          const created = await createRecipientWithGateway({
             owner: {
               name: user.name?.trim() || bankAccount.holderName.trim(),
               email: user.email,

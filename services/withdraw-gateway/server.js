@@ -18,6 +18,54 @@ function readAuthToken(req) {
   return auth.slice(7).trim();
 }
 
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function mapDocumentType(document) {
+  return document.length > 11 ? "company" : "individual";
+}
+
+function mapBankType(type) {
+  return String(type || "") === "conta_poupanca" ? "savings" : "checking";
+}
+
+function buildDefaultBankAccount(input) {
+  const document = digitsOnly(input?.holderDocument);
+  return {
+    holder_name: String(input?.holderName || "").trim(),
+    holder_type: mapDocumentType(document),
+    holder_document: document,
+    bank: digitsOnly(input?.bankCode),
+    branch_number: digitsOnly(input?.agency),
+    branch_check_digit: digitsOnly(input?.agencyDigit) || null,
+    account_number: digitsOnly(input?.accountNumber),
+    account_check_digit: digitsOnly(input?.accountDigit) || null,
+    type: mapBankType(input?.accountType),
+  };
+}
+
+async function pagarmeRequest(path, { method, body }) {
+  const response = await fetch(`${pagarmeApiBase}${path}`, {
+    method,
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${pagarmeSecretKey}:`).toString("base64")}`,
+      "Content-Type": "application/json",
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+
+  const raw = await response.text().catch(() => "");
+  let parsed = null;
+  try {
+    parsed = raw ? JSON.parse(raw) : null;
+  } catch {
+    parsed = { raw };
+  }
+
+  return { response, parsed };
+}
+
 async function pagarmeTransfer({ recipientId, amountInCents, metadata }) {
   const response = await fetch(`${pagarmeApiBase}/transfers`, {
     method: "POST",
@@ -148,6 +196,160 @@ app.get("/health", (_req, res) => {
   if (!pagarmeSecretKey) return fail(res, 500, "PAGARME_SECRET_KEY nao configurada");
   if (!gatewayToken) return fail(res, 500, "WITHDRAW_GATEWAY_TOKEN nao configurada");
   return res.json({ ok: true, service: "withdraw-gateway" });
+});
+
+app.get("/egress-ip", async (req, res) => {
+  if (!gatewayToken) return fail(res, 500, "WITHDRAW_GATEWAY_TOKEN nao configurada");
+  const token = readAuthToken(req);
+  if (!token || token !== gatewayToken) {
+    return fail(res, 401, "Nao autorizado");
+  }
+
+  try {
+    const v4 = await fetch("https://api.ipify.org", { method: "GET" }).then((r) => r.text());
+    let v6 = "";
+    try {
+      v6 = await fetch("https://api64.ipify.org", { method: "GET" }).then((r) => r.text());
+    } catch {
+      v6 = "";
+    }
+
+    return res.json({
+      ok: true,
+      ipv4: String(v4 || "").trim(),
+      ipv6: String(v6 || "").trim() || null,
+    });
+  } catch (error) {
+    return fail(res, 500, String(error && error.message ? error.message : "Erro ao obter egress IP"));
+  }
+});
+
+app.post("/recipient", async (req, res) => {
+  if (!pagarmeSecretKey) return fail(res, 500, "PAGARME_SECRET_KEY nao configurada");
+  if (!gatewayToken) return fail(res, 500, "WITHDRAW_GATEWAY_TOKEN nao configurada");
+
+  const token = readAuthToken(req);
+  if (!token || token !== gatewayToken) {
+    return fail(res, 401, "Nao autorizado");
+  }
+
+  const owner = req.body?.owner || {};
+  const bankAccount = req.body?.bankAccount || {};
+  const metadata = req.body?.metadata || {};
+  const ownerDocument = digitsOnly(owner.document);
+  if (!ownerDocument) return fail(res, 400, "Documento do titular invalido");
+
+  const payload = {
+    name: String(owner.name || "").trim(),
+    email: String(owner.email || "").trim(),
+    description: "Recebedor criado automaticamente pela plataforma LUMIÊ",
+    document: ownerDocument,
+    type: mapDocumentType(ownerDocument),
+    default_bank_account: buildDefaultBankAccount(bankAccount),
+    metadata,
+  };
+
+  try {
+    const { response, parsed } = await pagarmeRequest("/recipients", {
+      method: "POST",
+      body: payload,
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        ok: false,
+        provider: "pagarme",
+        status: response.status,
+        result: parsed,
+      });
+    }
+
+    return res.json({
+      ok: true,
+      provider: "pagarme",
+      recipient: parsed,
+    });
+  } catch (error) {
+    return fail(res, 500, String(error && error.message ? error.message : "Erro no gateway"));
+  }
+});
+
+app.patch("/recipient/:recipientId/default-bank-account", async (req, res) => {
+  if (!pagarmeSecretKey) return fail(res, 500, "PAGARME_SECRET_KEY nao configurada");
+  if (!gatewayToken) return fail(res, 500, "WITHDRAW_GATEWAY_TOKEN nao configurada");
+
+  const token = readAuthToken(req);
+  if (!token || token !== gatewayToken) {
+    return fail(res, 401, "Nao autorizado");
+  }
+
+  const recipientId = String(req.params.recipientId || "").trim();
+  const bankAccount = req.body?.bankAccount || {};
+  if (!recipientId) return fail(res, 400, "recipientId obrigatorio");
+  if (!String(bankAccount?.holderName || "").trim()) return fail(res, 400, "holderName obrigatorio");
+
+  const defaultBankAccount = buildDefaultBankAccount(bankAccount);
+  const recoverableStatuses = new Set([404, 405, 422]);
+
+  try {
+    // 1) Rota principal recomendada (core v5)
+    const main = await pagarmeRequest(`/recipients/${encodeURIComponent(recipientId)}`, {
+      method: "PATCH",
+      body: { default_bank_account: defaultBankAccount },
+    });
+    if (main.response.ok) {
+      return res.json({ ok: true, provider: "pagarme", recipient: main.parsed });
+    }
+    if (!recoverableStatuses.has(main.response.status)) {
+      return res.status(main.response.status).json({
+        ok: false,
+        provider: "pagarme",
+        status: main.response.status,
+        result: main.parsed,
+      });
+    }
+
+    // 2) Fallbacks de compatibilidade
+    const fallbackRoutes = [
+      `/recipients/${encodeURIComponent(recipientId)}/default-bank-account`,
+      `/recipients/${encodeURIComponent(recipientId)}/default_bank_account`,
+    ];
+    const fallbackBodies = [
+      defaultBankAccount,
+      { bank_account: defaultBankAccount },
+      { bankaccount: defaultBankAccount },
+      { default_bank_account: defaultBankAccount },
+    ];
+    const methods = ["PATCH", "POST", "PUT"];
+
+    for (const route of fallbackRoutes) {
+      for (const body of fallbackBodies) {
+        for (const method of methods) {
+          const attempt = await pagarmeRequest(route, { method, body });
+          if (attempt.response.ok) {
+            return res.json({ ok: true, provider: "pagarme", recipient: attempt.parsed });
+          }
+          if (!recoverableStatuses.has(attempt.response.status)) {
+            return res.status(attempt.response.status).json({
+              ok: false,
+              provider: "pagarme",
+              status: attempt.response.status,
+              result: attempt.parsed,
+            });
+          }
+        }
+      }
+    }
+
+    return res.status(main.response.status).json({
+      ok: false,
+      provider: "pagarme",
+      status: main.response.status,
+      result: main.parsed,
+    });
+  } catch (error) {
+    return fail(res, 500, String(error && error.message ? error.message : "Erro no gateway"));
+  }
 });
 
 app.post("/transfer", async (req, res) => {

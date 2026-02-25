@@ -1,9 +1,32 @@
-import { createRecipientTransfer, getRecipientBalanceSummary, listRecipientTransfers } from "@/lib/pagarme";
+import {
+  createRecipient,
+  createRecipientTransfer,
+  getRecipientBalanceSummary,
+  listRecipientTransfers,
+  updateRecipientDefaultBankAccount,
+} from "@/lib/pagarme";
 
 type CreateTransferInput = {
   recipientId: string;
   amountInCents: number;
   metadata?: Record<string, any>;
+};
+
+type RecipientBankAccountInput = {
+  holderName: string;
+  holderDocument: string;
+  bankCode: string;
+  agency: string;
+  agencyDigit?: string;
+  accountNumber: string;
+  accountDigit?: string;
+  accountType: "conta_corrente" | "conta_poupanca";
+};
+
+type RecipientOwnerInput = {
+  name: string;
+  email: string;
+  document: string;
 };
 
 function readGatewayConfig() {
@@ -13,47 +36,14 @@ function readGatewayConfig() {
 }
 
 async function createTransferViaGateway(input: CreateTransferInput) {
-  const { baseUrl, token } = readGatewayConfig();
-  if (!baseUrl) {
-    throw new Error("WITHDRAW_GATEWAY_URL nao configurada");
-  }
-  if (!token) {
-    throw new Error("WITHDRAW_GATEWAY_TOKEN nao configurada");
-  }
-
-  const res = await fetch(`${baseUrl.replace(/\/+$/, "")}/transfer`, {
+  return callGateway("/transfer", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+    body: {
       recipientId: input.recipientId,
       amountInCents: input.amountInCents,
       metadata: input.metadata ?? {},
-    }),
-    cache: "no-store",
+    },
   });
-
-  const raw = await res.text().catch(() => "");
-  let payload: any = {};
-  try {
-    payload = raw ? JSON.parse(raw) : {};
-  } catch {
-    payload = { raw };
-  }
-
-  if (!res.ok) {
-    const msg =
-      payload?.message ||
-      payload?.error ||
-      payload?.result?.message ||
-      raw ||
-      "Erro no withdraw gateway";
-    throw new Error(`Withdraw gateway error ${res.status}: ${msg}`);
-  }
-
-  return payload;
 }
 
 export async function createRecipientTransferWithGateway(input: CreateTransferInput) {
@@ -123,20 +113,32 @@ function isDashboardWithdrawTransfer(transfer: any): boolean {
 }
 
 async function getSummaryViaGateway(recipientId: string): Promise<RecipientFinancialSummary> {
+  const payload = await callGateway(`/recipient-summary/${encodeURIComponent(recipientId)}`, {
+    method: "GET",
+  });
+  return payload?.summary ?? {};
+}
+
+async function callGateway(
+  path: string,
+  opts: {
+    method: "GET" | "POST" | "PATCH";
+    body?: Record<string, any>;
+  }
+) {
   const { baseUrl, token } = readGatewayConfig();
   if (!baseUrl) throw new Error("WITHDRAW_GATEWAY_URL nao configurada");
   if (!token) throw new Error("WITHDRAW_GATEWAY_TOKEN nao configurada");
 
-  const res = await fetch(
-    `${baseUrl.replace(/\/+$/, "")}/recipient-summary/${encodeURIComponent(recipientId)}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
-  );
+  const res = await fetch(`${baseUrl.replace(/\/+$/, "")}${path}`, {
+    method: opts.method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    ...(opts.body ? { body: JSON.stringify(opts.body) } : {}),
+    cache: "no-store",
+  });
 
   const raw = await res.text().catch(() => "");
   let payload: any = {};
@@ -152,11 +154,11 @@ async function getSummaryViaGateway(recipientId: string): Promise<RecipientFinan
       payload?.error ||
       payload?.result?.message ||
       raw ||
-      "Erro ao consultar summary do gateway";
+      "Erro no withdraw gateway";
     throw new Error(`Withdraw gateway error ${res.status}: ${msg}`);
   }
 
-  return payload?.summary ?? {};
+  return payload;
 }
 
 export async function getRecipientFinancialSummaryWithGateway(
@@ -232,4 +234,42 @@ export async function getRecipientFinancialSummaryWithGateway(
     nonFailedTransferCount: 0,
     latestPendingTransfer: null,
   };
+}
+
+export async function createRecipientWithGateway(params: {
+  owner: RecipientOwnerInput;
+  bankAccount: RecipientBankAccountInput;
+  metadata?: Record<string, any>;
+}) {
+  const { baseUrl } = readGatewayConfig();
+  if (baseUrl) {
+    const payload = await callGateway("/recipient", {
+      method: "POST",
+      body: params,
+    });
+    return payload?.recipient ?? payload;
+  }
+
+  return createRecipient(params);
+}
+
+export async function updateRecipientDefaultBankAccountWithGateway(params: {
+  recipientId: string;
+  bankAccount: RecipientBankAccountInput;
+}) {
+  const { baseUrl } = readGatewayConfig();
+  if (baseUrl) {
+    const payload = await callGateway(
+      `/recipient/${encodeURIComponent(params.recipientId)}/default-bank-account`,
+      {
+        method: "PATCH",
+        body: {
+          bankAccount: params.bankAccount,
+        },
+      }
+    );
+    return payload?.recipient ?? payload;
+  }
+
+  return updateRecipientDefaultBankAccount(params);
 }
