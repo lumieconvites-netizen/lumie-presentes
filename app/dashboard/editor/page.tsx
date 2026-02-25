@@ -63,6 +63,63 @@ type Theme = {
   };
 };
 
+type EditorCachePayload = {
+  cachedAt: string;
+  giftList: {
+    id?: string;
+    slug?: string;
+    title?: string;
+    isPublished?: boolean;
+  } | null;
+  pageBlocks: PageBlock[];
+  theme: Theme;
+  listGifts: any[];
+};
+
+const EDITOR_CACHE_KEY = 'lumie:editor:cache:v1';
+
+const DEFAULT_THEME: Theme = {
+  primary_color: '#C86E52',
+  title_color: '#8E3D2C',
+  caption_color: '#5F4A41',
+  divider_color: '#8E3D2C',
+  divider_enabled: true,
+  divider_style: 'dot',
+  background_overlay_opacity: 50,
+  background_color: '#FAF4EF',
+  font_title: 'Cormorant Garamond',
+  font_body: 'Inter',
+  header: {
+    enabled: true,
+    brandText: 'LUMIÊ',
+    backgroundColor: '#0B0B0B',
+    textColor: '#FFFFFF',
+    showMeuSite: true,
+    showGifts: true,
+    showRsvp: true,
+    showMap: true,
+    menuMeuSite: 'Meu Site',
+    menuGifts: 'Lista de Presentes',
+    menuRsvp: 'Confirmar Presença',
+    menuMap: 'Como Chegar',
+    menuMeuSiteUrl: '',
+    menuGiftsUrl: '',
+    menuRsvpUrl: '',
+    menuMapUrl: '',
+  },
+};
+
+function mergeThemeWithDefaults(input?: Theme | null): Theme {
+  return {
+    ...DEFAULT_THEME,
+    ...(input ?? {}),
+    header: {
+      ...(DEFAULT_THEME.header ?? {}),
+      ...((input?.header as Theme['header']) ?? {}),
+    },
+  };
+}
+
 function sanitizeBlocks(blocks: PageBlock[] = []) {
   const cleaned = blocks
     .filter((block) => block.type !== 'map')
@@ -105,37 +162,9 @@ export default function PageBuilder() {
   const templateSlugParam = searchParams.get('template') || '';
   const [giftList, setGiftList] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hydratedFromCache, setHydratedFromCache] = useState(false);
   const [pageBlocks, setPageBlocks] = useState<PageBlock[]>([]);
-  const [theme, setTheme] = useState<Theme>({
-    primary_color: '#C86E52',
-    title_color: '#8E3D2C',
-    caption_color: '#5F4A41',
-    divider_color: '#8E3D2C',
-    divider_enabled: true,
-    divider_style: 'dot',
-    background_overlay_opacity: 50,
-    background_color: '#FAF4EF',
-    font_title: 'Cormorant Garamond',
-    font_body: 'Inter',
-    header: {
-      enabled: true,
-      brandText: 'LUMIÊ',
-      backgroundColor: '#0B0B0B',
-      textColor: '#FFFFFF',
-      showMeuSite: true,
-      showGifts: true,
-      showRsvp: true,
-      showMap: true,
-      menuMeuSite: 'Meu Site',
-      menuGifts: 'Lista de Presentes',
-      menuRsvp: 'Confirmar Presença',
-      menuMap: 'Como Chegar',
-      menuMeuSiteUrl: '',
-      menuGiftsUrl: '',
-      menuRsvpUrl: '',
-      menuMapUrl: '',
-    },
-  });
+  const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
   const [selectedBlock, setSelectedBlock] = useState<PageBlock | null>(null);
   const [mobileDrawer, setMobileDrawer] = useState<'controls' | 'selected' | null>(null);
   const [listGifts, setListGifts] = useState<any[]>([]);
@@ -143,6 +172,53 @@ export default function PageBuilder() {
   const [uploadingThemeBg, setUploadingThemeBg] = useState(false);
   const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(EDITOR_CACHE_KEY);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw) as EditorCachePayload;
+      const cachedBlocks = sanitizeBlocks(Array.isArray(parsed?.pageBlocks) ? parsed.pageBlocks : []);
+      if (cachedBlocks.length > 0) {
+        setPageBlocks(cachedBlocks);
+      }
+      if (parsed?.theme) {
+        setTheme(mergeThemeWithDefaults(parsed.theme));
+      }
+      if (Array.isArray(parsed?.listGifts)) {
+        setListGifts(parsed.listGifts);
+      }
+      if (parsed?.giftList) {
+        setGiftList((prev: any) => ({ ...(prev ?? {}), ...parsed.giftList }));
+      }
+      setHydratedFromCache(true);
+    } catch {
+      // ignore invalid cache payload
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!giftList && pageBlocks.length === 0 && listGifts.length === 0) return;
+    const payload: EditorCachePayload = {
+      cachedAt: new Date().toISOString(),
+      giftList: giftList
+        ? {
+            id: giftList.id,
+            slug: giftList.slug,
+            title: giftList.title,
+            isPublished: giftList.isPublished,
+          }
+        : null,
+      pageBlocks,
+      theme,
+      listGifts,
+    };
+    try {
+      window.localStorage.setItem(EDITOR_CACHE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore storage quota errors
+    }
+  }, [giftList, listGifts, pageBlocks, theme]);
 
   const siteHref = useMemo(() => {
     if (!giftList?.slug) return '/site';
@@ -154,7 +230,9 @@ export default function PageBuilder() {
 
     async function boot() {
       try {
-        setLoading(true);
+        if (!hydratedFromCache) {
+          setLoading(true);
+        }
 
         const glRes = await fetch('/api/gift-lists/my-list?view=editor', { cache: 'no-store' });
         const gl = await glRes.json();
@@ -166,18 +244,26 @@ export default function PageBuilder() {
         if (cancelled) return;
         const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
         setPageBlocks(cleanBlocks);
-        setTheme((layout?.theme ?? {}) as Theme);
-        const giftsRes = await fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' });
-        const giftsJson = giftsRes.ok ? await giftsRes.json().catch(() => []) : [];
-        const currentGifts = Array.isArray(giftsJson) ? giftsJson : [];
-        if (!cancelled) {
-          setListGifts(currentGifts.map(mapGift));
-        }
+        setTheme(mergeThemeWithDefaults((layout?.theme ?? {}) as Theme));
         setLoading(false);
+
+        const giftsPromise = fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' })
+          .then(async (giftsRes) => (giftsRes.ok ? await giftsRes.json().catch(() => []) : []))
+          .then((giftsJson) => (Array.isArray(giftsJson) ? giftsJson : []))
+          .catch(() => []);
+
+        let currentGifts = listGifts;
+        giftsPromise.then((freshGifts: any[]) => {
+          if (cancelled) return;
+          currentGifts = freshGifts;
+          setListGifts(freshGifts.map(mapGift));
+        });
 
         if (templateSlugParam) {
           void (async () => {
             try {
+              const freshGifts = await giftsPromise;
+              currentGifts = Array.isArray(freshGifts) ? freshGifts : currentGifts;
               const templateRes = await fetch(`/api/templates/by-slug/${encodeURIComponent(templateSlugParam)}`, {
                 cache: 'no-store',
               });
@@ -205,7 +291,7 @@ export default function PageBuilder() {
 
                 if (!cancelled) {
                   setPageBlocks(nextBlocks);
-                  setTheme(nextTheme);
+                  setTheme(mergeThemeWithDefaults(nextTheme));
                 }
                 await saveLayout(nextBlocks, nextTheme);
 
@@ -248,7 +334,7 @@ export default function PageBuilder() {
         }
 
         if (Array.isArray(layout?.blocks) && cleanBlocks.length !== layout.blocks.length) {
-          void saveLayout(cleanBlocks, (layout?.theme ?? {}) as Theme).catch((error) => {
+          void saveLayout(cleanBlocks, mergeThemeWithDefaults((layout?.theme ?? {}) as Theme)).catch((error) => {
             console.error('Erro ao limpar bloco "map" legado', error);
           });
         }
@@ -263,7 +349,7 @@ export default function PageBuilder() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hydratedFromCache]);
 
   useEffect(() => {
     if (!selectedBlock && mobileDrawer === 'selected') {
@@ -423,8 +509,6 @@ export default function PageBuilder() {
       alert('Link copiado.');
   };
 
-  if (loading) return <div className="p-4 md:p-6">Carregando editor...</div>;
-
   const published = Boolean(giftList?.isPublished);
 
   return (
@@ -436,6 +520,11 @@ export default function PageBuilder() {
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
               {published ? 'Publicada' : 'Rascunho'}
             </span>
+            {loading ? (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#f6ecdf] text-[#8e3d2c]">
+                Sincronizando...
+              </span>
+            ) : null}
           </div>
 
           <div className="hidden md:flex items-center gap-2">
