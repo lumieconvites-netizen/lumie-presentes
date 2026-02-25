@@ -342,12 +342,13 @@ export async function updateRecipientDefaultBankAccount(params: {
     default_bank_account: defaultBankAccount,
   });
 
-  // Core v5: atualizacao recomendada no proprio recurso de recipient.
+  // Core v5: tenta atualizar no proprio recurso do recebedor.
   try {
-    return await pagarmeFetch<any>(`/recipients/${params.recipientId}`, {
-      method: "PATCH",
-      body: recipientPatchBody,
-    });
+    return await pagarmeFetchWithMethodFallback<any>(
+      `/recipients/${params.recipientId}`,
+      recipientPatchBody,
+      ["PATCH", "PUT"]
+    );
   } catch (error) {
     if (!isRecoverablePagarmeRouteError(error)) {
       throw error;
@@ -358,12 +359,11 @@ export async function updateRecipientDefaultBankAccount(params: {
   const wrappedBankAccountBody = JSON.stringify({
     bank_account: defaultBankAccount,
   });
+  const wrappedBankaccountBody = JSON.stringify({
+    bankaccount: defaultBankAccount,
+  });
   const wrappedDefaultBankAccountBody = JSON.stringify({
     default_bank_account: defaultBankAccount,
-  });
-  const wrappedTransferBody = JSON.stringify({
-    payment_mode: "bank_transfer",
-    bank_account: defaultBankAccount,
   });
 
   const fallbackRoutes = [
@@ -375,8 +375,8 @@ export async function updateRecipientDefaultBankAccount(params: {
   const fallbackBodies = [
     directBody,
     wrappedBankAccountBody,
+    wrappedBankaccountBody,
     wrappedDefaultBankAccountBody,
-    wrappedTransferBody,
   ];
 
   for (const route of fallbackRoutes) {
