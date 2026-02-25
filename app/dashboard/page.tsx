@@ -29,7 +29,6 @@ type DashboardSummary = {
   totalGifts: number;
   activeGifts: number;
   pendingOrdersCount: number;
-  pendingCardOrdersCount?: number;
   recentPayments: Array<{
     id: string;
     guestName: string;
@@ -118,8 +117,6 @@ export default function DashboardPage() {
   const summary = data?.summary;
   const totalGifts = Number(summary?.totalGifts ?? 0);
   const activeGifts = Number(summary?.activeGifts ?? 0);
-  const pendingOrdersCount = Number(summary?.pendingOrdersCount ?? 0);
-  const pendingCardOrdersCount = Number(summary?.pendingCardOrdersCount ?? pendingOrdersCount);
   const recentPayments = summary?.recentPayments ?? [];
   const recentMessages = summary?.recentMessages ?? [];
   const availableNow = Math.max(0, Number(financial?.available ?? 0)) / 100;
@@ -246,7 +243,6 @@ export default function DashboardPage() {
               {waitingFunds.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
             <p className="text-xs text-gray-500 mt-1">Em processamento (cartão)</p>
-            <p className="text-xs text-gray-500">{pendingCardOrdersCount} pedido(s) em status pendente</p>
           </CardContent>
         </Card>
 
