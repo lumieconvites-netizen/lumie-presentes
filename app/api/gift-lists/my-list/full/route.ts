@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
 import { getActingUserContext } from "@/lib/acting-user";
 import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
+import { reconcilePendingOrdersForGiftList } from "@/lib/order-status-reconciliation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,17 @@ export async function GET(req: Request) {
 
     const primaryGiftListId = await getPrimaryGiftListIdForUser(ctx.effectiveUserId);
     if (!primaryGiftListId) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
+
+    // Mantem dashboard/recados/pagamentos alinhados quando webhook atrasar ou falhar.
+    try {
+      await reconcilePendingOrdersForGiftList(primaryGiftListId, {
+        throttleKey: `my-list-full:${primaryGiftListId}`,
+        minIntervalMs: 15_000,
+        take: 30,
+      });
+    } catch (error) {
+      console.error("Falha ao reconciliar pedidos pendentes em my-list/full:", error);
+    }
 
     if (view === "dashboard") {
       const giftList = await prisma.giftList.findUnique({
