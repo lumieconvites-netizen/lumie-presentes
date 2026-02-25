@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { getActingUserContext } from '@/lib/acting-user';
 import { getLegacyStorageRejectMessage, isLegacySupabaseStorageUrl } from '@/lib/storage-url';
+import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
 
 const giftSchema = z.object({
   name: z.string().min(1, 'Nome e obrigatorio'),
@@ -35,6 +36,17 @@ export async function GET(request: Request) {
 
     if (!giftList) {
       return NextResponse.json({ error: 'Lista nao encontrada' }, { status: 404 });
+    }
+
+    // Mantem o estoque do painel atualizado mesmo quando webhook atrasar/falhar.
+    try {
+      await reconcilePendingOrdersForGiftList(giftListId, {
+        throttleKey: `gifts-route:${giftListId}`,
+        minIntervalMs: 15_000,
+        take: 30,
+      });
+    } catch (error) {
+      console.error('Falha ao reconciliar pedidos pendentes em /api/gifts:', error);
     }
 
     const gifts = await prisma.giftItem.findMany({
