@@ -9,6 +9,31 @@ type ReconcileCandidate = {
   pagarmeOrderId: string;
 };
 
+type ReconcileOptions = {
+  take?: number;
+  minIntervalMs?: number;
+  throttleKey?: string;
+};
+
+const processState = globalThis as typeof globalThis & {
+  __lumieReconcileLastRunAt?: Map<string, number>;
+  __lumieReconcileInFlight?: Map<string, Promise<boolean>>;
+};
+
+function getLastRunMap() {
+  if (!processState.__lumieReconcileLastRunAt) {
+    processState.__lumieReconcileLastRunAt = new Map<string, number>();
+  }
+  return processState.__lumieReconcileLastRunAt;
+}
+
+function getInFlightMap() {
+  if (!processState.__lumieReconcileInFlight) {
+    processState.__lumieReconcileInFlight = new Map<string, Promise<boolean>>();
+  }
+  return processState.__lumieReconcileInFlight;
+}
+
 function toOrderStatus(status: string) {
   if (status === "paid" || status === "authorized") return "PAID" as const;
   if (status === "refunded") return "REFUNDED" as const;
@@ -105,48 +130,75 @@ async function reconcileSingleOrder(order: ReconcileCandidate) {
   return false;
 }
 
-export async function reconcilePendingOrdersForGiftList(giftListId: string) {
+export async function reconcilePendingOrdersForGiftList(giftListId: string, options?: ReconcileOptions) {
   if (!process.env.PAGARME_SECRET_KEY) return false;
 
-  const lookbackDate = new Date(Date.now() - 72 * 60 * 60 * 1000);
-  const pendingOrders = await prisma.order.findMany({
-    where: {
-      giftListId,
-      status: { in: ["PENDING", "AUTHORIZED"] },
-      paymentMethod: "pix",
-      pagarmeOrderId: { not: null },
-      createdAt: { gte: lookbackDate },
-    },
-    select: {
-      id: true,
-      status: true,
-      giftItemId: true,
-      quantity: true,
-      pagarmeOrderId: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: 30,
-  });
+  const throttleKey = options?.throttleKey || giftListId;
+  const minIntervalMs = Math.max(0, Number(options?.minIntervalMs ?? 0));
+  const now = Date.now();
+  const lastRunMap = getLastRunMap();
+  const inFlightMap = getInFlightMap();
 
-  let changed = false;
-  for (const pendingOrder of pendingOrders) {
-    try {
-      const updated = await reconcileSingleOrder({
-        id: pendingOrder.id,
-        status: pendingOrder.status as "PENDING" | "AUTHORIZED",
-        giftItemId: pendingOrder.giftItemId,
-        quantity: pendingOrder.quantity,
-        pagarmeOrderId: String(pendingOrder.pagarmeOrderId),
-      });
-      changed = changed || updated;
-    } catch (error) {
-      console.error("Falha ao reconciliar pedido PIX", {
-        localOrderId: pendingOrder.id,
-        pagarmeOrderId: pendingOrder.pagarmeOrderId,
-        error,
-      });
-    }
+  const currentInFlight = inFlightMap.get(throttleKey);
+  if (currentInFlight) {
+    return currentInFlight;
   }
 
-  return changed;
+  const lastRunAt = lastRunMap.get(throttleKey) ?? 0;
+  if (minIntervalMs > 0 && now - lastRunAt < minIntervalMs) {
+    return false;
+  }
+
+  const task = (async () => {
+    lastRunMap.set(throttleKey, Date.now());
+
+    const lookbackDate = new Date(Date.now() - 72 * 60 * 60 * 1000);
+    const pendingOrders = await prisma.order.findMany({
+      where: {
+        giftListId,
+        status: { in: ["PENDING", "AUTHORIZED"] },
+        paymentMethod: "pix",
+        pagarmeOrderId: { not: null },
+        createdAt: { gte: lookbackDate },
+      },
+      select: {
+        id: true,
+        status: true,
+        giftItemId: true,
+        quantity: true,
+        pagarmeOrderId: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: Math.max(1, Math.min(Number(options?.take ?? 30), 100)),
+    });
+
+    let changed = false;
+    for (const pendingOrder of pendingOrders) {
+      try {
+        const updated = await reconcileSingleOrder({
+          id: pendingOrder.id,
+          status: pendingOrder.status as "PENDING" | "AUTHORIZED",
+          giftItemId: pendingOrder.giftItemId,
+          quantity: pendingOrder.quantity,
+          pagarmeOrderId: String(pendingOrder.pagarmeOrderId),
+        });
+        changed = changed || updated;
+      } catch (error) {
+        console.error("Falha ao reconciliar pedido PIX", {
+          localOrderId: pendingOrder.id,
+          pagarmeOrderId: pendingOrder.pagarmeOrderId,
+          error,
+        });
+      }
+    }
+
+    return changed;
+  })();
+
+  inFlightMap.set(throttleKey, task);
+  try {
+    return await task;
+  } finally {
+    inFlightMap.delete(throttleKey);
+  }
 }

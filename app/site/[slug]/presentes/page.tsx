@@ -49,7 +49,11 @@ export default async function SiteGiftsBySlugPage({
 
   if (!list || !list.isPublished) return notFound();
 
-  await reconcilePendingOrdersForGiftList(list.id);
+  await reconcilePendingOrdersForGiftList(list.id, {
+    throttleKey: `public-gifts:${list.id}`,
+    minIntervalMs: 120000,
+    take: 12,
+  });
 
   const gifts = await prisma.giftItem.findMany({
     where: { giftListId: list.id, isActive: true },
