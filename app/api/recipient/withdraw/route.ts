@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getRecipientBalanceSummary } from "@/lib/pagarme";
-import { createRecipientTransferWithGateway } from "@/lib/withdraw-gateway";
+import {
+  createRecipientTransferWithGateway,
+  getRecipientFinancialSummaryWithGateway,
+} from "@/lib/withdraw-gateway";
 import { getActingUserContext } from "@/lib/acting-user";
 
 const WITHDRAW_FEE_CENTS = 367;
@@ -41,9 +43,9 @@ export async function POST() {
       );
     }
 
-    const { available: availableBalance, waitingFunds } = await getRecipientBalanceSummary(
-      recipient.pagarmeRecipientId
-    );
+    const summary = await getRecipientFinancialSummaryWithGateway(recipient.pagarmeRecipientId);
+    const availableBalance = Number(summary.available ?? 0);
+    const waitingFunds = Number(summary.waitingFunds ?? 0);
 
     if (!Number.isFinite(availableBalance) || availableBalance <= 0) {
       if (waitingFunds > 0) {
