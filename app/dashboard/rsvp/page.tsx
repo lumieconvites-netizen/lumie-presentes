@@ -47,7 +47,7 @@ export default function DashboardRsvpPage() {
   useEffect(() => {
     const timer = window.setInterval(() => {
       load({ silent: true });
-    }, 5000);
+    }, 12000);
     return () => window.clearInterval(timer);
   }, []);
 

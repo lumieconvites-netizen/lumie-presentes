@@ -35,6 +35,19 @@ async function getRsvpMetrics(giftListId: string) {
   };
 }
 
+async function getCheckInMetrics(giftListId: string) {
+  const [expected, checkedIn] = await Promise.all([
+    prisma.rsvpGuest.count({ where: { giftListId, status: "CONFIRMED" } }),
+    prisma.rsvpGuest.count({ where: { giftListId, checkedInAt: { not: null } } }),
+  ]);
+
+  return {
+    expected,
+    checkedIn,
+    remaining: Math.max(expected - checkedIn, 0),
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const ctx = await getActingUserContext();
@@ -96,6 +109,54 @@ export async function GET(request: Request) {
     }
 
     if (resolvedView === "checkin") {
+      const includeGuests = parsedUrl.searchParams.get("includeGuests") === "1";
+      const [settings, metrics, guests] = await Promise.all([
+        prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
+        getCheckInMetrics(giftList.id),
+        includeGuests
+          ? prisma.rsvpGuest.findMany({
+              where: { giftListId: giftList.id },
+              orderBy: [{ createdAt: "desc" }],
+              select: {
+                id: true,
+                fullName: true,
+                status: true,
+                checkedInAt: true,
+                confirmedAdults: true,
+                confirmedChildren: true,
+                checkInCode: true,
+              },
+            })
+          : Promise.resolve([]),
+      ]);
+      const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
+
+      return NextResponse.json({
+        list: giftList,
+        publicBaseUrl: getPublicBaseUrl(),
+        publicRsvpUrl: `${getPublicBaseUrl()}/site/${encodeURIComponent(giftList.slug)}/confirmar-presenca`,
+        publicCheckInUrl: getPublicCheckInUrl(resolvedCheckInSlug),
+        settings: settings
+          ? { ...settings, checkInSlug: settings.checkInSlug || resolvedCheckInSlug }
+          : {
+              enabled: false,
+              notificationEmail: ctx.effectiveUser.email ?? null,
+              eventTitle: giftList.title,
+              eventDateLabel: null,
+              eventLocation: null,
+              coverImageUrl: null,
+              publicTitle: "Confirmar Presenca",
+              publicDescription: "Confirme sua presenca no evento.",
+              searchPlaceholder: "Digite seu nome completo",
+              checkInEnabled: true,
+              checkInSlug: resolvedCheckInSlug,
+            },
+        metrics,
+        guests,
+      });
+    }
+
+    if (resolvedView === "config") {
       const [settings, guests] = await Promise.all([
         prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
         prisma.rsvpGuest.findMany({
@@ -104,14 +165,21 @@ export async function GET(request: Request) {
           select: {
             id: true,
             fullName: true,
-            status: true,
-            checkedInAt: true,
+            notes: true,
+            adultLimit: true,
+            childLimit: true,
             confirmedAdults: true,
             confirmedChildren: true,
+            status: true,
+            qrToken: true,
+            confirmedAt: true,
+            checkedInAt: true,
             checkInCode: true,
+            createdAt: true,
           },
         }),
       ]);
+
       const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
 
       return NextResponse.json({
@@ -143,6 +211,21 @@ export async function GET(request: Request) {
       prisma.rsvpGuest.findMany({
         where: { giftListId: giftList.id },
         orderBy: [{ createdAt: "desc" }],
+        select: {
+          id: true,
+          fullName: true,
+          notes: true,
+          adultLimit: true,
+          childLimit: true,
+          confirmedAdults: true,
+          confirmedChildren: true,
+          status: true,
+          qrToken: true,
+          confirmedAt: true,
+          checkedInAt: true,
+          checkInCode: true,
+          createdAt: true,
+        },
       }),
       getRsvpMetrics(giftList.id),
     ]);

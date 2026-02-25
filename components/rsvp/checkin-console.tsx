@@ -21,8 +21,12 @@ type Guest = {
 
 type OverviewResponse = {
   list: { id: string; slug: string; title: string };
-  guests: Guest[];
   settings: { checkInEnabled: boolean };
+  metrics?: {
+    expected: number;
+    checkedIn: number;
+    remaining: number;
+  };
   publicRsvpUrl?: string;
 };
 
@@ -40,7 +44,9 @@ export function CheckInConsole({
   autoRefreshMs = 5000,
 }: CheckInConsoleProps) {
   const [data, setData] = useState<OverviewResponse | null>(null);
+  const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [guestsLoading, setGuestsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'scanner' | 'lista'>('scanner');
   const [manualCode, setManualCode] = useState('');
   const [search, setSearch] = useState('');
@@ -68,14 +74,22 @@ export function CheckInConsole({
   }, []);
 
   const load = useCallback(
-    async (options?: { silent?: boolean }) => {
+    async (options?: { silent?: boolean; includeGuests?: boolean }) => {
       const silent = options?.silent === true;
+      const includeGuests = options?.includeGuests === true;
       if (!silent) setLoading(true);
 
       try {
-        const res = await fetch(overviewUrl, { cache: 'no-store' });
+        const url = new URL(overviewUrl, window.location.origin);
+        if (includeGuests) {
+          url.searchParams.set('includeGuests', '1');
+        }
+        const res = await fetch(url.toString(), { cache: 'no-store' });
         const json = await res.json();
         if (!res.ok) throw new Error(json?.error || 'Erro ao carregar check-in');
+        if (Array.isArray(json?.guests)) {
+          setGuests(json.guests);
+        }
         setData(json);
       } catch (error: any) {
         pushFeedback({ type: 'error', text: error?.message || 'Erro ao carregar check-in.' });
@@ -94,11 +108,11 @@ export function CheckInConsole({
     if (!autoRefreshMs || autoRefreshMs < 1000) return;
 
     const timer = window.setInterval(() => {
-      load({ silent: true });
+      load({ silent: true, includeGuests: activeTab === 'lista' });
     }, autoRefreshMs);
 
     return () => window.clearInterval(timer);
-  }, [autoRefreshMs, load]);
+  }, [activeTab, autoRefreshMs, load]);
 
   const stopScanner = useCallback(() => {
     scannerActiveRef.current = false;
@@ -161,14 +175,14 @@ export function CheckInConsole({
           pushFeedback({ type: 'ok', text: `Check-in confirmado: ${json.guest?.fullName || 'Convidado'}.` });
         }
 
-        await load({ silent: true });
+        await load({ silent: true, includeGuests: activeTab === 'lista' });
       } catch (error: any) {
         pushFeedback({ type: 'error', text: error?.message || 'Falha no check-in.' });
       } finally {
         setProcessing(false);
       }
     },
-    [load, processing, pushFeedback, scanUrl]
+    [activeTab, load, processing, pushFeedback, scanUrl]
   );
 
   const scanLoopBarcodeDetector = useCallback(async () => {
@@ -178,7 +192,7 @@ export function CheckInConsole({
 
     try {
       const now = Date.now();
-      if (now - lastReadAtRef.current > 1000) {
+      if (now - lastReadAtRef.current > 300) {
         const codes = await detector.detect(video);
         const rawValue = codes?.[0]?.rawValue;
         if (rawValue) {
@@ -202,10 +216,10 @@ export function CheckInConsole({
 
     try {
       const now = Date.now();
-      if (now - lastReadAtRef.current > 350 && video.videoWidth > 0 && video.videoHeight > 0) {
+      if (now - lastReadAtRef.current > 180 && video.videoWidth > 0 && video.videoHeight > 0) {
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (ctx) {
-          const maxDimension = 960;
+          const maxDimension = 1280;
           const scale = Math.min(1, maxDimension / Math.max(video.videoWidth, video.videoHeight));
           canvas.width = Math.max(1, Math.floor(video.videoWidth * scale));
           canvas.height = Math.max(1, Math.floor(video.videoHeight * scale));
@@ -239,6 +253,8 @@ export function CheckInConsole({
           facingMode: { ideal: 'environment' },
           width: { ideal: 1280 },
           height: { ideal: 720 },
+          // Some devices focus better when this hint is available.
+          advanced: [{ focusMode: 'continuous' } as any],
         },
         audio: false,
       });
@@ -272,6 +288,15 @@ export function CheckInConsole({
   }, [activeTab, data?.settings.checkInEnabled, scannerActive, scannerSupported, startScanner]);
 
   useEffect(() => {
+    if (activeTab !== 'lista') return;
+    if (guests.length > 0) return;
+    setGuestsLoading(true);
+    load({ includeGuests: true, silent: true }).finally(() => {
+      setGuestsLoading(false);
+    });
+  }, [activeTab, guests.length, load]);
+
+  useEffect(() => {
     if (!scannerActive) return;
 
     const watcher = window.setInterval(() => {
@@ -294,21 +319,22 @@ export function CheckInConsole({
   }, [activeTab, data?.settings.checkInEnabled, scannerActive, startScanner, stopScanner]);
 
   const stats = useMemo(() => {
-    const guests = data?.guests || [];
+    if (data?.metrics) {
+      return data.metrics;
+    }
     const expected = guests.filter((g) => g.status === 'CONFIRMED').length;
     const checkedIn = guests.filter((g) => !!g.checkedInAt).length;
     const remaining = Math.max(expected - checkedIn, 0);
     return { expected, checkedIn, remaining };
-  }, [data?.guests]);
+  }, [data?.metrics, guests]);
 
   const filteredGuests = useMemo(() => {
-    const guests = data?.guests || [];
     const query = search.trim().toLowerCase();
     if (!query) return guests;
     return guests.filter(
       (g) => g.fullName.toLowerCase().includes(query) || (g.checkInCode || '').toLowerCase().includes(query)
     );
-  }, [data?.guests, search]);
+  }, [guests, search]);
 
   if (loading) {
     return <div className="p-4 md:p-6">Carregando check-in...</div>;
@@ -343,7 +369,11 @@ export function CheckInConsole({
               </Button>
             ) : null}
 
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => load()}>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => load({ includeGuests: activeTab === 'lista' })}
+            >
               <RefreshCw className="w-4 h-4 mr-2" />
               Atualizar
             </Button>
@@ -489,6 +519,7 @@ export function CheckInConsole({
             </div>
           ) : (
             <div className="space-y-3">
+              {guestsLoading ? <p className="text-sm text-gray-500">Carregando lista...</p> : null}
               <Input
                 placeholder="Buscar por nome ou código de check-in"
                 value={search}

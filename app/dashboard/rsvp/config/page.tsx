@@ -234,7 +234,7 @@ export default function RsvpConfigPage() {
   async function loadOverview() {
     setLoading(true);
     try {
-      const res = await fetch('/api/rsvp/overview', { cache: 'no-store' });
+      const res = await fetch('/api/rsvp/overview?view=config', { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || 'Erro ao carregar RSVP');
       setData(json);

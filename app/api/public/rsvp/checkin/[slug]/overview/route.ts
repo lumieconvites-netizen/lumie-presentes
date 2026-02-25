@@ -6,7 +6,20 @@ import { getPublicBaseUrl } from '@/lib/rsvp';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(_req: Request, { params }: { params: { slug: string } }) {
+async function getCheckInMetrics(giftListId: string) {
+  const [expected, checkedIn] = await Promise.all([
+    prisma.rsvpGuest.count({ where: { giftListId, status: 'CONFIRMED' } }),
+    prisma.rsvpGuest.count({ where: { giftListId, checkedInAt: { not: null } } }),
+  ]);
+
+  return {
+    expected,
+    checkedIn,
+    remaining: Math.max(expected - checkedIn, 0),
+  };
+}
+
+export async function GET(req: Request, { params }: { params: { slug: string } }) {
   try {
     const giftList = await findGiftListByCheckInSlug(params.slug);
 
@@ -18,19 +31,26 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
       return NextResponse.json({ error: 'Check-in nao esta disponivel para este evento' }, { status: 403 });
     }
 
-    const guests = await prisma.rsvpGuest.findMany({
-      where: { giftListId: giftList.id },
-      orderBy: [{ createdAt: 'desc' }],
-      select: {
-        id: true,
-        fullName: true,
-        status: true,
-        checkedInAt: true,
-        confirmedAdults: true,
-        confirmedChildren: true,
-        checkInCode: true,
-      },
-    });
+    const parsedUrl = new URL(req.url);
+    const includeGuests = parsedUrl.searchParams.get('includeGuests') === '1';
+    const [metrics, guests] = await Promise.all([
+      getCheckInMetrics(giftList.id),
+      includeGuests
+        ? prisma.rsvpGuest.findMany({
+            where: { giftListId: giftList.id },
+            orderBy: [{ createdAt: 'desc' }],
+            select: {
+              id: true,
+              fullName: true,
+              status: true,
+              checkedInAt: true,
+              confirmedAdults: true,
+              confirmedChildren: true,
+              checkInCode: true,
+            },
+          })
+        : Promise.resolve([]),
+    ]);
 
     return NextResponse.json({
       list: {
@@ -42,6 +62,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
         checkInEnabled: true,
       },
       publicRsvpUrl: `${getPublicBaseUrl()}/site/${encodeURIComponent(giftList.slug)}/confirmar-presenca`,
+      metrics,
       guests,
     });
   } catch (error) {

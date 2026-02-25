@@ -11,7 +11,7 @@ export default function PublicCheckInPage({ params }: { params: { slug: string }
       overviewUrl={`/api/public/rsvp/checkin/${slug}/overview`}
       scanUrl={`/api/public/rsvp/checkin/${slug}/scan`}
       mode="public"
-      autoRefreshMs={5000}
+      autoRefreshMs={8000}
     />
   );
 }

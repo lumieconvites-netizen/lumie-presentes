@@ -45,21 +45,45 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    const q = (searchParams.get("q") || "").trim().toLowerCase();
+    const q = (searchParams.get("q") || "").trim();
+    const normalizedQ = normalizeGuestName(q);
     const status = searchParams.get("status") as "PENDING" | "CONFIRMED" | "DECLINED" | null;
 
     const guests = await prisma.rsvpGuest.findMany({
       where: {
         giftListId,
         ...(status ? { status } : {}),
+        ...(normalizedQ
+          ? {
+              fullName: {
+                contains: q,
+                mode: "insensitive",
+              },
+            }
+          : {}),
       },
-      orderBy: [{ fullName: "asc" }],
+      orderBy: [{ createdAt: "desc" }],
+      select: {
+        id: true,
+        fullName: true,
+        notes: true,
+        adultLimit: true,
+        childLimit: true,
+        confirmedAdults: true,
+        confirmedChildren: true,
+        status: true,
+        qrToken: true,
+        confirmedAt: true,
+        checkedInAt: true,
+        checkInCode: true,
+        createdAt: true,
+      },
     });
 
-    const filtered = q
+    const filtered = normalizedQ
       ? guests.filter((guest) => {
-          const target = `${guest.fullName}`.toLowerCase();
-          return target.includes(q);
+          const target = normalizeGuestName(guest.fullName);
+          return target.includes(normalizedQ);
         })
       : guests;
 
