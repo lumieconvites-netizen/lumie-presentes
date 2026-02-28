@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { PageBlock } from '@/contexts/user-context';
@@ -120,6 +120,19 @@ function mergeThemeWithDefaults(input?: Theme | null): Theme {
   };
 }
 
+function hasMeaningfulBlocks(blocks: PageBlock[] = []) {
+  return blocks.some((block) => block.type !== 'gifts');
+}
+
+function isThemeDifferentFromDefault(input?: Theme | null) {
+  const merged = mergeThemeWithDefaults(input);
+  return JSON.stringify(merged) !== JSON.stringify(DEFAULT_THEME);
+}
+
+function hasDraftContent(blocks: PageBlock[] = [], theme?: Theme | null) {
+  return hasMeaningfulBlocks(blocks) || isThemeDifferentFromDefault(theme);
+}
+
 function sanitizeBlocks(blocks: PageBlock[] = []) {
   const cleaned = blocks
     .filter((block) => block.type !== 'map')
@@ -160,6 +173,7 @@ export default function PageBuilder() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateSlugParam = searchParams.get('template') || '';
+  const cacheRef = useRef<EditorCachePayload | null>(null);
   const [giftList, setGiftList] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [hydratedFromCache, setHydratedFromCache] = useState(false);
@@ -169,6 +183,7 @@ export default function PageBuilder() {
   const [mobileDrawer, setMobileDrawer] = useState<'controls' | 'selected' | null>(null);
   const [listGifts, setListGifts] = useState<any[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [uploadingThemeBg, setUploadingThemeBg] = useState(false);
   const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
@@ -178,6 +193,7 @@ export default function PageBuilder() {
       if (!raw) return;
 
       const parsed = JSON.parse(raw) as EditorCachePayload;
+      cacheRef.current = parsed;
       const cachedBlocks = sanitizeBlocks(Array.isArray(parsed?.pageBlocks) ? parsed.pageBlocks : []);
       if (cachedBlocks.length > 0) {
         setPageBlocks(cachedBlocks);
@@ -213,6 +229,7 @@ export default function PageBuilder() {
       theme,
       listGifts,
     };
+    cacheRef.current = payload;
     try {
       window.localStorage.setItem(EDITOR_CACHE_KEY, JSON.stringify(payload));
     } catch {
@@ -240,11 +257,22 @@ export default function PageBuilder() {
         if (cancelled) return;
         setGiftList(gl);
         const layout = gl?.pageLayout ?? null;
+        const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
+        const nextTheme = mergeThemeWithDefaults((layout?.theme ?? {}) as Theme);
+        const cachedGiftListId = cacheRef.current?.giftList?.id;
+        const canUseCachedDraft =
+          !gl?.isPublished &&
+          hasDraftContent(
+            sanitizeBlocks(Array.isArray(cacheRef.current?.pageBlocks) ? cacheRef.current?.pageBlocks : []),
+            cacheRef.current?.theme
+          ) &&
+          (!cachedGiftListId || cachedGiftListId === gl.id);
 
         if (cancelled) return;
-        const cleanBlocks = sanitizeBlocks(Array.isArray(layout?.blocks) ? layout.blocks : []);
-        setPageBlocks(cleanBlocks);
-        setTheme(mergeThemeWithDefaults((layout?.theme ?? {}) as Theme));
+        if (!canUseCachedDraft) {
+          setPageBlocks(cleanBlocks);
+          setTheme(nextTheme);
+        }
         setLoading(false);
 
         const giftsPromise = fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' })
@@ -334,7 +362,7 @@ export default function PageBuilder() {
         }
 
         if (Array.isArray(layout?.blocks) && cleanBlocks.length !== layout.blocks.length) {
-          void saveLayout(cleanBlocks, mergeThemeWithDefaults((layout?.theme ?? {}) as Theme)).catch((error) => {
+          void saveLayout(cleanBlocks, nextTheme).catch((error) => {
             console.error('Erro ao limpar bloco "map" legado', error);
           });
         }
@@ -390,14 +418,40 @@ export default function PageBuilder() {
     if (!res.ok) throw new Error(data?.error ?? 'Falha ao salvar layout');
   }
 
+  async function persistDraft(
+    nextBlocks: PageBlock[],
+    nextTheme: Theme,
+    options?: { showAlert?: boolean; successMessage?: string; errorMessage?: string }
+  ) {
+    if (!giftList?.id) return;
+
+    setSaveState('saving');
+    try {
+      await saveLayout(nextBlocks, nextTheme);
+      setDirty(false);
+      setSaveState('saved');
+      if (options?.showAlert) {
+        alert(options.successMessage ?? 'Rascunho salvo.');
+      }
+    } catch (error: any) {
+      setSaveState('error');
+      if (options?.showAlert) {
+        alert(error?.message ?? options.errorMessage ?? 'Falha ao salvar rascunho');
+      }
+      throw error;
+    }
+  }
+
   const updatePageBlocks = (next: PageBlock[]) => {
     setPageBlocks(next);
     setDirty(true);
+    setSaveState('idle');
   };
 
   const updateTheme = (nextTheme: Theme) => {
     setTheme(nextTheme);
     setDirty(true);
+    setSaveState('idle');
   };
 
   const uploadThemeBackground = async (file?: File | null) => {
@@ -428,13 +482,24 @@ export default function PageBuilder() {
 
   const saveNow = async () => {
     try {
-      await saveLayout(pageBlocks, theme);
-      setDirty(false);
-      alert('Alterações salvas.');
-    } catch (error: any) {
-      alert(error?.message ?? 'Falha ao salvar alterações');
-    }
+      await persistDraft(pageBlocks, theme, {
+        showAlert: true,
+        successMessage: published ? 'Alterações salvas.' : 'Rascunho salvo.',
+        errorMessage: published ? 'Falha ao salvar alterações' : 'Falha ao salvar rascunho',
+      });
+    } catch {}
   };
+
+  useEffect(() => {
+    if (!dirty || !giftList?.id) return;
+
+    setSaveState('saving');
+    const timer = window.setTimeout(() => {
+      void persistDraft(pageBlocks, theme).catch(() => null);
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [dirty, giftList?.id, pageBlocks, theme]);
 
   const handleReorderBlocks = (newBlocks: PageBlock[]) => {
     const updated = newBlocks.map((block, index) => ({ ...block, order: index + 1 }));
@@ -482,6 +547,14 @@ export default function PageBuilder() {
   };
 
   const publishList = async () => {
+    if (dirty) {
+      try {
+        await persistDraft(pageBlocks, theme);
+      } catch {
+        return;
+      }
+    }
+
     const res = await fetch('/api/gift-lists/my-list', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -525,6 +598,27 @@ export default function PageBuilder() {
                 Sincronizando...
               </span>
             ) : null}
+            {!loading && !published ? (
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  saveState === 'error'
+                    ? 'bg-red-100 text-red-700'
+                    : saveState === 'saved'
+                      ? 'bg-green-100 text-green-700'
+                      : saveState === 'saving'
+                        ? 'bg-[#f6ecdf] text-[#8e3d2c]'
+                        : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {saveState === 'error'
+                  ? 'Falha ao salvar rascunho'
+                  : saveState === 'saved'
+                    ? 'Rascunho salvo'
+                    : saveState === 'saving'
+                      ? 'Salvando rascunho...'
+                      : 'Rascunho local'}
+              </span>
+            ) : null}
           </div>
 
           <div className="hidden md:flex items-center gap-2">
@@ -550,14 +644,20 @@ export default function PageBuilder() {
               <Button variant="outline" onClick={unpublishList} className="border-yellow-500 text-yellow-700">Despublicar</Button>
               </>
             ) : (
-              <Button onClick={publishList} className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Publicar
-              </Button>
+              <>
+                <Button variant="outline" onClick={saveNow} disabled={saveState === 'saving' || !dirty}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvar rascunho
+                </Button>
+                <Button onClick={publishList} className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Publicar
+                </Button>
+              </>
             )}
           </div>
 
-          <div className="md:hidden flex items-center gap-2">
+          <div className="md:hidden flex flex-wrap items-center gap-2">
             <Button variant="outline" className="flex-1" asChild>
               <Link href="/templates">Templates</Link>
             </Button>
@@ -569,9 +669,14 @@ export default function PageBuilder() {
                 {dirty ? 'Salvar' : 'Salvo'}
               </Button>
             ) : (
-              <Button className="flex-1 bg-gradient-to-r from-terracota-500 to-terracota-700 text-white" onClick={publishList}>
-                Publicar
-              </Button>
+              <>
+                <Button className="flex-1" variant="outline" onClick={saveNow} disabled={saveState === 'saving' || !dirty}>
+                  Salvar rascunho
+                </Button>
+                <Button className="flex-1 bg-gradient-to-r from-terracota-500 to-terracota-700 text-white" onClick={publishList}>
+                  Publicar
+                </Button>
+              </>
             )}
           </div>
           {published ? (
