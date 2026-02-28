@@ -133,6 +133,72 @@ function hasDraftContent(blocks: PageBlock[] = [], theme?: Theme | null) {
   return hasMeaningfulBlocks(blocks) || isThemeDifferentFromDefault(theme);
 }
 
+const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality?: number) =>
+  new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Falha ao processar imagem.'));
+        return;
+      }
+      resolve(blob);
+    }, type, quality);
+  });
+
+const loadImageFromFile = (file: File) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new window.Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Nao foi possivel processar a imagem.'));
+    };
+    image.src = objectUrl;
+  });
+
+async function normalizeThemeBackgroundFile(file: File, maxBytes: number) {
+  const image = await loadImageFromFile(file);
+  const sourceWidth = Math.max(1, image.naturalWidth || image.width);
+  const sourceHeight = Math.max(1, image.naturalHeight || image.height);
+  const maxDimension = 1600;
+  const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+  const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
+  const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Falha ao preparar imagem.');
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+  const qualities = [0.9, 0.84, 0.78, 0.72, 0.66, 0.6, 0.54];
+  let bestBlob: Blob | null = null;
+
+  for (const quality of qualities) {
+    const blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+    bestBlob = blob;
+    if (blob.size <= maxBytes) break;
+  }
+
+  if (!bestBlob || bestBlob.size > maxBytes) {
+    throw new Error('Nao foi possivel ajustar a imagem para o limite de upload. Tente outra imagem.');
+  }
+
+  const originalName = file.name.replace(/\.[^/.]+$/, '') || 'tema-fundo';
+  return new File([bestBlob], `${originalName}.jpg`, {
+    type: 'image/jpeg',
+    lastModified: Date.now(),
+  });
+}
+
 function sanitizeBlocks(blocks: PageBlock[] = []) {
   const cleaned = blocks
     .filter((block) => block.type !== 'map')
@@ -456,14 +522,11 @@ export default function PageBuilder() {
 
   const uploadThemeBackground = async (file?: File | null) => {
     if (!file) return;
-    if (file.size > MAX_UPLOAD_BYTES) {
-      alert('Imagem maior que 5MB. Escolha um arquivo de até 5MB.');
-      return;
-    }
     try {
       setUploadingThemeBg(true);
+      const preparedFile = await normalizeThemeBackgroundFile(file, MAX_UPLOAD_BYTES - 256 * 1024);
       const form = new FormData();
-      form.append('file', file);
+      form.append('file', preparedFile);
       form.append('folder', 'theme-background');
 
       const res = await fetch('/api/upload/avatar', { method: 'POST', body: form });
