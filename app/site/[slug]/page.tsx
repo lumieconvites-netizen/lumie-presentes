@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import SiteRenderer from "../../../components/site/SiteRenderer";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function SiteBySlugPage({
   params,
