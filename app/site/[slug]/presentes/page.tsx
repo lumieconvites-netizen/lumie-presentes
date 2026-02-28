@@ -138,14 +138,6 @@ export default async function SiteGiftsBySlugPage({
               >
                 {pageTitle}
               </h1>
-              {pageMessage ? (
-                <p
-                  className="mt-4 text-sm md:text-xl leading-relaxed"
-                  style={{ fontFamily: fontBody, color: messageColor, textShadow: heroTextShadow }}
-                >
-                  {pageMessage}
-                </p>
-              ) : null}
             </div>
           </div>
         </div>
@@ -165,7 +157,7 @@ export default async function SiteGiftsBySlugPage({
       )}
 
       <section className="max-w-6xl mx-auto px-4 py-10">
-        {!pageCoverImage && pageMessage ? (
+        {pageMessage ? (
           <p className="mb-8 max-w-3xl" style={{ fontFamily: fontBody, color: messageColor }}>
             {pageMessage}
           </p>
