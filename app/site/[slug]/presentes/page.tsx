@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
 import { buildEffectiveAvailabilityMap } from "@/lib/gift-availability";
-import { reconcilePendingOrdersForGiftList } from "@/lib/order-status-reconciliation";
 import { resolveThemeBodyFont, resolveThemeTitleFont } from "@/lib/theme-fonts";
 import GiftsFilterMenu from "@/components/public/GiftsFilterMenu";
 
@@ -44,18 +43,22 @@ export default async function SiteGiftsBySlugPage({
 
   const list = await prisma.giftList.findUnique({
     where: { slug },
-    include: {
-      pageLayout: true,
+    select: {
+      id: true,
+      slug: true,
+      isPublished: true,
+      title: true,
+      description: true,
+      feeMode: true,
+      pageLayout: {
+        select: {
+          theme: true,
+        },
+      },
     },
   });
 
   if (!list || !list.isPublished) return notFound();
-
-  await reconcilePendingOrdersForGiftList(list.id, {
-    throttleKey: `public-gifts:${list.id}`,
-    minIntervalMs: 120000,
-    take: 12,
-  });
 
   const gifts = await prisma.giftItem.findMany({
     where: { giftListId: list.id, isActive: true },
