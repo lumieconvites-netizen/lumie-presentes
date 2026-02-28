@@ -4,7 +4,12 @@ import { notFound } from "next/navigation";
 import SiteRenderer from "../../../components/site/SiteRenderer";
 
 export const runtime = "nodejs";
+export const dynamic = "force-static";
 export const revalidate = 60;
+
+export function generateStaticParams() {
+  return [];
+}
 
 export default async function SiteBySlugPage({
   params,

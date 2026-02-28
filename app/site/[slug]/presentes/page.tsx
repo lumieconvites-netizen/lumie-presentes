@@ -22,7 +22,12 @@ function calculateDisplayPrice(basePrice: number, feeMode: "PASS_TO_GUEST" | "AB
 const heroTextShadow = "0 2px 10px rgba(0,0,0,0.32)";
 
 export const runtime = "nodejs";
+export const dynamic = "force-static";
 export const revalidate = 60;
+
+export function generateStaticParams() {
+  return [];
+}
 
 export default async function SiteGiftsBySlugPage({
   params,

@@ -3,7 +3,12 @@ import { prisma } from '@/lib/prisma';
 import { ConfirmClient } from './confirm-client';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-static';
 export const revalidate = 60;
+
+export function generateStaticParams() {
+  return [];
+}
 
 export default async function ConfirmarPresencaPage({
   params,
