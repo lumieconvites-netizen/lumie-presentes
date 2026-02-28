@@ -153,6 +153,18 @@ function heroReadableTextStyle(): React.CSSProperties {
   };
 }
 
+function heroSecondaryTextStyle(point: { x: number; y: number }, color: string): React.CSSProperties {
+  return {
+    ...heroElementStyle(point),
+    ...heroReadableTextStyle(),
+    color,
+    width: 'min(88vw, 520px)',
+    maxWidth: 'calc(100% - 32px)',
+    fontSize: 'clamp(0.8rem, 1.7vw, 1.2rem)',
+    lineHeight: 1.25,
+  };
+}
+
 function renderGuestGuideIcon(iconId: string, className: string) {
   if (iconId === 'check-user') return <UserCheck className={className} />;
   if (iconId === 'clipboard') return <ClipboardCheck className={className} />;
@@ -359,8 +371,8 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                     <div className="absolute inset-0 z-10 p-6 md:p-10">
                       {config.label && (
                         <p
-                          className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
-                          style={{ ...heroElementStyle(getHeroPoint(config, 'label')), ...heroReadableTextStyle(), color: heroLabelColor }}
+                          className="opacity-90 text-center whitespace-pre-line break-words"
+                          style={heroSecondaryTextStyle(getHeroPoint(config, 'label'), heroLabelColor)}
                         >
                           {config.label}
                         </p>
@@ -373,8 +385,8 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       </h1>
                       {config.subtitle && (
                         <p
-                          className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
-                          style={{ ...heroElementStyle(getHeroPoint(config, 'subtitle')), ...heroReadableTextStyle(), color: heroSubtitleColor }}
+                          className="opacity-90 text-center whitespace-pre-line break-words"
+                          style={heroSecondaryTextStyle(getHeroPoint(config, 'subtitle'), heroSubtitleColor)}
                         >
                           {config.subtitle}
                         </p>
@@ -395,8 +407,8 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                     <div className="absolute inset-0 z-10 p-6 md:p-10">
                       {config.label && (
                         <p
-                          className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
-                          style={{ ...heroElementStyle(getHeroPoint(config, 'label')), ...heroReadableTextStyle(), color: heroLabelColor }}
+                          className="opacity-90 text-center whitespace-pre-line break-words"
+                          style={heroSecondaryTextStyle(getHeroPoint(config, 'label'), heroLabelColor)}
                         >
                           {config.label}
                         </p>
@@ -409,8 +421,8 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       </h1>
                       {config.subtitle && (
                         <p
-                          className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
-                          style={{ ...heroElementStyle(getHeroPoint(config, 'subtitle')), ...heroReadableTextStyle(), color: heroSubtitleColor }}
+                          className="opacity-90 text-center whitespace-pre-line break-words"
+                          style={heroSecondaryTextStyle(getHeroPoint(config, 'subtitle'), heroSubtitleColor)}
                         >
                           {config.subtitle}
                         </p>
