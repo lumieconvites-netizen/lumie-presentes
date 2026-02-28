@@ -67,6 +67,13 @@ function toSpotifyEmbedUrl(url: string) {
   return url.replace('open.spotify.com/', 'open.spotify.com/embed/');
 }
 
+function toSafeExternalUrl(url: string) {
+  const value = (url || '').trim();
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+}
+
 function toGoogleMapsEmbed(url: string) {
   if (!url) return '';
   if (url.includes('/maps/embed')) return url;
@@ -755,9 +762,39 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                   </h2>
                   {config.description && <p className="mb-6" style={{ color: captionColor }}>{config.description}</p>}
                   {config.spotifyUrl ? (
-                    <iframe src={toSpotifyEmbedUrl(config.spotifyUrl)} width="100%" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" className="rounded-2xl" />
+                    <>
+                      <div className="hidden md:block">
+                        <iframe src={toSpotifyEmbedUrl(config.spotifyUrl)} width="100%" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" className="rounded-2xl" />
+                      </div>
+                      <div className="md:hidden">
+                        <a
+                          href={toSafeExternalUrl(config.spotifyUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-medium text-white"
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          Abrir música
+                        </a>
+                      </div>
+                    </>
                   ) : config.youtubeUrl ? (
-                    <iframe src={toYoutubeEmbedUrl(config.youtubeUrl)} width="100%" height="360" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="rounded-2xl border border-gray-200" />
+                    <>
+                      <div className="hidden md:block">
+                        <iframe src={toYoutubeEmbedUrl(config.youtubeUrl)} width="100%" height="360" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="rounded-2xl border border-gray-200" />
+                      </div>
+                      <div className="md:hidden">
+                        <a
+                          href={toSafeExternalUrl(config.youtubeUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-medium text-white"
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          Abrir vídeo
+                        </a>
+                      </div>
+                    </>
                   ) : (
                     <div className="h-36 rounded-2xl bg-white border border-gray-200 flex items-center justify-center gap-2" style={{ color: captionColor }}>
                       <Music2 className="w-4 h-4" /> Configure Spotify ou YouTube no editor

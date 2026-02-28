@@ -733,8 +733,9 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           <div>
             <Label className="text-sm font-medium">Título</Label>
             <Input
-              value={config.title || 'Nossa História'}
+              value={config.title || ''}
               onChange={(e) => handleChange('title', e.target.value)}
+              placeholder="Ex: Nossa História"
               className="mt-2"
             />
           </div>
@@ -753,7 +754,7 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
             <Input
               value={config.signature || ''}
               onChange={(e) => handleChange('signature', e.target.value)}
-              placeholder="Ex: â€” Com amor, Maria e João"
+              placeholder="Ex: Com amor, Maria e João"
               className="mt-2"
             />
           </div>
