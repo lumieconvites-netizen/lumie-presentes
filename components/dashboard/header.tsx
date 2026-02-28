@@ -29,6 +29,7 @@ type ImpersonationData = {
 type DashboardHeaderProps = {
   limitedMode?: boolean;
   sessionUserRole?: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
+  initialSiteSlug?: string;
 };
 
 type NotificationSummary = {
@@ -43,12 +44,16 @@ type NotificationSummary = {
   }>;
 };
 
-export default function DashboardHeader({ limitedMode = false, sessionUserRole }: DashboardHeaderProps) {
+export default function DashboardHeader({
+  limitedMode = false,
+  sessionUserRole,
+  initialSiteSlug = '',
+}: DashboardHeaderProps) {
   const { user } = useUser();
   const { data: session } = useSession();
 
   const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
-  const [siteSlug, setSiteSlug] = useState('');
+  const [siteSlug, setSiteSlug] = useState(initialSiteSlug);
   const [notifications, setNotifications] = useState<NotificationSummary>({
     unreadCount: 0,
     latestEventAt: null,
@@ -98,13 +103,14 @@ export default function DashboardHeader({ limitedMode = false, sessionUserRole }
   }, [role]);
 
   useEffect(() => {
+    if (initialSiteSlug) return;
     fetch('/api/gift-lists/my-list?view=header', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data?.slug) setSiteSlug(String(data.slug));
       })
       .catch(() => null);
-  }, []);
+  }, [initialSiteSlug]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
