@@ -747,15 +747,17 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       className="rounded-2xl"
                     />
                   ) : config.youtubeUrl ? (
-                    <iframe
-                      src={toYoutubeEmbedUrl(config.youtubeUrl)}
-                      width="100%"
-                      height="360"
-                      loading="lazy"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="rounded-2xl"
-                    />
+                    <div className="aspect-video w-full overflow-hidden rounded-2xl">
+                      <iframe
+                        src={toYoutubeEmbedUrl(config.youtubeUrl)}
+                        width="100%"
+                        height="100%"
+                        loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="h-full w-full"
+                      />
+                    </div>
                   ) : (
                     <div className="h-36 rounded-2xl bg-white border border-gray-200 flex items-center justify-center gap-2" style={{ color: captionColor }}>
                       <Music2 className="w-4 h-4" /> Adicione Spotify ou YouTube
