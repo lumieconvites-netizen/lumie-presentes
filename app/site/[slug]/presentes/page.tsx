@@ -20,6 +20,8 @@ function calculateDisplayPrice(basePrice: number, feeMode: "PASS_TO_GUEST" | "AB
   return Number((basePrice * (1 + feePercentPix / 100)).toFixed(2));
 }
 
+const heroTextShadow = "0 2px 10px rgba(0,0,0,0.32)";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -110,15 +112,6 @@ export default async function SiteGiftsBySlugPage({
             : giftsWithAvailability;
   return (
     <main className="min-h-screen bg-[#faf7f5]">
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-          <Link href={`/site/${encodeURIComponent(slug)}`} aria-label="Voltar ao site" className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <span className="w-10" />
-        </div>
-      </header>
-
       {pageCoverImage ? (
         <div className="relative w-full aspect-[16/9] md:aspect-auto md:h-[78vh]">
           <Image
@@ -130,19 +123,41 @@ export default async function SiteGiftsBySlugPage({
             className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent" />
+          <Link
+            href={`/site/${encodeURIComponent(slug)}`}
+            aria-label="Voltar ao site"
+            className="absolute left-4 top-4 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/14 text-white backdrop-blur-sm transition hover:bg-white/22 md:left-6 md:top-6"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
           <div className="absolute inset-0 p-6 md:p-10 flex items-center justify-center">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-4xl mx-auto text-center">
               <h1
-                className="text-3xl md:text-5xl leading-tight text-center drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
-                style={{ fontFamily: fontTitle, color: titleColor }}
+                className="text-3xl md:text-5xl leading-tight"
+                style={{ fontFamily: fontTitle, color: titleColor, textShadow: heroTextShadow }}
               >
                 {pageTitle}
               </h1>
+              {pageMessage ? (
+                <p
+                  className="mt-4 text-sm md:text-xl leading-relaxed"
+                  style={{ fontFamily: fontBody, color: messageColor, textShadow: heroTextShadow }}
+                >
+                  {pageMessage}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
       ) : (
         <section className="max-w-6xl mx-auto px-4 pt-8">
+          <Link
+            href={`/site/${encodeURIComponent(slug)}`}
+            aria-label="Voltar ao site"
+            className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm transition hover:bg-gray-100"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
           <h1 className="text-3xl md:text-5xl leading-tight" style={{ fontFamily: fontTitle, color: titleColor }}>
             {pageTitle}
           </h1>
@@ -150,7 +165,7 @@ export default async function SiteGiftsBySlugPage({
       )}
 
       <section className="max-w-6xl mx-auto px-4 py-10">
-        {pageMessage ? (
+        {!pageCoverImage && pageMessage ? (
           <p className="mb-8 max-w-3xl" style={{ fontFamily: fontBody, color: messageColor }}>
             {pageMessage}
           </p>

@@ -147,6 +147,12 @@ function heroElementStyle(point: { x: number; y: number }): React.CSSProperties 
   };
 }
 
+function heroReadableTextStyle(): React.CSSProperties {
+  return {
+    textShadow: '0 2px 10px rgba(0,0,0,0.28)',
+  };
+}
+
 function renderGuestGuideIcon(iconId: string, className: string) {
   if (iconId === 'check-user') return <UserCheck className={className} />;
   if (iconId === 'clipboard') return <ClipboardCheck className={className} />;
@@ -354,21 +360,21 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       {config.label && (
                         <p
                           className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
-                          style={{ ...heroElementStyle(getHeroPoint(config, 'label')), color: heroLabelColor }}
+                          style={{ ...heroElementStyle(getHeroPoint(config, 'label')), ...heroReadableTextStyle(), color: heroLabelColor }}
                         >
                           {config.label}
                         </p>
                       )}
                       <h1
                         className="text-4xl md:text-7xl font-bold text-center whitespace-pre leading-[1.05] max-w-none"
-                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle, color: heroTitleColor }}
+                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), ...heroReadableTextStyle(), fontFamily: fontTitle, color: heroTitleColor }}
                       >
                         {config.title || 'Meu Evento Especial'}
                       </h1>
                       {config.subtitle && (
                         <p
                           className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
-                          style={{ ...heroElementStyle(getHeroPoint(config, 'subtitle')), color: heroSubtitleColor }}
+                          style={{ ...heroElementStyle(getHeroPoint(config, 'subtitle')), ...heroReadableTextStyle(), color: heroSubtitleColor }}
                         >
                           {config.subtitle}
                         </p>
@@ -390,21 +396,21 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       {config.label && (
                         <p
                           className="text-xs md:text-sm opacity-90 tracking-[0.3em] uppercase text-center whitespace-pre-wrap"
-                          style={{ ...heroElementStyle(getHeroPoint(config, 'label')), color: heroLabelColor }}
+                          style={{ ...heroElementStyle(getHeroPoint(config, 'label')), ...heroReadableTextStyle(), color: heroLabelColor }}
                         >
                           {config.label}
                         </p>
                       )}
                       <h1
                         className="text-4xl md:text-7xl font-bold text-center whitespace-pre leading-[1.05] max-w-none"
-                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), fontFamily: fontTitle, color: heroTitleColor }}
+                        style={{ ...heroElementStyle(getHeroPoint(config, 'title')), ...heroReadableTextStyle(), fontFamily: fontTitle, color: heroTitleColor }}
                       >
                         {config.title || 'Meu Evento Especial'}
                       </h1>
                       {config.subtitle && (
                         <p
                           className="text-lg md:text-2xl opacity-90 text-center whitespace-pre-wrap max-w-[90%] md:max-w-[75%]"
-                          style={{ ...heroElementStyle(getHeroPoint(config, 'subtitle')), color: heroSubtitleColor }}
+                          style={{ ...heroElementStyle(getHeroPoint(config, 'subtitle')), ...heroReadableTextStyle(), color: heroSubtitleColor }}
                         >
                           {config.subtitle}
                         </p>
