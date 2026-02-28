@@ -598,7 +598,7 @@ export default function PageBuilder() {
                 Sincronizando...
               </span>
             ) : null}
-            {!loading && !published ? (
+            {!loading && !published && saveState !== 'idle' ? (
               <span
                 className={`px-3 py-1 rounded-full text-xs font-medium ${
                   saveState === 'error'
@@ -616,7 +616,7 @@ export default function PageBuilder() {
                     ? 'Rascunho salvo'
                     : saveState === 'saving'
                       ? 'Salvando rascunho...'
-                      : 'Rascunho local'}
+                      : null}
               </span>
             ) : null}
           </div>
@@ -644,16 +644,10 @@ export default function PageBuilder() {
               <Button variant="outline" onClick={unpublishList} className="border-yellow-500 text-yellow-700">Despublicar</Button>
               </>
             ) : (
-              <>
-                <Button variant="outline" onClick={saveNow} disabled={saveState === 'saving' || !dirty}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Salvar rascunho
-                </Button>
-                <Button onClick={publishList} className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Publicar
-                </Button>
-              </>
+              <Button onClick={publishList} className="bg-gradient-to-r from-terracota-500 to-terracota-700 text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Publicar
+              </Button>
             )}
           </div>
 
@@ -669,14 +663,9 @@ export default function PageBuilder() {
                 {dirty ? 'Salvar' : 'Salvo'}
               </Button>
             ) : (
-              <>
-                <Button className="flex-1" variant="outline" onClick={saveNow} disabled={saveState === 'saving' || !dirty}>
-                  Salvar rascunho
-                </Button>
-                <Button className="flex-1 bg-gradient-to-r from-terracota-500 to-terracota-700 text-white" onClick={publishList}>
-                  Publicar
-                </Button>
-              </>
+              <Button className="flex-1 bg-gradient-to-r from-terracota-500 to-terracota-700 text-white" onClick={publishList}>
+                Publicar
+              </Button>
             )}
           </div>
           {published ? (
