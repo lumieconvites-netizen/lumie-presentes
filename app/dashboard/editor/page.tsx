@@ -341,17 +341,15 @@ export default function PageBuilder() {
         }
         setLoading(false);
 
-        const giftsPromise = fetch(`/api/gifts?giftListId=${encodeURIComponent(gl.id)}`, { cache: 'no-store' })
-          .then(async (giftsRes) => (giftsRes.ok ? await giftsRes.json().catch(() => []) : []))
-          .then((giftsJson) => (Array.isArray(giftsJson) ? giftsJson : []))
-          .catch(() => []);
+        const initialGifts = Array.isArray(gl?.gifts) ? gl.gifts : [];
+        const giftsPromise = Promise.resolve(initialGifts);
 
         let currentGifts = listGifts;
-        giftsPromise.then((freshGifts: any[]) => {
-          if (cancelled) return;
+        const freshGifts = await giftsPromise;
+        if (!cancelled) {
           currentGifts = freshGifts;
           setListGifts(freshGifts.map(mapGift));
-        });
+        }
 
         if (templateSlugParam) {
           void (async () => {

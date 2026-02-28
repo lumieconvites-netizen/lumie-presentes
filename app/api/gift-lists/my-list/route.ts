@@ -71,6 +71,20 @@ export async function GET(req: Request) {
               customCss: true,
             },
           },
+          gifts: {
+            orderBy: { order: "asc" },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              imageUrl: true,
+              basePrice: true,
+              totalQuantity: true,
+              availableQty: true,
+              isActive: true,
+              order: true,
+            },
+          },
         },
       });
 

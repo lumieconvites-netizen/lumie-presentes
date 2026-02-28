@@ -164,34 +164,11 @@ export default function PresentesDashboard() {
 
   const pendingChangesCount = pendingGiftChanges + (listMetaDirty ? 1 : 0);
 
-  async function loadGifts(listId: string) {
-    if (!listId) return;
-    setGiftsLoading(true);
-    try {
-      const giftsRes = await fetchWithTimeout(`/api/gifts?giftListId=${encodeURIComponent(listId)}`, { cache: 'no-store' });
-      const giftsData = await parseJsonSafe(giftsRes);
-      if (!giftsRes.ok) throw new Error(giftsData?.error ?? 'Erro ao carregar presentes');
-
-      const mapped = (Array.isArray(giftsData) ? giftsData : []).map((row: any) =>
-        toEditableGift({
-          ...row,
-          basePrice: Number(row.basePrice),
-        })
-      );
-
-      setGifts(mapped);
-      setExpandedIds([]);
-    } catch (error: any) {
-      alert(error?.message ?? 'Erro ao carregar presentes');
-    } finally {
-      setGiftsLoading(false);
-    }
-  }
-
   async function loadGiftListAndGifts() {
     setLoading(true);
+    setGiftsLoading(true);
     try {
-      const glRes = await fetchWithTimeout('/api/gift-lists/my-list?view=presentes-meta', { cache: 'no-store' });
+      const glRes = await fetchWithTimeout('/api/gift-lists/my-list?view=presentes', { cache: 'no-store' });
       const glData = await parseJsonSafe(glRes);
       if (!glRes.ok) throw new Error(glData?.error ?? 'Erro ao carregar lista');
 
@@ -234,13 +211,21 @@ export default function PresentesDashboard() {
       setInitialListPageMessageColor(messageColor);
       setListPageMessageFont(messageFont);
       setInitialListPageMessageFont(messageFont);
+      const mapped = (Array.isArray(glData?.gifts) ? glData.gifts : []).map((row: any) =>
+        toEditableGift({
+          ...row,
+          basePrice: Number(row.basePrice),
+        })
+      );
 
-      void loadGifts(glData.id);
+      setGifts(mapped);
+      setExpandedIds([]);
     } catch (error: any) {
       if (error?.name !== 'AbortError') {
         alert(error?.message ?? 'Erro ao carregar presentes');
       }
     } finally {
+      setGiftsLoading(false);
       setLoading(false);
     }
   }
