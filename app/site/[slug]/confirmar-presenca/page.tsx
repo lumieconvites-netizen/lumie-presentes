@@ -1,13 +1,14 @@
 ﻿import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ConfirmClient } from './confirm-client';
+import { getPublishedSiteStaticParams } from '@/lib/public-site-static-params';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-static';
 export const revalidate = 60;
 
-export function generateStaticParams() {
-  return [];
+export async function generateStaticParams() {
+  return getPublishedSiteStaticParams();
 }
 
 export default async function ConfirmarPresencaPage({

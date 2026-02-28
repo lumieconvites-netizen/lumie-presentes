@@ -2,13 +2,14 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import SiteRenderer from "../../../components/site/SiteRenderer";
+import { getPublishedSiteStaticParams } from "@/lib/public-site-static-params";
 
 export const runtime = "nodejs";
 export const dynamic = "force-static";
 export const revalidate = 60;
 
-export function generateStaticParams() {
-  return [];
+export async function generateStaticParams() {
+  return getPublishedSiteStaticParams();
 }
 
 export default async function SiteBySlugPage({

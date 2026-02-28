@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
 import { buildEffectiveAvailabilityMap } from "@/lib/gift-availability";
+import { getPublishedSiteStaticParams } from "@/lib/public-site-static-params";
 import { resolveThemeBodyFont, resolveThemeTitleFont } from "@/lib/theme-fonts";
 import GiftsFilterMenu from "@/components/public/GiftsFilterMenu";
 
@@ -25,8 +26,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-static";
 export const revalidate = 60;
 
-export function generateStaticParams() {
-  return [];
+export async function generateStaticParams() {
+  return getPublishedSiteStaticParams();
 }
 
 export default async function SiteGiftsBySlugPage({
