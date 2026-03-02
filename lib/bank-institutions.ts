@@ -481,6 +481,14 @@ export function normalizeBankCode(value?: string | null): string {
   return digits.padStart(3, "0").slice(-3);
 }
 
+export function normalizeRecipientTransferBankCode(value?: string | null): string {
+  const code = normalizeBankCode(value);
+  if (code === "380") {
+    return "079";
+  }
+  return code;
+}
+
 export function isSupportedBankCode(value?: string | null): boolean {
   const code = normalizeBankCode(value);
   return Boolean(code) && BANK_CODES.has(code);

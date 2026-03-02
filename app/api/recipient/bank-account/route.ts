@@ -6,7 +6,11 @@ import {
 } from "@/lib/withdraw-gateway";
 import { z } from "zod";
 import { getActingUserContext } from "@/lib/acting-user";
-import { isSupportedBankCode, normalizeBankCode } from "@/lib/bank-institutions";
+import {
+  isSupportedBankCode,
+  normalizeBankCode,
+  normalizeRecipientTransferBankCode,
+} from "@/lib/bank-institutions";
 
 const bankAccountSchema = z.object({
   holderName: z.string().min(3, "Nome do titular invalido"),
@@ -68,6 +72,10 @@ export async function PUT(request: Request) {
       ...parsed,
       bankCode: normalizedBankCode,
     };
+    const gatewayBankAccount = {
+      ...bankAccount,
+      bankCode: normalizeRecipientTransferBankCode(bankAccount.bankCode),
+    };
 
     const user = await prisma.user.findUnique({
       where: { id: ctx.effectiveUserId },
@@ -101,7 +109,7 @@ export async function PUT(request: Request) {
         if (hasRealRecipient && existingRecipient?.pagarmeRecipientId) {
           await updateRecipientDefaultBankAccountWithGateway({
             recipientId: existingRecipient.pagarmeRecipientId,
-            bankAccount,
+            bankAccount: gatewayBankAccount,
           });
           nextRecipientId = existingRecipient.pagarmeRecipientId;
           nextStatus = "active";
@@ -112,7 +120,7 @@ export async function PUT(request: Request) {
               email: user.email,
               document: ownerDocument,
             },
-            bankAccount,
+            bankAccount: gatewayBankAccount,
             metadata: {
               userId: user.id,
             },
