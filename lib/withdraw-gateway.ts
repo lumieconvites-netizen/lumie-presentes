@@ -29,6 +29,13 @@ type RecipientOwnerInput = {
   document: string;
 };
 
+type GatewayFallbackError = Error & {
+  gatewayFallback?: {
+    source: "withdraw_gateway";
+    details: string;
+  };
+};
+
 function readGatewayConfig() {
   const baseUrl = process.env.WITHDRAW_GATEWAY_URL?.trim() ?? "";
   const token = process.env.WITHDRAW_GATEWAY_TOKEN?.trim() ?? "";
@@ -161,6 +168,16 @@ async function callGateway(
   return payload;
 }
 
+function attachGatewayFallbackError(error: unknown): GatewayFallbackError {
+  const fallback = error instanceof Error ? error : new Error(String(error ?? "Erro no withdraw gateway"));
+  const details = String((error as any)?.message ?? fallback.message ?? "").trim() || "Erro no withdraw gateway";
+  (fallback as GatewayFallbackError).gatewayFallback = {
+    source: "withdraw_gateway",
+    details,
+  };
+  return fallback as GatewayFallbackError;
+}
+
 export async function getRecipientFinancialSummaryWithGateway(
   recipientId: string
 ): Promise<RecipientFinancialSummary> {
@@ -251,6 +268,13 @@ export async function createRecipientWithGateway(params: {
       return payload?.recipient ?? payload;
     } catch (error) {
       console.error("Falha ao criar recebedor via withdraw gateway. Tentando direto na Pagar.me.", error);
+      const directError = attachGatewayFallbackError(error);
+      try {
+        return await createRecipient(params);
+      } catch (fallbackError) {
+        (fallbackError as any).gatewayFallback = (directError as GatewayFallbackError).gatewayFallback;
+        throw fallbackError;
+      }
     }
   }
 
@@ -279,6 +303,13 @@ export async function updateRecipientDefaultBankAccountWithGateway(params: {
         "Falha ao atualizar conta via withdraw gateway. Tentando direto na Pagar.me.",
         error
       );
+      const directError = attachGatewayFallbackError(error);
+      try {
+        return await updateRecipientDefaultBankAccount(params);
+      } catch (fallbackError) {
+        (fallbackError as any).gatewayFallback = (directError as GatewayFallbackError).gatewayFallback;
+        throw fallbackError;
+      }
     }
   }
 

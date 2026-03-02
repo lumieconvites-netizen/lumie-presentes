@@ -43,6 +43,10 @@ function sanitizeRecipientSyncErrorDetails(input: unknown) {
   return message.length > 400 ? `${message.slice(0, 397)}...` : message;
 }
 
+function extractGatewayFallbackDetails(error: unknown) {
+  return sanitizeRecipientSyncErrorDetails((error as any)?.gatewayFallback?.details);
+}
+
 export async function GET() {
   const ctx = await getActingUserContext();
   if (!ctx) {
@@ -107,6 +111,8 @@ export async function PUT(request: Request) {
     let nextStatus = hasRealRecipient ? "active" : "pending";
     let warning: string | null = null;
     let details: string | null = null;
+    let gatewayDetails: string | null = null;
+    let fallbackDetails: string | null = null;
     let message = "Dados bancarios salvos e sincronizados com sucesso.";
 
     const ownerDocument = digitsOnly(bankAccount.holderDocument);
@@ -142,7 +148,9 @@ export async function PUT(request: Request) {
         }
       } catch (error: any) {
         console.error("Falha ao sincronizar recebedor na Pagar.me:", error);
-        details = sanitizeRecipientSyncErrorDetails(error?.message);
+        gatewayDetails = extractGatewayFallbackDetails(error);
+        fallbackDetails = sanitizeRecipientSyncErrorDetails(error?.message);
+        details = fallbackDetails || gatewayDetails;
         warning = hasRealRecipient
           ? "Conta salva, mas a atualizacao dos dados bancarios no recebedor atual da Pagar.me falhou. Nenhum novo recebedor foi criado."
           : "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
@@ -176,6 +184,8 @@ export async function PUT(request: Request) {
       message,
       warning,
       details,
+      gatewayDetails,
+      fallbackDetails,
       recipient,
     });
   } catch (error) {

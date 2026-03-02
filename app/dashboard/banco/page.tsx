@@ -87,7 +87,12 @@ export default function BancoDashboardPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Erro ao salvar");
       setStatus(data?.recipient?.status ?? "pending");
-      const feedback = [data?.warning ?? data?.message ?? "Dados bancários salvos com sucesso.", data?.details]
+      const feedback = [
+        data?.warning ?? data?.message ?? "Dados bancários salvos com sucesso.",
+        data?.gatewayDetails ? `Gateway: ${data.gatewayDetails}` : null,
+        data?.fallbackDetails ? `Fallback Pagar.me: ${data.fallbackDetails}` : null,
+        !data?.gatewayDetails && !data?.fallbackDetails ? data?.details : null,
+      ]
         .filter(Boolean)
         .join("\n\n");
       alert(feedback);
