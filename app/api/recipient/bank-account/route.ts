@@ -32,6 +32,17 @@ function isRealRecipientId(value?: string | null) {
   return !value.startsWith("pending_");
 }
 
+function sanitizeRecipientSyncErrorDetails(input: unknown) {
+  const message = String(input ?? "").trim();
+  if (!message) return null;
+
+  if (/<html|<!doctype|<\?xml/i.test(message)) {
+    return "A Pagar.me retornou uma resposta invalida/temporaria. Tente novamente em alguns segundos.";
+  }
+
+  return message.length > 400 ? `${message.slice(0, 397)}...` : message;
+}
+
 export async function GET() {
   const ctx = await getActingUserContext();
   if (!ctx) {
@@ -95,6 +106,7 @@ export async function PUT(request: Request) {
     let nextRecipientId = existingRecipient?.pagarmeRecipientId ?? `pending_${ctx.effectiveUserId}`;
     let nextStatus = hasRealRecipient ? "active" : "pending";
     let warning: string | null = null;
+    let details: string | null = null;
     let message = "Dados bancarios salvos e sincronizados com sucesso.";
 
     const ownerDocument = digitsOnly(bankAccount.holderDocument);
@@ -130,6 +142,7 @@ export async function PUT(request: Request) {
         }
       } catch (error: any) {
         console.error("Falha ao sincronizar recebedor na Pagar.me:", error);
+        details = sanitizeRecipientSyncErrorDetails(error?.message);
         warning = hasRealRecipient
           ? "Conta salva, mas a atualizacao dos dados bancarios no recebedor atual da Pagar.me falhou. Nenhum novo recebedor foi criado."
           : "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
@@ -162,6 +175,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({
       message,
       warning,
+      details,
       recipient,
     });
   } catch (error) {

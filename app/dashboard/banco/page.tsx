@@ -87,7 +87,10 @@ export default function BancoDashboardPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Erro ao salvar");
       setStatus(data?.recipient?.status ?? "pending");
-      alert(data?.warning ?? data?.message ?? "Dados bancários salvos com sucesso.");
+      const feedback = [data?.warning ?? data?.message ?? "Dados bancários salvos com sucesso.", data?.details]
+        .filter(Boolean)
+        .join("\n\n");
+      alert(feedback);
     } catch (error: any) {
       alert(error?.message ?? "Erro ao salvar dados bancários.");
     } finally {
