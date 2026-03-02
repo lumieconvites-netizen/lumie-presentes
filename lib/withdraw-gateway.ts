@@ -243,11 +243,15 @@ export async function createRecipientWithGateway(params: {
 }) {
   const { baseUrl } = readGatewayConfig();
   if (baseUrl) {
-    const payload = await callGateway("/recipient", {
-      method: "POST",
-      body: params,
-    });
-    return payload?.recipient ?? payload;
+    try {
+      const payload = await callGateway("/recipient", {
+        method: "POST",
+        body: params,
+      });
+      return payload?.recipient ?? payload;
+    } catch (error) {
+      console.error("Falha ao criar recebedor via withdraw gateway. Tentando direto na Pagar.me.", error);
+    }
   }
 
   return createRecipient(params);
@@ -259,16 +263,23 @@ export async function updateRecipientDefaultBankAccountWithGateway(params: {
 }) {
   const { baseUrl } = readGatewayConfig();
   if (baseUrl) {
-    const payload = await callGateway(
-      `/recipient/${encodeURIComponent(params.recipientId)}/default-bank-account`,
-      {
-        method: "PATCH",
-        body: {
-          bankAccount: params.bankAccount,
-        },
-      }
-    );
-    return payload?.recipient ?? payload;
+    try {
+      const payload = await callGateway(
+        `/recipient/${encodeURIComponent(params.recipientId)}/default-bank-account`,
+        {
+          method: "PATCH",
+          body: {
+            bankAccount: params.bankAccount,
+          },
+        }
+      );
+      return payload?.recipient ?? payload;
+    } catch (error) {
+      console.error(
+        "Falha ao atualizar conta via withdraw gateway. Tentando direto na Pagar.me.",
+        error
+      );
+    }
   }
 
   return updateRecipientDefaultBankAccount(params);
