@@ -32,6 +32,15 @@ function isRealRecipientId(value?: string | null) {
   return !value.startsWith("pending_");
 }
 
+function normalizeGatewayHolderName(value: string) {
+  const compact = String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
+  if (!compact) return compact;
+  // O gateway exige menos de 30 caracteres neste campo.
+  return compact.slice(0, 29);
+}
+
 function sanitizeRecipientSyncErrorDetails(input: unknown) {
   const message = String(input ?? "").trim();
   if (!message) return null;
@@ -90,6 +99,7 @@ export async function PUT(request: Request) {
     const gatewayBankAccount = {
       ...bankAccount,
       bankCode: normalizeRecipientTransferBankCode(bankAccount.bankCode),
+      holderName: normalizeGatewayHolderName(bankAccount.holderName),
     };
 
     const user = await prisma.user.findUnique({
