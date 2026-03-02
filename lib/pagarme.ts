@@ -10,6 +10,14 @@ function getApiKey() {
   return key;
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableStatus(status: number) {
+  return status === 429 || status === 502 || status === 503 || status === 504;
+}
+
 export type PagarmeOrderStatus =
   | "pending"
   | "paid"
@@ -141,35 +149,43 @@ async function gatewayFetch<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error("WITHDRAW_GATEWAY_TOKEN nao configurada");
   }
 
-  const res = await fetch(`${WITHDRAW_GATEWAY_URL.replace(/\/+$/, "")}${path}`, {
-    ...init,
-    headers: {
-      ...(init?.headers ?? {}),
-      Authorization: `Bearer ${WITHDRAW_GATEWAY_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const res = await fetch(`${WITHDRAW_GATEWAY_URL.replace(/\/+$/, "")}${path}`, {
+      ...init,
+      headers: {
+        ...(init?.headers ?? {}),
+        Authorization: `Bearer ${WITHDRAW_GATEWAY_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`Withdraw gateway error ${res.status}: ${txt}`);
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      if (attempt < 2 && isRetryableStatus(res.status)) {
+        await wait(250 * (attempt + 1));
+        continue;
+      }
+      throw new Error(`Withdraw gateway error ${res.status}: ${txt}`);
+    }
+
+    if (res.status === 204) {
+      return {} as T;
+    }
+
+    const raw = await res.text().catch(() => "");
+    if (!raw || !raw.trim()) {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return {} as T;
+    }
   }
 
-  if (res.status === 204) {
-    return {} as T;
-  }
-
-  const raw = await res.text().catch(() => "");
-  if (!raw || !raw.trim()) {
-    return {} as T;
-  }
-
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return {} as T;
-  }
+  throw new Error("Withdraw gateway error: retry limit reached");
 }
 
 async function pagarmeFetchWithMethodFallback<T>(

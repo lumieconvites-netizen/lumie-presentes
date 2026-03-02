@@ -35,7 +35,12 @@ export async function GET(request: Request, { params }: { params: { giftId: stri
       return NextResponse.json({ error: 'Presente nao encontrado' }, { status: 404 });
     }
 
-    await reconcilePendingOrdersForGiftList(gift.giftList.id);
+    void reconcilePendingOrdersForGiftList(gift.giftList.id, {
+      minIntervalMs: 15000,
+      throttleKey: `checkout-public:${gift.giftList.id}`,
+    }).catch((reconcileError) => {
+      console.error('Falha ao reconciliar pedidos pendentes no preload do checkout:', reconcileError);
+    });
     const effectiveAvailableQty = await getEffectiveAvailabilityForGift(gift.id, gift.totalQuantity);
 
     return NextResponse.json({

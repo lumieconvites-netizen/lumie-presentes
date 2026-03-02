@@ -112,6 +112,21 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function sanitizeGatewayErrorDetails(input: unknown) {
+  const message = String(input ?? '').trim();
+  if (!message) return 'Falha temporaria ao comunicar com o gateway.';
+
+  if (/backend\.max_conn reached/i.test(message)) {
+    return 'Gateway temporariamente sobrecarregado. Tente novamente em alguns segundos.';
+  }
+
+  if (/<html|<!doctype|<\?xml/i.test(message)) {
+    return 'Gateway temporariamente indisponivel. Tente novamente em alguns segundos.';
+  }
+
+  return message.length > 220 ? `${message.slice(0, 217)}...` : message;
+}
+
 function calculateCommissionSplit(params: {
   baseAmount: number;
   totalAmount: number;
@@ -176,7 +191,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const data = orderSchema.parse(body);
 
-    await reconcilePendingOrdersForGiftList(data.giftListId);
+    await reconcilePendingOrdersForGiftList(data.giftListId, {
+      minIntervalMs: 15000,
+      throttleKey: `checkout-order:${data.giftListId}`,
+    });
 
     const emailRate = await enforceRateLimit({
       key: `checkout:orders:email:${data.guestEmail.trim().toLowerCase()}`,
@@ -578,7 +596,9 @@ export async function POST(request: Request) {
           expiresAt: transaction?.expires_at ?? null,
         });
       } catch (gatewayError: any) {
-        const details = gatewayError?.message || 'Falha ao criar cobranca no gateway';
+        const details = sanitizeGatewayErrorDetails(
+          gatewayError?.message || 'Falha ao criar cobranca no gateway'
+        );
         console.error('Falha ao criar cobranca Pagar.me:', details);
         await prisma.order.update({
           where: { id: order.id },
