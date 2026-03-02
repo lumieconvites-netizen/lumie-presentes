@@ -170,12 +170,35 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
 
   const toYoutubeEmbedUrl = (url: string) => {
     if (!url) return '';
-    if (url.includes('youtube.com/embed/')) return url;
-    const short = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
-    if (short?.[1]) return `https://www.youtube.com/embed/${short[1]}`;
-    const long = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
-    if (long?.[1]) return `https://www.youtube.com/embed/${long[1]}`;
-    return url;
+    const value = url.trim();
+    if (!value) return '';
+
+    let videoId = '';
+    const embedded = value.match(/youtube(?:-nocookie)?\.com\/embed\/([a-zA-Z0-9_-]+)/i);
+    if (embedded?.[1]) videoId = embedded[1];
+
+    if (!videoId) {
+      const short = value.match(/youtu\.be\/([a-zA-Z0-9_-]+)/i);
+      if (short?.[1]) videoId = short[1];
+    }
+
+    if (!videoId) {
+      const shorts = value.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/i);
+      if (shorts?.[1]) videoId = shorts[1];
+    }
+
+    if (!videoId) {
+      const live = value.match(/youtube\.com\/live\/([a-zA-Z0-9_-]+)/i);
+      if (live?.[1]) videoId = live[1];
+    }
+
+    if (!videoId) {
+      const long = value.match(/[?&]v=([a-zA-Z0-9_-]+)/i);
+      if (long?.[1]) videoId = long[1];
+    }
+
+    if (!videoId) return value;
+    return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`;
   };
 
   const toSpotifyEmbedUrl = (url: string) => {
@@ -747,7 +770,7 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                       className="rounded-2xl"
                     />
                   ) : config.youtubeUrl ? (
-                    <div className="aspect-video w-full overflow-hidden rounded-2xl">
+                    <div className="relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-black aspect-video min-h-[220px] sm:min-h-[260px]">
                       <iframe
                         src={toYoutubeEmbedUrl(config.youtubeUrl)}
                         width="100%"
@@ -755,7 +778,9 @@ export default function BlockPreview({ list, blocks, selectedBlock, onSelectBloc
                         loading="lazy"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
-                        className="h-full w-full"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        title={config.title || 'Preview da musica'}
+                        className="absolute inset-0 block h-full w-full"
                       />
                     </div>
                   ) : (
