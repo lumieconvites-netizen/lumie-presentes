@@ -482,11 +482,7 @@ export function normalizeBankCode(value?: string | null): string {
 }
 
 export function normalizeRecipientTransferBankCode(value?: string | null): string {
-  const code = normalizeBankCode(value);
-  if (code === "380") {
-    return "079";
-  }
-  return code;
+  return normalizeBankCode(value);
 }
 
 export function isSupportedBankCode(value?: string | null): boolean {
