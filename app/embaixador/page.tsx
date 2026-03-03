@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,7 @@ export default function AmbassadorDashboardPage() {
   const [period, setPeriod] = useState<PeriodFilter>('total');
   const [data, setData] = useState<AmbassadorOverview | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copiedCode, setCopiedCode] = useState<string>('');
+  const [copiedValue, setCopiedValue] = useState<string>('');
   const [openingClientId, setOpeningClientId] = useState<string | null>(null);
 
   const codeMeta = (type: string) => {
@@ -64,12 +65,21 @@ export default function AmbassadorDashboardPage() {
     };
   };
 
-  async function handleCopyCode(code: string) {
+  function getSignupLink(code: string, type: string) {
+    const params = new URLSearchParams({ code });
+    if (type === 'AMBASSADOR_PARTNER') {
+      params.set('tipo', 'parceiro');
+    }
+    return `/auth/cadastro?${params.toString()}`;
+  }
+
+  async function handleCopyCode(value: string, copyKey: string, options?: { absolute?: boolean }) {
     try {
-      await navigator.clipboard.writeText(code);
-      setCopiedCode(code);
+      const textToCopy = options?.absolute ? `${window.location.origin}${value}` : value;
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedValue(copyKey);
       window.setTimeout(() => {
-        setCopiedCode((prev) => (prev === code ? '' : prev));
+        setCopiedValue((prev) => (prev === copyKey ? '' : prev));
       }, 1800);
     } catch {
       alert('Não foi possível copiar automaticamente.');
@@ -162,16 +172,35 @@ export default function AmbassadorDashboardPage() {
               <p className="font-semibold text-lg break-all">{code.code}</p>
               <p className="text-xs text-gray-500 mt-1">{codeMeta(code.type).hint}</p>
               <p className="text-sm text-gray-600">{code.usageCount} cadastros com este código</p>
-              <div className="mt-3">
+              <div className="mt-3 rounded-md bg-[#faf3ee] p-2">
+                <p className="text-xs text-gray-500">Link de cadastro com código aplicado</p>
+                <Link
+                  href={getSignupLink(code.code, code.type)}
+                  className="mt-1 block break-all text-xs font-medium text-[#8e3d2c] hover:underline"
+                >
+                  {getSignupLink(code.code, code.type)}
+                </Link>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="h-8"
-                  onClick={() => handleCopyCode(code.code)}
+                  onClick={() => handleCopyCode(code.code, `code:${code.id}`)}
                 >
-                  {copiedCode === code.code ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                  {copiedCode === code.code ? 'Copiado' : 'Copiar código'}
+                  {copiedValue === `code:${code.id}` ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                  {copiedValue === `code:${code.id}` ? 'Copiado' : 'Copiar código'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => handleCopyCode(getSignupLink(code.code, code.type), `link:${code.id}`, { absolute: true })}
+                >
+                  {copiedValue === `link:${code.id}` ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                  {copiedValue === `link:${code.id}` ? 'Link copiado' : 'Copiar link'}
                 </Button>
               </div>
             </div>

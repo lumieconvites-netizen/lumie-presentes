@@ -1,9 +1,11 @@
 ﻿'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Check, Copy } from 'lucide-react';
 import AffiliateWithdrawCard from '@/components/affiliate/withdraw-card';
 
 type PartnerOverview = {
@@ -32,6 +34,25 @@ export default function PartnerDashboardPage() {
   const [data, setData] = useState<PartnerOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingClientId, setOpeningClientId] = useState<string | null>(null);
+  const [copiedValue, setCopiedValue] = useState<string>('');
+
+  function getSignupLink(code: string) {
+    const params = new URLSearchParams({ code });
+    return `/auth/cadastro?${params.toString()}`;
+  }
+
+  async function handleCopy(value: string, copyKey: string, options?: { absolute?: boolean }) {
+    try {
+      const textToCopy = options?.absolute ? `${window.location.origin}${value}` : value;
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedValue(copyKey);
+      window.setTimeout(() => {
+        setCopiedValue((prev) => (prev === copyKey ? '' : prev));
+      }, 1800);
+    } catch {
+      alert('Não foi possível copiar automaticamente.');
+    }
+  }
 
   useEffect(() => {
     let cancel = false;
@@ -111,6 +132,37 @@ export default function PartnerDashboardPage() {
                   <p className="text-xs text-gray-500">{code.type}</p>
                   <p className="font-semibold text-lg">{code.code}</p>
                   <p className="text-sm text-gray-600">{code.usageCount} cadastros com este código</p>
+                  <div className="mt-3 rounded-md bg-[#faf3ee] p-2">
+                    <p className="text-xs text-gray-500">Link de cadastro com código aplicado</p>
+                    <Link
+                      href={getSignupLink(code.code)}
+                      className="mt-1 block break-all text-xs font-medium text-[#8e3d2c] hover:underline"
+                    >
+                      {getSignupLink(code.code)}
+                    </Link>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8"
+                      onClick={() => handleCopy(code.code, `code:${code.id}`)}
+                    >
+                      {copiedValue === `code:${code.id}` ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                      {copiedValue === `code:${code.id}` ? 'Copiado' : 'Copiar código'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8"
+                      onClick={() => handleCopy(getSignupLink(code.code), `link:${code.id}`, { absolute: true })}
+                    >
+                      {copiedValue === `link:${code.id}` ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                      {copiedValue === `link:${code.id}` ? 'Link copiado' : 'Copiar link'}
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
