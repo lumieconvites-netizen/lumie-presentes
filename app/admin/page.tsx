@@ -28,7 +28,6 @@ type AdminUser = {
   role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
   isBlocked: boolean;
   blockReason?: string | null;
-  blockedAté?: string | null;
   _count: { giftLists: number };
 };
 
@@ -50,17 +49,15 @@ type ImpersonationState = {
 
 type PeriodFilter = 'total' | 'current_month' | 'last_month';
 type ManagedRole = 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
-type UserApiResponse = { users: AdminUser[]; total: number; hasMore: boolean };
+type UserApiResponse = { users: AdminUser[] };
 
 const brl = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const INITIAL_ROLE_LIMIT = 10;
-const LOAD_MORE_STEP = 50;
-const SIDE_RECENT_LIMIT = 15;
+const RECENT_LIMIT = 10;
 const ROLE_SECTIONS: { role: ManagedRole; title: string; description: string }[] = [
-  { role: 'CLIENT', title: 'Clientes', description: 'Contas finais da plataforma.' },
-  { role: 'PARTNER', title: 'Parceiros', description: 'Contas com comissão por indicação.' },
-  { role: 'AMBASSADOR', title: 'Embaixadores', description: 'Rede de parceiros e clientes.' },
-  { role: 'EMPLOYEE', title: 'Funcionários', description: 'Equipe interna com acesso operacional.' },
+  { role: 'CLIENT', title: 'Clientes', description: 'Últimos clientes cadastrados.' },
+  { role: 'PARTNER', title: 'Parceiros', description: 'Últimos parceiros cadastrados.' },
+  { role: 'AMBASSADOR', title: 'Embaixadores', description: 'Últimos embaixadores cadastrados.' },
+  { role: 'EMPLOYEE', title: 'Funcionários', description: 'Últimos acessos internos.' },
 ];
 
 function useDebouncedValue<T>(value: T, delayMs: number) {
@@ -81,33 +78,14 @@ export default function AdminPage() {
   const [templates, setTemplates] = useState<AdminTemplate[]>([]);
   const [impersonation, setImpersonation] = useState<ImpersonationState | null>(null);
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
-  const [qUser, setQUser] = useState('');
   const [qList, setQList] = useState('');
-  const [usersByRole, setUsersByRole] = useState<Record<ManagedRole, AdminUser[]>>({
+  const [recentUsers, setRecentUsers] = useState<Record<ManagedRole, AdminUser[]>>({
     CLIENT: [],
     PARTNER: [],
     AMBASSADOR: [],
     EMPLOYEE: [],
   });
-  const [totalsByRole, setTotalsByRole] = useState<Record<ManagedRole, number>>({
-    CLIENT: 0,
-    PARTNER: 0,
-    AMBASSADOR: 0,
-    EMPLOYEE: 0,
-  });
-  const [visibleByRole, setVisibleByRole] = useState<Record<ManagedRole, number>>({
-    CLIENT: INITIAL_ROLE_LIMIT,
-    PARTNER: INITIAL_ROLE_LIMIT,
-    AMBASSADOR: INITIAL_ROLE_LIMIT,
-    EMPLOYEE: INITIAL_ROLE_LIMIT,
-  });
-  const [recentUsers, setRecentUsers] = useState<Record<'CLIENT' | 'PARTNER', AdminUser[]>>({
-    CLIENT: [],
-    PARTNER: [],
-  });
-  const [usersLoading, setUsersLoading] = useState(true);
 
-  const debouncedUserQuery = useDebouncedValue(qUser.trim(), 350);
   const debouncedListQuery = useDebouncedValue(qList.trim(), 350);
 
   const listQuery = useMemo(() => {
@@ -139,55 +117,33 @@ export default function AdminPage() {
     if (impersonationResponse) setImpersonation(impersonationResponse);
   }
 
-  async function fetchRoleUsers(role: ManagedRole, take: number, query: string) {
-    const params = new URLSearchParams({
-      role,
-      take: String(take),
-    });
-    if (query) params.set('q', query);
-
-    const response = await getJson<UserApiResponse & { error?: string }>(`/api/admin/users?${params.toString()}`);
-    if (!response || 'error' in response || !Array.isArray(response.users)) {
-      throw new Error(`Erro ao carregar ${role.toLowerCase()}`);
-    }
-
-    setUsersByRole((current) => ({ ...current, [role]: response.users }));
-    setTotalsByRole((current) => ({ ...current, [role]: response.total || 0 }));
-    setVisibleByRole((current) => ({ ...current, [role]: take }));
-  }
-
-  async function loadUserSections(query: string) {
-    setUsersLoading(true);
-    try {
-      await Promise.all(ROLE_SECTIONS.map(({ role }) => fetchRoleUsers(role, INITIAL_ROLE_LIMIT, query)));
-    } catch (error: any) {
-      alert(error?.message || 'Erro ao carregar usuários.');
-    } finally {
-      setUsersLoading(false);
-    }
-  }
-
   async function loadRecentUsers() {
-    const [clientResponse, partnerResponse] = await Promise.all([
-      getJson<UserApiResponse & { error?: string }>(`/api/admin/users?role=CLIENT&take=${SIDE_RECENT_LIMIT}`),
-      getJson<UserApiResponse & { error?: string }>(`/api/admin/users?role=PARTNER&take=${SIDE_RECENT_LIMIT}`),
-    ]);
+    const responses = await Promise.all(
+      ROLE_SECTIONS.map(({ role }) =>
+        getJson<UserApiResponse & { error?: string }>(`/api/admin/users?role=${role}&take=${RECENT_LIMIT}`)
+      )
+    );
 
-    if (clientResponse && !('error' in clientResponse) && Array.isArray(clientResponse.users)) {
-      setRecentUsers((current) => ({ ...current, CLIENT: clientResponse.users }));
-    }
-    if (partnerResponse && !('error' in partnerResponse) && Array.isArray(partnerResponse.users)) {
-      setRecentUsers((current) => ({ ...current, PARTNER: partnerResponse.users }));
-    }
+    const nextState: Record<ManagedRole, AdminUser[]> = {
+      CLIENT: [],
+      PARTNER: [],
+      AMBASSADOR: [],
+      EMPLOYEE: [],
+    };
+
+    responses.forEach((response, index) => {
+      const role = ROLE_SECTIONS[index].role;
+      if (response && !('error' in response) && Array.isArray(response.users)) {
+        nextState[role] = response.users;
+      }
+    });
+
+    setRecentUsers(nextState);
   }
 
   useEffect(() => {
     loadNonUserData().catch(() => null);
   }, [period, listQuery]);
-
-  useEffect(() => {
-    loadUserSections(debouncedUserQuery).catch(() => null);
-  }, [debouncedUserQuery]);
 
   useEffect(() => {
     loadRecentUsers().catch(() => null);
@@ -202,35 +158,6 @@ export default function AdminPage() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Erro ao atualizar lista');
     await loadNonUserData();
-  }
-
-  async function patchUser(id: string, payload: unknown) {
-    const response = await fetch(`/api/admin/users/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Erro ao atualizar usuário');
-    await Promise.all([loadUserSections(debouncedUserQuery), loadRecentUsers()]);
-  }
-
-  async function toggleBlockUser(user: AdminUser) {
-    if (user.isBlocked) {
-      await patchUser(user.id, { isBlocked: false, blockReason: null });
-      return;
-    }
-
-    const reason = window.prompt('Motivo do bloqueio (obrigatório):', user.blockReason || '');
-    if (reason === null) return;
-
-    const normalized = reason.trim();
-    if (!normalized) {
-      alert('Informe o motivo para bloquear o usuário.');
-      return;
-    }
-
-    await patchUser(user.id, { isBlocked: true, blockReason: normalized });
   }
 
   async function removeList(id: string) {
@@ -269,15 +196,7 @@ export default function AdminPage() {
     }
   }
 
-  async function startImpersonation(userId: string) {
-    const targetRole =
-      Object.values(usersByRole)
-        .flat()
-        .find((user) => user.id === userId)?.role ??
-      Object.values(recentUsers)
-        .flat()
-        .find((user) => user.id === userId)?.role;
-
+  async function startImpersonation(userId: string, role?: AdminUser['role']) {
     const response = await fetch('/api/admin/impersonation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -286,15 +205,15 @@ export default function AdminPage() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Erro ao acessar painel do usuário');
 
-    if (targetRole === 'PARTNER') {
+    if (role === 'PARTNER') {
       window.location.assign('/parceiro');
       return;
     }
-    if (targetRole === 'AMBASSADOR') {
+    if (role === 'AMBASSADOR') {
       window.location.assign('/embaixador');
       return;
     }
-    if (targetRole === 'EMPLOYEE') {
+    if (role === 'EMPLOYEE') {
       window.location.assign('/funcionario');
       return;
     }
@@ -306,44 +225,6 @@ export default function AdminPage() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Erro ao sair do modo de acesso');
     await loadNonUserData();
-  }
-
-  async function loadMoreUsers(role: ManagedRole) {
-    const nextCount = visibleByRole[role] + LOAD_MORE_STEP;
-    try {
-      await fetchRoleUsers(role, nextCount, debouncedUserQuery);
-    } catch (error: any) {
-      alert(error?.message || 'Erro ao carregar mais usuários.');
-    }
-  }
-
-  function renderUserActions(user: AdminUser) {
-    return (
-      <div className="flex flex-wrap gap-1">
-        <Button size="sm" variant="outline" onClick={() => patchUser(user.id, { role: 'PARTNER' }).catch((error) => alert(error.message))}>
-          Virar parceiro
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => patchUser(user.id, { role: 'AMBASSADOR' }).catch((error) => alert(error.message))}>
-          Virar embaixador
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => patchUser(user.id, { role: 'EMPLOYEE' }).catch((error) => alert(error.message))}>
-          Virar funcionário
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => patchUser(user.id, { role: 'CLIENT' }).catch((error) => alert(error.message))}>
-          Virar cliente
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => toggleBlockUser(user).catch((error) => alert(error.message))}>
-          {user.isBlocked ? 'Desbloquear' : 'Bloquear'}
-        </Button>
-        {user.role !== 'ADMIN' ? (
-          <Button size="sm" onClick={() => startImpersonation(user.id).catch((error) => alert(error.message))}>
-            Acessar painel
-          </Button>
-        ) : (
-          <span className="text-xs text-gray-500">Admin</span>
-        )}
-      </div>
-    );
   }
 
   return (
@@ -397,99 +278,31 @@ export default function AdminPage() {
         </Card>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]">
-        <Card className="border-[#e7d8cb]">
-          <CardHeader>
-            <CardTitle>Usuários por perfil</CardTitle>
-            <p className="text-sm text-gray-600">A busca agora é dividida por papel e abre só os últimos registros por padrão.</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              placeholder="Buscar por nome ou e-mail"
-              value={qUser}
-              onChange={(event) => setQUser(event.target.value)}
+      <Card className="border-[#e7d8cb]">
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle>Usuários recentes</CardTitle>
+              <p className="text-sm text-gray-600">O dashboard mostra só os últimos registros. A gestão completa fica em Usuários.</p>
+            </div>
+            <Button variant="outline" asChild>
+              <Link href="/admin/usuarios">Abrir usuários</Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {ROLE_SECTIONS.map((section) => (
+            <RecentRoleSection
+              key={section.role}
+              title={section.title}
+              description={section.description}
+              users={recentUsers[section.role]}
+              moreHref={`/admin/usuarios?role=${section.role}`}
+              onOpenPanel={startImpersonation}
             />
-
-            {ROLE_SECTIONS.map((section) => {
-              const users = usersByRole[section.role];
-              const total = totalsByRole[section.role];
-              const hasMore = users.length < total;
-
-              return (
-                <div key={section.role} className="rounded-xl border border-[#ead9cd]">
-                  <div className="border-b border-[#ead9cd] bg-[#fffaf6] px-4 py-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <h3 className="font-medium text-[#8E3D2C]">{section.title}</h3>
-                        <p className="text-xs text-gray-500">{section.description}</p>
-                      </div>
-                      <Badge variant="outline">{total} encontrados</Badge>
-                    </div>
-                  </div>
-                  <div className="overflow-auto">
-                    <table className="w-full min-w-[760px] text-sm">
-                      <thead className="bg-[#faf3ee]">
-                        <tr>
-                          <th className="p-2 text-left">Usuário</th>
-                          <th className="p-2 text-left">Listas</th>
-                          <th className="p-2 text-left">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {users.map((user) => (
-                          <tr key={user.id} className="border-t">
-                            <td className="p-2">
-                              <p className="font-medium">{user.name || 'Sem nome'}</p>
-                              <p className="text-xs text-gray-500">{user.email}</p>
-                              {user.isBlocked && user.blockReason ? (
-                                <p className="mt-1 text-xs text-red-600">Motivo: {user.blockReason}</p>
-                              ) : null}
-                            </td>
-                            <td className="p-2">{user._count.giftLists}</td>
-                            <td className="p-2">{renderUserActions(user)}</td>
-                          </tr>
-                        ))}
-                        {!users.length && !usersLoading ? (
-                          <tr>
-                            <td className="p-3 text-sm text-gray-500" colSpan={3}>
-                              Nenhum registro encontrado.
-                            </td>
-                          </tr>
-                        ) : null}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#ead9cd] px-4 py-3">
-                    <p className="text-xs text-gray-500">
-                      Mostrando {users.length} de {total}
-                    </p>
-                    {hasMore ? (
-                      <Button variant="outline" size="sm" onClick={() => loadMoreUsers(section.role)}>
-                        Ver mais 50
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <RecentUsersCard
-            title="Clientes recentes"
-            description="Últimos 15 clientes cadastrados."
-            users={recentUsers.CLIENT}
-            onOpenPanel={startImpersonation}
-          />
-          <RecentUsersCard
-            title="Parceiros recentes"
-            description="Últimos 15 parceiros cadastrados."
-            users={recentUsers.PARTNER}
-            onOpenPanel={startImpersonation}
-          />
-        </div>
-      </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <Card className="border-[#e7d8cb]">
         <CardHeader>
@@ -614,39 +427,56 @@ export default function AdminPage() {
   );
 }
 
-function RecentUsersCard({
+function RecentRoleSection({
   title,
   description,
   users,
+  moreHref,
   onOpenPanel,
 }: {
   title: string;
   description: string;
   users: AdminUser[];
-  onOpenPanel: (userId: string) => Promise<void>;
+  moreHref: string;
+  onOpenPanel: (userId: string, role?: AdminUser['role']) => Promise<void>;
 }) {
   return (
-    <Card className="border-[#e7d8cb]">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <p className="text-sm text-gray-600">{description}</p>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <div className="rounded-xl border border-[#ead9cd]">
+      <div className="border-b border-[#ead9cd] bg-[#fffaf6] px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <Link href={moreHref} className="font-medium text-[#8E3D2C] hover:underline">
+              {title}
+            </Link>
+            <p className="text-xs text-gray-500">{description}</p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={moreHref}>Ver mais</Link>
+          </Button>
+        </div>
+      </div>
+      <div className="space-y-3 p-4">
         {users.map((user) => (
           <div key={user.id} className="rounded-lg border border-[#ead9cd] p-3">
-            <p className="font-medium">{user.name || 'Sem nome'}</p>
-            <p className="text-xs text-gray-500">{user.email}</p>
+            <button
+              type="button"
+              className="text-left"
+              onClick={() => onOpenPanel(user.id, user.role).catch((error) => alert(error.message))}
+            >
+              <p className="font-medium hover:text-[#8E3D2C]">{user.name || 'Sem nome'}</p>
+              <p className="text-xs text-gray-500">{user.email}</p>
+            </button>
             <div className="mt-2 flex items-center justify-between gap-2">
               <Badge variant="outline">{user._count.giftLists} listas</Badge>
-              <Button size="sm" variant="outline" onClick={() => onOpenPanel(user.id).catch((error) => alert(error.message))}>
+              <Button size="sm" variant="outline" onClick={() => onOpenPanel(user.id, user.role).catch((error) => alert(error.message))}>
                 Abrir
               </Button>
             </div>
           </div>
         ))}
         {!users.length ? <p className="text-sm text-gray-500">Nenhum registro recente.</p> : null}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

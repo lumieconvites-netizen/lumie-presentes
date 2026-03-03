@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Blocks, CreditCard, LayoutTemplate, ShieldBan, Sparkles, ClipboardList, Gift, Menu, X } from 'lucide-react';
+import { Blocks, CreditCard, LayoutTemplate, ShieldBan, Sparkles, ClipboardList, Gift, Menu, Users, X } from 'lucide-react';
 
 const items = [
   { href: '/admin', label: 'Geral', icon: Blocks },
+  { href: '/admin/usuarios', label: 'Usuários', icon: Users },
   { href: '/admin/financeiro', label: 'Financeiro', icon: CreditCard },
   { href: '/admin/bloqueados', label: 'Bloqueados', icon: ShieldBan },
   { href: '/admin/retencao', label: 'Retenção', icon: ClipboardList },
