@@ -54,10 +54,10 @@ type UserApiResponse = { users: AdminUser[] };
 const brl = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const RECENT_LIMIT = 10;
 const ROLE_SECTIONS: { role: ManagedRole; title: string; description: string }[] = [
-  { role: 'CLIENT', title: 'Clientes', description: 'Últimos clientes cadastrados.' },
-  { role: 'PARTNER', title: 'Parceiros', description: 'Últimos parceiros cadastrados.' },
-  { role: 'AMBASSADOR', title: 'Embaixadores', description: 'Últimos embaixadores cadastrados.' },
-  { role: 'EMPLOYEE', title: 'Funcionários', description: 'Últimos acessos internos.' },
+  { role: 'CLIENT', title: 'Clientes', description: '10 mais recentes com controles.' },
+  { role: 'PARTNER', title: 'Parceiros', description: '10 mais recentes com controles.' },
+  { role: 'AMBASSADOR', title: 'Embaixadores', description: '10 mais recentes com controles.' },
+  { role: 'EMPLOYEE', title: 'Funcionários', description: '10 mais recentes com controles.' },
 ];
 
 function useDebouncedValue<T>(value: T, delayMs: number) {
@@ -78,14 +78,16 @@ export default function AdminPage() {
   const [templates, setTemplates] = useState<AdminTemplate[]>([]);
   const [impersonation, setImpersonation] = useState<ImpersonationState | null>(null);
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
+  const [qUser, setQUser] = useState('');
   const [qList, setQList] = useState('');
-  const [recentUsers, setRecentUsers] = useState<Record<ManagedRole, AdminUser[]>>({
+  const [sectionUsers, setSectionUsers] = useState<Record<ManagedRole, AdminUser[]>>({
     CLIENT: [],
     PARTNER: [],
     AMBASSADOR: [],
     EMPLOYEE: [],
   });
 
+  const debouncedUserQuery = useDebouncedValue(qUser.trim(), 350);
   const debouncedListQuery = useDebouncedValue(qList.trim(), 350);
 
   const listQuery = useMemo(() => {
@@ -117,11 +119,16 @@ export default function AdminPage() {
     if (impersonationResponse) setImpersonation(impersonationResponse);
   }
 
-  async function loadRecentUsers() {
+  async function loadSectionUsers() {
     const responses = await Promise.all(
-      ROLE_SECTIONS.map(({ role }) =>
-        getJson<UserApiResponse & { error?: string }>(`/api/admin/users?role=${role}&take=${RECENT_LIMIT}`)
-      )
+      ROLE_SECTIONS.map(({ role }) => {
+        const params = new URLSearchParams({
+          role,
+          take: String(RECENT_LIMIT),
+        });
+        if (debouncedUserQuery) params.set('q', debouncedUserQuery);
+        return getJson<UserApiResponse & { error?: string }>(`/api/admin/users?${params.toString()}`);
+      })
     );
 
     const nextState: Record<ManagedRole, AdminUser[]> = {
@@ -138,7 +145,7 @@ export default function AdminPage() {
       }
     });
 
-    setRecentUsers(nextState);
+    setSectionUsers(nextState);
   }
 
   useEffect(() => {
@@ -146,8 +153,36 @@ export default function AdminPage() {
   }, [period, listQuery]);
 
   useEffect(() => {
-    loadRecentUsers().catch(() => null);
-  }, []);
+    loadSectionUsers().catch(() => null);
+  }, [debouncedUserQuery]);
+
+  async function patchUser(id: string, payload: unknown) {
+    const response = await fetch(`/api/admin/users/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Erro ao atualizar usuário');
+    await loadSectionUsers();
+  }
+
+  async function toggleBlockUser(user: AdminUser) {
+    if (user.isBlocked) {
+      await patchUser(user.id, { isBlocked: false, blockReason: null });
+      return;
+    }
+
+    const reason = window.prompt('Motivo do bloqueio (obrigatório):', user.blockReason || '');
+    if (reason === null) return;
+    const normalized = reason.trim();
+    if (!normalized) {
+      alert('Informe o motivo para bloquear o usuário.');
+      return;
+    }
+
+    await patchUser(user.id, { isBlocked: true, blockReason: normalized });
+  }
 
   async function patchList(id: string, payload: unknown) {
     const response = await fetch(`/api/admin/gift-lists/${id}`, {
@@ -282,23 +317,31 @@ export default function AdminPage() {
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <CardTitle>Usuários recentes</CardTitle>
-              <p className="text-sm text-gray-600">O dashboard mostra só os últimos registros. A gestão completa fica em Usuários.</p>
+              <CardTitle>Usuários por perfil</CardTitle>
+              <p className="text-sm text-gray-600">Os controles ficam aqui. O “Ver mais” abre a página completa de usuários.</p>
             </div>
             <Button variant="outline" asChild>
               <Link href="/admin/usuarios">Abrir usuários</Link>
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <CardContent className="space-y-4">
+          <Input
+            placeholder="Buscar por nome ou e-mail"
+            value={qUser}
+            onChange={(event) => setQUser(event.target.value)}
+          />
+
           {ROLE_SECTIONS.map((section) => (
-            <RecentRoleSection
+            <RoleSection
               key={section.role}
               title={section.title}
               description={section.description}
-              users={recentUsers[section.role]}
+              users={sectionUsers[section.role]}
               moreHref={`/admin/usuarios?role=${section.role}`}
               onOpenPanel={startImpersonation}
+              onPatchUser={patchUser}
+              onToggleBlock={toggleBlockUser}
             />
           ))}
         </CardContent>
@@ -427,27 +470,29 @@ export default function AdminPage() {
   );
 }
 
-function RecentRoleSection({
+function RoleSection({
   title,
   description,
   users,
   moreHref,
   onOpenPanel,
+  onPatchUser,
+  onToggleBlock,
 }: {
   title: string;
   description: string;
   users: AdminUser[];
   moreHref: string;
   onOpenPanel: (userId: string, role?: AdminUser['role']) => Promise<void>;
+  onPatchUser: (id: string, payload: unknown) => Promise<void>;
+  onToggleBlock: (user: AdminUser) => Promise<void>;
 }) {
   return (
     <div className="rounded-xl border border-[#ead9cd]">
       <div className="border-b border-[#ead9cd] bg-[#fffaf6] px-4 py-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <Link href={moreHref} className="font-medium text-[#8E3D2C] hover:underline">
-              {title}
-            </Link>
+            <h3 className="font-medium text-[#8E3D2C]">{title}</h3>
             <p className="text-xs text-gray-500">{description}</p>
           </div>
           <Button variant="outline" size="sm" asChild>
@@ -455,26 +500,68 @@ function RecentRoleSection({
           </Button>
         </div>
       </div>
-      <div className="space-y-3 p-4">
-        {users.map((user) => (
-          <div key={user.id} className="rounded-lg border border-[#ead9cd] p-3">
-            <button
-              type="button"
-              className="text-left"
-              onClick={() => onOpenPanel(user.id, user.role).catch((error) => alert(error.message))}
-            >
-              <p className="font-medium hover:text-[#8E3D2C]">{user.name || 'Sem nome'}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
-            </button>
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <Badge variant="outline">{user._count.giftLists} listas</Badge>
-              <Button size="sm" variant="outline" onClick={() => onOpenPanel(user.id, user.role).catch((error) => alert(error.message))}>
-                Abrir
-              </Button>
-            </div>
-          </div>
-        ))}
-        {!users.length ? <p className="text-sm text-gray-500">Nenhum registro recente.</p> : null}
+
+      <div className="overflow-auto">
+        <table className="w-full min-w-[920px] text-sm">
+          <thead className="bg-[#faf3ee]">
+            <tr>
+              <th className="p-2 text-left">Usuário</th>
+              <th className="p-2 text-left">Listas</th>
+              <th className="p-2 text-left">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id} className="border-t">
+                <td className="p-2">
+                  <button
+                    type="button"
+                    className="text-left"
+                    onClick={() => onOpenPanel(user.id, user.role).catch((error) => alert(error.message))}
+                  >
+                    <p className="font-medium hover:text-[#8E3D2C]">{user.name || 'Sem nome'}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                  </button>
+                  {user.isBlocked && user.blockReason ? (
+                    <p className="mt-1 text-xs text-red-600">Motivo: {user.blockReason}</p>
+                  ) : null}
+                </td>
+                <td className="p-2">
+                  <Badge variant="outline">{user._count.giftLists} listas</Badge>
+                </td>
+                <td className="p-2">
+                  <div className="flex flex-wrap gap-1">
+                    <Button size="sm" variant="outline" onClick={() => onPatchUser(user.id, { role: 'PARTNER' }).catch((error) => alert(error.message))}>
+                      Virar parceiro
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => onPatchUser(user.id, { role: 'AMBASSADOR' }).catch((error) => alert(error.message))}>
+                      Virar embaixador
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => onPatchUser(user.id, { role: 'EMPLOYEE' }).catch((error) => alert(error.message))}>
+                      Virar funcionário
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => onPatchUser(user.id, { role: 'CLIENT' }).catch((error) => alert(error.message))}>
+                      Virar cliente
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => onToggleBlock(user).catch((error) => alert(error.message))}>
+                      {user.isBlocked ? 'Desbloquear' : 'Bloquear'}
+                    </Button>
+                    <Button size="sm" onClick={() => onOpenPanel(user.id, user.role).catch((error) => alert(error.message))}>
+                      Acessar painel
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {!users.length ? (
+              <tr>
+                <td className="p-3 text-sm text-gray-500" colSpan={3}>
+                  Nenhum registro encontrado.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
       </div>
     </div>
   );
