@@ -238,14 +238,7 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="p-2">
                     {role === 'CLIENT' ? (
-                      <div className="space-y-1">
-                        <Badge variant="outline">
-                          Parceiro: {user.referredByPartner?.name || user.referredByPartner?.email || 'LUMIÊ'}
-                        </Badge>
-                        <Badge variant="outline">
-                          Embaixador: {user.referredByAmbassador?.name || user.referredByAmbassador?.email || 'LUMIÊ'}
-                        </Badge>
-                      </div>
+                      <OriginDisplay user={user} />
                     ) : null}
                     {role === 'PARTNER' ? <Badge variant="outline">{user._count.referredClientsAsPartner} clientes</Badge> : null}
                     {role === 'AMBASSADOR' ? (
@@ -297,5 +290,36 @@ export default function AdminUsersPage() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function OriginDisplay({ user }: { user: AdminUser }) {
+  const partner = user.referredByPartner?.name || user.referredByPartner?.email || null;
+  const ambassador = user.referredByAmbassador?.name || user.referredByAmbassador?.email || null;
+
+  if (!partner && !ambassador) {
+    return <Badge variant="outline">LUMIÊ</Badge>;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {partner ? (
+        <span className="inline-flex items-center rounded-full border border-[#ead9cd] bg-white px-2 py-1 text-xs text-[#5f4a41]">
+          <span className="mr-1 text-[#8E3D2C]">Parceiro</span>
+          {partner}
+        </span>
+      ) : null}
+      {ambassador ? (
+        <span className="inline-flex items-center rounded-full border border-[#ead9cd] bg-white px-2 py-1 text-xs text-[#5f4a41]">
+          <span className="mr-1 text-[#8E3D2C]">Embaixador</span>
+          {ambassador}
+        </span>
+      ) : null}
+      {!partner || !ambassador ? (
+        <span className="inline-flex items-center rounded-full border border-dashed border-[#ead9cd] bg-[#fffaf6] px-2 py-1 text-xs text-[#8E3D2C]">
+          LUMIÊ
+        </span>
+      ) : null}
+    </div>
   );
 }

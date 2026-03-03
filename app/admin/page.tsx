@@ -60,6 +60,7 @@ type UserApiResponse = { users: AdminUser[] };
 
 const brl = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const RECENT_LIMIT = 10;
+const LISTS_STEP = 10;
 const ROLE_SECTIONS: { role: ManagedRole; title: string; description: string }[] = [
   { role: 'CLIENT', title: 'Clientes', description: '10 mais recentes com controles.' },
   { role: 'PARTNER', title: 'Parceiros', description: '10 mais recentes com controles.' },
@@ -87,6 +88,7 @@ export default function AdminPage() {
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
   const [qUser, setQUser] = useState('');
   const [qList, setQList] = useState('');
+  const [visibleListCount, setVisibleListCount] = useState(LISTS_STEP);
   const [sectionUsers, setSectionUsers] = useState<Record<ManagedRole, AdminUser[]>>({
     CLIENT: [],
     PARTNER: [],
@@ -158,6 +160,10 @@ export default function AdminPage() {
   useEffect(() => {
     loadNonUserData().catch(() => null);
   }, [period, listQuery]);
+
+  useEffect(() => {
+    setVisibleListCount(LISTS_STEP);
+  }, [debouncedListQuery]);
 
   useEffect(() => {
     loadSectionUsers().catch(() => null);
@@ -277,6 +283,8 @@ export default function AdminPage() {
     await loadNonUserData();
   }
 
+  const visibleLists = useMemo(() => lists.slice(0, visibleListCount), [lists, visibleListCount]);
+
   return (
     <div className="space-y-6">
       <Card className="border-[#e7d8cb] bg-gradient-to-r from-[#fff3eb] via-[#fffaf6] to-[#fffdf9]">
@@ -384,7 +392,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {lists.map((list) => (
+                {visibleLists.map((list) => (
                   <tr key={list.id} className="border-t">
                     <td className="p-2">
                       <p className="font-medium">{list.title}</p>
@@ -418,6 +426,21 @@ export default function AdminPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-gray-500">Mostrando {visibleLists.length} de {lists.length}</p>
+            <div className="flex flex-wrap gap-2">
+              {visibleListCount > LISTS_STEP ? (
+                <Button variant="outline" size="sm" onClick={() => setVisibleListCount((current) => Math.max(LISTS_STEP, current - LISTS_STEP))}>
+                  Ver menos
+                </Button>
+              ) : null}
+              {visibleListCount < lists.length ? (
+                <Button variant="outline" size="sm" onClick={() => setVisibleListCount((current) => Math.min(lists.length, current + LISTS_STEP))}>
+                  Ver mais
+                </Button>
+              ) : null}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -558,14 +581,7 @@ function RoleSection({
                 </td>
                 <td className="p-2">
                   {role === 'CLIENT' ? (
-                    <div className="space-y-1">
-                      <Badge variant="outline">
-                        Parceiro: {user.referredByPartner?.name || user.referredByPartner?.email || 'LUMIÊ'}
-                      </Badge>
-                      <Badge variant="outline">
-                        Embaixador: {user.referredByAmbassador?.name || user.referredByAmbassador?.email || 'LUMIÊ'}
-                      </Badge>
-                    </div>
+                    <OriginDisplay user={user} />
                   ) : null}
                   {role === 'PARTNER' ? (
                     <Badge variant="outline">{user._count.referredClientsAsPartner} clientes</Badge>
@@ -608,6 +624,37 @@ function RoleSection({
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function OriginDisplay({ user }: { user: AdminUser }) {
+  const partner = user.referredByPartner?.name || user.referredByPartner?.email || null;
+  const ambassador = user.referredByAmbassador?.name || user.referredByAmbassador?.email || null;
+
+  if (!partner && !ambassador) {
+    return <Badge variant="outline">LUMIÊ</Badge>;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {partner ? (
+        <span className="inline-flex items-center rounded-full border border-[#ead9cd] bg-white px-2 py-1 text-xs text-[#5f4a41]">
+          <span className="mr-1 text-[#8E3D2C]">Parceiro</span>
+          {partner}
+        </span>
+      ) : null}
+      {ambassador ? (
+        <span className="inline-flex items-center rounded-full border border-[#ead9cd] bg-white px-2 py-1 text-xs text-[#5f4a41]">
+          <span className="mr-1 text-[#8E3D2C]">Embaixador</span>
+          {ambassador}
+        </span>
+      ) : null}
+      {!partner || !ambassador ? (
+        <span className="inline-flex items-center rounded-full border border-dashed border-[#ead9cd] bg-[#fffaf6] px-2 py-1 text-xs text-[#8E3D2C]">
+          LUMIÊ
+        </span>
+      ) : null}
     </div>
   );
 }
