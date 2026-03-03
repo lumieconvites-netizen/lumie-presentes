@@ -119,3 +119,39 @@ export async function PATCH(
     return NextResponse.json({ error: "Erro ao atualizar usuario" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await requireAdminSession();
+  if (!session) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+
+  try {
+    const currentUserId = (session.user as any).id as string;
+    if (params.id === currentUserId) {
+      return NextResponse.json({ error: "Voce nao pode excluir sua propria conta admin." }, { status: 400 });
+    }
+
+    const target = await prisma.user.findUnique({
+      where: { id: params.id },
+      select: { id: true, role: true },
+    });
+
+    if (!target) {
+      return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    }
+
+    if (target.role === "ADMIN") {
+      return NextResponse.json({ error: "Admins nao podem ser excluidos por esta tela." }, { status: 400 });
+    }
+
+    await prisma.user.delete({
+      where: { id: params.id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Erro ao excluir usuario" }, { status: 500 });
+  }
+}

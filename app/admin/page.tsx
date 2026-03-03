@@ -28,7 +28,14 @@ type AdminUser = {
   role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
   isBlocked: boolean;
   blockReason?: string | null;
-  _count: { giftLists: number };
+  referredByPartner?: { id: string; name: string | null; email: string } | null;
+  referredByAmbassador?: { id: string; name: string | null; email: string } | null;
+  _count: {
+    giftLists: number;
+    referredClientsAsPartner: number;
+    referredClientsAsAmbassador: number;
+    partnerReferrals: number;
+  };
 };
 
 type AdminGiftList = {
@@ -164,6 +171,14 @@ export default function AdminPage() {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Erro ao atualizar usuário');
+    await loadSectionUsers();
+  }
+
+  async function deleteUser(user: AdminUser) {
+    if (!window.confirm(`Excluir ${user.name || user.email}? Esta ação remove a conta e os dados vinculados.`)) return;
+    const response = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Erro ao excluir usuário');
     await loadSectionUsers();
   }
 
@@ -338,10 +353,12 @@ export default function AdminPage() {
               title={section.title}
               description={section.description}
               users={sectionUsers[section.role]}
+              role={section.role}
               moreHref={`/admin/usuarios?role=${section.role}`}
               onOpenPanel={startImpersonation}
               onPatchUser={patchUser}
               onToggleBlock={toggleBlockUser}
+              onDeleteUser={deleteUser}
             />
           ))}
         </CardContent>
@@ -471,6 +488,7 @@ export default function AdminPage() {
 }
 
 function RoleSection({
+  role,
   title,
   description,
   users,
@@ -478,7 +496,9 @@ function RoleSection({
   onOpenPanel,
   onPatchUser,
   onToggleBlock,
+  onDeleteUser,
 }: {
+  role: ManagedRole;
   title: string;
   description: string;
   users: AdminUser[];
@@ -486,7 +506,17 @@ function RoleSection({
   onOpenPanel: (userId: string, role?: AdminUser['role']) => Promise<void>;
   onPatchUser: (id: string, payload: unknown) => Promise<void>;
   onToggleBlock: (user: AdminUser) => Promise<void>;
+  onDeleteUser: (user: AdminUser) => Promise<void>;
 }) {
+  const metricLabel =
+    role === 'CLIENT'
+      ? 'Origem'
+      : role === 'PARTNER'
+        ? 'Clientes'
+        : role === 'AMBASSADOR'
+          ? 'Rede'
+          : 'Listas';
+
   return (
     <div className="rounded-xl border border-[#ead9cd]">
       <div className="border-b border-[#ead9cd] bg-[#fffaf6] px-4 py-3">
@@ -506,7 +536,7 @@ function RoleSection({
           <thead className="bg-[#faf3ee]">
             <tr>
               <th className="p-2 text-left">Usuário</th>
-              <th className="p-2 text-left">Listas</th>
+              <th className="p-2 text-left">{metricLabel}</th>
               <th className="p-2 text-left">Ações</th>
             </tr>
           </thead>
@@ -527,24 +557,39 @@ function RoleSection({
                   ) : null}
                 </td>
                 <td className="p-2">
-                  <Badge variant="outline">{user._count.giftLists} listas</Badge>
+                  {role === 'CLIENT' ? (
+                    <div className="space-y-1">
+                      <Badge variant="outline">
+                        Parceiro: {user.referredByPartner?.name || user.referredByPartner?.email || 'LUMIÊ'}
+                      </Badge>
+                      <Badge variant="outline">
+                        Embaixador: {user.referredByAmbassador?.name || user.referredByAmbassador?.email || 'LUMIÊ'}
+                      </Badge>
+                    </div>
+                  ) : null}
+                  {role === 'PARTNER' ? (
+                    <Badge variant="outline">{user._count.referredClientsAsPartner} clientes</Badge>
+                  ) : null}
+                  {role === 'AMBASSADOR' ? (
+                    <div className="space-y-1">
+                      <Badge variant="outline">{user._count.referredClientsAsAmbassador} clientes</Badge>
+                      <Badge variant="outline">{user._count.partnerReferrals} parceiros</Badge>
+                    </div>
+                  ) : null}
+                  {role === 'EMPLOYEE' ? <Badge variant="outline">{user._count.giftLists} listas</Badge> : null}
                 </td>
                 <td className="p-2">
                   <div className="flex flex-wrap gap-1">
-                    <Button size="sm" variant="outline" onClick={() => onPatchUser(user.id, { role: 'PARTNER' }).catch((error) => alert(error.message))}>
-                      Virar parceiro
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => onPatchUser(user.id, { role: 'AMBASSADOR' }).catch((error) => alert(error.message))}>
-                      Virar embaixador
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => onPatchUser(user.id, { role: 'EMPLOYEE' }).catch((error) => alert(error.message))}>
-                      Virar funcionário
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => onPatchUser(user.id, { role: 'CLIENT' }).catch((error) => alert(error.message))}>
-                      Virar cliente
-                    </Button>
+                    {role === 'PARTNER' ? (
+                      <Button size="sm" variant="outline" onClick={() => onPatchUser(user.id, { role: 'AMBASSADOR' }).catch((error) => alert(error.message))}>
+                        Virar embaixador
+                      </Button>
+                    ) : null}
                     <Button size="sm" variant="outline" onClick={() => onToggleBlock(user).catch((error) => alert(error.message))}>
                       {user.isBlocked ? 'Desbloquear' : 'Bloquear'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="border-red-300 text-red-600 hover:bg-red-50" onClick={() => onDeleteUser(user).catch((error) => alert(error.message))}>
+                      Excluir
                     </Button>
                     <Button size="sm" onClick={() => onOpenPanel(user.id, user.role).catch((error) => alert(error.message))}>
                       Acessar painel

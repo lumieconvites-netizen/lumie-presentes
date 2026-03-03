@@ -2,6 +2,72 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 
+const userSelectWithRelations = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  isBlocked: true,
+  blockReason: true,
+  blockedAt: true,
+  emailVerified: true,
+  createdAt: true,
+  referredByPartner: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
+  referredByAmbassador: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
+  _count: {
+    select: {
+      giftLists: true,
+      referredClientsAsPartner: true,
+      referredClientsAsAmbassador: true,
+      partnerReferrals: true,
+    },
+  },
+} as const;
+
+const userSelectFallback = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  isBlocked: true,
+  emailVerified: true,
+  createdAt: true,
+  referredByPartner: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
+  referredByAmbassador: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
+  _count: {
+    select: {
+      giftLists: true,
+      referredClientsAsPartner: true,
+      referredClientsAsAmbassador: true,
+      partnerReferrals: true,
+    },
+  },
+} as const;
+
 export async function GET(request: Request) {
   const session = await requireAdminSession();
   if (!session) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
@@ -48,18 +114,7 @@ export async function GET(request: Request) {
       prisma.user.findMany({
         where,
         orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          isBlocked: true,
-          blockReason: true,
-          blockedAt: true,
-          emailVerified: true,
-          createdAt: true,
-          _count: { select: { giftLists: true } },
-        },
+        select: userSelectWithRelations,
         take,
         skip,
       }),
@@ -72,16 +127,7 @@ export async function GET(request: Request) {
         prisma.user.findMany({
           where,
           orderBy: { createdAt: "desc" },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            isBlocked: true,
-            emailVerified: true,
-            createdAt: true,
-            _count: { select: { giftLists: true } },
-          },
+          select: userSelectFallback,
           take,
           skip,
         }),
@@ -100,16 +146,7 @@ export async function GET(request: Request) {
           prisma.user.findMany({
             where: fallbackWhere,
             orderBy: { createdAt: "desc" },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
-              isBlocked: true,
-              emailVerified: true,
-              createdAt: true,
-              _count: { select: { giftLists: true } },
-            },
+            select: userSelectFallback,
             take,
             skip,
           }),
