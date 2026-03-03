@@ -24,8 +24,7 @@ export async function GET(request: Request) {
   ) as any[];
   const take = Math.min(Math.max(Number(searchParams.get("take") ?? "100") || 100, 1), 200);
   const skip = Math.max(Number(searchParams.get("skip") ?? "0") || 0, 0);
-
-  const where = {
+  const buildWhere = (activeRoles: any[]) => ({
     ...(q
       ? {
           OR: [
@@ -34,11 +33,13 @@ export async function GET(request: Request) {
           ],
         }
       : {}),
-    ...(roles.length === 1 ? { role: roles[0] } : {}),
-    ...(roles.length > 1 ? { role: { in: roles } } : {}),
+    ...(activeRoles.length === 1 ? { role: activeRoles[0] } : {}),
+    ...(activeRoles.length > 1 ? { role: { in: activeRoles } } : {}),
     ...(blocked === "true" ? { isBlocked: true } : {}),
     ...(blocked === "false" ? { isBlocked: false } : {}),
-  };
+  });
+  const where = buildWhere(roles);
+  const rolesWithoutEmployee = roles.filter((value) => value !== "EMPLOYEE");
 
   let users: any[] = [];
   let total = 0;
@@ -65,27 +66,60 @@ export async function GET(request: Request) {
       prisma.user.count({ where }),
     ]);
   } catch {
-    // Backward compatibility while blockReason columns are not present in DB.
-    [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          isBlocked: true,
-          emailVerified: true,
-          createdAt: true,
-          _count: { select: { giftLists: true } },
-        },
-        take,
-        skip,
-      }),
-      prisma.user.count({ where }),
-    ]);
-    users = users.map((u) => ({ ...u, blockReason: null, blockedAt: null }));
+    try {
+      // Backward compatibility while blockReason columns are not present in DB.
+      [users, total] = await Promise.all([
+        prisma.user.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            isBlocked: true,
+            emailVerified: true,
+            createdAt: true,
+            _count: { select: { giftLists: true } },
+          },
+          take,
+          skip,
+        }),
+        prisma.user.count({ where }),
+      ]);
+      users = users.map((u) => ({ ...u, blockReason: null, blockedAt: null }));
+    } catch {
+      // Backward compatibility while EMPLOYEE enum is not present in DB yet.
+      if (roles.includes("EMPLOYEE")) {
+        if (!rolesWithoutEmployee.length) {
+          return NextResponse.json({ users: [], total: 0, take, skip, hasMore: false });
+        }
+
+        const fallbackWhere = buildWhere(rolesWithoutEmployee);
+        [users, total] = await Promise.all([
+          prisma.user.findMany({
+            where: fallbackWhere,
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              isBlocked: true,
+              emailVerified: true,
+              createdAt: true,
+              _count: { select: { giftLists: true } },
+            },
+            take,
+            skip,
+          }),
+          prisma.user.count({ where: fallbackWhere }),
+        ]);
+        users = users.map((u) => ({ ...u, blockReason: null, blockedAt: null }));
+      } else {
+        throw new Error("Erro ao carregar usuários");
+      }
+    }
   }
 
   return NextResponse.json({ users, total, take, skip, hasMore: skip + users.length < total });
