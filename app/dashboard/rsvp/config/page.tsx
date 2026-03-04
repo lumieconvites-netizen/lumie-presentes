@@ -916,26 +916,26 @@ export default function RsvpConfigPage() {
                     {guest.checkInCode && <p className="text-xs text-gray-500">Código check-in: {guest.checkInCode}</p>}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => startEditGuest(guest)}>
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 w-full md:w-auto">
+                    <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => startEditGuest(guest)}>
                       <Pencil className="w-4 h-4 mr-1" /> Editar
                     </Button>
 
-                    <Button variant="outline" size="sm" onClick={() => { setQrGuest(guest); setOpenQr(true); }}>
+                    <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => { setQrGuest(guest); setOpenQr(true); }}>
                       <QrCode className="w-4 h-4 mr-1" /> QR
                     </Button>
 
                     <Button
                       variant={guest.checkedInAt ? 'default' : 'outline'}
                       size="sm"
-                      className={guest.checkedInAt ? 'bg-[#1f8a4c] hover:bg-[#186f3c] text-white' : ''}
+                      className={`${guest.checkedInAt ? 'bg-[#1f8a4c] hover:bg-[#186f3c] text-white' : ''} w-full sm:w-auto`}
                       onClick={() => toggleCheckIn(guest.id, !guest.checkedInAt)}
                     >
                       <UserCheck className="w-4 h-4 mr-1" />
                       {guest.checkedInAt ? 'Check-in OK' : 'Marcar check-in'}
                     </Button>
 
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={() => deleteGuest(guest.id)}>
+                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 w-full sm:w-auto" onClick={() => deleteGuest(guest.id)}>
                       <Trash2 className="w-4 h-4 mr-1" /> Excluir
                     </Button>
                   </div>

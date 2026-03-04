@@ -203,26 +203,29 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
           <CardTitle>Lista de convidados ({visibleGuests.length}/{filteredGuests.length})</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant={guestFilter === 'all' ? 'default' : 'outline'} onClick={() => { setGuestFilter('all'); setVisibleCount(5); }}>
+          <div className="-mx-1 overflow-x-auto px-1 pb-1">
+            <div className="flex min-w-max flex-nowrap gap-2">
+            <Button size="sm" className="whitespace-nowrap" variant={guestFilter === 'all' ? 'default' : 'outline'} onClick={() => { setGuestFilter('all'); setVisibleCount(5); }}>
               Todos
             </Button>
-            <Button size="sm" variant={guestFilter === 'confirmed' ? 'default' : 'outline'} onClick={() => { setGuestFilter('confirmed'); setVisibleCount(5); }}>
+            <Button size="sm" className="whitespace-nowrap" variant={guestFilter === 'confirmed' ? 'default' : 'outline'} onClick={() => { setGuestFilter('confirmed'); setVisibleCount(5); }}>
               Confirmados
             </Button>
-            <Button size="sm" variant={guestFilter === 'pending' ? 'default' : 'outline'} onClick={() => { setGuestFilter('pending'); setVisibleCount(5); }}>
+            <Button size="sm" className="whitespace-nowrap" variant={guestFilter === 'pending' ? 'default' : 'outline'} onClick={() => { setGuestFilter('pending'); setVisibleCount(5); }}>
               Pendentes
             </Button>
-            <Button size="sm" variant={guestFilter === 'declined' ? 'default' : 'outline'} onClick={() => { setGuestFilter('declined'); setVisibleCount(5); }}>
+            <Button size="sm" className="whitespace-nowrap" variant={guestFilter === 'declined' ? 'default' : 'outline'} onClick={() => { setGuestFilter('declined'); setVisibleCount(5); }}>
               Nao comparecem
             </Button>
             <Button
               size="sm"
+              className="whitespace-nowrap"
               variant={guestFilter === 'confirmedCheckedIn' ? 'default' : 'outline'}
               onClick={() => { setGuestFilter('confirmedCheckedIn'); setVisibleCount(5); }}
             >
               Confirmados com check-in
             </Button>
+            </div>
           </div>
 
           {guestsLoading ? <p className="text-sm text-gray-500">Carregando convidados...</p> : null}
@@ -232,7 +235,7 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
           ) : (
             <div className="space-y-2">
               {visibleGuests.map((guest) => (
-                <div key={guest.id} className="rounded-xl border border-[#e7d8cb] bg-white p-3 flex items-center justify-between gap-3">
+                <div key={guest.id} className="rounded-xl border border-[#e7d8cb] bg-white p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-medium text-gray-900 truncate">{guest.fullName}</p>
                     <p className="text-xs text-gray-500">
@@ -244,7 +247,7 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
                       {guest.checkedInAt ? ' • Check-in OK' : ''}
                     </p>
                   </div>
-                  <Button size="sm" variant="outline" asChild>
+                  <Button size="sm" variant="outline" className="w-full sm:w-auto" asChild>
                     <Link href="/dashboard/rsvp/config">Gerenciar</Link>
                   </Button>
                 </div>
@@ -252,14 +255,14 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             {canShowMore ? (
-              <Button variant="outline" onClick={() => setVisibleCount((prev) => Math.min(prev + 5, filteredGuests.length))}>
+              <Button className="w-full sm:w-auto" variant="outline" onClick={() => setVisibleCount((prev) => Math.min(prev + 5, filteredGuests.length))}>
                 Ver mais
               </Button>
             ) : null}
             {canShowLess ? (
-              <Button variant="outline" onClick={() => setVisibleCount((prev) => Math.max(prev - 5, 5))}>
+              <Button className="w-full sm:w-auto" variant="outline" onClick={() => setVisibleCount((prev) => Math.max(prev - 5, 5))}>
                 Ver menos
               </Button>
             ) : null}
@@ -268,15 +271,15 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
       </Card>
 
       <Card className="border-[#e7d8cb]">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <CardTitle>Status do RSVP</CardTitle>
           <Badge variant={data?.settings?.enabled ? 'default' : 'secondary'}>
             {data?.settings?.enabled ? 'Ativo' : 'Inativo'}
           </Badge>
         </CardHeader>
         <CardContent className="text-sm text-gray-600 space-y-2">
-          <p>URL de confirmação: <span className="font-medium text-gray-900">{data?.publicRsvpUrl ?? '-'}</span></p>
-          <p>URL do check-in público: <span className="font-medium text-gray-900">{data?.publicCheckInUrl || 'Não disponível'}</span></p>
+          <p>URL de confirmação: <span className="font-medium text-gray-900 break-all">{data?.publicRsvpUrl ?? '-'}</span></p>
+          <p>URL do check-in público: <span className="font-medium text-gray-900 break-all">{data?.publicCheckInUrl || 'Não disponível'}</span></p>
           <p>Email de notificações: <span className="font-medium text-gray-900">{data?.settings?.notificationEmail || 'Não configurado'}</span></p>
           {refreshing ? <p className="text-xs text-gray-500">Atualizando dados...</p> : null}
         </CardContent>
@@ -284,3 +287,4 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
     </div>
   );
 }
+
