@@ -115,7 +115,9 @@ export async function GET(req: Request) {
             description: true,
             pageLayout: {
               select: {
+                blocks: true,
                 theme: true,
+                customCss: true,
               },
             },
             gifts: {

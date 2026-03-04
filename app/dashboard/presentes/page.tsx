@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -102,8 +102,14 @@ export default function PresentesDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [savingAll, setSavingAll] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [uploadingGiftId, setUploadingGiftId] = useState<string | null>(null);
   const [uploadingListCover, setUploadingListCover] = useState(false);
+  const [bankAccountConfigured, setBankAccountConfigured] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
+  const [listLayoutBlocks, setListLayoutBlocks] = useState<any[]>([]);
+  const [listLayoutCustomCss, setListLayoutCustomCss] = useState<string | null>(null);
+  const [listLayoutTheme, setListLayoutTheme] = useState<Record<string, any>>({});
   const [listPageTitle, setListPageTitle] = useState('Minha Lista de Presentes');
   const [listPageMessage, setListPageMessage] = useState('Ajude a realizar nossos sonhos!');
   const [listPageCoverImage, setListPageCoverImage] = useState('');
@@ -125,6 +131,8 @@ export default function PresentesDashboard() {
   const primary = settings?.theme?.primary_color ?? '#C86E52';
   const previewTitleFont = resolveThemeTitleFont(listPageTitleFont);
   const previewMessageFont = resolveThemeBodyFont(listPageMessageFont);
+  const bootedRef = useRef(false);
+  const draftPersistingRef = useRef(false);
 
   const filteredGifts = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -163,6 +171,7 @@ export default function PresentesDashboard() {
   );
 
   const pendingChangesCount = pendingGiftChanges + (listMetaDirty ? 1 : 0);
+  const canPublish = pendingChangesCount > 0 || !isPublished;
 
   async function loadGiftListAndGifts() {
     setLoading(true);
@@ -175,10 +184,15 @@ export default function PresentesDashboard() {
       setGiftListId(glData.id);
       setGiftListSlug(glData.slug || '');
       setGiftListFeeMode(glData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
+      setBankAccountConfigured(Boolean(glData?.bankAccountConfigured));
+      setIsPublished(Boolean(glData?.isPublished));
 
       const title = glData?.title || 'Minha Lista de Presentes';
       const message = glData?.description || '';
       const theme = (glData?.pageLayout?.theme ?? {}) as Record<string, any>;
+      setListLayoutBlocks(Array.isArray(glData?.pageLayout?.blocks) ? glData.pageLayout.blocks : []);
+      setListLayoutCustomCss(typeof glData?.pageLayout?.customCss === 'string' ? glData.pageLayout.customCss : null);
+      setListLayoutTheme(theme);
       const cover = typeof theme.gifts_page_cover_image === 'string' ? theme.gifts_page_cover_image : '';
       const titleColor =
         typeof theme.gifts_page_title_color === 'string' && theme.gifts_page_title_color.trim()
@@ -220,6 +234,8 @@ export default function PresentesDashboard() {
 
       setGifts(mapped);
       setExpandedIds([]);
+      setSaveState('idle');
+      bootedRef.current = true;
     } catch (error: any) {
       if (error?.name !== 'AbortError') {
         alert(error?.message ?? 'Erro ao carregar presentes');
@@ -233,6 +249,43 @@ export default function PresentesDashboard() {
   useEffect(() => {
     loadGiftListAndGifts();
   }, []);
+
+  useEffect(() => {
+    if (
+      !bootedRef.current ||
+      !giftListId ||
+      loading ||
+      giftsLoading ||
+      savingAll ||
+      draftPersistingRef.current ||
+      pendingChangesCount === 0
+    ) {
+      return;
+    }
+
+    setSaveState('idle');
+    const timer = window.setTimeout(() => {
+      void persistDraft().catch(() => null);
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    giftListId,
+    loading,
+    giftsLoading,
+    savingAll,
+    pendingChangesCount,
+    gifts,
+    listPageTitle,
+    listPageMessage,
+    listPageCoverImage,
+    listPageTitleColor,
+    listPageTitleFont,
+    listPageMessageColor,
+    listPageMessageFont,
+    listMetaDirty,
+    isPublished,
+  ]);
 
   async function uploadGiftPhoto(file: File) {
     if (file.size > MAX_UPLOAD_BYTES) {
@@ -400,39 +453,34 @@ export default function PresentesDashboard() {
     setGifts((prev) => prev.map((gift) => (gift.localId === localId ? { ...gift, deleted: false, dirty: true } : gift)));
   }
 
+  function isGiftValidForSave(gift: EditableGift) {
+    return Boolean(gift.name.trim()) && Number(gift.basePrice) > 0 && Number(gift.totalQuantity) > 0;
+  }
+
   async function saveListMeta() {
-    const [giftListRes, layoutRes] = await Promise.all([
-      fetch('/api/gift-lists/my-list', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: listPageTitle.trim() || 'Minha Lista de Presentes',
-          description: listPageMessage.trim(),
-        }),
+    const giftListRes = await fetch('/api/gift-lists/my-list', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: listPageTitle.trim() || 'Minha Lista de Presentes',
+        description: listPageMessage.trim(),
       }),
-      giftListId ? fetch(`/api/gift-lists/${encodeURIComponent(giftListId)}/layout`, { cache: 'no-store' }) : Promise.resolve(null as any),
-    ]);
+    });
 
     const listData = await parseJsonSafe(giftListRes);
     if (!giftListRes.ok) {
       throw new Error(listData?.error ?? 'Erro ao salvar textos da página');
     }
 
-    if (giftListId && layoutRes) {
-      const layoutData = await parseJsonSafe(layoutRes);
-      if (!layoutRes.ok) {
-        throw new Error(layoutData?.error ?? 'Erro ao carregar layout para salvar capa');
-      }
-
-      const currentTheme = (layoutData?.theme ?? {}) as Record<string, any>;
+    if (giftListId) {
       const layoutSaveRes = await fetch(`/api/gift-lists/${encodeURIComponent(giftListId)}/layout`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          blocks: layoutData?.blocks ?? [],
-          customCss: layoutData?.customCss ?? null,
+          blocks: listLayoutBlocks,
+          customCss: listLayoutCustomCss,
           theme: {
-            ...currentTheme,
+            ...listLayoutTheme,
             gifts_page_cover_image: listPageCoverImage || '',
             gifts_page_title_color: listPageTitleColor || '#FFFFFF',
             gifts_page_title_font: listPageTitleFont || 'Cormorant Garamond',
@@ -440,106 +488,253 @@ export default function PresentesDashboard() {
             gifts_page_message_font: listPageMessageFont || 'Inter',
           },
         }),
-      });
+        });
       const layoutSaveData = await parseJsonSafe(layoutSaveRes);
       if (!layoutSaveRes.ok) {
         throw new Error(layoutSaveData?.error ?? 'Erro ao salvar capa da página');
       }
+
+      setListLayoutTheme((prev) => ({
+        ...prev,
+        gifts_page_cover_image: listPageCoverImage || '',
+        gifts_page_title_color: listPageTitleColor || '#FFFFFF',
+        gifts_page_title_font: listPageTitleFont || 'Cormorant Garamond',
+        gifts_page_message_color: listPageMessageColor || '#5F4A41',
+        gifts_page_message_font: listPageMessageFont || 'Inter',
+      }));
     }
+
+    setGiftListSlug(listData?.slug || giftListSlug);
+    setGiftListFeeMode(listData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
+    setIsPublished(Boolean(listData?.isPublished));
+    setInitialListPageTitle(listPageTitle.trim() || 'Minha Lista de Presentes');
+    setInitialListPageMessage(listPageMessage.trim());
+    setInitialListPageCoverImage(listPageCoverImage);
+    setInitialListPageTitleColor(listPageTitleColor || '#FFFFFF');
+    setInitialListPageTitleFont(listPageTitleFont || 'Cormorant Garamond');
+    setInitialListPageMessageColor(listPageMessageColor || '#5F4A41');
+    setInitialListPageMessageFont(listPageMessageFont || 'Inter');
   }
 
-  async function handleSaveAllChanges() {
-    if (!giftListId) return;
+  async function persistDraft(options?: { showAlert?: boolean; successMessage?: string; errorMessage?: string }) {
+    if (!giftListId) return { hasInvalidPending: false };
+    if (draftPersistingRef.current) return { hasInvalidPending: false };
 
-    const activeGifts = gifts.filter((gift) => !gift.deleted);
-    const invalid = activeGifts.find(
-      (gift) => !gift.name.trim() || Number(gift.basePrice) <= 0 || Number(gift.totalQuantity) <= 0
-    );
+    let nextGifts = [...gifts];
+    let hadMissingItems = false;
+    const invalidPending = nextGifts.filter((gift) => !gift.deleted && (gift.isNew || gift.dirty) && !isGiftValidForSave(gift));
 
-    if (invalid) {
-      alert('Preencha nome, valor e quantidade válidos para todos os presentes antes de publicar as alterações.');
-      return;
-    }
-
-    setSavingAll(true);
+    draftPersistingRef.current = true;
+    setSaveState('saving');
     try {
-      let hadMissingItems = false;
+      if (isPublished) {
+        const draftRes = await fetch('/api/gift-lists/my-list', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPublished: false }),
+        });
+        const draftData = await parseJsonSafe(draftRes);
+        if (!draftRes.ok) {
+          throw new Error(draftData?.error ?? 'Erro ao salvar rascunho');
+        }
+        setIsPublished(false);
+      }
 
       if (listMetaDirty) {
         await saveListMeta();
       }
 
-      const deletions = gifts.filter((gift) => gift.deleted && !gift.isNew && gift.serverId);
-      const updates = gifts.filter((gift) => !gift.deleted && !gift.isNew && gift.dirty && gift.serverId);
-      const creations = gifts.filter((gift) => !gift.deleted && gift.isNew);
+      const deletions = nextGifts.filter((gift) => gift.deleted && !gift.isNew && gift.serverId);
+      const updates = nextGifts.filter(
+        (gift) => !gift.deleted && !gift.isNew && gift.dirty && gift.serverId && isGiftValidForSave(gift)
+      );
+      const creations = nextGifts.filter((gift) => !gift.deleted && gift.isNew && isGiftValidForSave(gift));
 
-      for (const gift of deletions) {
-        const res = await fetch(`/api/gifts/${gift.serverId}`, { method: 'DELETE' });
-        const data = await parseJsonSafe(res);
+      const deletionResults = await Promise.all(
+        deletions.map(async (gift) => {
+          const res = await fetch(`/api/gifts/${gift.serverId}`, { method: 'DELETE' });
+          const data = await parseJsonSafe(res);
+          return { gift, res, data };
+        })
+      );
+
+      for (const { gift, res, data } of deletionResults) {
         if (!res.ok) {
           if (res.status === 404) {
             hadMissingItems = true;
-            continue;
+          } else {
+            throw new Error(data?.error ?? `Erro ao excluir presente ${gift.name || ''}`.trim());
           }
-          throw new Error(data?.error ?? `Erro ao excluir presente ${gift.name || ''}`.trim());
         }
+        nextGifts = nextGifts.filter((row) => row.localId !== gift.localId);
       }
 
-      for (const gift of updates) {
-        const trimmedImageUrl = (gift.imageUrl || '').trim();
-        const originalTrimmedImageUrl = (gift.originalImageUrl || '').trim();
-        const imageChanged = trimmedImageUrl !== originalTrimmedImageUrl;
-        const shouldSendImageUrl = imageChanged || !isLegacySupabaseStorageUrl(trimmedImageUrl);
+      const updateResults = await Promise.all(
+        updates.map(async (gift) => {
+          const trimmedImageUrl = (gift.imageUrl || '').trim();
+          const originalTrimmedImageUrl = (gift.originalImageUrl || '').trim();
+          const imageChanged = trimmedImageUrl !== originalTrimmedImageUrl;
+          const shouldSendImageUrl = imageChanged || !isLegacySupabaseStorageUrl(trimmedImageUrl);
 
-        const payload: Record<string, unknown> = {
-          name: gift.name.trim(),
-          description: gift.description.trim() || undefined,
-          basePrice: Number(gift.basePrice),
-          totalQuantity: Math.max(1, Number(gift.totalQuantity || 1)),
-        };
+          const payload: Record<string, unknown> = {
+            name: gift.name.trim(),
+            description: gift.description.trim() || undefined,
+            basePrice: Number(gift.basePrice),
+            totalQuantity: Math.max(1, Number(gift.totalQuantity || 1)),
+          };
 
-        if (shouldSendImageUrl) {
-          payload.imageUrl = trimmedImageUrl || '';
-        }
+          if (shouldSendImageUrl) {
+            payload.imageUrl = trimmedImageUrl || '';
+          }
 
-        const res = await fetch(`/api/gifts/${gift.serverId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const data = await parseJsonSafe(res);
+          const res = await fetch(`/api/gifts/${gift.serverId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const data = await parseJsonSafe(res);
+          return { gift, res, data };
+        })
+      );
+
+      for (const { gift, res, data } of updateResults) {
         if (!res.ok) {
           if (res.status === 404) {
             hadMissingItems = true;
+            nextGifts = nextGifts.filter((row) => row.localId !== gift.localId);
             continue;
           }
           throw new Error(data?.error ?? `Erro ao atualizar presente ${gift.name || ''}`.trim());
         }
+
+        nextGifts = nextGifts.map((row) =>
+          row.localId === gift.localId
+            ? {
+                ...row,
+                dirty: false,
+                isNew: false,
+                deleted: false,
+                originalImageUrl: row.imageUrl,
+                availableQty: Number(data?.availableQty ?? row.availableQty),
+                totalQuantity: Number(data?.totalQuantity ?? row.totalQuantity),
+              }
+            : row
+        );
       }
 
-      for (const gift of creations) {
-        const res = await fetch('/api/gifts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            giftListId,
-            name: gift.name.trim(),
-            description: gift.description.trim() || undefined,
-            imageUrl: gift.imageUrl || undefined,
-            basePrice: Number(gift.basePrice),
-            totalQuantity: Math.max(1, Number(gift.totalQuantity || 1)),
-          }),
-        });
-        const data = await parseJsonSafe(res);
-        if (!res.ok) throw new Error(data?.error ?? `Erro ao criar presente ${gift.name || ''}`.trim());
+      const creationResults = await Promise.all(
+        creations.map(async (gift) => {
+          const res = await fetch('/api/gifts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              giftListId,
+              name: gift.name.trim(),
+              description: gift.description.trim() || undefined,
+              imageUrl: gift.imageUrl || undefined,
+              basePrice: Number(gift.basePrice),
+              totalQuantity: Math.max(1, Number(gift.totalQuantity || 1)),
+            }),
+          });
+          const data = await parseJsonSafe(res);
+          return { gift, res, data };
+        })
+      );
+
+      for (const { gift, res, data } of creationResults) {
+        if (!res.ok) {
+          throw new Error(data?.error ?? `Erro ao criar presente ${gift.name || ''}`.trim());
+        }
+
+        nextGifts = nextGifts.map((row) =>
+          row.localId === gift.localId
+            ? {
+                ...row,
+                serverId: String(data?.id ?? row.serverId ?? ''),
+                dirty: false,
+                isNew: false,
+                deleted: false,
+                originalImageUrl: row.imageUrl,
+                availableQty: Number(data?.availableQty ?? row.totalQuantity),
+                totalQuantity: Number(data?.totalQuantity ?? row.totalQuantity),
+              }
+            : row
+        );
       }
 
-      await loadGiftListAndGifts();
       if (hadMissingItems) {
-        alert('Alguns presentes não existiam mais e foram sincronizados. Lista atualizada com sucesso.');
+        await loadGiftListAndGifts();
       } else {
-        alert('Alterações publicadas com sucesso.');
+        setGifts(nextGifts);
       }
+
+      const hasInvalidPending = invalidPending.length > 0;
+      setSaveState(hasInvalidPending ? 'idle' : 'saved');
+
+      if (options?.showAlert) {
+        alert(
+          options.successMessage ??
+            (hasInvalidPending
+              ? 'Rascunho salvo. Alguns presentes ainda precisam de nome, valor e quantidade válidos.'
+              : 'Rascunho salvo.')
+        );
+      }
+
+      return { hasInvalidPending };
+    } catch (error: any) {
+      setSaveState('error');
+      if (options?.showAlert) {
+        alert(error?.message ?? options.errorMessage ?? 'Falha ao salvar rascunho');
+      }
+      throw error;
+    } finally {
+      draftPersistingRef.current = false;
+    }
+  }
+
+  async function handlePublishChanges() {
+    if (!giftListId) return;
+    if (draftPersistingRef.current) {
+      alert('Aguarde o rascunho terminar de salvar e tente publicar novamente.');
+      return;
+    }
+
+    setSavingAll(true);
+    try {
+      const activeGifts = gifts.filter((gift) => !gift.deleted);
+      const invalid = activeGifts.find((gift) => !isGiftValidForSave(gift));
+
+      if (pendingChangesCount > 0) {
+        await persistDraft({
+          errorMessage: 'Erro ao salvar rascunho dos presentes',
+        });
+      }
+
+      if (invalid) {
+        alert('Preencha nome, valor e quantidade válidos para todos os presentes antes de publicar as alterações.');
+        return;
+      }
+
+      if (!bankAccountConfigured) {
+        alert('Cadastre a conta bancária antes de publicar os presentes. As alterações já ficaram salvas como rascunho.');
+        return;
+      }
+
+      const publishRes = await fetch('/api/gift-lists/my-list', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublished: true }),
+      });
+      const publishData = await parseJsonSafe(publishRes);
+      if (!publishRes.ok) {
+        throw new Error(publishData?.error ?? 'Erro ao publicar alterações dos presentes');
+      }
+
+      setIsPublished(true);
+      setGiftListSlug(publishData?.slug || giftListSlug);
+      setGiftListFeeMode(publishData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
+      setSaveState('saved');
+      alert('Alterações publicadas com sucesso.');
     } catch (error: any) {
       alert(error?.message ?? 'Erro ao publicar alterações dos presentes');
     } finally {
@@ -554,9 +749,31 @@ export default function PresentesDashboard() {
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-display font-bold text-gray-900">Meus Presentes</h1>
-              <p className="text-gray-600 mt-1">
-                {filteredGifts.length} {filteredGifts.length === 1 ? 'item' : 'itens'}
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-gray-600">
+                <p>
+                  {filteredGifts.length} {filteredGifts.length === 1 ? 'item' : 'itens'}
+                </p>
+                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${isPublished ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                  {isPublished ? 'Publicado' : 'Rascunho'}
+                </span>
+                {saveState !== 'idle' ? (
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                      saveState === 'error'
+                        ? 'bg-red-100 text-red-700'
+                        : saveState === 'saved'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-[#f6ecdf] text-[#8e3d2c]'
+                    }`}
+                  >
+                    {saveState === 'error'
+                      ? 'Falha ao salvar'
+                      : saveState === 'saved'
+                        ? 'Rascunho salvo'
+                        : 'Salvando rascunho...'}
+                  </span>
+                ) : null}
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
@@ -684,7 +901,7 @@ export default function PresentesDashboard() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-gray-500">
-                Dica: faça todas as edições nos cards abaixo e depois clique em <b>Publicar alterações</b> uma única vez.
+                As alterações são salvas automaticamente como rascunho. Clique em <b>Publicar alterações</b> apenas quando quiser deixar a página pública.
               </p>
             </div>
           </div>
@@ -869,12 +1086,12 @@ export default function PresentesDashboard() {
               <Plus className="w-5 h-5" />
             </Button>
             <Button
-              onClick={handleSaveAllChanges}
+              onClick={handlePublishChanges}
               className="h-11"
-              disabled={loading || giftsLoading || savingAll || uploadingListCover || uploadingGiftId !== null || pendingChangesCount === 0}
+              disabled={loading || giftsLoading || savingAll || uploadingListCover || uploadingGiftId !== null || !canPublish}
             >
               {savingAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
-              {savingAll ? 'Publicando...' : `Publicar alterações (${pendingChangesCount})`}
+              {savingAll ? 'Publicando...' : pendingChangesCount > 0 ? `Publicar alterações (${pendingChangesCount})` : 'Publicar alterações'}
             </Button>
           </div>
         </div>
