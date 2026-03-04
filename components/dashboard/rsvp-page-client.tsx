@@ -133,12 +133,6 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
                     Ver check-in
                   </Link>
                 </Button>
-                <Button variant="outline" asChild className="w-full sm:w-auto">
-                  <Link href="/dashboard/rsvp/config?status=confirmed">Ver confirmados</Link>
-                </Button>
-                <Button variant="outline" asChild className="w-full sm:w-auto">
-                  <Link href="/dashboard/rsvp/config?status=pending">Ver pendentes</Link>
-                </Button>
                 <Button asChild className="bg-[#8e3d2c] hover:bg-[#7a3426] text-white w-full sm:w-auto">
                   <Link href="/dashboard/rsvp/config">
                     <Settings className="w-4 h-4 mr-2" />
