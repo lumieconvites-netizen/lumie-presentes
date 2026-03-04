@@ -779,8 +779,9 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           <div>
             <Label className="text-sm font-medium">Título</Label>
             <Input
-              value={config.title || 'Falta Pouco!'}
+              value={config.title || ''}
               onChange={(e) => handleChange('title', e.target.value)}
+              placeholder="Ex: Falta Pouco!"
               className="mt-2"
             />
           </div>
