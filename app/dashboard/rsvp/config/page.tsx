@@ -55,7 +55,7 @@ type SlugCheckState = {
   message: string;
 };
 
-type GuestListFilter = 'all' | 'confirmed' | 'pending' | 'declined' | 'checkedIn' | 'confirmedPendingCheckin';
+type GuestListFilter = 'all' | 'confirmed' | 'pending' | 'confirmedCheckedIn' | 'declined';
 
 type EditGuestForm = {
   fullName: string;
@@ -189,8 +189,7 @@ export default function RsvpConfigPage() {
     if (raw === 'confirmed') return 'confirmed' as GuestListFilter;
     if (raw === 'pending') return 'pending' as GuestListFilter;
     if (raw === 'declined') return 'declined' as GuestListFilter;
-    if (raw === 'checkedin') return 'checkedIn' as GuestListFilter;
-    if (raw === 'confirmed-pending-checkin') return 'confirmedPendingCheckin' as GuestListFilter;
+    if (raw === 'checkedin' || raw === 'confirmed-checkedin') return 'confirmedCheckedIn' as GuestListFilter;
     return 'all' as GuestListFilter;
   }, [searchParams]);
 
@@ -235,6 +234,7 @@ export default function RsvpConfigPage() {
   const [savedCheckInSlug, setSavedCheckInSlug] = useState('');
   const [slugCheck, setSlugCheck] = useState<SlugCheckState>({ status: 'idle', message: '' });
   const [guestListFilter, setGuestListFilter] = useState<GuestListFilter>(initialStatusFilter);
+  const [visibleGuestsCount, setVisibleGuestsCount] = useState(15);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -266,15 +266,21 @@ export default function RsvpConfigPage() {
         return data.guests.filter((guest) => guest.status === 'PENDING');
       case 'declined':
         return data.guests.filter((guest) => guest.status === 'DECLINED');
-      case 'checkedIn':
-        return data.guests.filter((guest) => !!guest.checkedInAt);
-      case 'confirmedPendingCheckin':
-        return data.guests.filter((guest) => guest.status === 'CONFIRMED' && !guest.checkedInAt);
+      case 'confirmedCheckedIn':
+        return data.guests.filter((guest) => guest.status === 'CONFIRMED' && !!guest.checkedInAt);
       case 'all':
       default:
         return data.guests;
     }
   }, [data?.guests, guestListFilter]);
+
+  useEffect(() => {
+    setVisibleGuestsCount(15);
+  }, [guestListFilter, data?.guests?.length]);
+
+  const visibleGuests = useMemo(() => filteredGuests.slice(0, visibleGuestsCount), [filteredGuests, visibleGuestsCount]);
+  const canShowMoreGuests = visibleGuestsCount < filteredGuests.length;
+  const canShowLessGuests = visibleGuestsCount > 15;
 
   async function loadOverview() {
     setLoading(true);
@@ -848,7 +854,7 @@ export default function RsvpConfigPage() {
 
       <Card className="border-[#e7d8cb]">
         <CardHeader>
-          <CardTitle>Lista de convidados ({filteredGuests.length}/{data.guests.length})</CardTitle>
+          <CardTitle>Lista de convidados ({visibleGuests.length}/{filteredGuests.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-wrap gap-2">
@@ -867,10 +873,13 @@ export default function RsvpConfigPage() {
             </Button>
             <Button
               size="sm"
-              variant={guestListFilter === 'confirmedPendingCheckin' ? 'default' : 'outline'}
-              onClick={() => setGuestListFilter('confirmedPendingCheckin')}
+              variant={guestListFilter === 'confirmedCheckedIn' ? 'default' : 'outline'}
+              onClick={() => setGuestListFilter('confirmedCheckedIn')}
             >
-              Confirmados sem check-in
+              Confirmados com check-in
+            </Button>
+            <Button size="sm" variant={guestListFilter === 'declined' ? 'default' : 'outline'} onClick={() => setGuestListFilter('declined')}>
+              Não comparecem
             </Button>
           </div>
 
@@ -878,7 +887,7 @@ export default function RsvpConfigPage() {
             <p className="text-gray-600">Nenhum convidado cadastrado ainda.</p>
           ) : (
             <div className="space-y-3">
-              {filteredGuests.map((guest) => (
+              {visibleGuests.map((guest) => (
                 <div key={guest.id} className="rounded-xl border border-[#e7d8cb] bg-white p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-semibold text-gray-900 truncate">{guest.fullName}</p>
@@ -913,6 +922,19 @@ export default function RsvpConfigPage() {
                   </div>
                 </div>
               ))}
+
+              <div className="flex flex-wrap gap-2 justify-center pt-2">
+                {canShowMoreGuests ? (
+                  <Button variant="outline" onClick={() => setVisibleGuestsCount((prev) => Math.min(prev + 15, filteredGuests.length))}>
+                    Ver mais 15
+                  </Button>
+                ) : null}
+                {canShowLessGuests ? (
+                  <Button variant="outline" onClick={() => setVisibleGuestsCount((prev) => Math.max(prev - 15, 15))}>
+                    Ver menos
+                  </Button>
+                ) : null}
+              </div>
             </div>
           )}
         </CardContent>
