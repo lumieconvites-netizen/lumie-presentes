@@ -120,11 +120,12 @@ export async function PUT(request: Request) {
 
     const existingRecipient = await prisma.recipient.findUnique({
       where: { userId: ctx.effectiveUserId },
-      select: { id: true, pagarmeRecipientId: true, bankAccount: true },
+      select: { id: true, pagarmeRecipientId: true, bankAccount: true, status: true },
     });
 
     const ownerDocument = digitsOnly(bankAccount.holderDocument);
     const hasRealRecipient = isRealRecipientId(existingRecipient?.pagarmeRecipientId);
+    const hasSyncedRecipient = hasRealRecipient && existingRecipient?.status === "active";
     const currentBankAccount = (existingRecipient?.bankAccount ?? null) as Record<string, any> | null;
     const holderDocumentChanged =
       digitsOnly(currentBankAccount?.holderDocument) &&
@@ -134,9 +135,9 @@ export async function PUT(request: Request) {
       normalizeComparableHolderName(currentBankAccount?.holderName) !==
         normalizeComparableHolderName(bankAccount.holderName);
     const shouldCreateNewRecipient =
-      Boolean(holderDocumentChanged) || Boolean(holderNameChanged);
+      !hasSyncedRecipient || Boolean(holderDocumentChanged) || Boolean(holderNameChanged);
     let nextRecipientId = existingRecipient?.pagarmeRecipientId ?? `pending_${ctx.effectiveUserId}`;
-    let nextStatus = hasRealRecipient ? "active" : "pending";
+    let nextStatus = hasSyncedRecipient ? "active" : "pending";
     let warning: string | null = null;
     let details: string | null = null;
     let gatewayDetails: string | null = null;
@@ -151,7 +152,7 @@ export async function PUT(request: Request) {
       message = "Dados bancarios salvos. Sincronizacao pendente.";
     } else {
       try {
-        if (hasRealRecipient && existingRecipient?.pagarmeRecipientId && !shouldCreateNewRecipient) {
+        if (hasSyncedRecipient && existingRecipient?.pagarmeRecipientId && !shouldCreateNewRecipient) {
           await updateRecipientDefaultBankAccountWithGateway({
             recipientId: existingRecipient.pagarmeRecipientId,
             bankAccount: gatewayBankAccount,
@@ -178,7 +179,8 @@ export async function PUT(request: Request) {
         gatewayDetails = extractGatewayFallbackDetails(error);
         fallbackDetails = sanitizeRecipientSyncErrorDetails(error?.message);
         details = fallbackDetails || gatewayDetails;
-        warning = hasRealRecipient && !shouldCreateNewRecipient
+        nextStatus = "pending";
+        warning = hasSyncedRecipient && !shouldCreateNewRecipient
           ? "Conta salva, mas a atualizacao dos dados bancarios no recebedor atual da Pagar.me falhou. Nenhum novo recebedor foi criado."
           : "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
         message = "Dados bancarios salvos. Sincronizacao pendente.";
