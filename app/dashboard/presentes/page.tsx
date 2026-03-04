@@ -39,6 +39,18 @@ type EditableGift = {
   deleted: boolean;
 };
 
+type GiftsDraft = {
+  gifts: EditableGift[];
+  listPageTitle: string;
+  listPageMessage: string;
+  listPageCoverImage: string;
+  listPageTitleColor: string;
+  listPageTitleFont: string;
+  listPageMessageColor: string;
+  listPageMessageFont: string;
+  expandedIds: string[];
+};
+
 const feePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const TITLE_FONTS = ['Playfair Display', 'Cormorant Garamond', 'Great Vibes', 'Dancing Script', 'Allura', 'Poppins', 'Montserrat'] as const;
@@ -89,6 +101,10 @@ function toEditableGift(gift: GiftRow): EditableGift {
   };
 }
 
+function draftStorageKey(giftListId: string) {
+  return `lumie:gifts:draft:${giftListId}`;
+}
+
 export default function PresentesDashboard() {
   const { settings } = useUser();
 
@@ -132,7 +148,6 @@ export default function PresentesDashboard() {
   const previewTitleFont = resolveThemeTitleFont(listPageTitleFont);
   const previewMessageFont = resolveThemeBodyFont(listPageMessageFont);
   const bootedRef = useRef(false);
-  const draftPersistingRef = useRef(false);
 
   const filteredGifts = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -232,9 +247,35 @@ export default function PresentesDashboard() {
         })
       );
 
-      setGifts(mapped);
-      setExpandedIds([]);
-      setSaveState('idle');
+      const localDraftRaw =
+        typeof window !== 'undefined' && glData?.id ? window.localStorage.getItem(draftStorageKey(String(glData.id))) : null;
+      let localDraft: Partial<GiftsDraft> | null = null;
+      if (localDraftRaw) {
+        try {
+          localDraft = JSON.parse(localDraftRaw) as Partial<GiftsDraft>;
+        } catch {
+          localDraft = null;
+        }
+      }
+
+      if (localDraft?.gifts && Array.isArray(localDraft.gifts)) {
+        setGifts(localDraft.gifts as EditableGift[]);
+        setListPageTitle(typeof localDraft.listPageTitle === 'string' ? localDraft.listPageTitle : title);
+        setListPageMessage(typeof localDraft.listPageMessage === 'string' ? localDraft.listPageMessage : message);
+        setListPageCoverImage(typeof localDraft.listPageCoverImage === 'string' ? localDraft.listPageCoverImage : cover);
+        setListPageTitleColor(typeof localDraft.listPageTitleColor === 'string' ? localDraft.listPageTitleColor : titleColor);
+        setListPageTitleFont(typeof localDraft.listPageTitleFont === 'string' ? localDraft.listPageTitleFont : titleFont);
+        setListPageMessageColor(
+          typeof localDraft.listPageMessageColor === 'string' ? localDraft.listPageMessageColor : messageColor
+        );
+        setListPageMessageFont(typeof localDraft.listPageMessageFont === 'string' ? localDraft.listPageMessageFont : messageFont);
+        setExpandedIds(Array.isArray(localDraft.expandedIds) ? localDraft.expandedIds : []);
+        setSaveState('saved');
+      } else {
+        setGifts(mapped);
+        setExpandedIds([]);
+        setSaveState('idle');
+      }
       bootedRef.current = true;
     } catch (error: any) {
       if (error?.name !== 'AbortError') {
@@ -251,21 +292,29 @@ export default function PresentesDashboard() {
   }, []);
 
   useEffect(() => {
-    if (
-      !bootedRef.current ||
-      !giftListId ||
-      loading ||
-      giftsLoading ||
-      savingAll ||
-      draftPersistingRef.current ||
-      pendingChangesCount === 0
-    ) {
+    if (!bootedRef.current || !giftListId || loading || giftsLoading || savingAll || pendingChangesCount === 0) {
       return;
     }
 
-    setSaveState('idle');
+    setSaveState('saving');
     const timer = window.setTimeout(() => {
-      void persistDraft().catch(() => null);
+      try {
+        const payload: GiftsDraft = {
+          gifts,
+          listPageTitle,
+          listPageMessage,
+          listPageCoverImage,
+          listPageTitleColor,
+          listPageTitleFont,
+          listPageMessageColor,
+          listPageMessageFont,
+          expandedIds,
+        };
+        window.localStorage.setItem(draftStorageKey(giftListId), JSON.stringify(payload));
+        setSaveState('saved');
+      } catch {
+        setSaveState('error');
+      }
     }, 900);
 
     return () => window.clearTimeout(timer);
@@ -283,8 +332,8 @@ export default function PresentesDashboard() {
     listPageTitleFont,
     listPageMessageColor,
     listPageMessageFont,
+    expandedIds,
     listMetaDirty,
-    isPublished,
   ]);
 
   async function uploadGiftPhoto(file: File) {
@@ -516,29 +565,54 @@ export default function PresentesDashboard() {
     setInitialListPageMessageFont(listPageMessageFont || 'Inter');
   }
 
-  async function persistDraft(options?: { showAlert?: boolean; successMessage?: string; errorMessage?: string }) {
-    if (!giftListId) return { hasInvalidPending: false };
-    if (draftPersistingRef.current) return { hasInvalidPending: false };
+  function saveDraftNow() {
+    if (!giftListId || pendingChangesCount === 0) return;
 
-    let nextGifts = [...gifts];
-    let hadMissingItems = false;
-    const invalidPending = nextGifts.filter((gift) => !gift.deleted && (gift.isNew || gift.dirty) && !isGiftValidForSave(gift));
+    const payload: GiftsDraft = {
+      gifts,
+      listPageTitle,
+      listPageMessage,
+      listPageCoverImage,
+      listPageTitleColor,
+      listPageTitleFont,
+      listPageMessageColor,
+      listPageMessageFont,
+      expandedIds,
+    };
 
-    draftPersistingRef.current = true;
-    setSaveState('saving');
+    window.localStorage.setItem(draftStorageKey(giftListId), JSON.stringify(payload));
+    setSaveState('saved');
+  }
+
+  function clearDraft() {
+    if (!giftListId) return;
+    window.localStorage.removeItem(draftStorageKey(giftListId));
+  }
+
+  async function handlePublishChanges() {
+    if (!giftListId) return;
+
+    setSavingAll(true);
     try {
-      if (isPublished) {
-        const draftRes = await fetch('/api/gift-lists/my-list', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isPublished: false }),
-        });
-        const draftData = await parseJsonSafe(draftRes);
-        if (!draftRes.ok) {
-          throw new Error(draftData?.error ?? 'Erro ao salvar rascunho');
-        }
-        setIsPublished(false);
+      const activeGifts = gifts.filter((gift) => !gift.deleted);
+      const invalid = activeGifts.find((gift) => !isGiftValidForSave(gift));
+
+      if (pendingChangesCount > 0) {
+        saveDraftNow();
       }
+
+      if (invalid) {
+        alert('Preencha nome, valor e quantidade válidos para todos os presentes antes de publicar as alterações.');
+        return;
+      }
+
+      if (!bankAccountConfigured) {
+        alert('Cadastre a conta bancária antes de publicar os presentes. As alterações já ficaram salvas como rascunho.');
+        return;
+      }
+
+      let nextGifts = [...gifts];
+      let hadMissingItems = false;
 
       if (listMetaDirty) {
         await saveListMeta();
@@ -650,6 +724,7 @@ export default function PresentesDashboard() {
           row.localId === gift.localId
             ? {
                 ...row,
+                localId: String(data?.id ?? row.localId),
                 serverId: String(data?.id ?? row.serverId ?? ''),
                 dirty: false,
                 isNew: false,
@@ -660,64 +735,6 @@ export default function PresentesDashboard() {
               }
             : row
         );
-      }
-
-      if (hadMissingItems) {
-        await loadGiftListAndGifts();
-      } else {
-        setGifts(nextGifts);
-      }
-
-      const hasInvalidPending = invalidPending.length > 0;
-      setSaveState(hasInvalidPending ? 'idle' : 'saved');
-
-      if (options?.showAlert) {
-        alert(
-          options.successMessage ??
-            (hasInvalidPending
-              ? 'Rascunho salvo. Alguns presentes ainda precisam de nome, valor e quantidade válidos.'
-              : 'Rascunho salvo.')
-        );
-      }
-
-      return { hasInvalidPending };
-    } catch (error: any) {
-      setSaveState('error');
-      if (options?.showAlert) {
-        alert(error?.message ?? options.errorMessage ?? 'Falha ao salvar rascunho');
-      }
-      throw error;
-    } finally {
-      draftPersistingRef.current = false;
-    }
-  }
-
-  async function handlePublishChanges() {
-    if (!giftListId) return;
-    if (draftPersistingRef.current) {
-      alert('Aguarde o rascunho terminar de salvar e tente publicar novamente.');
-      return;
-    }
-
-    setSavingAll(true);
-    try {
-      const activeGifts = gifts.filter((gift) => !gift.deleted);
-      const invalid = activeGifts.find((gift) => !isGiftValidForSave(gift));
-
-      if (pendingChangesCount > 0) {
-        await persistDraft({
-          errorMessage: 'Erro ao salvar rascunho dos presentes',
-        });
-      }
-
-      if (invalid) {
-        alert('Preencha nome, valor e quantidade válidos para todos os presentes antes de publicar as alterações.');
-        return;
-      }
-
-      if (!bankAccountConfigured) {
-        alert('Cadastre a conta bancária antes de publicar os presentes. As alterações já ficaram salvas como rascunho.');
-        return;
       }
 
       const publishRes = await fetch('/api/gift-lists/my-list', {
@@ -733,6 +750,12 @@ export default function PresentesDashboard() {
       setIsPublished(true);
       setGiftListSlug(publishData?.slug || giftListSlug);
       setGiftListFeeMode(publishData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
+      clearDraft();
+      if (hadMissingItems) {
+        await loadGiftListAndGifts();
+      } else {
+        setGifts(nextGifts);
+      }
       setSaveState('saved');
       alert('Alterações publicadas com sucesso.');
     } catch (error: any) {
