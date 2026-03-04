@@ -245,6 +245,10 @@ export default function AccountSettingsPanel({
               <p className="mt-1">
                 O CPF/CNPJ e o titular devem ser exatamente os mesmos da conta bancária informada.
               </p>
+              <p className="mt-1">
+                Não é permitido cadastrar conta bancária em nome de menor de 18 anos. Use apenas uma conta de titular
+                maior de idade.
+              </p>
             </div>
 
             <div>
