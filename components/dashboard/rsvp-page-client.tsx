@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,9 +21,23 @@ export type OverviewResponse = {
   publicCheckInUrl?: string;
 };
 
+type Guest = {
+  id: string;
+  fullName: string;
+  status: 'PENDING' | 'CONFIRMED' | 'DECLINED';
+  checkedInAt: string | null;
+  checkInCode: string | null;
+};
+
+type DashboardGuestFilter = 'all' | 'confirmed' | 'pending' | 'declined' | 'confirmedCheckedIn';
+
 export default function DashboardRsvpPageClient({ initialData }: { initialData: OverviewResponse | null }) {
   const [data, setData] = useState<OverviewResponse | null>(initialData);
   const [refreshing, setRefreshing] = useState(false);
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [guestsLoading, setGuestsLoading] = useState(true);
+  const [guestFilter, setGuestFilter] = useState<DashboardGuestFilter>('all');
+  const [visibleCount, setVisibleCount] = useState(5);
 
   async function load(options?: { silent?: boolean }) {
     const silent = options?.silent === true;
@@ -42,9 +56,28 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
     }
   }
 
+  async function loadGuests(options?: { silent?: boolean }) {
+    const silent = options?.silent === true;
+    if (!silent) setGuestsLoading(true);
+    try {
+      const res = await fetch('/api/rsvp/guests?view=checkin&limit=500', { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Erro ao carregar convidados');
+      setGuests(Array.isArray(json) ? json : []);
+    } catch (error) {
+      if (!silent) {
+        console.error('Falha ao carregar convidados no dashboard RSVP:', error);
+      }
+    } finally {
+      if (!silent) setGuestsLoading(false);
+    }
+  }
+
   useEffect(() => {
+    loadGuests();
     const timer = window.setInterval(() => {
       load({ silent: true });
+      loadGuests({ silent: true });
     }, 12000);
     return () => window.clearInterval(timer);
   }, []);
@@ -56,6 +89,26 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
     declined: 0,
     checkedIn: 0,
   };
+
+  const filteredGuests = useMemo(() => {
+    switch (guestFilter) {
+      case 'confirmed':
+        return guests.filter((guest) => guest.status === 'CONFIRMED');
+      case 'pending':
+        return guests.filter((guest) => guest.status === 'PENDING');
+      case 'declined':
+        return guests.filter((guest) => guest.status === 'DECLINED');
+      case 'confirmedCheckedIn':
+        return guests.filter((guest) => guest.status === 'CONFIRMED' && !!guest.checkedInAt);
+      case 'all':
+      default:
+        return guests;
+    }
+  }, [guestFilter, guests]);
+
+  const visibleGuests = useMemo(() => filteredGuests.slice(0, visibleCount), [filteredGuests, visibleCount]);
+  const canShowMore = visibleCount < filteredGuests.length;
+  const canShowLess = visibleCount > 5;
 
   return (
     <div className="p-4 md:p-6 space-y-6 bg-[#fbf8f5] min-h-screen">
@@ -144,6 +197,75 @@ export default function DashboardRsvpPageClient({ initialData }: { initialData: 
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-[#e7d8cb]">
+        <CardHeader>
+          <CardTitle>Lista de convidados ({visibleGuests.length}/{filteredGuests.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant={guestFilter === 'all' ? 'default' : 'outline'} onClick={() => { setGuestFilter('all'); setVisibleCount(5); }}>
+              Todos
+            </Button>
+            <Button size="sm" variant={guestFilter === 'confirmed' ? 'default' : 'outline'} onClick={() => { setGuestFilter('confirmed'); setVisibleCount(5); }}>
+              Confirmados
+            </Button>
+            <Button size="sm" variant={guestFilter === 'pending' ? 'default' : 'outline'} onClick={() => { setGuestFilter('pending'); setVisibleCount(5); }}>
+              Pendentes
+            </Button>
+            <Button size="sm" variant={guestFilter === 'declined' ? 'default' : 'outline'} onClick={() => { setGuestFilter('declined'); setVisibleCount(5); }}>
+              Nao comparecem
+            </Button>
+            <Button
+              size="sm"
+              variant={guestFilter === 'confirmedCheckedIn' ? 'default' : 'outline'}
+              onClick={() => { setGuestFilter('confirmedCheckedIn'); setVisibleCount(5); }}
+            >
+              Confirmados com check-in
+            </Button>
+          </div>
+
+          {guestsLoading ? <p className="text-sm text-gray-500">Carregando convidados...</p> : null}
+
+          {visibleGuests.length === 0 ? (
+            <p className="text-sm text-gray-600">Nenhum convidado neste filtro.</p>
+          ) : (
+            <div className="space-y-2">
+              {visibleGuests.map((guest) => (
+                <div key={guest.id} className="rounded-xl border border-[#e7d8cb] bg-white p-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{guest.fullName}</p>
+                    <p className="text-xs text-gray-500">
+                      {guest.status === 'CONFIRMED'
+                        ? 'Confirmado'
+                        : guest.status === 'DECLINED'
+                          ? 'Nao comparece'
+                          : 'Pendente'}
+                      {guest.checkedInAt ? ' • Check-in OK' : ''}
+                    </p>
+                  </div>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href="/dashboard/rsvp/config">Gerenciar</Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            {canShowMore ? (
+              <Button variant="outline" onClick={() => setVisibleCount((prev) => Math.min(prev + 5, filteredGuests.length))}>
+                Ver mais
+              </Button>
+            ) : null}
+            {canShowLess ? (
+              <Button variant="outline" onClick={() => setVisibleCount((prev) => Math.max(prev - 5, 5))}>
+                Ver menos
+              </Button>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-[#e7d8cb]">
         <CardHeader className="flex flex-row items-center justify-between">
