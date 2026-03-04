@@ -129,7 +129,7 @@ async function getSummaryViaGateway(recipientId: string): Promise<RecipientFinan
 async function callGateway(
   path: string,
   opts: {
-    method: "GET" | "POST" | "PATCH";
+    method: "GET" | "POST" | "PATCH" | "PUT";
     body?: Record<string, any>;
   }
 ) {
@@ -287,17 +287,31 @@ export async function updateRecipientDefaultBankAccountWithGateway(params: {
 }) {
   const { baseUrl } = readGatewayConfig();
   if (baseUrl) {
-    try {
-      const payload = await callGateway(
-        `/recipient/${encodeURIComponent(params.recipientId)}/default-bank-account`,
-        {
-          method: "PATCH",
+    const path = `/recipient/${encodeURIComponent(params.recipientId)}/default-bank-account`;
+    let lastGatewayError: unknown = null;
+    for (const method of ["PATCH", "POST", "PUT"] as const) {
+      try {
+        const payload = await callGateway(path, {
+          method,
           body: {
             bankAccount: params.bankAccount,
           },
+        });
+        return payload?.recipient ?? payload;
+      } catch (error) {
+        lastGatewayError = error;
+        const message = String((error as any)?.message ?? "");
+        const isMethodMismatch =
+          message.includes("Withdraw gateway error 405") ||
+          message.includes("UnsupportedApiVersion");
+        if (!isMethodMismatch) {
+          break;
         }
-      );
-      return payload?.recipient ?? payload;
+      }
+    }
+
+    try {
+      throw lastGatewayError ?? new Error("Falha ao atualizar conta via withdraw gateway.");
     } catch (error) {
       console.error(
         "Falha ao atualizar conta via withdraw gateway. Tentando direto na Pagar.me.",
