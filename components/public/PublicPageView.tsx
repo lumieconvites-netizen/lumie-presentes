@@ -110,6 +110,18 @@ function toExternalMapUrl(value: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(url)}`;
 }
 
+function getEventInfoItems(config: any) {
+  if (!Array.isArray(config?.events)) return [];
+  return config.events.map((item: any) => ({
+    label: item?.label || '',
+    datetime: item?.datetime || '',
+    location: item?.location || '',
+    address: item?.address || '',
+    mapLink: item?.mapLink || '',
+    mapButtonText: item?.mapButtonText || '',
+  }));
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -742,6 +754,70 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                       </div>
                     </div>
                   )}
+
+                  {getEventInfoItems(config)
+                    .slice(1)
+                    .filter((item: any) => item.datetime || item.location || item.address || item.mapLink)
+                    .map((item: any, itemIndex: number) => (
+                      <div key={itemIndex} className="p-8 bg-white rounded-2xl shadow-sm space-y-5">
+                        {item.label ? (
+                          <div
+                            className="inline-flex rounded-full px-3 py-1 text-xs font-medium"
+                            style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}
+                          >
+                            {item.label}
+                          </div>
+                        ) : null}
+
+                        {item.datetime ? (
+                          <div className="flex items-start gap-6">
+                            <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primaryColor}15` }}>
+                              <Calendar className="w-7 h-7" style={{ color: primaryColor }} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-base mb-2" style={{ color: captionColor }}>Data e Hora</p>
+                              <p className="text-lg" style={{ color: captionColor }}>
+                                {new Date(item.datetime).toLocaleString('pt-BR', {
+                                  day: '2-digit',
+                                  month: 'long',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {(item.location || item.address || item.mapLink) ? (
+                          <div className="flex items-start gap-6">
+                            <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primaryColor}15` }}>
+                              <MapPin className="w-7 h-7" style={{ color: primaryColor }} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-base mb-2" style={{ color: captionColor }}>
+                                {item.location || 'Local do Evento'}
+                              </p>
+                              {item.address ? (
+                                <p className="mb-3" style={{ color: captionColor }}>{item.address}</p>
+                              ) : null}
+                              {item.mapLink ? (
+                                <a
+                                  href={item.mapLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 text-sm font-medium hover:underline"
+                                  style={{ color: captionColor }}
+                                >
+                                  <Globe className="w-4 h-4" />
+                                  {item.mapButtonText || 'Ver no mapa'}
+                                </a>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
                 </div>
               </div>
             )}

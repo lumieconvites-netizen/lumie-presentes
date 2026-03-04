@@ -50,6 +50,14 @@ type GuestGuideItem = {
   image: string;
   mediaType: GuestGuideMediaType;
 };
+type EventInfoItem = {
+  label: string;
+  datetime: string;
+  location: string;
+  address: string;
+  mapLink: string;
+  mapButtonText: string;
+};
 
 const GUEST_GUIDE_ICON_OPTIONS: Array<{ id: GuestGuideIconId; label: string }> = [
   { id: 'none', label: 'Sem ícone' },
@@ -373,6 +381,97 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
     const items = getGuestGuideItems();
     items.splice(index, 1);
     updateGuestGuideItems(items);
+  };
+
+  const getEventInfoItems = (): EventInfoItem[] => {
+    const fromEvents = Array.isArray(config.events)
+      ? config.events.map((item: any) => ({
+          label: item?.label || '',
+          datetime: item?.datetime || '',
+          location: item?.location || '',
+          address: item?.address || '',
+          mapLink: item?.mapLink || '',
+          mapButtonText: item?.mapButtonText || '',
+        }))
+      : [];
+
+    if (fromEvents.length > 0) return fromEvents;
+
+    return [
+      {
+        label: '',
+        datetime: config.datetime || '',
+        location: config.location || '',
+        address: config.address || '',
+        mapLink: config.mapLink || '',
+        mapButtonText: config.mapButtonText || '',
+      },
+    ];
+  };
+
+  const updateEventInfoItems = (items: EventInfoItem[]) => {
+    const normalized = items.length > 0
+      ? items
+      : [
+          {
+            label: '',
+            datetime: '',
+            location: '',
+            address: '',
+            mapLink: '',
+            mapButtonText: '',
+          },
+        ];
+    const primary = normalized[0];
+    onUpdate({
+      events: normalized,
+      datetime: primary.datetime,
+      location: primary.location,
+      address: primary.address,
+      mapLink: primary.mapLink,
+      mapButtonText: primary.mapButtonText,
+    });
+  };
+
+  const addEventInfoItem = () => {
+    const items = getEventInfoItems();
+    updateEventInfoItems([
+      ...items,
+      {
+        label: '',
+        datetime: '',
+        location: '',
+        address: '',
+        mapLink: '',
+        mapButtonText: '',
+      },
+    ]);
+  };
+
+  const updateEventInfoItem = (index: number, key: keyof EventInfoItem, value: string) => {
+    const items = getEventInfoItems();
+    if (!items[index]) return;
+    items[index] = { ...items[index], [key]: value };
+    updateEventInfoItems(items);
+  };
+
+  const removeEventInfoItem = (index: number) => {
+    const items = getEventInfoItems();
+    if (items.length <= 1) {
+      updateEventInfoItems([
+        {
+          label: '',
+          datetime: '',
+          location: '',
+          address: '',
+          mapLink: '',
+          mapButtonText: '',
+        },
+      ]);
+      return;
+    }
+    items.splice(index, 1);
+    updateEventInfoItems(items);
   };
 
   const handleGuestGuideImageUpload = async (
@@ -1024,55 +1123,85 @@ export default function BlockEditor({ block, onUpdate, onDelete }: BlockEditorPr
           <div>
             <Label className="text-sm font-medium">Título</Label>
             <Input
-              value={config.title || 'Informações do Evento'}
+              value={config.title || ''}
               onChange={(e) => handleChange('title', e.target.value)}
+              placeholder="Ex: Informações do Evento"
               className="mt-2"
             />
           </div>
 
-          <DateTimePicker
-            label="Data e Hora"
-            value={config.datetime || ''}
-            onChange={(value) => handleChange('datetime', value)}
-          />
+          <div className="space-y-4">
+            {getEventInfoItems().map((item, index) => (
+              <div key={index} className="rounded-lg border border-[#ead9cd] bg-white p-4 space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-[#8E3D2C]">Momento {index + 1}</p>
+                  <Button type="button" variant="outline" size="sm" onClick={() => removeEventInfoItem(index)}>
+                    Remover
+                  </Button>
+                </div>
 
-          <div>
-            <Label className="text-sm font-medium">Local</Label>
-            <Input
-              value={config.location || ''}
-              onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="Ex: Espaço Villa Bella"
-              className="mt-2"
-            />
-          </div>
+                <div>
+                  <Label className="text-sm font-medium">Nome deste momento</Label>
+                  <Input
+                    value={item.label}
+                    onChange={(e) => updateEventInfoItem(index, 'label', e.target.value)}
+                    placeholder="Ex: Cerimônia ou Festa"
+                    className="mt-2"
+                  />
+                </div>
 
-          <div>
-            <Label className="text-sm font-medium">Endereço</Label>
-            <Input
-              value={config.address || ''}
-              onChange={(e) => handleChange('address', e.target.value)}
-              placeholder="Ex: Rua das Flores, 123"
-              className="mt-2"
-            />
-          </div>
+                <DateTimePicker
+                  label="Data e Hora"
+                  value={item.datetime}
+                  onChange={(value) => updateEventInfoItem(index, 'datetime', value)}
+                />
 
-          <div>
-            <Label className="text-sm font-medium">Link do Mapa</Label>
-            <Input
-              value={config.mapLink || ''}
-              onChange={(e) => handleChange('mapLink', e.target.value)}
-              placeholder="Cole o link do Google Maps"
-              className="mt-2"
-            />
-          </div>
+                <div>
+                  <Label className="text-sm font-medium">Local</Label>
+                  <Input
+                    value={item.location}
+                    onChange={(e) => updateEventInfoItem(index, 'location', e.target.value)}
+                    placeholder="Ex: Espaço Villa Bella"
+                    className="mt-2"
+                  />
+                </div>
 
-          <div>
-            <Label className="text-sm font-medium">Texto do Botão do mapa</Label>
-            <Input
-              value={config.mapButtonText || 'Abrir no mapa'}
-              onChange={(e) => handleChange('mapButtonText', e.target.value)}
-              className="mt-2"
-            />
+                <div>
+                  <Label className="text-sm font-medium">Endereço</Label>
+                  <Input
+                    value={item.address}
+                    onChange={(e) => updateEventInfoItem(index, 'address', e.target.value)}
+                    placeholder="Ex: Rua das Flores, 123"
+                    className="mt-2"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Link do Mapa</Label>
+                  <Input
+                    value={item.mapLink}
+                    onChange={(e) => updateEventInfoItem(index, 'mapLink', e.target.value)}
+                    placeholder="Cole o link do Google Maps"
+                    className="mt-2"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Texto do botão do mapa</Label>
+                  <Input
+                    value={item.mapButtonText}
+                    onChange={(e) => updateEventInfoItem(index, 'mapButtonText', e.target.value)}
+                    placeholder="Ex: Abrir no mapa"
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+            ))}
+
+            <Button type="button" variant="outline" onClick={addEventInfoItem} className="w-full">
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar outro local, data e hora
+            </Button>
           </div>
         </>
       )}
