@@ -40,6 +40,7 @@ export default async function DashboardLayout({
     ctx.sessionUserRole === 'EMPLOYEE';
 
   const isLimitedMode = isAffiliateLimitedMode || isEmployeeLimitedMode;
+  const canViewBankInLimitedMode = isAffiliateLimitedMode;
 
   if (!isLimitedMode && ctx.effectiveUser.role === 'PARTNER') {
     redirect('/parceiro');
@@ -56,14 +57,14 @@ export default async function DashboardLayout({
   return (
     <UserProviderGate>
       <div className="min-h-screen bg-background flex">
-        <DashboardSidebar limitedMode={isLimitedMode} />
+        <DashboardSidebar limitedMode={isLimitedMode} canViewBankInLimitedMode={canViewBankInLimitedMode} />
         <div className="flex-1 flex flex-col">
           <DashboardHeader
             limitedMode={isLimitedMode}
             sessionUserRole={ctx.sessionUserRole}
             initialSiteSlug={initialSiteSlug}
           />
-          <AffiliateLimitedGuard enabled={isLimitedMode} />
+          <AffiliateLimitedGuard enabled={isLimitedMode} canViewBankInLimitedMode={canViewBankInLimitedMode} />
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
       </div>

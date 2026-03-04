@@ -29,20 +29,22 @@ const menuItems = [
   { href: '/dashboard/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
-const limitedMenuItems = menuItems.filter((item) =>
-  ['/dashboard/presentes', '/dashboard/editor', '/dashboard/rsvp'].includes(item.href)
-);
-
 function SidebarNav({
   pathname,
   onNavigate,
   limitedMode,
+  canViewBankInLimitedMode,
 }: {
   pathname: string;
   onNavigate?: () => void;
   limitedMode?: boolean;
+  canViewBankInLimitedMode?: boolean;
 }) {
-  const items = limitedMode ? limitedMenuItems : menuItems;
+  const limitedItems = menuItems.filter((item) =>
+    ['/dashboard/presentes', '/dashboard/editor', '/dashboard/rsvp'].includes(item.href) ||
+    (canViewBankInLimitedMode && item.href === '/dashboard/banco')
+  );
+  const items = limitedMode ? limitedItems : menuItems;
   return (
     <nav className="flex-1 p-4 space-y-1">
       {items.map((item) => {
@@ -73,7 +75,13 @@ function SidebarNav({
   );
 }
 
-export default function DashboardSidebar({ limitedMode = false }: { limitedMode?: boolean }) {
+export default function DashboardSidebar({
+  limitedMode = false,
+  canViewBankInLimitedMode = false,
+}: {
+  limitedMode?: boolean;
+  canViewBankInLimitedMode?: boolean;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -109,7 +117,12 @@ export default function DashboardSidebar({ limitedMode = false }: { limitedMode?
           </Link>
         </div>
 
-        <SidebarNav pathname={pathname} onNavigate={() => setOpen(false)} limitedMode={limitedMode} />
+        <SidebarNav
+          pathname={pathname}
+          onNavigate={() => setOpen(false)}
+          limitedMode={limitedMode}
+          canViewBankInLimitedMode={canViewBankInLimitedMode}
+        />
       </aside>
     </>
   );

@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,17 +35,34 @@ const initialState: BankAccountForm = {
 };
 
 export default function BancoDashboardPage() {
+  const { data: session } = useSession();
   const [form, setForm] = useState<BankAccountForm>(initialState);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [readOnly, setReadOnly] = useState(false);
+
+  const sessionRole = (session?.user as any)?.role as string | undefined;
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/recipient/bank-account", { cache: "no-store" });
+        const bankRequest = fetch("/api/recipient/bank-account", { cache: "no-store" });
+        const affiliateModeRequest =
+          sessionRole === "PARTNER" || sessionRole === "AMBASSADOR"
+            ? fetch("/api/affiliate/impersonation", { cache: "no-store" })
+            : Promise.resolve(null);
+
+        const [res, affiliateModeRes] = await Promise.all([bankRequest, affiliateModeRequest]);
         const data = await res.json();
         const bankAccount = data?.recipient?.bankAccount as Partial<BankAccountForm> | undefined;
+
+        if (affiliateModeRes?.ok) {
+          const affiliateMode = await affiliateModeRes.json().catch(() => null);
+          setReadOnly(Boolean(affiliateMode?.isImpersonating));
+        } else {
+          setReadOnly(false);
+        }
 
         if (bankAccount) {
           setForm({
@@ -65,9 +83,13 @@ export default function BancoDashboardPage() {
     };
 
     load();
-  }, []);
+  }, [sessionRole]);
 
   async function handleSave() {
+    if (readOnly) {
+      return;
+    }
+
     const normalizedBankCode = normalizeBankCode(form.bankCode);
     if (!isSupportedBankCode(normalizedBankCode)) {
       alert("Código do banco inválido. Selecione uma instituição da lista.");
@@ -111,7 +133,11 @@ export default function BancoDashboardPage() {
     <div className="p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-display text-foreground mb-2">Conta Bancária</h1>
-        <p className="text-gray-500">Cadastre a conta para receber os valores dos presentes.</p>
+        <p className="text-gray-500">
+          {readOnly
+            ? "Visualize os dados bancários cadastrados para este cliente."
+            : "Cadastre a conta para receber os valores dos presentes."}
+        </p>
       </div>
 
       <Card>
@@ -134,12 +160,20 @@ export default function BancoDashboardPage() {
             </p>
           </div>
 
+          {readOnly ? (
+            <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+              Você está em modo de visualização. Parceiros e embaixadores podem apenas consultar os dados bancários do
+              cliente, sem alterar nenhuma informação.
+            </div>
+          ) : null}
+
           <div>
             <label className="text-sm font-medium mb-2 block">Titular</label>
             <Input
               value={form.holderName}
               onChange={(e) => setForm((p) => ({ ...p, holderName: e.target.value }))}
               placeholder="Ex.: Maria da Silva Souza"
+              readOnly={readOnly}
             />
           </div>
 
@@ -149,6 +183,7 @@ export default function BancoDashboardPage() {
               value={form.holderDocument}
               onChange={(e) => setForm((p) => ({ ...p, holderDocument: e.target.value }))}
               placeholder="Ex.: 12345678901 ou 12345678000199"
+              readOnly={readOnly}
             />
             <p className="mt-1 text-xs text-gray-500">
               Use apenas o documento do titular da conta.
@@ -158,10 +193,22 @@ export default function BancoDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Instituição financeira</label>
-              <BankInstitutionCombobox
-                value={form.bankCode}
-                onChange={(value) => setForm((p) => ({ ...p, bankCode: value }))}
-              />
+              {readOnly ? (
+                <Input
+                  value={
+                    isSupportedBankCode(form.bankCode)
+                      ? `${normalizeBankCode(form.bankCode)} - ${getBankNameByCode(form.bankCode)}`
+                      : form.bankCode
+                  }
+                  readOnly
+                  placeholder="Banco não informado"
+                />
+              ) : (
+                <BankInstitutionCombobox
+                  value={form.bankCode}
+                  onChange={(value) => setForm((p) => ({ ...p, bankCode: value }))}
+                />
+              )}
               {form.bankCode && !isSupportedBankCode(form.bankCode) ? (
                 <p className="text-xs text-red-600 mt-2">
                   Código inválido. Selecione uma instituição oficial.
@@ -179,6 +226,7 @@ export default function BancoDashboardPage() {
                 value={form.agency}
                 onChange={(e) => setForm((p) => ({ ...p, agency: e.target.value }))}
                 placeholder="Ex.: 1234"
+                readOnly={readOnly}
               />
             </div>
             <div>
@@ -187,6 +235,7 @@ export default function BancoDashboardPage() {
                 value={form.agencyDigit}
                 onChange={(e) => setForm((p) => ({ ...p, agencyDigit: e.target.value }))}
                 placeholder="Ex.: 0 (se houver)"
+                readOnly={readOnly}
               />
             </div>
           </div>
@@ -198,6 +247,7 @@ export default function BancoDashboardPage() {
                 value={form.accountNumber}
                 onChange={(e) => setForm((p) => ({ ...p, accountNumber: e.target.value }))}
                 placeholder="Ex.: 1234567"
+                readOnly={readOnly}
               />
             </div>
             <div>
@@ -206,6 +256,7 @@ export default function BancoDashboardPage() {
                 value={form.accountDigit}
                 onChange={(e) => setForm((p) => ({ ...p, accountDigit: e.target.value }))}
                 placeholder="Ex.: 8"
+                readOnly={readOnly}
               />
             </div>
             <div>
@@ -219,6 +270,7 @@ export default function BancoDashboardPage() {
                     accountType: e.target.value === "conta_poupanca" ? "conta_poupanca" : "conta_corrente",
                   }))
                 }
+                disabled={readOnly}
               >
                 <option value="conta_corrente">Conta corrente</option>
                 <option value="conta_poupanca">Conta poupança</option>
@@ -230,12 +282,17 @@ export default function BancoDashboardPage() {
             Status atual de validação: <strong>{status ?? "não enviado"}</strong>
           </div>
 
-          <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
-            {saving ? "Salvando..." : "Salvar dados bancários"}
-          </Button>
+          {readOnly ? (
+            <p className="text-sm text-gray-500">
+              Apenas o titular da conta pode alterar esses dados no próprio painel.
+            </p>
+          ) : (
+            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+              {saving ? "Salvando..." : "Salvar dados bancários"}
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
   );
 }
-

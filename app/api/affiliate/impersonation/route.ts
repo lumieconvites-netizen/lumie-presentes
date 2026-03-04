@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import {
+  ADMIN_IMPERSONATION_COOKIE,
   AFFILIATE_IMPERSONATION_COOKIE,
   getActingUserContext,
 } from "@/lib/acting-user";
@@ -14,20 +15,48 @@ function isAffiliateRole(role: string) {
   return role === "PARTNER" || role === "AMBASSADOR";
 }
 
+function getAffiliateActor(ctx: Awaited<ReturnType<typeof getActingUserContext>>) {
+  if (!ctx) return null;
+
+  if (isAffiliateRole(ctx.sessionUserRole)) {
+    return {
+      role: ctx.sessionUserRole,
+      ownerUserId: ctx.sessionUserId,
+      cookieName: AFFILIATE_IMPERSONATION_COOKIE,
+    } as const;
+  }
+
+  if (
+    ctx.sessionUserRole === "ADMIN" &&
+    ctx.isImpersonating &&
+    ctx.impersonationMode === "ADMIN" &&
+    isAffiliateRole(ctx.effectiveUser.role)
+  ) {
+    return {
+      role: ctx.effectiveUser.role,
+      ownerUserId: ctx.effectiveUserId,
+      cookieName: ADMIN_IMPERSONATION_COOKIE,
+    } as const;
+  }
+
+  return null;
+}
+
 export async function GET() {
   const ctx = await getActingUserContext();
   if (!ctx) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  if (!isAffiliateRole(ctx.sessionUserRole)) {
+  const affiliateActor = getAffiliateActor(ctx);
+  if (!affiliateActor) {
     return NextResponse.json({ error: "Acesso permitido apenas para parceiros e embaixadores." }, { status: 403 });
   }
 
   return NextResponse.json({
     isImpersonating: ctx.isImpersonating && ctx.impersonationMode === "AFFILIATE",
-    sessionUserId: ctx.sessionUserId,
-    sessionUserRole: ctx.sessionUserRole,
+    sessionUserId: affiliateActor.ownerUserId,
+    sessionUserRole: affiliateActor.role,
     effectiveUser: ctx.effectiveUser,
   });
 }
@@ -38,7 +67,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  if (!isAffiliateRole(ctx.sessionUserRole)) {
+  const affiliateActor = getAffiliateActor(ctx);
+  if (!affiliateActor) {
     return NextResponse.json({ error: "Acesso permitido apenas para parceiros e embaixadores." }, { status: 403 });
   }
 
@@ -50,9 +80,9 @@ export async function POST(request: Request) {
       where: {
         id: userId,
         role: "CLIENT",
-        ...(ctx.sessionUserRole === "PARTNER"
-          ? { referredByPartnerId: ctx.sessionUserId }
-          : { referredByAmbassadorId: ctx.sessionUserId }),
+        ...(affiliateActor.role === "PARTNER"
+          ? { referredByPartnerId: affiliateActor.ownerUserId }
+          : { referredByAmbassadorId: affiliateActor.ownerUserId }),
       },
       select: { id: true },
     });
@@ -62,7 +92,7 @@ export async function POST(request: Request) {
     }
 
     const response = NextResponse.json({ ok: true });
-    response.cookies.set(AFFILIATE_IMPERSONATION_COOKIE, userId, {
+    response.cookies.set(affiliateActor.cookieName, userId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -81,12 +111,13 @@ export async function DELETE() {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  if (!isAffiliateRole(ctx.sessionUserRole)) {
+  const affiliateActor = getAffiliateActor(ctx);
+  if (!affiliateActor) {
     return NextResponse.json({ error: "Acesso permitido apenas para parceiros e embaixadores." }, { status: 403 });
   }
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(AFFILIATE_IMPERSONATION_COOKIE, "", {
+  response.cookies.set(affiliateActor.cookieName, "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
