@@ -58,14 +58,14 @@ export default async function DashboardLayout({
     <UserProviderGate>
       <div className="min-h-screen bg-background flex">
         <DashboardSidebar limitedMode={isLimitedMode} canViewBankInLimitedMode={canViewBankInLimitedMode} />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 min-w-0 flex flex-col">
           <DashboardHeader
             limitedMode={isLimitedMode}
             sessionUserRole={ctx.sessionUserRole}
             initialSiteSlug={initialSiteSlug}
           />
           <AffiliateLimitedGuard enabled={isLimitedMode} canViewBankInLimitedMode={canViewBankInLimitedMode} />
-          <main className="flex-1 overflow-auto">{children}</main>
+          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">{children}</main>
         </div>
       </div>
     </UserProviderGate>
