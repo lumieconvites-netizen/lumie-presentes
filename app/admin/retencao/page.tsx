@@ -22,17 +22,56 @@ type RunSummary = {
   finishedAt: string | null;
 };
 
+type TrackedUser = {
+  id: string;
+  name: string | null;
+  email: string;
+  latestEvent: string;
+  retentionDeadline: string;
+  hardDeleteAt: string | null;
+  isBlocked: boolean;
+  managedByRetention: boolean;
+  status: 'active' | 'eligible' | 'waiting_grace' | 'ready_to_delete';
+  publishedLists: number;
+  totalLists: number;
+  lists: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    eventDate: string | null;
+    isPublished: boolean;
+  }>;
+};
+
 type RetentionResponse = {
   logs: RetentionLog[];
   actions: string[];
   runSummaries: RunSummary[];
+  trackedUsers: TrackedUser[];
+  retentionDays: number;
+  graceDays: number;
 };
 
 const dateTimeBr = (value?: string | null) => (value ? new Date(value).toLocaleString('pt-BR') : '-');
 
+function statusLabel(status: TrackedUser['status']) {
+  if (status === 'ready_to_delete') return 'Pronto para excluir';
+  if (status === 'waiting_grace') return 'Aguardando carência';
+  if (status === 'eligible') return 'Elegível ao bloqueio';
+  return 'Ativo';
+}
+
+function statusBadgeClass(status: TrackedUser['status']) {
+  if (status === 'ready_to_delete') return 'bg-red-100 text-red-700';
+  if (status === 'waiting_grace') return 'bg-amber-100 text-amber-700';
+  if (status === 'eligible') return 'bg-orange-100 text-orange-700';
+  return 'bg-slate-100 text-slate-700';
+}
+
 export default function AdminRetencaoPage() {
   const [data, setData] = useState<RetentionResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [runId, setRunId] = useState('');
   const [action, setAction] = useState('all');
   const [limit, setLimit] = useState('200');
@@ -63,8 +102,131 @@ export default function AdminRetencaoPage() {
     loadData().catch(() => null);
   }, [query]);
 
+  async function forceDeleteUser(userId: string) {
+    const confirmed = window.confirm(
+      'Isso vai excluir a conta agora e tentar limpar as mídias imediatamente. Deseja continuar?'
+    );
+    if (!confirmed) return;
+
+    setDeletingUserId(userId);
+    try {
+      const res = await fetch('/api/admin/retencao', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Erro ao excluir conta');
+
+      const deletedCount = Number(json?.assets?.deleted ?? 0);
+      const failedCount = Number(json?.assets?.failed ?? 0);
+      alert(
+        failedCount > 0
+          ? `Conta excluída. ${deletedCount} arquivos removidos e ${failedCount} falharam na limpeza.`
+          : `Conta excluída. ${deletedCount} arquivos removidos com sucesso.`
+      );
+      await loadData();
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao excluir conta');
+    } finally {
+      setDeletingUserId(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
+      <Card className="border-[#e7d8cb]">
+        <CardHeader>
+          <CardTitle>Painel de retenção</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+          <div className="rounded-lg border border-[#ead9cd] p-3 bg-white">
+            <p className="text-gray-500">Regra atual</p>
+            <p className="font-medium">Bloqueio após {data?.retentionDays ?? 90} dias do último evento</p>
+          </div>
+          <div className="rounded-lg border border-[#ead9cd] p-3 bg-white">
+            <p className="text-gray-500">Carência</p>
+            <p className="font-medium">Exclusão definitiva após {data?.graceDays ?? 7} dias de bloqueio</p>
+          </div>
+          <div className="rounded-lg border border-[#ead9cd] p-3 bg-white">
+            <p className="text-gray-500">Observação</p>
+            <p className="font-medium">A retenção usa a data do evento salva na lista.</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-[#e7d8cb]">
+        <CardHeader>
+          <CardTitle>Contas acompanhadas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead className="bg-[#faf3ee]">
+                <tr>
+                  <th className="p-2 text-left">Cliente</th>
+                  <th className="p-2 text-left">Último evento</th>
+                  <th className="p-2 text-left">Prazo 90 dias</th>
+                  <th className="p-2 text-left">Status</th>
+                  <th className="p-2 text-left">Listas</th>
+                  <th className="p-2 text-left">Exclusão</th>
+                  <th className="p-2 text-left">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data?.trackedUsers || []).map((user) => (
+                  <tr key={user.id} className="border-t align-top">
+                    <td className="p-2">
+                      <p>{user.name || 'Sem nome'}</p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                      <p className="text-xs text-gray-400">{user.id}</p>
+                    </td>
+                    <td className="p-2 whitespace-nowrap">{dateTimeBr(user.latestEvent)}</td>
+                    <td className="p-2 whitespace-nowrap">{dateTimeBr(user.retentionDeadline)}</td>
+                    <td className="p-2">
+                      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusBadgeClass(user.status)}`}>
+                        {statusLabel(user.status)}
+                      </span>
+                      {user.managedByRetention ? (
+                        <p className="mt-1 text-xs text-gray-500">Bloqueada pela retenção</p>
+                      ) : null}
+                    </td>
+                    <td className="p-2">
+                      <p>{user.publishedLists} publicadas / {user.totalLists} total</p>
+                      <div className="mt-1 space-y-1">
+                        {user.lists.slice(0, 3).map((list) => (
+                          <p key={list.id} className="text-xs text-gray-500">
+                            {list.title} · {list.isPublished ? 'publicada' : 'rascunho'}
+                          </p>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-2 whitespace-nowrap">{user.hardDeleteAt ? dateTimeBr(user.hardDeleteAt) : '-'}</td>
+                    <td className="p-2">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={deletingUserId === user.id}
+                        onClick={() => forceDeleteUser(user.id)}
+                      >
+                        {deletingUserId === user.id ? 'Excluindo...' : 'Excluir agora'}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+                {(data?.trackedUsers || []).length === 0 ? (
+                  <tr>
+                    <td className="p-3 text-gray-500 text-sm" colSpan={7}>
+                      Nenhuma conta com data de evento definida.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-[#e7d8cb]">
         <CardHeader>
           <CardTitle>Retenção de contas - Auditoria</CardTitle>
@@ -215,4 +377,3 @@ export default function AdminRetencaoPage() {
     </div>
   );
 }
-

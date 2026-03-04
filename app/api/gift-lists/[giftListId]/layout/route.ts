@@ -10,6 +10,29 @@ function safeJson(value: any) {
   return value ?? null;
 }
 
+function extractGiftListEventDate(blocks: unknown): Date | null {
+  if (!Array.isArray(blocks)) return null;
+
+  const countdownBlock = blocks.find(
+    (block) =>
+      block &&
+      typeof block === "object" &&
+      (block as Record<string, unknown>).type === "countdown"
+  ) as Record<string, unknown> | undefined;
+
+  const config =
+    countdownBlock && typeof countdownBlock.config === "object" && countdownBlock.config
+      ? (countdownBlock.config as Record<string, unknown>)
+      : null;
+
+  const rawDate = typeof config?.eventDate === "string" ? config.eventDate.trim() : "";
+  if (!rawDate) return null;
+
+  const parsed = new Date(rawDate);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: { giftListId: string } }
@@ -95,26 +118,36 @@ export async function PUT(
     const theme = safeJson(body.theme);
     const customCss = typeof body.customCss === "string" ? body.customCss : null;
 
-    const layout = await prisma.pageLayout.upsert({
-      where: { giftListId },
-      create: {
-        giftListId,
-        blocks: blocks ?? [],
-        theme: theme ?? {},
-        customCss,
-      },
-      update: {
-        blocks: blocks ?? [],
-        theme: theme ?? {},
-        customCss,
-      },
-    });
+    const nextBlocks = blocks ?? [];
+    const syncedEventDate = extractGiftListEventDate(nextBlocks);
+
+    const [, layout] = await prisma.$transaction([
+      prisma.giftList.update({
+        where: { id: giftListId },
+        data: { eventDate: syncedEventDate },
+      }),
+      prisma.pageLayout.upsert({
+        where: { giftListId },
+        create: {
+          giftListId,
+          blocks: nextBlocks,
+          theme: theme ?? {},
+          customCss,
+        },
+        update: {
+          blocks: nextBlocks,
+          theme: theme ?? {},
+          customCss,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       giftListId,
       blocks: layout.blocks,
       theme: layout.theme,
       customCss: layout.customCss,
+      eventDate: syncedEventDate,
     });
   } catch (error) {
     console.error("PUT layout error:", error);
