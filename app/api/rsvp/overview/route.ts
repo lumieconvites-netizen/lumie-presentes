@@ -48,6 +48,40 @@ async function getCheckInMetrics(giftListId: string) {
   };
 }
 
+async function getCheckInGuestsSafely(giftListId: string) {
+  try {
+    return await prisma.rsvpGuest.findMany({
+      where: { giftListId },
+      orderBy: [{ createdAt: "desc" }],
+      select: {
+        id: true,
+        fullName: true,
+        status: true,
+        checkedInAt: true,
+        confirmedAdults: true,
+        confirmedChildren: true,
+        checkInCode: true,
+      },
+    });
+  } catch (error) {
+    console.error("Falha ao carregar convidados com checkInCode, aplicando fallback:", error);
+    const guests = await prisma.rsvpGuest.findMany({
+      where: { giftListId },
+      orderBy: [{ createdAt: "desc" }],
+      select: {
+        id: true,
+        fullName: true,
+        status: true,
+        checkedInAt: true,
+        confirmedAdults: true,
+        confirmedChildren: true,
+      },
+    });
+
+    return guests.map((guest) => ({ ...guest, checkInCode: null as string | null }));
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const ctx = await getActingUserContext();
@@ -113,21 +147,7 @@ export async function GET(request: Request) {
       const [settings, metrics, guests] = await Promise.all([
         prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
         getCheckInMetrics(giftList.id),
-        includeGuests
-          ? prisma.rsvpGuest.findMany({
-              where: { giftListId: giftList.id },
-              orderBy: [{ createdAt: "desc" }],
-              select: {
-                id: true,
-                fullName: true,
-                status: true,
-                checkedInAt: true,
-                confirmedAdults: true,
-                confirmedChildren: true,
-                checkInCode: true,
-              },
-            })
-          : Promise.resolve([]),
+        includeGuests ? getCheckInGuestsSafely(giftList.id) : Promise.resolve([]),
       ]);
       const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
 

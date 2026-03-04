@@ -37,6 +37,8 @@ type CheckInConsoleProps = {
   autoRefreshMs?: number;
 };
 
+type GuestListFilter = 'all' | 'confirmedPendingCheckin' | 'checkedIn' | 'confirmed' | 'pending' | 'declined';
+
 export function CheckInConsole({
   overviewUrl,
   scanUrl,
@@ -48,6 +50,7 @@ export function CheckInConsole({
   const [loading, setLoading] = useState(true);
   const [guestsLoading, setGuestsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'scanner' | 'lista'>('scanner');
+  const [guestListFilter, setGuestListFilter] = useState<GuestListFilter>('confirmedPendingCheckin');
   const [manualCode, setManualCode] = useState('');
   const [search, setSearch] = useState('');
   const [processing, setProcessing] = useState(false);
@@ -73,31 +76,65 @@ export function CheckInConsole({
     }
   }, []);
 
+  const resolveStatusForFilter = useCallback((filter: GuestListFilter) => {
+    if (filter === 'pending') return 'PENDING';
+    if (filter === 'declined') return 'DECLINED';
+    if (filter === 'confirmed' || filter === 'confirmedPendingCheckin') return 'CONFIRMED';
+    return '';
+  }, []);
+
   const load = useCallback(
-    async (options?: { silent?: boolean; includeGuests?: boolean }) => {
+    async (options?: { silent?: boolean }) => {
       const silent = options?.silent === true;
-      const includeGuests = options?.includeGuests === true;
       if (!silent) setLoading(true);
 
       try {
-        const url = new URL(overviewUrl, window.location.origin);
-        if (includeGuests) {
-          url.searchParams.set('includeGuests', '1');
-        }
-        const res = await fetch(url.toString(), { cache: 'no-store' });
+        const res = await fetch(overviewUrl, { cache: 'no-store' });
         const json = await res.json();
         if (!res.ok) throw new Error(json?.error || 'Erro ao carregar check-in');
-        if (Array.isArray(json?.guests)) {
-          setGuests(json.guests);
-        }
         setData(json);
       } catch (error: any) {
-        pushFeedback({ type: 'error', text: error?.message || 'Erro ao carregar check-in.' });
+        if (!silent) {
+          pushFeedback({ type: 'error', text: error?.message || 'Erro ao carregar check-in.' });
+        } else {
+          console.error('Falha ao atualizar check-in em background:', error);
+        }
       } finally {
         if (!silent) setLoading(false);
       }
     },
     [overviewUrl, pushFeedback]
+  );
+
+  const loadGuests = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent === true;
+      if (!silent) setGuestsLoading(true);
+
+      try {
+        const url = new URL('/api/rsvp/guests', window.location.origin);
+        const statusParam = resolveStatusForFilter(guestListFilter);
+        url.searchParams.set('view', 'checkin');
+        url.searchParams.set('limit', guestListFilter === 'all' || guestListFilter === 'checkedIn' ? '500' : '300');
+        if (statusParam) {
+          url.searchParams.set('status', statusParam);
+        }
+
+        const res = await fetch(url.toString(), { cache: 'no-store' });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error || 'Erro ao carregar convidados');
+        setGuests(Array.isArray(json) ? json : []);
+      } catch (error: any) {
+        if (!silent) {
+          pushFeedback({ type: 'error', text: error?.message || 'Erro ao carregar convidados.' });
+        } else {
+          console.error('Falha ao atualizar lista de convidados em background:', error);
+        }
+      } finally {
+        if (!silent) setGuestsLoading(false);
+      }
+    },
+    [guestListFilter, pushFeedback, resolveStatusForFilter]
   );
 
   useEffect(() => {
@@ -108,11 +145,15 @@ export function CheckInConsole({
     if (!autoRefreshMs || autoRefreshMs < 1000) return;
 
     const timer = window.setInterval(() => {
-      load({ silent: true, includeGuests: activeTab === 'lista' });
+      // Atualiza métricas em background sem recarregar toda a lista de convidados.
+      load({ silent: true });
+      if (activeTab === 'lista') {
+        loadGuests({ silent: true });
+      }
     }, autoRefreshMs);
 
     return () => window.clearInterval(timer);
-  }, [activeTab, autoRefreshMs, load]);
+  }, [activeTab, autoRefreshMs, load, loadGuests]);
 
   const stopScanner = useCallback(() => {
     scannerActiveRef.current = false;
@@ -175,14 +216,17 @@ export function CheckInConsole({
           pushFeedback({ type: 'ok', text: `Check-in confirmado: ${json.guest?.fullName || 'Convidado'}.` });
         }
 
-        await load({ silent: true, includeGuests: activeTab === 'lista' });
+        await Promise.all([
+          load({ silent: true }),
+          activeTab === 'lista' ? loadGuests({ silent: true }) : Promise.resolve(),
+        ]);
       } catch (error: any) {
         pushFeedback({ type: 'error', text: error?.message || 'Falha no check-in.' });
       } finally {
         setProcessing(false);
       }
     },
-    [activeTab, load, processing, pushFeedback, scanUrl]
+    [activeTab, load, loadGuests, processing, pushFeedback, scanUrl]
   );
 
   const scanLoopBarcodeDetector = useCallback(async () => {
@@ -289,12 +333,8 @@ export function CheckInConsole({
 
   useEffect(() => {
     if (activeTab !== 'lista') return;
-    if (guests.length > 0) return;
-    setGuestsLoading(true);
-    load({ includeGuests: true, silent: true }).finally(() => {
-      setGuestsLoading(false);
-    });
-  }, [activeTab, guests.length, load]);
+    loadGuests();
+  }, [activeTab, guestListFilter, loadGuests]);
 
   useEffect(() => {
     if (!scannerActive) return;
@@ -328,13 +368,31 @@ export function CheckInConsole({
     return { expected, checkedIn, remaining };
   }, [data?.metrics, guests]);
 
+  const guestsByFilter = useMemo(() => {
+    switch (guestListFilter) {
+      case 'confirmedPendingCheckin':
+        return guests.filter((g) => g.status === 'CONFIRMED' && !g.checkedInAt);
+      case 'checkedIn':
+        return guests.filter((g) => !!g.checkedInAt);
+      case 'confirmed':
+        return guests.filter((g) => g.status === 'CONFIRMED');
+      case 'pending':
+        return guests.filter((g) => g.status === 'PENDING');
+      case 'declined':
+        return guests.filter((g) => g.status === 'DECLINED');
+      case 'all':
+      default:
+        return guests;
+    }
+  }, [guestListFilter, guests]);
+
   const filteredGuests = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return guests;
-    return guests.filter(
+    if (!query) return guestsByFilter;
+    return guestsByFilter.filter(
       (g) => g.fullName.toLowerCase().includes(query) || (g.checkInCode || '').toLowerCase().includes(query)
     );
-  }, [guests, search]);
+  }, [guestsByFilter, search]);
 
   if (loading) {
     return <div className="p-4 md:p-6">Carregando check-in...</div>;
@@ -372,7 +430,12 @@ export function CheckInConsole({
             <Button
               variant="outline"
               className="w-full sm:w-auto"
-              onClick={() => load({ includeGuests: activeTab === 'lista' })}
+              onClick={() => {
+                load();
+                if (activeTab === 'lista') {
+                  loadGuests();
+                }
+              }}
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Atualizar
@@ -520,6 +583,33 @@ export function CheckInConsole({
           ) : (
             <div className="space-y-3">
               {guestsLoading ? <p className="text-sm text-gray-500">Carregando lista...</p> : null}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant={guestListFilter === 'confirmedPendingCheckin' ? 'default' : 'outline'}
+                  className={guestListFilter === 'confirmedPendingCheckin' ? 'bg-[#8e3d2c] text-white hover:bg-[#7a3426]' : ''}
+                  onClick={() => setGuestListFilter('confirmedPendingCheckin')}
+                >
+                  Confirmados sem check-in
+                </Button>
+                <Button size="sm" variant={guestListFilter === 'all' ? 'default' : 'outline'} onClick={() => setGuestListFilter('all')}>
+                  Todos
+                </Button>
+                <Button
+                  size="sm"
+                  variant={guestListFilter === 'checkedIn' ? 'default' : 'outline'}
+                  onClick={() => setGuestListFilter('checkedIn')}
+                >
+                  Ja com check-in
+                </Button>
+                <Button
+                  size="sm"
+                  variant={guestListFilter === 'pending' ? 'default' : 'outline'}
+                  onClick={() => setGuestListFilter('pending')}
+                >
+                  Pendentes
+                </Button>
+              </div>
               <Input
                 placeholder="Buscar por nome ou código de check-in"
                 value={search}
@@ -527,6 +617,9 @@ export function CheckInConsole({
               />
 
               <div className="space-y-2 max-h-[480px] overflow-auto pr-1">
+                {filteredGuests.length === 0 ? (
+                  <p className="text-sm text-gray-500">Nenhum convidado encontrado neste filtro.</p>
+                ) : null}
                 {filteredGuests.map((guest) => (
                   <div key={guest.id} className="rounded-xl border border-[#e7d8cb] bg-white p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="min-w-0">

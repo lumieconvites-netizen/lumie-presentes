@@ -1,12 +1,13 @@
 ﻿'use client';
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, Plus, QrCode, Trash2, UserCheck, UploadCloud, FileUp } from 'lucide-react';
+import { Download, Plus, QrCode, Trash2, UserCheck, UploadCloud, FileUp, Pencil } from 'lucide-react';
 
 type RsvpGuest = {
   id: string;
@@ -52,6 +53,14 @@ type GuestInput = {
 type SlugCheckState = {
   status: 'idle' | 'checking' | 'current' | 'available' | 'taken' | 'invalid' | 'error';
   message: string;
+};
+
+type GuestListFilter = 'all' | 'confirmed' | 'pending' | 'declined' | 'checkedIn' | 'confirmedPendingCheckin';
+
+type EditGuestForm = {
+  fullName: string;
+  adultLimit: number;
+  childLimit: number;
 };
 
 const statusLabels: Record<RsvpGuest['status'], string> = {
@@ -174,6 +183,17 @@ function parseCsvGuests(raw: string): GuestInput[] {
 }
 
 export default function RsvpConfigPage() {
+  const searchParams = useSearchParams();
+  const initialStatusFilter = useMemo(() => {
+    const raw = (searchParams.get('status') || '').trim().toLowerCase();
+    if (raw === 'confirmed') return 'confirmed' as GuestListFilter;
+    if (raw === 'pending') return 'pending' as GuestListFilter;
+    if (raw === 'declined') return 'declined' as GuestListFilter;
+    if (raw === 'checkedin') return 'checkedIn' as GuestListFilter;
+    if (raw === 'confirmed-pending-checkin') return 'confirmedPendingCheckin' as GuestListFilter;
+    return 'all' as GuestListFilter;
+  }, [searchParams]);
+
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
   const [addingGuest, setAddingGuest] = useState(false);
@@ -184,6 +204,10 @@ export default function RsvpConfigPage() {
   const [openQr, setOpenQr] = useState(false);
   const [qrGuest, setQrGuest] = useState<RsvpGuest | null>(null);
   const [openImportPreview, setOpenImportPreview] = useState(false);
+  const [openEditGuest, setOpenEditGuest] = useState(false);
+  const [editingGuest, setEditingGuest] = useState<RsvpGuest | null>(null);
+  const [savingEditGuest, setSavingEditGuest] = useState(false);
+  const [editGuestForm, setEditGuestForm] = useState<EditGuestForm>({ fullName: '', adultLimit: 0, childLimit: 0 });
 
   const [settings, setSettings] = useState({
     enabled: false,
@@ -210,6 +234,7 @@ export default function RsvpConfigPage() {
   const [importGuestsPreview, setImportGuestsPreview] = useState<GuestInput[]>([]);
   const [savedCheckInSlug, setSavedCheckInSlug] = useState('');
   const [slugCheck, setSlugCheck] = useState<SlugCheckState>({ status: 'idle', message: '' });
+  const [guestListFilter, setGuestListFilter] = useState<GuestListFilter>(initialStatusFilter);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -230,6 +255,26 @@ export default function RsvpConfigPage() {
     }
     return `${window.location.origin}/rsvp/checkin/${suffix}`;
   }, [data?.list.slug, data?.publicCheckInUrl, settings.checkInSlug]);
+
+  const filteredGuests = useMemo(() => {
+    if (!data?.guests) return [];
+
+    switch (guestListFilter) {
+      case 'confirmed':
+        return data.guests.filter((guest) => guest.status === 'CONFIRMED');
+      case 'pending':
+        return data.guests.filter((guest) => guest.status === 'PENDING');
+      case 'declined':
+        return data.guests.filter((guest) => guest.status === 'DECLINED');
+      case 'checkedIn':
+        return data.guests.filter((guest) => !!guest.checkedInAt);
+      case 'confirmedPendingCheckin':
+        return data.guests.filter((guest) => guest.status === 'CONFIRMED' && !guest.checkedInAt);
+      case 'all':
+      default:
+        return data.guests;
+    }
+  }, [data?.guests, guestListFilter]);
 
   async function loadOverview() {
     setLoading(true);
@@ -457,6 +502,67 @@ export default function RsvpConfigPage() {
       await loadOverview();
     } catch (error: any) {
       alert(error?.message || 'Erro ao excluir convidado');
+    }
+  }
+
+  function startEditGuest(guest: RsvpGuest) {
+    setEditingGuest(guest);
+    setEditGuestForm({
+      fullName: guest.fullName,
+      adultLimit: guest.adultLimit,
+      childLimit: guest.childLimit,
+    });
+    setOpenEditGuest(true);
+  }
+
+  async function saveGuestEdit(e: FormEvent) {
+    e.preventDefault();
+    if (!editingGuest) return;
+
+    const payload = {
+      fullName: editGuestForm.fullName.trim(),
+      adultLimit: Number(editGuestForm.adultLimit || 0),
+      childLimit: Number(editGuestForm.childLimit || 0),
+    };
+
+    if (payload.fullName.length < 2) {
+      alert('Nome precisa ter pelo menos 2 caracteres.');
+      return;
+    }
+
+    setSavingEditGuest(true);
+    try {
+      const res = await fetch(`/api/rsvp/guests/${editingGuest.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Erro ao atualizar convidado');
+
+      setData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          guests: prev.guests.map((guest) =>
+            guest.id === editingGuest.id
+              ? {
+                  ...guest,
+                  fullName: json.fullName ?? payload.fullName,
+                  adultLimit: typeof json.adultLimit === 'number' ? json.adultLimit : payload.adultLimit,
+                  childLimit: typeof json.childLimit === 'number' ? json.childLimit : payload.childLimit,
+                }
+              : guest
+          ),
+        };
+      });
+
+      setOpenEditGuest(false);
+      setEditingGuest(null);
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao atualizar convidado');
+    } finally {
+      setSavingEditGuest(false);
     }
   }
 
@@ -742,14 +848,37 @@ export default function RsvpConfigPage() {
 
       <Card className="border-[#e7d8cb]">
         <CardHeader>
-          <CardTitle>Lista de convidados ({data.guests.length})</CardTitle>
+          <CardTitle>Lista de convidados ({filteredGuests.length}/{data.guests.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {data.guests.length === 0 ? (
+          <div className="mb-4 flex flex-wrap gap-2">
+            <Button size="sm" variant={guestListFilter === 'all' ? 'default' : 'outline'} onClick={() => setGuestListFilter('all')}>
+              Todos
+            </Button>
+            <Button
+              size="sm"
+              variant={guestListFilter === 'confirmed' ? 'default' : 'outline'}
+              onClick={() => setGuestListFilter('confirmed')}
+            >
+              Confirmados
+            </Button>
+            <Button size="sm" variant={guestListFilter === 'pending' ? 'default' : 'outline'} onClick={() => setGuestListFilter('pending')}>
+              Pendentes
+            </Button>
+            <Button
+              size="sm"
+              variant={guestListFilter === 'confirmedPendingCheckin' ? 'default' : 'outline'}
+              onClick={() => setGuestListFilter('confirmedPendingCheckin')}
+            >
+              Confirmados sem check-in
+            </Button>
+          </div>
+
+          {filteredGuests.length === 0 ? (
             <p className="text-gray-600">Nenhum convidado cadastrado ainda.</p>
           ) : (
             <div className="space-y-3">
-              {data.guests.map((guest) => (
+              {filteredGuests.map((guest) => (
                 <div key={guest.id} className="rounded-xl border border-[#e7d8cb] bg-white p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-semibold text-gray-900 truncate">{guest.fullName}</p>
@@ -760,6 +889,10 @@ export default function RsvpConfigPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => startEditGuest(guest)}>
+                      <Pencil className="w-4 h-4 mr-1" /> Editar
+                    </Button>
+
                     <Button variant="outline" size="sm" onClick={() => { setQrGuest(guest); setOpenQr(true); }}>
                       <QrCode className="w-4 h-4 mr-1" /> QR
                     </Button>
@@ -839,6 +972,58 @@ export default function RsvpConfigPage() {
               <p className="text-xs text-gray-500 break-all">{qrPayload}</p>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openEditGuest} onOpenChange={setOpenEditGuest}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar convidado</DialogTitle>
+          </DialogHeader>
+
+          <form className="space-y-3" onSubmit={saveGuestEdit}>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Nome completo</label>
+              <Input
+                value={editGuestForm.fullName}
+                onChange={(e) => setEditGuestForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                placeholder="Nome do convidado"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Adultos</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={editGuestForm.adultLimit}
+                  onChange={(e) => setEditGuestForm((prev) => ({ ...prev, adultLimit: Number(e.target.value || 0) }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Crianças</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={editGuestForm.childLimit}
+                  onChange={(e) => setEditGuestForm((prev) => ({ ...prev, childLimit: Number(e.target.value || 0) }))}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setOpenEditGuest(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-[#8e3d2c] hover:bg-[#7a3326] text-white" disabled={savingEditGuest}>
+                {savingEditGuest ? 'Salvando...' : 'Salvar alterações'}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

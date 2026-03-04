@@ -48,6 +48,12 @@ export async function GET(req: Request) {
     const q = (searchParams.get("q") || "").trim();
     const normalizedQ = normalizeGuestName(q);
     const status = searchParams.get("status") as "PENDING" | "CONFIRMED" | "DECLINED" | null;
+    const view = (searchParams.get("view") || "").trim().toLowerCase();
+    const limitRaw = Number(searchParams.get("limit") || "0");
+    const limit =
+      Number.isFinite(limitRaw) && limitRaw > 0
+        ? Math.min(Math.floor(limitRaw), 500)
+        : undefined;
 
     const guests = await prisma.rsvpGuest.findMany({
       where: {
@@ -63,21 +69,33 @@ export async function GET(req: Request) {
           : {}),
       },
       orderBy: [{ createdAt: "desc" }],
-      select: {
-        id: true,
-        fullName: true,
-        notes: true,
-        adultLimit: true,
-        childLimit: true,
-        confirmedAdults: true,
-        confirmedChildren: true,
-        status: true,
-        qrToken: true,
-        confirmedAt: true,
-        checkedInAt: true,
-        checkInCode: true,
-        createdAt: true,
-      },
+      ...(typeof limit === "number" ? { take: limit } : {}),
+      select:
+        view === "checkin"
+          ? {
+              id: true,
+              fullName: true,
+              status: true,
+              checkedInAt: true,
+              confirmedAdults: true,
+              confirmedChildren: true,
+              checkInCode: true,
+            }
+          : {
+              id: true,
+              fullName: true,
+              notes: true,
+              adultLimit: true,
+              childLimit: true,
+              confirmedAdults: true,
+              confirmedChildren: true,
+              status: true,
+              qrToken: true,
+              confirmedAt: true,
+              checkedInAt: true,
+              checkInCode: true,
+              createdAt: true,
+            },
     });
 
     const filtered = normalizedQ
