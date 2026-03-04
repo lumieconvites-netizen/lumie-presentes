@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, Plus, QrCode, Trash2, UserCheck, UploadCloud, FileUp, Pencil } from 'lucide-react';
+import { Download, Plus, QrCode, Trash2, UserCheck, UploadCloud, FileUp } from 'lucide-react';
 
 type RsvpGuest = {
   id: string;
@@ -62,6 +62,8 @@ type EditGuestForm = {
   adultLimit: number;
   childLimit: number;
 };
+
+type GuestSaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 const statusLabels: Record<RsvpGuest['status'], string> = {
   PENDING: 'Pendente',
@@ -203,10 +205,10 @@ export default function RsvpConfigPage() {
   const [openQr, setOpenQr] = useState(false);
   const [qrGuest, setQrGuest] = useState<RsvpGuest | null>(null);
   const [openImportPreview, setOpenImportPreview] = useState(false);
-  const [openEditGuest, setOpenEditGuest] = useState(false);
-  const [editingGuest, setEditingGuest] = useState<RsvpGuest | null>(null);
-  const [savingEditGuest, setSavingEditGuest] = useState(false);
-  const [editGuestForm, setEditGuestForm] = useState<EditGuestForm>({ fullName: '', adultLimit: 0, childLimit: 0 });
+  const [bulkEditEnabled, setBulkEditEnabled] = useState(false);
+  const [guestDrafts, setGuestDrafts] = useState<Record<string, EditGuestForm>>({});
+  const [guestSaveState, setGuestSaveState] = useState<Record<string, GuestSaveState>>({});
+  const [guestNotice, setGuestNotice] = useState<{ type: 'ok' | 'error'; text: string } | null>(null);
 
   const [settings, setSettings] = useState({
     enabled: false,
@@ -281,6 +283,19 @@ export default function RsvpConfigPage() {
   const visibleGuests = useMemo(() => filteredGuests.slice(0, visibleGuestsCount), [filteredGuests, visibleGuestsCount]);
   const canShowMoreGuests = visibleGuestsCount < filteredGuests.length;
   const canShowLessGuests = visibleGuestsCount > 15;
+
+  useEffect(() => {
+    if (!data?.guests) return;
+    const nextDrafts: Record<string, EditGuestForm> = {};
+    data.guests.forEach((guest) => {
+      nextDrafts[guest.id] = {
+        fullName: guest.fullName,
+        adultLimit: guest.adultLimit,
+        childLimit: guest.childLimit,
+      };
+    });
+    setGuestDrafts(nextDrafts);
+  }, [data?.guests]);
 
   async function loadOverview() {
     setLoading(true);
@@ -511,37 +526,43 @@ export default function RsvpConfigPage() {
     }
   }
 
-  function startEditGuest(guest: RsvpGuest) {
-    setEditingGuest(guest);
-    setEditGuestForm({
-      fullName: guest.fullName,
-      adultLimit: guest.adultLimit,
-      childLimit: guest.childLimit,
-    });
-    setOpenEditGuest(true);
+  function sanitizeLimit(value: number) {
+    if (!Number.isFinite(value)) return 0;
+    return Math.min(20, Math.max(0, Math.floor(value)));
   }
 
-  async function saveGuestEdit(e: FormEvent) {
-    e.preventDefault();
-    if (!editingGuest) return;
+  function updateGuestDraft(id: string, patch: Partial<EditGuestForm>) {
+    setGuestDrafts((prev) => {
+      const current = prev[id] || { fullName: '', adultLimit: 0, childLimit: 0 };
+      return { ...prev, [id]: { ...current, ...patch } };
+    });
+  }
 
-    const payload = {
-      fullName: editGuestForm.fullName.trim(),
-      adultLimit: Number(editGuestForm.adultLimit || 0),
-      childLimit: Number(editGuestForm.childLimit || 0),
-    };
+  async function saveGuestDraft(id: string) {
+    const draft = guestDrafts[id];
+    const guest = data?.guests.find((item) => item.id === id);
+    if (!draft || !guest) return;
 
-    if (payload.fullName.length < 2) {
-      alert('Nome precisa ter pelo menos 2 caracteres.');
+    const fullName = draft.fullName.trim();
+    const adultLimit = sanitizeLimit(draft.adultLimit);
+    const childLimit = sanitizeLimit(draft.childLimit);
+
+    if (fullName.length < 2) {
+      setGuestSaveState((prev) => ({ ...prev, [id]: 'error' }));
+      setGuestNotice({ type: 'error', text: 'Nome precisa ter pelo menos 2 caracteres.' });
       return;
     }
 
-    setSavingEditGuest(true);
+    if (fullName === guest.fullName && adultLimit === guest.adultLimit && childLimit === guest.childLimit) {
+      return;
+    }
+
+    setGuestSaveState((prev) => ({ ...prev, [id]: 'saving' }));
     try {
-      const res = await fetch(`/api/rsvp/guests/${editingGuest.id}`, {
+      const res = await fetch(`/api/rsvp/guests/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ fullName, adultLimit, childLimit }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || 'Erro ao atualizar convidado');
@@ -550,25 +571,27 @@ export default function RsvpConfigPage() {
         if (!prev) return prev;
         return {
           ...prev,
-          guests: prev.guests.map((guest) =>
-            guest.id === editingGuest.id
+          guests: prev.guests.map((item) =>
+            item.id === id
               ? {
-                  ...guest,
-                  fullName: json.fullName ?? payload.fullName,
-                  adultLimit: typeof json.adultLimit === 'number' ? json.adultLimit : payload.adultLimit,
-                  childLimit: typeof json.childLimit === 'number' ? json.childLimit : payload.childLimit,
+                  ...item,
+                  fullName: typeof json.fullName === 'string' ? json.fullName : fullName,
+                  adultLimit: typeof json.adultLimit === 'number' ? json.adultLimit : adultLimit,
+                  childLimit: typeof json.childLimit === 'number' ? json.childLimit : childLimit,
                 }
-              : guest
+              : item
           ),
         };
       });
 
-      setOpenEditGuest(false);
-      setEditingGuest(null);
+      setGuestSaveState((prev) => ({ ...prev, [id]: 'saved' }));
+      setGuestNotice({ type: 'ok', text: 'Alteração salva automaticamente.' });
+      window.setTimeout(() => {
+        setGuestSaveState((prev) => ({ ...prev, [id]: 'idle' }));
+      }, 1200);
     } catch (error: any) {
-      alert(error?.message || 'Erro ao atualizar convidado');
-    } finally {
-      setSavingEditGuest(false);
+      setGuestSaveState((prev) => ({ ...prev, [id]: 'error' }));
+      setGuestNotice({ type: 'error', text: error?.message || 'Erro ao atualizar convidado' });
     }
   }
 
@@ -857,6 +880,28 @@ export default function RsvpConfigPage() {
           <CardTitle>Lista de convidados ({visibleGuests.length}/{filteredGuests.length})</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <Button
+              type="button"
+              variant={bulkEditEnabled ? 'default' : 'outline'}
+              className={bulkEditEnabled ? 'bg-[#8e3d2c] hover:bg-[#7a3326] text-white w-full sm:w-auto' : 'w-full sm:w-auto'}
+              onClick={() => setBulkEditEnabled((prev) => !prev)}
+            >
+              {bulkEditEnabled ? 'Finalizar edição rápida' : 'Editar todos na lista'}
+            </Button>
+            {bulkEditEnabled ? <p className="text-xs text-gray-500">As alterações são salvas automaticamente ao sair do campo.</p> : null}
+          </div>
+
+          {guestNotice ? (
+            <div
+              className={`mb-3 rounded-lg border p-2 text-xs ${
+                guestNotice.type === 'ok' ? 'border-[#bde5c8] bg-[#f2fff6] text-[#1f8a4c]' : 'border-[#f4cccc] bg-[#fff4f4] text-[#b94a48]'
+              }`}
+            >
+              {guestNotice.text}
+            </div>
+          ) : null}
+
           <div className="mb-4 -mx-1 overflow-x-auto px-1 pb-1">
             <div className="flex min-w-max flex-nowrap gap-2">
             <Button
@@ -909,17 +954,58 @@ export default function RsvpConfigPage() {
               {visibleGuests.map((guest) => (
                 <div key={guest.id} className="rounded-xl border border-[#e7d8cb] bg-white p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">{guest.fullName}</p>
-                    <p className="text-xs text-gray-500 mt-1">Status: {statusLabels[guest.status]}</p>
-                    <p className="text-xs text-gray-500">Limites: {guest.adultLimit} adulto(s), {guest.childLimit} criança(s)</p>
+                    {bulkEditEnabled ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={guestDrafts[guest.id]?.fullName ?? guest.fullName}
+                          onChange={(e) => updateGuestDraft(guest.id, { fullName: e.target.value })}
+                          onBlur={() => saveGuestDraft(guest.id)}
+                          placeholder="Nome completo"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            type="number"
+                            min={0}
+                            max={20}
+                            value={guestDrafts[guest.id]?.adultLimit ?? guest.adultLimit}
+                            onChange={(e) => updateGuestDraft(guest.id, { adultLimit: sanitizeLimit(Number(e.target.value || 0)) })}
+                            onBlur={() => saveGuestDraft(guest.id)}
+                            placeholder="Adultos"
+                          />
+                          <Input
+                            type="number"
+                            min={0}
+                            max={20}
+                            value={guestDrafts[guest.id]?.childLimit ?? guest.childLimit}
+                            onChange={(e) => updateGuestDraft(guest.id, { childLimit: sanitizeLimit(Number(e.target.value || 0)) })}
+                            onBlur={() => saveGuestDraft(guest.id)}
+                            placeholder="Crianças"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="font-semibold text-gray-900 truncate">{guest.fullName}</p>
+                        <p className="text-xs text-gray-500 mt-1">Status: {statusLabels[guest.status]}</p>
+                        <p className="text-xs text-gray-500">Limites: {guest.adultLimit} adulto(s), {guest.childLimit} criança(s)</p>
+                      </>
+                    )}
                     <p className="text-xs text-gray-500">Confirmados: {guest.confirmedAdults ?? 0} adulto(s), {guest.confirmedChildren ?? 0} criança(s)</p>
                     {guest.checkInCode && <p className="text-xs text-gray-500">Código check-in: {guest.checkInCode}</p>}
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 w-full md:w-auto">
-                    <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => startEditGuest(guest)}>
-                      <Pencil className="w-4 h-4 mr-1" /> Editar
-                    </Button>
+                    {bulkEditEnabled ? (
+                      <p className="text-xs text-gray-500 w-full sm:w-auto">
+                        {guestSaveState[guest.id] === 'saving'
+                          ? 'Salvando...'
+                          : guestSaveState[guest.id] === 'saved'
+                            ? 'Salvo'
+                            : guestSaveState[guest.id] === 'error'
+                              ? 'Erro ao salvar'
+                              : ' '}
+                      </p>
+                    ) : null}
 
                     <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => { setQrGuest(guest); setOpenQr(true); }}>
                       <QrCode className="w-4 h-4 mr-1" /> QR
@@ -1013,58 +1099,6 @@ export default function RsvpConfigPage() {
               <p className="text-xs text-gray-500 break-all">{qrPayload}</p>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={openEditGuest} onOpenChange={setOpenEditGuest}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar convidado</DialogTitle>
-          </DialogHeader>
-
-          <form className="space-y-3" onSubmit={saveGuestEdit}>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Nome completo</label>
-              <Input
-                value={editGuestForm.fullName}
-                onChange={(e) => setEditGuestForm((prev) => ({ ...prev, fullName: e.target.value }))}
-                placeholder="Nome do convidado"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Adultos</label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={20}
-                  value={editGuestForm.adultLimit}
-                  onChange={(e) => setEditGuestForm((prev) => ({ ...prev, adultLimit: Number(e.target.value || 0) }))}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Crianças</label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={20}
-                  value={editGuestForm.childLimit}
-                  onChange={(e) => setEditGuestForm((prev) => ({ ...prev, childLimit: Number(e.target.value || 0) }))}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setOpenEditGuest(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="bg-[#8e3d2c] hover:bg-[#7a3326] text-white" disabled={savingEditGuest}>
-                {savingEditGuest ? 'Salvando...' : 'Salvar alterações'}
-              </Button>
-            </div>
-          </form>
         </DialogContent>
       </Dialog>
     </div>
