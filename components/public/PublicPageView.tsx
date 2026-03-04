@@ -717,30 +717,32 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
                   {config.title || 'Informações do Evento'}
                 </h2>
                 <div className="max-w-3xl mx-auto space-y-6">
-                  {getEventInfoItems(config)[0]?.label ? (
-                    <div
-                      className="inline-flex rounded-full px-3 py-1 text-xs font-medium"
-                      style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}
-                    >
-                      {getEventInfoItems(config)[0].label}
-                    </div>
-                  ) : null}
                   {config.datetime && (
-                    <div className="flex items-start gap-6 p-8 bg-white rounded-2xl shadow-sm">
-                      <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primaryColor}15` }}>
-                        <Calendar className="w-7 h-7" style={{ color: primaryColor }} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-base mb-2" style={{ color: captionColor }}>Data e Hora</p>
-                        <p className="text-lg" style={{ color: captionColor }}>
-                          {new Date(config.datetime).toLocaleString('pt-BR', {
-                            day: '2-digit',
-                            month: 'long',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
+                    <div className="p-8 bg-white rounded-2xl shadow-sm space-y-5">
+                      {getEventInfoItems(config)[0]?.label ? (
+                        <div
+                          className="inline-flex rounded-full px-3 py-1 text-xs font-medium"
+                          style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}
+                        >
+                          {getEventInfoItems(config)[0].label}
+                        </div>
+                      ) : null}
+                      <div className="flex items-start gap-6">
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primaryColor}15` }}>
+                          <Calendar className="w-7 h-7" style={{ color: primaryColor }} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-base mb-2" style={{ color: captionColor }}>Data e Hora</p>
+                          <p className="text-lg" style={{ color: captionColor }}>
+                            {new Date(config.datetime).toLocaleString('pt-BR', {
+                              day: '2-digit',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
