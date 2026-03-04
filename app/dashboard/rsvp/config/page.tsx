@@ -857,30 +857,49 @@ export default function RsvpConfigPage() {
           <CardTitle>Lista de convidados ({visibleGuests.length}/{filteredGuests.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex flex-wrap gap-2">
-            <Button size="sm" variant={guestListFilter === 'all' ? 'default' : 'outline'} onClick={() => setGuestListFilter('all')}>
+          <div className="mb-4 -mx-1 overflow-x-auto px-1 pb-1">
+            <div className="flex min-w-max flex-nowrap gap-2">
+            <Button
+              size="sm"
+              className="whitespace-nowrap"
+              variant={guestListFilter === 'all' ? 'default' : 'outline'}
+              onClick={() => setGuestListFilter('all')}
+            >
               Todos
             </Button>
             <Button
               size="sm"
+              className="whitespace-nowrap"
               variant={guestListFilter === 'confirmed' ? 'default' : 'outline'}
               onClick={() => setGuestListFilter('confirmed')}
             >
               Confirmados
             </Button>
-            <Button size="sm" variant={guestListFilter === 'pending' ? 'default' : 'outline'} onClick={() => setGuestListFilter('pending')}>
+            <Button
+              size="sm"
+              className="whitespace-nowrap"
+              variant={guestListFilter === 'pending' ? 'default' : 'outline'}
+              onClick={() => setGuestListFilter('pending')}
+            >
               Pendentes
             </Button>
             <Button
               size="sm"
+              className="whitespace-nowrap"
               variant={guestListFilter === 'confirmedCheckedIn' ? 'default' : 'outline'}
               onClick={() => setGuestListFilter('confirmedCheckedIn')}
             >
               Confirmados com check-in
             </Button>
-            <Button size="sm" variant={guestListFilter === 'declined' ? 'default' : 'outline'} onClick={() => setGuestListFilter('declined')}>
+            <Button
+              size="sm"
+              className="whitespace-nowrap"
+              variant={guestListFilter === 'declined' ? 'default' : 'outline'}
+              onClick={() => setGuestListFilter('declined')}
+            >
               Não comparecem
             </Button>
+            </div>
           </div>
 
           {filteredGuests.length === 0 ? (
