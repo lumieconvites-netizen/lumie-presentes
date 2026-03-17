@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import {
+  ADMIN_IMPERSONATION_COOKIE,
   EMPLOYEE_IMPERSONATION_COOKIE,
   getActingUserContext,
 } from "@/lib/acting-user";
@@ -14,13 +15,20 @@ function isEmployeeRole(role: string) {
   return role === "EMPLOYEE";
 }
 
+function canUseEmployeeMode(ctx: NonNullable<Awaited<ReturnType<typeof getActingUserContext>>>) {
+  return (
+    isEmployeeRole(ctx.sessionUserRole) ||
+    (ctx.sessionUserRole === "ADMIN" && ctx.effectiveUser.role === "EMPLOYEE")
+  );
+}
+
 export async function GET() {
   const ctx = await getActingUserContext();
   if (!ctx) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  if (!isEmployeeRole(ctx.sessionUserRole)) {
+  if (!canUseEmployeeMode(ctx)) {
     return NextResponse.json({ error: "Acesso permitido apenas para funcionarios." }, { status: 403 });
   }
 
@@ -38,7 +46,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  if (!isEmployeeRole(ctx.sessionUserRole)) {
+  if (!canUseEmployeeMode(ctx)) {
     return NextResponse.json({ error: "Acesso permitido apenas para funcionarios." }, { status: 403 });
   }
 
@@ -56,13 +64,25 @@ export async function POST(request: Request) {
     }
 
     const response = NextResponse.json({ ok: true });
-    response.cookies.set(EMPLOYEE_IMPERSONATION_COOKIE, userId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 8,
-    });
+
+    if (ctx.sessionUserRole === "ADMIN") {
+      response.cookies.set(ADMIN_IMPERSONATION_COOKIE, userId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 12,
+      });
+    } else {
+      response.cookies.set(EMPLOYEE_IMPERSONATION_COOKIE, userId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 8,
+      });
+    }
+
     return response;
   } catch {
     return NextResponse.json({ error: "Dados invalidos" }, { status: 400 });
@@ -75,7 +95,7 @@ export async function DELETE() {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  if (!isEmployeeRole(ctx.sessionUserRole)) {
+  if (!canUseEmployeeMode(ctx)) {
     return NextResponse.json({ error: "Acesso permitido apenas para funcionarios." }, { status: 403 });
   }
 
