@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActingUserContext } from "@/lib/acting-user";
 
-type SortMode = "recent" | "alpha";
-
 const CLIENT_SELECT = {
   id: true,
   name: true,
@@ -33,52 +31,20 @@ const CLIENT_SELECT = {
   },
 } as const;
 
-function parseSortMode(value: string | null): SortMode {
-  return value === "alpha" ? "alpha" : "recent";
-}
-
-function buildClientWhere(q: string) {
-  return {
-    role: "CLIENT" as const,
-    ...(q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" as const } },
-            { email: { contains: q, mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
-  };
-}
-
-export async function GET(request: Request) {
+export async function GET() {
   const ctx = await getActingUserContext();
   if (!ctx) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   if (ctx.effectiveUser.role !== "EMPLOYEE") {
     return NextResponse.json({ error: "Acesso permitido apenas para funcionários." }, { status: 403 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const q = (searchParams.get("q") ?? "").trim();
-  const sort = parseSortMode(searchParams.get("sort"));
-  const take = Math.min(Math.max(Number(searchParams.get("take") ?? "10") || 10, 1), 50);
-  const skip = Math.max(Number(searchParams.get("skip") ?? "0") || 0, 0);
-
-  const where = buildClientWhere(q);
-  const orderBy =
-    sort === "alpha"
-      ? [{ name: "asc" as const }, { email: "asc" as const }]
-      : [{ createdAt: "desc" as const }];
-
-  const [clients, total, clientsCount, clientsWithGiftList, publishedLists] = await Promise.all([
+  const [clients, clientsCount, clientsWithGiftList, publishedLists] = await Promise.all([
     prisma.user.findMany({
-      where,
+      where: { role: "CLIENT" },
       select: CLIENT_SELECT,
-      orderBy,
-      take,
-      skip,
+      orderBy: { createdAt: "desc" },
+      take: 500,
     }),
-    prisma.user.count({ where }),
     prisma.user.count({ where: { role: "CLIENT" } }),
     prisma.giftList.count({
       where: {
@@ -101,7 +67,7 @@ export async function GET(request: Request) {
     id: client.id,
     name: client.name || "Sem nome",
     email: client.email,
-    createdAt: client.createdAt,
+    createdAt: client.createdAt.toISOString(),
     hasGiftList: client._count.giftLists > 0,
     published: Boolean(client.giftLists[0]?.isPublished),
     referredByPartner: client.referredByPartner,
@@ -120,9 +86,5 @@ export async function GET(request: Request) {
       publishedLists,
     },
     clients: normalized,
-    total,
-    take,
-    skip,
-    hasMore: skip + normalized.length < total,
   });
 }
