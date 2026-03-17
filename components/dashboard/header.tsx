@@ -30,6 +30,7 @@ type DashboardHeaderProps = {
   limitedMode?: boolean;
   sessionUserRole?: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
   initialSiteSlug?: string;
+  canViewSettingsInLimitedMode?: boolean;
 };
 
 type NotificationSummary = {
@@ -48,6 +49,7 @@ export default function DashboardHeader({
   limitedMode = false,
   sessionUserRole,
   initialSiteSlug = '',
+  canViewSettingsInLimitedMode = false,
 }: DashboardHeaderProps) {
   const { user } = useUser();
   const { data: session } = useSession();
@@ -361,7 +363,7 @@ export default function DashboardHeader({
                   </Link>
                 </DropdownMenuItem>
               ) : null}
-              {!limitedMode ? (
+              {!limitedMode || canViewSettingsInLimitedMode ? (
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/configuracoes" className="cursor-pointer">
                     <Settings className="w-4 h-4 mr-2" />

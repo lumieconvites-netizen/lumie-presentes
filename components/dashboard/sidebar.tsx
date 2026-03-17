@@ -34,15 +34,18 @@ function SidebarNav({
   onNavigate,
   limitedMode,
   canViewBankInLimitedMode,
+  canViewSettingsInLimitedMode,
 }: {
   pathname: string;
   onNavigate?: () => void;
   limitedMode?: boolean;
   canViewBankInLimitedMode?: boolean;
+  canViewSettingsInLimitedMode?: boolean;
 }) {
   const limitedItems = menuItems.filter((item) =>
     ['/dashboard/presentes', '/dashboard/editor', '/dashboard/rsvp'].includes(item.href) ||
-    (canViewBankInLimitedMode && item.href === '/dashboard/banco')
+    (canViewBankInLimitedMode && item.href === '/dashboard/banco') ||
+    (canViewSettingsInLimitedMode && item.href === '/dashboard/configuracoes')
   );
   const items = limitedMode ? limitedItems : menuItems;
   return (
@@ -78,9 +81,11 @@ function SidebarNav({
 export default function DashboardSidebar({
   limitedMode = false,
   canViewBankInLimitedMode = false,
+  canViewSettingsInLimitedMode = false,
 }: {
   limitedMode?: boolean;
   canViewBankInLimitedMode?: boolean;
+  canViewSettingsInLimitedMode?: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -122,6 +127,7 @@ export default function DashboardSidebar({
           onNavigate={() => setOpen(false)}
           limitedMode={limitedMode}
           canViewBankInLimitedMode={canViewBankInLimitedMode}
+          canViewSettingsInLimitedMode={canViewSettingsInLimitedMode}
         />
       </aside>
     </>

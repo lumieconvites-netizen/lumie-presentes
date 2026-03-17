@@ -8,23 +8,27 @@ const ALLOWED_PREFIXES = ['/dashboard/presentes', '/dashboard/editor', '/dashboa
 export default function AffiliateLimitedGuard({
   enabled,
   canViewBankInLimitedMode = false,
+  canViewSettingsInLimitedMode = false,
 }: {
   enabled: boolean;
   canViewBankInLimitedMode?: boolean;
+  canViewSettingsInLimitedMode?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
     if (!enabled) return;
-    const allowedPrefixes = canViewBankInLimitedMode
-      ? [...ALLOWED_PREFIXES, '/dashboard/banco']
-      : ALLOWED_PREFIXES;
+    const allowedPrefixes = [
+      ...ALLOWED_PREFIXES,
+      ...(canViewBankInLimitedMode ? ['/dashboard/banco'] : []),
+      ...(canViewSettingsInLimitedMode ? ['/dashboard/configuracoes'] : []),
+    ];
     const isAllowed = allowedPrefixes.some((prefix) => (pathname ?? '').startsWith(prefix));
     if (!isAllowed) {
       router.replace('/dashboard/presentes');
     }
-  }, [canViewBankInLimitedMode, enabled, pathname, router]);
+  }, [canViewBankInLimitedMode, canViewSettingsInLimitedMode, enabled, pathname, router]);
 
   return null;
 }
