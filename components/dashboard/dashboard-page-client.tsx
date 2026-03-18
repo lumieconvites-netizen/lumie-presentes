@@ -128,7 +128,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
       await navigator.clipboard.writeText(url);
       alert('Link copiado com sucesso.');
     } catch {
-      alert('Nao foi possivel copiar o link agora.');
+      alert('Não foi possível copiar o link agora.');
     } finally {
       setCopying(false);
     }
@@ -143,7 +143,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
         method: 'POST',
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? 'Nao foi possivel solicitar o saque.');
+      if (!res.ok) throw new Error(json?.error ?? 'Não foi possível solicitar o saque.');
       alert(json?.message ?? 'Saque solicitado com sucesso.');
       setWithdrawOpen(false);
       const summaryRes = await fetch('/api/recipient/financial-summary', { cache: 'no-store' });
@@ -162,7 +162,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-display text-foreground mb-1">Dashboard</h1>
-            <p className="text-gray-600">Visao geral da sua lista de presentes</p>
+            <p className="text-gray-600">Visão geral da sua lista de presentes</p>
             <p className="text-sm text-gray-500 mt-1">
               {data?.title || 'Sua Lista'}
               {data?.description ? ` - ${data.description}` : ''}
@@ -215,8 +215,8 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
               <span>Pendente</span>
               <span
                 className="inline-flex items-center text-gray-400 hover:text-gray-600 cursor-help"
-                title="Pagamentos em cartao ficam pendentes ate a liquidacao pela operadora (prazo medio D+30). Apos liberacao, o valor entra em Saldo atual."
-                aria-label="Informacoes sobre pendencia de cartao"
+                title="Pagamentos em cartão ficam pendentes até a liquidação pela operadora (prazo médio D+30). Após a liberação, o valor entra em Saldo atual."
+                aria-label="Informações sobre pendência de cartão"
               >
                 <Info className="w-4 h-4" />
               </span>
@@ -229,7 +229,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
             <div className="text-2xl font-bold text-foreground">
               {waitingFunds.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Em processamento (cartao)</p>
+            <p className="text-xs text-gray-500 mt-1">Em processamento (cartão)</p>
           </CardContent>
         </Card>
 
@@ -242,7 +242,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">{activeGifts}/{totalGifts}</div>
-            <p className="text-xs text-gray-500 mt-1">Disponiveis / Total</p>
+            <p className="text-xs text-gray-500 mt-1">Disponíveis / Total</p>
           </CardContent>
         </Card>
 
@@ -258,7 +258,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
               {pendingTransferAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {pendingTransferCount > 0 ? `${pendingTransferCount} saque(s) aguardando transferencia` : 'Nenhum saque aguardando transferencia'}
+              {pendingTransferCount > 0 ? `${pendingTransferCount} saque(s) aguardando transferência` : 'Nenhum saque aguardando transferência'}
             </p>
           </CardContent>
         </Card>
@@ -268,7 +268,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
         <Card className="border-[#ead9cd]">
           <CardHeader>
             <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <span>Ultimos Presentes Recebidos</span>
+              <span>Últimos Presentes Recebidos</span>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard/pagamentos">Ver todos</Link>
               </Button>
@@ -340,7 +340,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
       <Card className="border-[#ead9cd]">
         <CardHeader>
           <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <span>Acoes Rapidas</span>
+            <span>Ações Rápidas</span>
             <span className="text-sm font-normal text-gray-500">Status: {statusLabel}</span>
           </CardTitle>
         </CardHeader>
@@ -355,19 +355,19 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
             <Button variant="outline" className="h-auto py-4 flex-col gap-2 border-[#e3cdbf] hover:bg-[#fff7f1]" asChild>
               <Link href="/dashboard/editor">
                 <Calendar className="w-6 h-6" />
-                Editar Pagina
+                Editar Página
               </Link>
             </Button>
             <Button variant="outline" className="h-auto py-4 flex-col gap-2 border-[#e3cdbf] hover:bg-[#fff7f1]" asChild>
               <Link href={publicLink} target="_blank">
                 <ExternalLink className="w-6 h-6" />
-                Ver Lista Publica
+                Ver Lista Pública
               </Link>
             </Button>
             <Button variant="outline" className="h-auto py-4 flex-col gap-2 border-[#e3cdbf] hover:bg-[#fff7f1]" asChild>
               <Link href="/dashboard/configuracoes">
                 <Settings className="w-6 h-6" />
-                Configuracoes
+                Configurações
               </Link>
             </Button>
           </div>
@@ -379,12 +379,12 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
           <DialogHeader>
             <DialogTitle>Confirmar saque</DialogTitle>
             <DialogDescription>
-              A taxa de transferencia e de{' '}
+              A taxa de transferência é de{' '}
               {(WITHDRAW_FEE_CENTS / 100).toLocaleString('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',
               })}
-              . Saques solicitados ate 15h caem no mesmo dia; apos 15h, caem no proximo dia util. Deseja continuar com o saque?
+              . Saques solicitados até 15h caem no mesmo dia; após 15h, caem no próximo dia útil. Deseja continuar com o saque?
             </DialogDescription>
           </DialogHeader>
 
