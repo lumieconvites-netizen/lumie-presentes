@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { getActingUserContext } from '@/lib/acting-user';
 import { getPrimaryGiftListIdForUser } from '@/lib/primary-gift-list';
+import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
 import PagamentosPageClient, { type OrderRow } from '@/components/dashboard/pagamentos-page-client';
 
 export default async function PagamentosPage() {
@@ -11,6 +12,16 @@ export default async function PagamentosPage() {
     const primaryGiftListId = await getPrimaryGiftListIdForUser(ctx.effectiveUserId);
 
     if (primaryGiftListId) {
+      try {
+        await reconcilePendingOrdersForGiftList(primaryGiftListId, {
+          throttleKey: `dashboard-payments:${primaryGiftListId}`,
+          minIntervalMs: 15_000,
+          take: 30,
+        });
+      } catch (error) {
+        console.error('Falha ao reconciliar pedidos pendentes em dashboard/pagamentos:', error);
+      }
+
       const orders = await prisma.order.findMany({
         where: { giftListId: primaryGiftListId },
         orderBy: { createdAt: 'desc' },

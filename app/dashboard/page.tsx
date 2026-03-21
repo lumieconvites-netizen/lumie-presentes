@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { getActingUserContext } from '@/lib/acting-user';
 import { getPrimaryGiftListIdForUser } from '@/lib/primary-gift-list';
+import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
 import DashboardPageClient, { type DashboardData } from '@/components/dashboard/dashboard-page-client';
 
 export default async function DashboardPage() {
@@ -12,6 +13,16 @@ export default async function DashboardPage() {
     const primaryGiftListId = await getPrimaryGiftListIdForUser(ctx.effectiveUserId);
 
     if (primaryGiftListId) {
+      try {
+        await reconcilePendingOrdersForGiftList(primaryGiftListId, {
+          throttleKey: `dashboard-page:${primaryGiftListId}`,
+          minIntervalMs: 15_000,
+          take: 30,
+        });
+      } catch (error) {
+        console.error('Falha ao reconciliar pedidos pendentes em dashboard/page:', error);
+      }
+
       const giftList = await prisma.giftList.findUnique({
         where: { id: primaryGiftListId },
         select: {

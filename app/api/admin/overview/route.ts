@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { GIFT_MODEL_CATEGORY } from "@/lib/gift-models";
+import { reconcileRecentPendingOrders } from "@/lib/order-status-reconciliation";
 import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter";
 
 export async function GET(request: Request) {
@@ -11,6 +12,16 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const period = normalizePeriodFilter(searchParams.get("period"));
   const createdAtWhere = buildCreatedAtWhere(period);
+
+  try {
+    await reconcileRecentPendingOrders({
+      throttleKey: "admin-overview",
+      minIntervalMs: 15_000,
+      take: 50,
+    });
+  } catch (error) {
+    console.error("Falha ao reconciliar pedidos pendentes em admin/overview:", error);
+  }
 
   const [
     usersCount,

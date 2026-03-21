@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { reconcileRecentPendingOrders } from "@/lib/order-status-reconciliation";
 import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter";
 
 type MethodFilter = "all" | "card" | "pix";
@@ -139,6 +140,16 @@ export async function GET(request: Request) {
   const clientId = (searchParams.get("clientId") ?? "").trim();
   const partnerId = (searchParams.get("partnerId") ?? "").trim();
   const ambassadorId = (searchParams.get("ambassadorId") ?? "").trim();
+
+  try {
+    await reconcileRecentPendingOrders({
+      throttleKey: "admin-financeiro",
+      minIntervalMs: 15_000,
+      take: 50,
+    });
+  } catch (error) {
+    console.error("Falha ao reconciliar pedidos pendentes em admin/financeiro:", error);
+  }
 
   const validMethod: MethodFilter = ["all", "card", "pix"].includes(method) ? method : "all";
 

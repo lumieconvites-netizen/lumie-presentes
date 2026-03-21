@@ -202,3 +202,75 @@ export async function reconcilePendingOrdersForGiftList(giftListId: string, opti
     inFlightMap.delete(throttleKey);
   }
 }
+
+export async function reconcileRecentPendingOrders(options?: ReconcileOptions) {
+  const hasGateway = Boolean(process.env.WITHDRAW_GATEWAY_URL?.trim());
+  if (!process.env.PAGARME_SECRET_KEY && !hasGateway) return false;
+
+  const throttleKey = options?.throttleKey || "global";
+  const minIntervalMs = Math.max(0, Number(options?.minIntervalMs ?? 0));
+  const now = Date.now();
+  const lastRunMap = getLastRunMap();
+  const inFlightMap = getInFlightMap();
+
+  const currentInFlight = inFlightMap.get(throttleKey);
+  if (currentInFlight) {
+    return currentInFlight;
+  }
+
+  const lastRunAt = lastRunMap.get(throttleKey) ?? 0;
+  if (minIntervalMs > 0 && now - lastRunAt < minIntervalMs) {
+    return false;
+  }
+
+  const task = (async () => {
+    lastRunMap.set(throttleKey, Date.now());
+
+    const lookbackDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const pendingOrders = await prisma.order.findMany({
+      where: {
+        status: { in: ["PENDING", "AUTHORIZED"] },
+        pagarmeOrderId: { not: null },
+        createdAt: { gte: lookbackDate },
+      },
+      select: {
+        id: true,
+        status: true,
+        giftItemId: true,
+        quantity: true,
+        pagarmeOrderId: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: Math.max(1, Math.min(Number(options?.take ?? 50), 200)),
+    });
+
+    let changed = false;
+    for (const pendingOrder of pendingOrders) {
+      try {
+        const updated = await reconcileSingleOrder({
+          id: pendingOrder.id,
+          status: pendingOrder.status as "PENDING" | "AUTHORIZED",
+          giftItemId: pendingOrder.giftItemId,
+          quantity: pendingOrder.quantity,
+          pagarmeOrderId: String(pendingOrder.pagarmeOrderId),
+        });
+        changed = changed || updated;
+      } catch (error) {
+        console.error("Falha ao reconciliar pedido pendente global", {
+          localOrderId: pendingOrder.id,
+          pagarmeOrderId: pendingOrder.pagarmeOrderId,
+          error,
+        });
+      }
+    }
+
+    return changed;
+  })();
+
+  inFlightMap.set(throttleKey, task);
+  try {
+    return await task;
+  } finally {
+    inFlightMap.delete(throttleKey);
+  }
+}
