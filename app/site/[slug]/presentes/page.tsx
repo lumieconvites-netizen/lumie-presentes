@@ -167,7 +167,10 @@ export default async function SiteGiftsBySlugPage({
 
       <section className="max-w-6xl mx-auto px-4 py-10">
         {pageMessage ? (
-          <p className="mb-8 max-w-3xl" style={{ fontFamily: fontBody, color: messageColor }}>
+          <p
+            className="mb-8 max-w-3xl whitespace-pre-line break-words"
+            style={{ fontFamily: fontBody, color: messageColor }}
+          >
             {pageMessage}
           </p>
         ) : null}
