@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Instagram, MessageCircle } from 'lucide-react';
+import { Instagram, MessageCircle, Phone } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -78,7 +78,7 @@ export function Footer() {
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-[radial-gradient(circle_at_30%_107%,#fdf497_0%,#fdf497_5%,#fd5949_45%,#d6249f_60%,#285AEB_90%)] text-white shadow-[0_6px_14px_rgba(0,0,0,0.35)] hover:brightness-110 transition"
                 aria-label="Instagram da Lumie"
               >
-                <Instagram className="w-[19px] h-[19px]" strokeWidth={2.4} />
+                <Instagram className="w-[21px] h-[21px]" strokeWidth={2.5} />
               </a>
               <a
                 href="https://wa.me/5516981873064"
@@ -87,7 +87,8 @@ export function Footer() {
                 className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-gradient-to-br from-[#34e06f] to-[#1fb654] text-white shadow-[0_6px_14px_rgba(0,0,0,0.35)] hover:brightness-110 transition"
                 aria-label="WhatsApp da Lumie"
               >
-                <MessageCircle className="w-[19px] h-[19px]" strokeWidth={2.4} />
+                <MessageCircle className="w-[21px] h-[21px]" strokeWidth={2.5} />
+                <Phone className="absolute w-[9px] h-[9px] translate-x-[0.2px] translate-y-[0.6px] rotate-[18deg]" strokeWidth={3} />
               </a>
             </div>
             <div className="space-y-1 text-sm text-[#d8cfc9]">
