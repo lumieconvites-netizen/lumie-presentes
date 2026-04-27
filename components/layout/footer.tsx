@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Instagram, MessageCircle } from 'lucide-react';
+import { Instagram, MessageCircle, Phone } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -75,19 +75,20 @@ export function Footer() {
                 href="https://instagram.com/lumie.convites"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#fdcf5c] via-[#f77737] to-[#c13584] text-white shadow-sm hover:brightness-110 transition"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-[radial-gradient(circle_at_30%_107%,#fdf497_0%,#fdf497_5%,#fd5949_45%,#d6249f_60%,#285AEB_90%)] text-white shadow-[0_6px_14px_rgba(0,0,0,0.35)] hover:brightness-110 transition"
                 aria-label="Instagram da Lumie"
               >
-                <Instagram className="w-[15px] h-[15px]" />
+                <Instagram className="w-[16px] h-[16px]" strokeWidth={2.3} />
               </a>
               <a
                 href="https://wa.me/5516981873064"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#25d366] text-white shadow-sm hover:brightness-110 transition"
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-gradient-to-br from-[#34e06f] to-[#1fb654] text-white shadow-[0_6px_14px_rgba(0,0,0,0.35)] hover:brightness-110 transition"
                 aria-label="WhatsApp da Lumie"
               >
-                <MessageCircle className="w-[15px] h-[15px]" />
+                <MessageCircle className="w-[16px] h-[16px]" strokeWidth={2.3} />
+                <Phone className="absolute w-[8px] h-[8px] rotate-[16deg]" strokeWidth={2.8} />
               </a>
             </div>
             <div className="space-y-1 text-sm text-[#d8cfc9]">
