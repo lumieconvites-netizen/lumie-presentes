@@ -13,33 +13,41 @@ export function Footer() {
             <div className="relative w-20 h-10 mb-3">
               <Image src="/logo.png" alt="LUMIE" fill className="object-contain brightness-0 invert" />
             </div>
-            <p className="text-[#d8cfc9] text-sm leading-relaxed max-w-xs">
-              Transforme seus presentes em sonhos realizados.
-              A forma mais elegante de celebrar momentos especiais.
-            </p>
+            <p className="text-[#d8cfc9] text-sm leading-relaxed max-w-xs">Anunciando sonhos.</p>
           </div>
 
           <div>
-            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Links</h4>
+            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Navegação</h4>
             <ul className="space-y-1.5">
               <li>
-                <Link href="/como-funciona" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Como Funciona
+                <Link href="/templates" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
+                  Temas
                 </Link>
               </li>
               <li>
                 <Link href="/tarifas" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Tarifas
+                  Loja
                 </Link>
               </li>
               <li>
                 <Link href="/templates" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Templates
+                  Álbum de fotos
                 </Link>
               </li>
               <li>
-                <Link href="/seja-parceiro" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Seja Nosso Parceiro
+                <Link href="/dashboard/rsvp" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
+                  Formulário RSVP
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Informações</h4>
+            <ul className="space-y-1.5">
+              <li>
+                <Link href="/" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
+                  Lumie Eventos
                 </Link>
               </li>
               <li>
@@ -47,20 +55,9 @@ export function Footer() {
                   FAQ
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Legal</h4>
-            <ul className="space-y-1.5">
               <li>
-                <Link href="/termos" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Termos de Uso
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacidade" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Politica de Privacidade
+                <Link href="/seja-parceiro" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
+                  Quem Somos
                 </Link>
               </li>
               <li>
@@ -78,38 +75,30 @@ export function Footer() {
                 href="https://instagram.com/lumie.convites"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#feda75] via-[#fa7e1e] to-[#d62976] text-white shadow-sm hover:brightness-110 transition"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#fdcf5c] via-[#f77737] to-[#c13584] text-white shadow-sm hover:brightness-110 transition"
                 aria-label="Instagram da Lumie"
               >
-                <Instagram className="w-4 h-4" />
+                <Instagram className="w-[15px] h-[15px]" />
               </a>
               <a
                 href="https://wa.me/5516981873064"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#22c55e] text-white shadow-sm hover:brightness-110 transition"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#25d366] text-white shadow-sm hover:brightness-110 transition"
                 aria-label="WhatsApp da Lumie"
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-[15px] h-[15px]" />
               </a>
             </div>
             <div className="space-y-1 text-sm text-[#d8cfc9]">
-              <p>
-                <a href="https://wa.me/5516981873064" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                  (16) 98187-3064
-                </a>
-              </p>
-              <p>
-                <a href="https://instagram.com/lumie.convites" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                  @lumie.convites
-                </a>
-              </p>
+              <p>CNPJ: 62.076.127/0001-41</p>
+              <p>Lumie Convites LTDA</p>
             </div>
           </div>
         </div>
 
         <div className="mt-8 pt-4 border-t border-[#4a3f3a] text-center">
-          <p className="text-xs text-[#b7aaa2]">Feito com carinho por Lumie Convites · {currentYear}</p>
+          <p className="text-xs text-[#b7aaa2]">Feito com ❤️ por Lumie Convites · {currentYear}</p>
         </div>
       </div>
     </footer>
