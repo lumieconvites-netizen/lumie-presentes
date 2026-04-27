@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { BarChart3, Handshake, Shield, Settings, Menu, X, Briefcase } from 'lucide-react';
+import { BarChart3, Handshake, Shield, Settings, Menu, X, Briefcase, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type AffiliateRole = 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
@@ -17,6 +17,7 @@ export default function AffiliateSidebar({ role }: { role: AffiliateRole }) {
   const base = role === 'PARTNER' ? '/parceiro' : role === 'AMBASSADOR' ? '/embaixador' : '/funcionario';
   const items = [
     { href: base, label: 'Visão Geral', icon: BarChart3 },
+    ...(role === 'PARTNER' ? [{ href: `${base}/tutoriais`, label: 'Tutoriais', icon: BookOpen }] : []),
     { href: `${base}/configuracoes`, label: 'Configurações', icon: Settings },
   ];
 
@@ -52,7 +53,7 @@ export default function AffiliateSidebar({ role }: { role: AffiliateRole }) {
         </div>
         <nav className="p-4 space-y-1">
           {items.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const ItemIcon = item.icon;
             return (
               <Link
