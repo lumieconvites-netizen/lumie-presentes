@@ -63,6 +63,13 @@ function extractGatewayFallbackDetails(error: unknown) {
   return sanitizeRecipientSyncErrorDetails((error as any)?.gatewayFallback?.details);
 }
 
+function isRecipientNotFoundError(error: unknown) {
+  const direct = String((error as any)?.message ?? "");
+  const gatewayFallback = String((error as any)?.gatewayFallback?.details ?? "");
+  const combined = `${direct}\n${gatewayFallback}`.toLowerCase();
+  return combined.includes(" 404") || combined.includes("not found") || combined.includes("nao encontrado");
+}
+
 export async function GET() {
   const ctx = await getActingUserContext();
   if (!ctx) {
@@ -125,7 +132,6 @@ export async function PUT(request: Request) {
 
     const ownerDocument = digitsOnly(bankAccount.holderDocument);
     const hasRealRecipient = isRealRecipientId(existingRecipient?.pagarmeRecipientId);
-    const hasSyncedRecipient = hasRealRecipient && existingRecipient?.status === "active";
     const currentBankAccount = (existingRecipient?.bankAccount ?? null) as Record<string, any> | null;
     const holderDocumentChanged =
       digitsOnly(currentBankAccount?.holderDocument) &&
@@ -135,9 +141,9 @@ export async function PUT(request: Request) {
       normalizeComparableHolderName(currentBankAccount?.holderName) !==
         normalizeComparableHolderName(bankAccount.holderName);
     const shouldCreateNewRecipient =
-      !hasSyncedRecipient || Boolean(holderDocumentChanged) || Boolean(holderNameChanged);
+      !hasRealRecipient || Boolean(holderDocumentChanged) || Boolean(holderNameChanged);
     let nextRecipientId = existingRecipient?.pagarmeRecipientId ?? `pending_${ctx.effectiveUserId}`;
-    let nextStatus = hasSyncedRecipient ? "active" : "pending";
+    let nextStatus = hasRealRecipient ? existingRecipient?.status ?? "active" : "pending";
     let warning: string | null = null;
     let details: string | null = null;
     let gatewayDetails: string | null = null;
@@ -152,13 +158,35 @@ export async function PUT(request: Request) {
       message = "Dados bancarios salvos. Sincronizacao pendente.";
     } else {
       try {
-        if (hasSyncedRecipient && existingRecipient?.pagarmeRecipientId && !shouldCreateNewRecipient) {
-          await updateRecipientDefaultBankAccountWithGateway({
-            recipientId: existingRecipient.pagarmeRecipientId,
-            bankAccount: gatewayBankAccount,
-          });
-          nextRecipientId = existingRecipient.pagarmeRecipientId;
-          nextStatus = "active";
+        if (hasRealRecipient && existingRecipient?.pagarmeRecipientId && !shouldCreateNewRecipient) {
+          try {
+            await updateRecipientDefaultBankAccountWithGateway({
+              recipientId: existingRecipient.pagarmeRecipientId,
+              bankAccount: gatewayBankAccount,
+            });
+            nextRecipientId = existingRecipient.pagarmeRecipientId;
+            nextStatus = "active";
+          } catch (updateError) {
+            if (!isRecipientNotFoundError(updateError)) {
+              throw updateError;
+            }
+
+            const created = await createRecipientWithGateway({
+              owner: {
+                name: user.name?.trim() || bankAccount.holderName.trim(),
+                email: user.email,
+                document: ownerDocument,
+              },
+              bankAccount: gatewayBankAccount,
+              metadata: {
+                userId: user.id,
+              },
+            });
+            nextRecipientId = created?.id ?? nextRecipientId;
+            nextStatus = "active";
+            warning =
+              "Conta salva. O recebedor anterior nao foi encontrado na Pagar.me e um novo recebedor foi criado automaticamente.";
+          }
         } else {
           const created = await createRecipientWithGateway({
             owner: {
@@ -180,7 +208,7 @@ export async function PUT(request: Request) {
         fallbackDetails = sanitizeRecipientSyncErrorDetails(error?.message);
         details = fallbackDetails || gatewayDetails;
         nextStatus = "pending";
-        warning = hasSyncedRecipient && !shouldCreateNewRecipient
+        warning = hasRealRecipient && !shouldCreateNewRecipient
           ? "Conta salva, mas a atualizacao dos dados bancarios no recebedor atual da Pagar.me falhou. Nenhum novo recebedor foi criado."
           : "Conta salva, mas a sincronizacao com a Pagar.me falhou temporariamente.";
         message = "Dados bancarios salvos. Sincronizacao pendente.";
