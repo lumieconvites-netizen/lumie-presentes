@@ -1,48 +1,49 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { Instagram, MessageCircle } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#2B2422] text-white py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="col-span-1 md:col-span-2">
-            <div className="relative w-24 h-12 mb-4 brightness-0 invert">
-              <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" />
+    <footer className="bg-gradient-to-r from-[#2b2422] via-[#2f2623] to-[#2b2422] text-white py-10 md:py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div>
+            <div className="relative w-20 h-10 mb-3">
+              <Image src="/logo.png" alt="LUMIE" fill className="object-contain brightness-0 invert" />
             </div>
-            <p className="text-gray-400 text-sm max-w-sm">
+            <p className="text-[#d8cfc9] text-sm leading-relaxed max-w-xs">
               Transforme seus presentes em sonhos realizados.
               A forma mais elegante de celebrar momentos especiais.
             </p>
           </div>
 
           <div>
-            <h4 className="font-display text-lg mb-4">Links</h4>
-            <ul className="space-y-2">
+            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Links</h4>
+            <ul className="space-y-1.5">
               <li>
-                <Link href="/como-funciona" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/como-funciona" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
                   Como Funciona
                 </Link>
               </li>
               <li>
-                <Link href="/tarifas" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/tarifas" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
                   Tarifas
                 </Link>
               </li>
               <li>
-                <Link href="/templates" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/templates" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
                   Templates
                 </Link>
               </li>
               <li>
-                <Link href="/seja-parceiro" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/seja-parceiro" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
                   Seja Nosso Parceiro
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/faq" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
                   FAQ
                 </Link>
               </li>
@@ -50,31 +51,65 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display text-lg mb-4">Legal</h4>
-            <ul className="space-y-2">
+            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Legal</h4>
+            <ul className="space-y-1.5">
               <li>
-                <Link href="/termos" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/termos" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
                   Termos de Uso
                 </Link>
               </li>
               <li>
-                <Link href="/privacidade" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Política de Privacidade
+                <Link href="/privacidade" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
+                  Politica de Privacidade
                 </Link>
               </li>
               <li>
-                <Link href="/lgpd" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/lgpd" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
                   LGPD
                 </Link>
               </li>
             </ul>
           </div>
+
+          <div>
+            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Contato</h4>
+            <div className="flex items-center gap-2 mb-3">
+              <a
+                href="https://instagram.com/lumie.convites"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#feda75] via-[#fa7e1e] to-[#d62976] text-white shadow-sm hover:brightness-110 transition"
+                aria-label="Instagram da Lumie"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a
+                href="https://wa.me/5516981873064"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#22c55e] text-white shadow-sm hover:brightness-110 transition"
+                aria-label="WhatsApp da Lumie"
+              >
+                <MessageCircle className="w-4 h-4" />
+              </a>
+            </div>
+            <div className="space-y-1 text-sm text-[#d8cfc9]">
+              <p>
+                <a href="https://wa.me/5516981873064" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  (16) 98187-3064
+                </a>
+              </p>
+              <p>
+                <a href="https://instagram.com/lumie.convites" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  @lumie.convites
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-800 text-center">
-          <p className="text-sm text-gray-500">
-            © {currentYear} LUMIÊ. Todos os direitos reservados.
-          </p>
+        <div className="mt-8 pt-4 border-t border-[#4a3f3a] text-center">
+          <p className="text-xs text-[#b7aaa2]">Feito com carinho por Lumie Convites · {currentYear}</p>
         </div>
       </div>
     </footer>
@@ -88,10 +123,10 @@ export function CompactFooter() {
     <footer className="border-t border-[#e9d9cd] bg-[#fffaf6]">
       <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col items-center text-center gap-2">
         <div className="relative w-16 h-8">
-          <Image src="/logo.png" alt="LUMIÊ" fill className="object-contain" />
+          <Image src="/logo.png" alt="LUMIE" fill className="object-contain" />
         </div>
         <p className="text-sm text-[#6b5a52]">Transforme seus presentes em sonhos realizados.</p>
-        <p className="text-xs text-[#8a786f]">© {currentYear} LUMIÊ. Todos os direitos reservados.</p>
+        <p className="text-xs text-[#8a786f]">© {currentYear} LUMIE. Todos os direitos reservados.</p>
       </div>
     </footer>
   );
