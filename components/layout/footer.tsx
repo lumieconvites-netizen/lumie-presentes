@@ -17,37 +17,26 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Navegação</h4>
+            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Links</h4>
             <ul className="space-y-1.5">
               <li>
-                <Link href="/templates" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Temas
+                <Link href="/como-funciona" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
+                  Como Funciona
                 </Link>
               </li>
               <li>
                 <Link href="/tarifas" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Loja
+                  Tarifas
                 </Link>
               </li>
               <li>
                 <Link href="/templates" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Álbum de fotos
+                  Templates
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/rsvp" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Formulário RSVP
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Informações</h4>
-            <ul className="space-y-1.5">
-              <li>
-                <Link href="/" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Lumie Eventos
+                <Link href="/seja-parceiro" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
+                  Seja Nosso Parceiro
                 </Link>
               </li>
               <li>
@@ -55,9 +44,20 @@ export function Footer() {
                   FAQ
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-display text-xl mb-3 text-[#f1e5dc]">Legal</h4>
+            <ul className="space-y-1.5">
               <li>
-                <Link href="/seja-parceiro" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Quem Somos
+                <Link href="/termos" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
+                  Termos de Uso
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacidade" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
+                  Política de Privacidade
                 </Link>
               </li>
               <li>
