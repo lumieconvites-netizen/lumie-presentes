@@ -36,14 +36,26 @@ export async function POST() {
       );
     }
 
-    if (recipient.status !== "active") {
-      return NextResponse.json(
-        { error: "Sua conta bancaria ainda nao esta ativa para saque." },
-        { status: 400 }
-      );
+    let summary;
+    try {
+      summary = await getRecipientFinancialSummaryWithGateway(recipient.pagarmeRecipientId);
+    } catch (statusProbeError) {
+      if (recipient.status !== "active") {
+        return NextResponse.json(
+          { error: "Sua conta bancaria ainda nao esta ativa para saque." },
+          { status: 400 }
+        );
+      }
+      throw statusProbeError;
     }
 
-    const summary = await getRecipientFinancialSummaryWithGateway(recipient.pagarmeRecipientId);
+    if (recipient.status !== "active") {
+      await prisma.recipient.update({
+        where: { id: recipient.id },
+        data: { status: "active" },
+      });
+    }
+
     const availableBalance = Number(summary.available ?? 0);
     const waitingFunds = Number(summary.waitingFunds ?? 0);
 
