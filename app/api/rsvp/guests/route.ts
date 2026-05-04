@@ -16,8 +16,8 @@ const guestSchema = z.object({
 const importGuestSchema = z.object({
   fullName: z.string().min(2, "Nome completo e obrigatorio"),
   notes: z.string().optional(),
-  adultLimit: z.coerce.number().int().min(0).optional(),
-  childLimit: z.coerce.number().int().min(0).optional(),
+  adultLimit: z.coerce.number().int().min(0).max(20).optional(),
+  childLimit: z.coerce.number().int().min(0).max(20).optional(),
   status: z.enum(["PENDING", "CONFIRMED", "DECLINED"]).optional(),
 });
 
@@ -30,11 +30,6 @@ export const dynamic = "force-dynamic";
 
 async function getGiftListId(userId: string) {
   return getPrimaryGiftListIdForUser(userId);
-}
-
-function clampGuestLimit(value: number | undefined) {
-  if (!Number.isFinite(value as number)) return 0;
-  return Math.max(0, Math.min(20, Math.trunc(value as number)));
 }
 
 export async function GET(req: Request) {
@@ -145,8 +140,8 @@ export async function POST(req: Request) {
           email: null,
           phone: null,
           notes: g.notes?.trim() || null,
-          adultLimit: clampGuestLimit(g.adultLimit),
-          childLimit: clampGuestLimit(g.childLimit),
+          adultLimit: g.adultLimit ?? 0,
+          childLimit: g.childLimit ?? 0,
           status: g.status || "PENDING",
           qrToken: createQrToken(),
           checkInCode: createCheckInCode(),
