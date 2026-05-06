@@ -32,6 +32,7 @@ model User {
   updatedAt              DateTime          @updatedAt
 
   giftLists                   GiftList[]
+  customDomains               CustomDomain[]
   recipient                   Recipient?
   partnerAmbassador           User?          @relation("PartnerToAmbassador", fields: [partnerAmbassadorId], references: [id], onDelete: SetNull)
   partnerReferrals            User[]         @relation("PartnerToAmbassador")
@@ -138,6 +139,7 @@ model GiftList {
   gifts        GiftItem[]
   orders       Order[]
   messages     Message[]
+  customDomains CustomDomain[]
   rsvpSettings RsvpSettings?
   rsvpGuests   RsvpGuest[]
 
@@ -151,6 +153,37 @@ model GiftList {
 enum FeeMode {
   PASS_TO_GUEST
   ABSORB
+}
+
+model CustomDomain {
+  id                    String             @id @default(cuid())
+  userId                String
+  giftListId            String
+  domain                String             @unique
+  status                CustomDomainStatus @default(SELECTED)
+  provider              String             @default("VERCEL")
+  availabilityCheckedAt DateTime?
+  registeredAt          DateTime?
+  expiresAt             DateTime?
+  lastError             String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([giftListId])
+  @@index([status])
+  @@map("custom_domains")
+}
+
+enum CustomDomainStatus {
+  SELECTED
+  PURCHASE_PENDING
+  ACTIVE
+  EXPIRED
+  FAILED
 }
 
 // ===== LAYOUT DA PÁGINA =====

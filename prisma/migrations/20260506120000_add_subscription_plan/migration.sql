@@ -1,7 +1,11 @@
-CREATE TYPE "SubscriptionPlan" AS ENUM ('FREE', 'PREMIUM');
+DO $$ BEGIN
+  CREATE TYPE "SubscriptionPlan" AS ENUM ('FREE', 'PREMIUM');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 ALTER TABLE "users"
-ADD COLUMN "plan" "SubscriptionPlan" NOT NULL DEFAULT 'FREE',
-ADD COLUMN "planExpiresAt" TIMESTAMP(3);
+ADD COLUMN IF NOT EXISTS "plan" "SubscriptionPlan" NOT NULL DEFAULT 'FREE',
+ADD COLUMN IF NOT EXISTS "planExpiresAt" TIMESTAMP(3);
 
-CREATE INDEX "users_plan_idx" ON "users"("plan");
+CREATE INDEX IF NOT EXISTS "users_plan_idx" ON "users"("plan");

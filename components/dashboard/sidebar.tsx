@@ -14,6 +14,7 @@ import {
   Landmark,
   CalendarCheck,
   BookOpen,
+  Globe2,
   Menu,
   X,
 } from 'lucide-react';
@@ -27,6 +28,7 @@ const menuItems = [
   { href: '/dashboard/recados', label: 'Recados', icon: MessageSquare },
   { href: '/dashboard/pagamentos', label: 'Pagamentos', icon: CreditCard },
   { href: '/dashboard/banco', label: 'Conta Bancária', icon: Landmark },
+  { href: '/dashboard/dominio', label: 'Domínio', icon: Globe2 },
   { href: '/dashboard/tutoriais', label: 'Tutoriais', icon: BookOpen },
   { href: '/dashboard/configuracoes', label: 'Configurações', icon: Settings },
 ];
