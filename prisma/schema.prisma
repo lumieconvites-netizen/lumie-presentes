@@ -18,6 +18,8 @@ model User {
   password               String?
   image                  String?
   role                   UserRole          @default(CLIENT)
+  plan                   SubscriptionPlan  @default(FREE)
+  planExpiresAt          DateTime?
   isBlocked              Boolean           @default(false)
   blockReason            String?
   blockedAt              DateTime?
@@ -40,6 +42,7 @@ model User {
   referralCodes               ReferralCode[]
 
   @@index([role])
+  @@index([plan])
   @@index([role, createdAt])
   @@index([isBlocked, createdAt])
   @@index([partnerAmbassadorId])
@@ -389,6 +392,11 @@ model RsvpGuest {
   @@index([giftListId, checkedInAt])
   @@index([giftListId, status, createdAt])
   @@map("rsvp_guests")
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
 }
 
 enum RsvpStatus {

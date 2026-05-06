@@ -7,15 +7,13 @@ import { buildEffectiveAvailabilityMap } from "@/lib/gift-availability";
 import { getPublishedSiteStaticParams } from "@/lib/public-site-static-params";
 import { resolveThemeBodyFont, resolveThemeTitleFont } from "@/lib/theme-fonts";
 import GiftsFilterMenu from "@/components/public/GiftsFilterMenu";
+import { resolveEffectivePlan, resolvePlatformFeePercent } from "@/lib/plans";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const fallbackFeePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
-const feePercentPix = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE_PIX ?? fallbackFeePercent);
-
-function calculateDisplayPrice(basePrice: number, feeMode: "PASS_TO_GUEST" | "ABSORB") {
+function calculateDisplayPrice(basePrice: number, feeMode: "PASS_TO_GUEST" | "ABSORB", feePercentPix: number) {
   if (feeMode !== "PASS_TO_GUEST") return basePrice;
   return Number((basePrice * (1 + feePercentPix / 100)).toFixed(2));
 }
@@ -56,6 +54,12 @@ export default async function SiteGiftsBySlugPage({
       title: true,
       description: true,
       feeMode: true,
+      user: {
+        select: {
+          plan: true,
+          planExpiresAt: true,
+        },
+      },
       pageLayout: {
         select: {
           theme: true,
@@ -65,6 +69,7 @@ export default async function SiteGiftsBySlugPage({
   });
 
   if (!list || !list.isPublished) return notFound();
+  const feePercentPix = resolvePlatformFeePercent("PIX", resolveEffectivePlan(list.user));
 
   const gifts = await prisma.giftItem.findMany({
     where: { giftListId: list.id, isActive: true },
@@ -101,7 +106,7 @@ export default async function SiteGiftsBySlugPage({
   const giftsWithAvailability = gifts.map((gift) => {
     const availableQty = availabilityByGiftId.get(gift.id) ?? Math.max(0, gift.availableQty);
     const soldOut = availableQty <= 0;
-    const displayPrice = calculateDisplayPrice(Number(gift.basePrice || 0), list.feeMode);
+    const displayPrice = calculateDisplayPrice(Number(gift.basePrice || 0), list.feeMode, feePercentPix);
     return {
       gift,
       availableQty,

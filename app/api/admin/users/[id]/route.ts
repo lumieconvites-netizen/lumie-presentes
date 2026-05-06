@@ -6,6 +6,8 @@ import { ensureDefaultReferralCodesForUser } from "@/lib/referrals";
 
 const patchSchema = z.object({
   role: z.enum(["ADMIN", "CLIENT", "PARTNER", "AMBASSADOR", "EMPLOYEE"]).optional(),
+  plan: z.enum(["FREE", "PREMIUM"]).optional(),
+  planExpiresAt: z.string().datetime().optional().nullable(),
   isBlocked: z.boolean().optional(),
   blockReason: z.string().max(400).optional().nullable(),
   name: z.string().min(2).max(120).optional(),
@@ -53,6 +55,10 @@ export async function PATCH(
 
     const updateData: any = {
       ...(typeof data.role === "string" ? { role: data.role } : {}),
+      ...(typeof data.plan === "string" ? { plan: data.plan } : {}),
+      ...(typeof data.planExpiresAt !== "undefined"
+        ? { planExpiresAt: data.planExpiresAt ? new Date(data.planExpiresAt) : null }
+        : {}),
       ...(typeof data.isBlocked === "boolean" ? { isBlocked: data.isBlocked } : {}),
       ...(typeof data.blockReason !== "undefined"
         ? { blockReason: data.blockReason?.trim() || null }
@@ -80,6 +86,8 @@ export async function PATCH(
             name: true,
             email: true,
             role: true,
+            plan: true,
+            planExpiresAt: true,
             isBlocked: true,
             blockReason: true,
             blockedAt: true,
@@ -91,6 +99,10 @@ export async function PATCH(
           where: { id: params.id },
           data: {
             ...(typeof data.role === "string" ? { role: data.role } : {}),
+            ...(typeof data.plan === "string" ? { plan: data.plan } : {}),
+            ...(typeof data.planExpiresAt !== "undefined"
+              ? { planExpiresAt: data.planExpiresAt ? new Date(data.planExpiresAt) : null }
+              : {}),
             ...(typeof data.isBlocked === "boolean" ? { isBlocked: data.isBlocked } : {}),
             ...(typeof data.name === "string" ? { name: data.name.trim() } : {}),
             ...(typeof data.email === "string" ? { email: data.email.trim().toLowerCase() } : {}),
@@ -100,6 +112,8 @@ export async function PATCH(
             name: true,
             email: true,
             role: true,
+            plan: true,
+            planExpiresAt: true,
             isBlocked: true,
           },
         });

@@ -51,12 +51,11 @@ type GiftsDraft = {
   expandedIds: string[];
 };
 
-const feePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const TITLE_FONTS = ['Playfair Display', 'Cormorant Garamond', 'Great Vibes', 'Dancing Script', 'Allura', 'Poppins', 'Montserrat'] as const;
 const BODY_FONTS = ['Inter', 'Lato', 'Open Sans', 'Roboto', 'Nunito', 'Work Sans', 'Raleway'] as const;
 
-function withFee(value: number, feePassedToGuest: boolean) {
+function withFee(value: number, feePassedToGuest: boolean, feePercent: number) {
   if (!feePassedToGuest) return value;
   return Number((value * (1 + feePercent / 100)).toFixed(2));
 }
@@ -111,6 +110,7 @@ export default function PresentesDashboard() {
   const [giftListId, setGiftListId] = useState('');
   const [giftListSlug, setGiftListSlug] = useState('');
   const [giftListFeeMode, setGiftListFeeMode] = useState<'PASS_TO_GUEST' | 'ABSORB'>('PASS_TO_GUEST');
+  const [feePercentPix, setFeePercentPix] = useState(11.99);
 
   const [gifts, setGifts] = useState<EditableGift[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,6 +199,7 @@ export default function PresentesDashboard() {
       setGiftListId(glData.id);
       setGiftListSlug(glData.slug || '');
       setGiftListFeeMode(glData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
+      setFeePercentPix(Number(glData?.feePercentPix ?? 11.99));
       setBankAccountConfigured(Boolean(glData?.bankAccountConfigured));
       setIsPublished(Boolean(glData?.isPublished));
 
@@ -947,7 +948,7 @@ export default function PresentesDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredGifts.map((gift) => {
-              const valueShown = withFee(Number(gift.basePrice || 0), giftListFeeMode === 'PASS_TO_GUEST');
+              const valueShown = withFee(Number(gift.basePrice || 0), giftListFeeMode === 'PASS_TO_GUEST', feePercentPix);
               const soldOut = gift.availableQty <= 0;
               const expanded = expandedIds.includes(gift.localId);
 

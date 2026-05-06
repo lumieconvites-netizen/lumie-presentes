@@ -8,6 +8,7 @@ import {
 } from "@/lib/gift-list-slug";
 import { getActingUserContext } from "@/lib/acting-user";
 import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
+import { resolveEffectivePlan, resolvePlatformFeePercent } from "@/lib/plans";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -103,7 +104,7 @@ export async function GET(req: Request) {
     }
 
     if (view === "presentes") {
-      const [presentesPayload, recipient] = await Promise.all([
+      const [presentesPayload, recipient, userPlan] = await Promise.all([
         prisma.giftList.findUnique({
           where: { id: giftList.id },
           select: {
@@ -140,10 +141,18 @@ export async function GET(req: Request) {
           where: { userId: ctx.effectiveUserId },
           select: { bankAccount: true },
         }),
+        prisma.user.findUnique({
+          where: { id: ctx.effectiveUserId },
+          select: { plan: true, planExpiresAt: true },
+        }),
       ]);
+      const effectivePlan = resolveEffectivePlan(userPlan);
 
       return NextResponse.json({
         ...(presentesPayload ?? giftList),
+        plan: effectivePlan,
+        feePercentPix: resolvePlatformFeePercent("PIX", effectivePlan),
+        feePercentCreditCard: resolvePlatformFeePercent("CREDIT_CARD", effectivePlan),
         bankAccountConfigured: hasConfiguredBankAccount(recipient?.bankAccount),
       });
     }

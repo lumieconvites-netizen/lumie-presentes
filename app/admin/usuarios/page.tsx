@@ -12,6 +12,8 @@ type AdminUser = {
   name: string | null;
   email: string;
   role: 'ADMIN' | 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
+  plan: 'FREE' | 'PREMIUM';
+  planExpiresAt?: string | null;
   isBlocked: boolean;
   blockReason?: string | null;
   referredByPartner?: { id: string; name: string | null; email: string } | null;
@@ -176,6 +178,18 @@ export default function AdminUsersPage() {
     window.location.assign('/dashboard');
   }
 
+  async function togglePlan(user: AdminUser) {
+    const nextPlan = user.plan === 'PREMIUM' ? 'FREE' : 'PREMIUM';
+    const payload =
+      nextPlan === 'PREMIUM'
+        ? {
+            plan: nextPlan,
+            planExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          }
+        : { plan: nextPlan, planExpiresAt: null };
+    await patchUser(user.id, payload);
+  }
+
   const metricLabel =
     role === 'CLIENT'
       ? 'Origem'
@@ -232,6 +246,18 @@ export default function AdminUsersPage() {
                   <td className="p-2">
                     <p className="font-medium">{user.name || 'Sem nome'}</p>
                     <p className="text-xs text-gray-500">{user.email}</p>
+                    {role === 'CLIENT' ? (
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <Badge variant={user.plan === 'PREMIUM' ? 'default' : 'outline'}>
+                          {user.plan === 'PREMIUM' ? 'Premium' : 'Gratuito'}
+                        </Badge>
+                        {user.plan === 'PREMIUM' && user.planExpiresAt ? (
+                          <span className="text-xs text-gray-500">
+                            expira em {new Date(user.planExpiresAt).toLocaleDateString('pt-BR')}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
                     {user.isBlocked && user.blockReason ? (
                       <p className="mt-1 text-xs text-red-600">Motivo: {user.blockReason}</p>
                     ) : null}
@@ -254,6 +280,11 @@ export default function AdminUsersPage() {
                       {role === 'PARTNER' ? (
                         <Button size="sm" variant="outline" onClick={() => patchUser(user.id, { role: 'AMBASSADOR' }).catch((error) => alert(error.message))}>
                           Virar embaixador
+                        </Button>
+                      ) : null}
+                      {role === 'CLIENT' ? (
+                        <Button size="sm" variant="outline" onClick={() => togglePlan(user).catch((error) => alert(error.message))}>
+                          {user.plan === 'PREMIUM' ? 'Voltar ao gratuito' : 'Ativar premium'}
                         </Button>
                       ) : null}
                       <Button size="sm" variant="outline" onClick={() => toggleBlockUser(user).catch((error) => alert(error.message))}>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getEffectiveAvailabilityForGift } from '@/lib/gift-availability';
 import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
+import { resolveEffectivePlan, resolvePlatformFeePercent } from '@/lib/plans';
 
 export async function GET(request: Request, { params }: { params: { giftId: string } }) {
   try {
@@ -26,6 +27,12 @@ export async function GET(request: Request, { params }: { params: { giftId: stri
             feeMode: true,
             allowMessages: true,
             allowPhotoUpload: true,
+            user: {
+              select: {
+                plan: true,
+                planExpiresAt: true,
+              },
+            },
           },
         },
       },
@@ -42,6 +49,17 @@ export async function GET(request: Request, { params }: { params: { giftId: stri
       console.error('Falha ao reconciliar pedidos pendentes no preload do checkout:', reconcileError);
     });
     const effectiveAvailableQty = await getEffectiveAvailabilityForGift(gift.id, gift.totalQuantity);
+    const effectivePlan = resolveEffectivePlan(gift.giftList.user);
+    const giftList = {
+      id: gift.giftList.id,
+      title: gift.giftList.title,
+      slug: gift.giftList.slug,
+      feeMode: gift.giftList.feeMode,
+      allowMessages: gift.giftList.allowMessages,
+      allowPhotoUpload: gift.giftList.allowPhotoUpload,
+      feePercentPix: resolvePlatformFeePercent('PIX', effectivePlan),
+      feePercentCreditCard: resolvePlatformFeePercent('CREDIT_CARD', effectivePlan),
+    };
 
     return NextResponse.json({
       gift: {
@@ -53,7 +71,7 @@ export async function GET(request: Request, { params }: { params: { giftId: stri
         availableQty: effectiveAvailableQty,
         totalQuantity: gift.totalQuantity,
       },
-      giftList: gift.giftList,
+      giftList,
     });
   } catch (error) {
     console.error('Erro ao buscar presente:', error);

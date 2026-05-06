@@ -25,14 +25,10 @@ export type GiftResponse = {
     feeMode: 'PASS_TO_GUEST' | 'ABSORB';
     allowMessages: boolean;
     allowPhotoUpload: boolean;
+    feePercentPix: number;
+    feePercentCreditCard: number;
   };
 };
-
-const fallbackFeePercent = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE ?? 11.99);
-const feePercentPix = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE_PIX ?? fallbackFeePercent);
-const feePercentCreditCard = Number(
-  process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE_CREDIT_CARD ?? fallbackFeePercent
-);
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -205,6 +201,8 @@ export default function CheckoutPageClient({
   }, [pixData?.orderId, guestEmail]);
 
   const feeMode = giftData?.giftList.feeMode ?? 'PASS_TO_GUEST';
+  const feePercentPix = Number(giftData?.giftList.feePercentPix ?? 11.99);
+  const feePercentCreditCard = Number(giftData?.giftList.feePercentCreditCard ?? feePercentPix);
   const available = giftData?.gift.availableQty ?? 0;
   const qtyMax = Math.max(1, available);
 

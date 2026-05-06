@@ -6,6 +6,12 @@ import { z } from 'zod';
 import { enforceRateLimit, getRequestIp } from '@/lib/rate-limit';
 import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
 import { getEffectiveAvailabilityForGift } from '@/lib/gift-availability';
+import {
+  resolveEffectivePlan,
+  resolveNetworkFeePercent,
+  resolvePlatformFeePercent,
+  type SubscriptionPlan,
+} from '@/lib/plans';
 
 const orderSchema = z.object({
   giftId: z.string(),
@@ -67,19 +73,9 @@ function readPercent(name: string, fallback: number) {
   return parsed;
 }
 
-function resolveFeePercentages(paymentMethod: 'PIX' | 'CREDIT_CARD') {
-  const defaultPlatformFee = readPercent('PLATFORM_FEE_PERCENTAGE', 11.99);
-  const platformFee =
-    paymentMethod === 'CREDIT_CARD'
-      ? readPercent('PLATFORM_FEE_PERCENTAGE_CREDIT_CARD', defaultPlatformFee)
-      : readPercent('PLATFORM_FEE_PERCENTAGE_PIX', defaultPlatformFee);
-
-  const defaultNetworkFee = readPercent('PLATFORM_NETWORK_FEE_PERCENTAGE', 10.9);
-  const networkFee =
-    paymentMethod === 'CREDIT_CARD'
-      ? readPercent('PLATFORM_NETWORK_FEE_PERCENTAGE_CREDIT_CARD', defaultNetworkFee)
-      : readPercent('PLATFORM_NETWORK_FEE_PERCENTAGE_PIX', defaultNetworkFee);
-
+function resolveFeePercentages(paymentMethod: 'PIX' | 'CREDIT_CARD', plan: SubscriptionPlan) {
+  const platformFee = resolvePlatformFeePercent(paymentMethod, plan);
+  const networkFee = resolveNetworkFeePercent(paymentMethod, plan);
   const defaultProcessingFee = readPercent('PAGARME_PROCESSING_FEE_PERCENTAGE', 1.09);
   const processingFee =
     paymentMethod === 'CREDIT_CARD'
@@ -134,10 +130,9 @@ function calculateCommissionSplit(params: {
   hasPartnerRecipient: boolean;
   hasAmbassadorRecipient: boolean;
   paymentMethod: 'PIX' | 'CREDIT_CARD';
+  plan: SubscriptionPlan;
 }) {
-  const { processingFee: processingFeePercentage, networkFee: networkFeePercentage } = resolveFeePercentages(
-    params.paymentMethod
-  );
+  const { processingFee: processingFeePercentage, networkFee: networkFeePercentage } = resolveFeePercentages(params.paymentMethod, params.plan);
   const partnerFeePercentage = readPercent('PARTNER_COMMISSION_PERCENTAGE', 2);
   const ambassadorFeePercentage = readPercent('AMBASSADOR_COMMISSION_PERCENTAGE', 3);
 
@@ -252,9 +247,15 @@ export async function POST(request: Request) {
       },
       include: {
         giftList: {
-          include: {
+          select: {
+            id: true,
+            feeMode: true,
+            allowMessages: true,
             user: {
-              include: {
+              select: {
+                acquisitionSource: true,
+                plan: true,
+                planExpiresAt: true,
                 recipient: true,
                 referredByPartner: {
                   include: {
@@ -283,7 +284,8 @@ export async function POST(request: Request) {
     }
 
     const baseAmount = Number(gift.basePrice) * data.quantity;
-    const { platformFee: platformFeePercentage } = resolveFeePercentages(data.paymentMethod);
+    const effectivePlan = resolveEffectivePlan(gift.giftList.user);
+    const { platformFee: platformFeePercentage } = resolveFeePercentages(data.paymentMethod, effectivePlan);
     const calculation = calculateTotal(baseAmount, gift.giftList.feeMode, platformFeePercentage);
 
     const order = await prisma.order.create({
@@ -332,6 +334,7 @@ export async function POST(request: Request) {
           hasPartnerRecipient: isRealRecipientId(partnerRecipientId),
           hasAmbassadorRecipient: isRealRecipientId(ambassadorRecipientId),
           paymentMethod: data.paymentMethod,
+          plan: effectivePlan,
         });
 
         const splitRules =
@@ -386,6 +389,7 @@ export async function POST(request: Request) {
             splitPartnerEnabled: splitAmounts.splitProfile.partnerEnabled,
             splitAmbassadorEnabled: splitAmounts.splitProfile.ambassadorEnabled,
             splitPlatformGrossPercentage: splitAmounts.splitProfile.platformGrossPercentage,
+            subscriptionPlan: effectivePlan,
             splitPartnerFeePercentage: splitAmounts.splitProfile.partnerFeePercentage,
             splitAmbassadorFeePercentage: splitAmounts.splitProfile.ambassadorFeePercentage,
             splitTotalInCents: splitAmounts.totalInCents,
