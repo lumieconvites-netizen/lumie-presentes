@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { validateWebhookSignature, mapOrderStatus } from "@/lib/pagarme";
 import { prisma } from "@/lib/prisma";
 import { claimIdempotencyKey } from "@/lib/idempotency";
+import { activatePremiumPlanPurchase } from "@/lib/plan-purchases";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +31,15 @@ function resolveLocalOrderId(event: any): string | null {
     event?.data?.metadata?.localOrderId ??
     event?.data?.order?.metadata?.localOrderId ??
     event?.data?.last_transaction?.metadata?.localOrderId ??
+    null
+  );
+}
+
+function resolveLocalPlanPurchaseId(event: any): string | null {
+  return (
+    event?.data?.metadata?.localPlanPurchaseId ??
+    event?.data?.order?.metadata?.localPlanPurchaseId ??
+    event?.data?.last_transaction?.metadata?.localPlanPurchaseId ??
     null
   );
 }
@@ -71,7 +81,56 @@ export async function POST(request: Request) {
 
   try {
     const localOrderId = resolveLocalOrderId(event);
+    const localPlanPurchaseId = resolveLocalPlanPurchaseId(event);
     const pagarmeOrderId = resolvePagarmeOrderId(event);
+
+    if (localPlanPurchaseId) {
+      const planPurchase = await prisma.planPurchase.findFirst({
+        where: pagarmeOrderId
+          ? {
+              OR: [{ id: localPlanPurchaseId }, { pagarmeOrderId }],
+            }
+          : { id: localPlanPurchaseId },
+        select: {
+          id: true,
+          status: true,
+        },
+      });
+
+      if (!planPurchase) {
+        return NextResponse.json({ received: true, skipped: "plan_purchase_not_found" });
+      }
+
+      const mapped = resolveMappedStatus(event);
+      let nextStatus = toOrderStatus(mapped);
+      if (planPurchase.status === "PAID" && nextStatus === "PENDING") {
+        nextStatus = "PAID";
+      }
+
+      if (nextStatus === "PAID") {
+        await activatePremiumPlanPurchase(planPurchase.id);
+        return NextResponse.json({ received: true, kind: "plan_purchase" });
+      }
+
+      if (eventType === "charge.chargeback" || nextStatus === "REFUNDED") {
+        await prisma.planPurchase.update({
+          where: { id: planPurchase.id },
+          data: {
+            status: "REFUNDED",
+          },
+        });
+        return NextResponse.json({ received: true, kind: "plan_purchase" });
+      }
+
+      await prisma.planPurchase.update({
+        where: { id: planPurchase.id },
+        data: {
+          status: nextStatus,
+        },
+      });
+
+      return NextResponse.json({ received: true, kind: "plan_purchase" });
+    }
 
     const dbOrder = await prisma.order.findFirst({
       where: localOrderId

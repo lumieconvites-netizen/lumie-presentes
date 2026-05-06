@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Crown, Gift, Globe2, HelpCircle, Shield, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSession } from 'next-auth/react';
 
 const freeFeatures = [
   'Lista de presentes online',
@@ -82,7 +83,10 @@ function PlanFeature({ children, dark = false }: { children: string; dark?: bool
 
 export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<PlanKey>('FREE');
+  const { status } = useSession();
   const selectedExample = feeExamples[selectedPlan];
+  const exclusiveHref =
+    status === 'authenticated' ? '/dashboard/premium' : '/auth/login?callbackUrl=/dashboard/premium';
 
   return (
     <main className="bg-[#f8f2ed] text-[#2b2422]">
@@ -190,10 +194,10 @@ export default function PricingPage() {
                 </div>
 
                 <Link
-                  href="/auth/cadastro"
+                  href={exclusiveHref}
                   className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-[#2f2622] transition hover:bg-[#fff1e8]"
                 >
-                  Começar com Exclusive
+                  Adquirir Lumie Exclusive
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
