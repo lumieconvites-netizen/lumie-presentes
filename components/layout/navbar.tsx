@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { LayoutDashboard, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 
@@ -55,38 +55,65 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/auth/login"
-              className="pointer-events-auto inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-              onClick={() => setNavigating(true)}
-            >
-              Entrar
-            </Link>
+            {status === 'authenticated' ? (
+              <Link
+                href="/dashboard"
+                className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead9cd] text-[#6d564b] transition-colors hover:bg-[#fff3ea] hover:text-primary"
+                onClick={() => setNavigating(true)}
+                aria-label="Voltar para o dashboard"
+                title="Voltar para o dashboard"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="pointer-events-auto inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                  onClick={() => setNavigating(true)}
+                >
+                  Entrar
+                </Link>
 
-            <Link
-              href="/auth/cadastro"
-              className="pointer-events-auto inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-terracota-500 to-terracota-700 px-5 text-sm font-medium text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm transition-colors"
-              onClick={() => setNavigating(true)}
-            >
-              Criar Conta
-            </Link>
+                <Link
+                  href="/auth/cadastro"
+                  className="pointer-events-auto inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-terracota-500 to-terracota-700 px-5 text-sm font-medium text-white hover:from-terracota-600 hover:to-terracota-800 shadow-sm transition-colors"
+                  onClick={() => setNavigating(true)}
+                >
+                  Criar Conta
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="md:hidden flex items-center gap-2">
-            <Link
-              href="/auth/login"
-              className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-foreground border border-[#e8d8cc]"
-              onClick={() => setNavigating(true)}
-            >
-              Entrar
-            </Link>
-            <Link
-              href="/auth/cadastro"
-              className="inline-flex h-9 items-center justify-center rounded-full bg-gradient-to-r from-terracota-500 to-terracota-700 px-3 text-sm font-medium text-white"
-              onClick={() => setNavigating(true)}
-            >
-              Criar Conta
-            </Link>
+            {status === 'authenticated' ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e8d8cc] text-[#6d564b]"
+                onClick={() => setNavigating(true)}
+                aria-label="Voltar para o dashboard"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-foreground border border-[#e8d8cc]"
+                  onClick={() => setNavigating(true)}
+                >
+                  Entrar
+                </Link>
+                <Link
+                  href="/auth/cadastro"
+                  className="inline-flex h-9 items-center justify-center rounded-full bg-gradient-to-r from-terracota-500 to-terracota-700 px-3 text-sm font-medium text-white"
+                  onClick={() => setNavigating(true)}
+                >
+                  Criar Conta
+                </Link>
+              </>
+            )}
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#e8d8cc]"

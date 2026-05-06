@@ -6,7 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Crown, Loader2, QrCode, ShieldCheck } from 'lucide-react';
+import {
+  CheckCircle2,
+  Clock3,
+  Copy,
+  CreditCard,
+  Crown,
+  Gift,
+  Globe2,
+  Loader2,
+  QrCode,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
 
 type ExclusiveData = {
   user: {
@@ -50,6 +62,11 @@ async function parseJsonSafe(res: Response) {
   }
 }
 
+function formatDate(value?: string | null) {
+  if (!value) return null;
+  return new Date(value).toLocaleDateString('pt-BR');
+}
+
 export default function PremiumCheckoutPage() {
   const [data, setData] = useState<ExclusiveData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,6 +86,7 @@ export default function PremiumCheckoutPage() {
     expiresAt: string | null;
   } | null>(null);
   const [purchaseStatus, setPurchaseStatus] = useState<string | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -168,6 +186,17 @@ export default function PremiumCheckoutPage() {
     }
   };
 
+  const handleCopyPix = async () => {
+    if (!pixPayload?.qrCode) return;
+    try {
+      await navigator.clipboard.writeText(pixPayload.qrCode);
+      setCopyFeedback(true);
+      window.setTimeout(() => setCopyFeedback(false), 1800);
+    } catch {
+      alert('Nao foi possivel copiar o codigo PIX.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-4 md:p-6">
@@ -183,22 +212,110 @@ export default function PremiumCheckoutPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      <Card className="border-[#e4d2c5] bg-gradient-to-r from-[#fff8f2] to-white">
-        <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#3b2d28] text-white">
-              <Crown className="h-6 w-6" />
-            </span>
+      <Card className="overflow-hidden border-[#e6d3c8] bg-[radial-gradient(circle_at_top_left,_rgba(255,241,232,0.95),_rgba(255,255,255,1)_58%)] shadow-[0_18px_48px_rgba(77,51,39,0.10)]">
+        <CardContent className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1.1fr,0.9fr]">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#ecd7ca] bg-white/90 px-4 py-2 text-sm text-[#6e594f]">
+              <Crown className="h-4 w-4 text-[#8e3d2c]" />
+              Lumie Exclusive
+            </div>
+
             <div>
-              <h1 className="text-2xl font-display text-[#2d221f]">Lumie Exclusive</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Domínio personalizado por 1 ano, taxa reduzida e suporte exclusivo com a nossa equipe.
+              <h1 className="font-display text-3xl leading-tight text-[#2d221f] md:text-5xl">
+                Seu plano premium com dominio proprio, taxa menor e suporte exclusivo.
+              </h1>
+              <p className="mt-4 max-w-2xl text-[15px] leading-7 text-[#67544a]">
+                Ative agora e deixe sua lista pronta para receber presentes com uma experiencia mais elegante, mais
+                profissional e com dominio escolhido direto pelo dashboard.
               </p>
             </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-[#ecd8cc] bg-white/90 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8e6b5d]">Valor</p>
+                <p className="mt-2 font-display text-4xl text-[#9a3f2a]">{formatBRL(amount)}</p>
+                <p className="mt-1 text-sm text-[#705b51]">por 1 ano</p>
+              </div>
+              <div className="rounded-2xl border border-[#ecd8cc] bg-white/90 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8e6b5d]">Taxa</p>
+                <p className="mt-2 font-display text-4xl text-[#2d221f]">3,69%</p>
+                <p className="mt-1 text-sm text-[#705b51]">nos presentes</p>
+              </div>
+              <div className="rounded-2xl border border-[#ecd8cc] bg-white/90 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8e6b5d]">Ativacao</p>
+                <p className="mt-2 font-display text-4xl text-[#2d221f]">Imediata</p>
+                <p className="mt-1 text-sm text-[#705b51]">apos pagamento</p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                'Dominio personalizado por 1 ano',
+                'Tudo do plano gratuito, com taxa reduzida',
+                'Suporte exclusivo com a nossa equipe',
+                'Checkout por PIX e cartao com confirmacao automatica',
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3 rounded-2xl border border-[#ead7ca] bg-white/85 p-4">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#1f8e5b]" />
+                  <p className="text-sm leading-6 text-[#564841]">{item}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-col items-start gap-2 md:items-end">
-            <Badge variant={isPremium ? 'default' : 'outline'}>{isPremium ? 'Premium ativo' : 'Plano gratuito'}</Badge>
-            <p className="font-display text-4xl text-[#8e3d2c]">{formatBRL(amount)}</p>
+
+          <div className="space-y-4">
+            <div className="rounded-[28px] border border-[#dfc6b7] bg-[#2f2622] p-6 text-white shadow-[0_20px_44px_rgba(49,34,28,0.22)]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm text-[#d7c5bb]">Status do seu plano</p>
+                  <p className="mt-2 text-2xl font-semibold">{isPremium ? 'Premium ativo' : 'Plano gratuito'}</p>
+                </div>
+                <Badge variant={isPremium ? 'default' : 'outline'} className="border-white/20 bg-white/10 text-white">
+                  {isPremium ? 'Ativo' : 'Disponivel'}
+                </Badge>
+              </div>
+
+              <div className="mt-6 space-y-3 text-sm text-[#ebddd6]">
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <span>Preco do plano</span>
+                  <strong>{formatBRL(amount)}</strong>
+                </div>
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <span>Duracao</span>
+                  <strong>1 ano</strong>
+                </div>
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <span>Dominio</span>
+                  <strong>Escolhido depois da ativacao</strong>
+                </div>
+              </div>
+            </div>
+
+            <Card className="border-[#e6d3c8] bg-white/90">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-[#2d221f]">O que acontece depois da compra</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-[#625046]">
+                <div className="flex gap-3">
+                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#fff2ea] text-xs font-semibold text-[#b45133]">
+                    1
+                  </span>
+                  <p>Seu plano e ativado automaticamente assim que o pagamento for confirmado.</p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#fff2ea] text-xs font-semibold text-[#b45133]">
+                    2
+                  </span>
+                  <p>Depois disso, voce escolhe o dominio pela area de dominio no dashboard.</p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#fff2ea] text-xs font-semibold text-[#b45133]">
+                    3
+                  </span>
+                  <p>A Lumie registra o endereco escolhido dentro das opcoes disponiveis para o plano.</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </CardContent>
       </Card>
@@ -209,137 +326,200 @@ export default function PremiumCheckoutPage() {
             <div className="flex items-start gap-3">
               <ShieldCheck className="mt-1 h-5 w-5 text-[#1f8e5b]" />
               <div>
-                <p className="font-semibold text-[#22352a]">Seu Lumie Exclusive já está ativo.</p>
+                <p className="font-semibold text-[#22352a]">Seu Lumie Exclusive ja esta ativo.</p>
                 <p className="mt-1 text-sm text-gray-600">
                   {data?.user.planExpiresAt
                     ? `Expira em ${new Date(data.user.planExpiresAt).toLocaleDateString('pt-BR')}.`
-                    : 'Seu plano já está habilitado.'}
+                    : 'Seu plano ja esta habilitado.'}
                 </p>
               </div>
             </div>
             <Button asChild className="bg-[#1f8e5b] text-white hover:bg-[#18764b]">
-              <Link href="/dashboard/dominio">Ir para domínio</Link>
+              <Link href="/dashboard/dominio">Ir para dominio</Link>
             </Button>
           </CardContent>
         </Card>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Finalizar compra</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="grid gap-3 md:grid-cols-2">
-              <Button
-                type="button"
-                variant={paymentMethod === 'PIX' ? 'default' : 'outline'}
-                className={paymentMethod === 'PIX' ? 'bg-[#8e3d2c] text-white hover:bg-[#7a3426]' : ''}
-                onClick={() => setPaymentMethod('PIX')}
-              >
-                PIX
-              </Button>
-              <Button
-                type="button"
-                variant={paymentMethod === 'CREDIT_CARD' ? 'default' : 'outline'}
-                className={paymentMethod === 'CREDIT_CARD' ? 'bg-[#8e3d2c] text-white hover:bg-[#7a3426]' : ''}
-                onClick={() => setPaymentMethod('CREDIT_CARD')}
-              >
-                Cartão
-              </Button>
+      <div className="grid gap-6 xl:grid-cols-[1.2fr,0.8fr]">
+        <Card className="border-[#e7d5c9] shadow-[0_10px_28px_rgba(84,56,42,0.06)]">
+          <CardHeader className="space-y-4">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle className="text-2xl text-[#2d221f]">Finalizar compra</CardTitle>
+                <p className="mt-1 text-sm text-[#67544a]">
+                  Preencha seus dados e escolha a forma de pagamento para ativar o Lumie Exclusive.
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#e6d4c9] bg-[#fff9f5] px-4 py-2 text-sm text-[#67544a]">
+                <ShieldCheck className="h-4 w-4 text-[#1f8e5b]" />
+                Checkout seguro
+              </div>
             </div>
 
+            <div className="grid gap-3 md:grid-cols-2">
+              <button
+                type="button"
+                className={`rounded-2xl border p-4 text-left transition ${
+                  paymentMethod === 'PIX'
+                    ? 'border-[#b85537] bg-[#fff1e8] shadow-[0_8px_22px_rgba(182,85,55,0.10)]'
+                    : 'border-[#ead8cc] bg-white hover:bg-[#fffaf6]'
+                }`}
+                onClick={() => setPaymentMethod('PIX')}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#ffefe5] text-[#b85537]">
+                    <QrCode className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="font-semibold text-[#2d221f]">PIX</p>
+                    <p className="text-sm text-[#6a554a]">Aprovacao rapida e acompanhamento automatico.</p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                className={`rounded-2xl border p-4 text-left transition ${
+                  paymentMethod === 'CREDIT_CARD'
+                    ? 'border-[#b85537] bg-[#fff1e8] shadow-[0_8px_22px_rgba(182,85,55,0.10)]'
+                    : 'border-[#ead8cc] bg-white hover:bg-[#fffaf6]'
+                }`}
+                onClick={() => setPaymentMethod('CREDIT_CARD')}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#ffefe5] text-[#b85537]">
+                    <CreditCard className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="font-semibold text-[#2d221f]">Cartao</p>
+                    <p className="text-sm text-[#6a554a]">Ativacao imediata quando o pagamento for aprovado.</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Nome</label>
+                <label className="text-sm font-medium text-[#43342e]">Nome</label>
                 <Input value={data?.user.name ?? ''} disabled />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">E-mail</label>
+                <label className="text-sm font-medium text-[#43342e]">E-mail</label>
                 <Input value={data?.user.email ?? ''} disabled />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">CPF</label>
+                <label className="text-sm font-medium text-[#43342e]">CPF</label>
                 <Input value={document} onChange={(e) => setDocument(e.target.value)} placeholder="000.000.000-00" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Telefone</label>
+                <label className="text-sm font-medium text-[#43342e]">Telefone</label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
               </div>
             </div>
 
             {paymentMethod === 'CREDIT_CARD' ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium">Número do cartão</label>
-                  <Input value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} />
+              <div className="rounded-2xl border border-[#ecd8cc] bg-[#fffaf6] p-4">
+                <div className="mb-4 flex items-center gap-2 text-sm font-medium text-[#564841]">
+                  <CreditCard className="h-4 w-4 text-[#b85537]" />
+                  Dados do cartao
                 </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium">Nome do titular</label>
-                  <Input value={cardHolderName} onChange={(e) => setCardHolderName(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Mês</label>
-                  <Input value={cardExpMonth} onChange={(e) => setCardExpMonth(e.target.value)} placeholder="12" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Ano</label>
-                  <Input value={cardExpYear} onChange={(e) => setCardExpYear(e.target.value)} placeholder="2028" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">CVV</label>
-                  <Input value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} placeholder="123" />
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium text-[#43342e]">Numero do cartao</label>
+                    <Input value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium text-[#43342e]">Nome do titular</label>
+                    <Input value={cardHolderName} onChange={(e) => setCardHolderName(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#43342e]">Mes</label>
+                    <Input value={cardExpMonth} onChange={(e) => setCardExpMonth(e.target.value)} placeholder="12" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#43342e]">Ano</label>
+                    <Input value={cardExpYear} onChange={(e) => setCardExpYear(e.target.value)} placeholder="2028" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#43342e]">CVV</label>
+                    <Input value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} placeholder="123" />
+                  </div>
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="rounded-2xl border border-[#dcecdf] bg-[#f8fffa] p-4 text-sm text-[#476152]">
+                Ao gerar o PIX, voce recebe o QR Code e o codigo copia e cola aqui mesmo na tela. A pagina acompanha a
+                confirmacao automaticamente.
+              </div>
+            )}
 
             <Button
               type="button"
               onClick={handleCheckout}
               disabled={submitting}
-              className="w-full bg-[#8e3d2c] text-white hover:bg-[#7a3426]"
+              className="h-12 w-full bg-[#8e3d2c] text-white hover:bg-[#7a3426]"
             >
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {paymentMethod === 'PIX' ? 'Gerar PIX do plano' : 'Pagar com cartão'}
+              {paymentMethod === 'PIX' ? 'Gerar PIX do plano' : 'Pagar com cartao'}
             </Button>
           </CardContent>
         </Card>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="border-[#e7d5c9]">
             <CardHeader>
-              <CardTitle>Resumo do plano</CardTitle>
+              <CardTitle className="text-xl text-[#2d221f]">Resumo do plano</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-gray-700">
+            <CardContent className="space-y-4 text-sm text-gray-700">
               <div className="flex items-center justify-between">
-                <span>Valor do plano</span>
+                <span className="flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-[#b85537]" />
+                  Valor do plano
+                </span>
                 <strong>{formatBRL(amount)}</strong>
               </div>
               <div className="flex items-center justify-between">
-                <span>Duração</span>
+                <span className="flex items-center gap-2">
+                  <Clock3 className="h-4 w-4 text-[#b85537]" />
+                  Duracao
+                </span>
                 <strong>1 ano</strong>
               </div>
               <div className="flex items-center justify-between">
-                <span>Taxa dos presentes</span>
+                <span className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-[#b85537]" />
+                  Taxa dos presentes
+                </span>
                 <strong>3,69%</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Globe2 className="h-4 w-4 text-[#b85537]" />
+                  Dominio
+                </span>
+                <strong>1 ano incluso</strong>
               </div>
             </CardContent>
           </Card>
 
           {(data?.referrals.partner || data?.referrals.ambassador) && (
-            <Card>
+            <Card className="border-[#e7d5c9]">
               <CardHeader>
-                <CardTitle>Comissão da compra</CardTitle>
+                <CardTitle className="text-xl text-[#2d221f]">Comissao da compra</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-gray-700">
                 {data.referrals.partner ? (
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between rounded-xl border border-[#efdfd5] bg-[#fffaf6] px-4 py-3">
                     <span>Parceiro vinculado</span>
                     <strong>R$ 10,00</strong>
                   </div>
                 ) : null}
                 {data.referrals.ambassador ? (
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between rounded-xl border border-[#efdfd5] bg-[#fffaf6] px-4 py-3">
                     <span>Embaixador vinculado</span>
                     <strong>R$ 5,00</strong>
                   </div>
@@ -348,33 +528,76 @@ export default function PremiumCheckoutPage() {
             </Card>
           )}
 
+          {data?.latestPurchase ? (
+            <Card className="border-[#e7d5c9]">
+              <CardHeader>
+                <CardTitle className="text-xl text-[#2d221f]">Ultima tentativa</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-[#625046]">
+                <div className="flex items-center justify-between">
+                  <span>Status</span>
+                  <strong>{data.latestPurchase.status}</strong>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Metodo</span>
+                  <strong>{data.latestPurchase.paymentMethod ?? '-'}</strong>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Criado em</span>
+                  <strong>{formatDate(data.latestPurchase.createdAt) ?? '-'}</strong>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
           {pixPayload ? (
             <Card className="border-[#e6dac5] bg-[#fffaf3]">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-[#2d221f]">
                   <QrCode className="h-5 w-5 text-[#8e3d2c]" />
                   PIX gerado
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {pixPayload.qrCodeUrl ? (
-                  <img src={pixPayload.qrCodeUrl} alt="QR Code PIX" className="h-44 w-44 rounded-lg border bg-white p-2" />
-                ) : null}
-                {pixPayload.qrCode ? (
-                  <textarea
-                    readOnly
-                    value={pixPayload.qrCode}
-                    className="min-h-[120px] w-full rounded-lg border border-[#e4d2c5] bg-white p-3 text-xs text-gray-700"
-                  />
-                ) : null}
-                <p className="text-sm text-gray-600">
+                <div className="grid gap-4 lg:grid-cols-[160px,1fr]">
+                  {pixPayload.qrCodeUrl ? (
+                    <img src={pixPayload.qrCodeUrl} alt="QR Code PIX" className="h-40 w-40 rounded-2xl border bg-white p-2" />
+                  ) : null}
+                  <div className="space-y-3">
+                    {pixPayload.qrCode ? (
+                      <>
+                        <textarea
+                          readOnly
+                          value={pixPayload.qrCode}
+                          className="min-h-[128px] w-full rounded-xl border border-[#e4d2c5] bg-white p-3 text-xs text-gray-700"
+                        />
+                        <Button type="button" variant="outline" className="w-full" onClick={handleCopyPix}>
+                          <Copy className="mr-2 h-4 w-4" />
+                          {copyFeedback ? 'Codigo copiado' : 'Copiar codigo PIX'}
+                        </Button>
+                      </>
+                    ) : null}
+                    {pixPayload.expiresAt ? (
+                      <p className="text-xs text-[#78655b]">Valido ate {formatDate(pixPayload.expiresAt)}.</p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div
+                  className={`rounded-xl border px-4 py-3 text-sm ${
+                    purchaseStatus === 'PAID'
+                      ? 'border-[#cfe7d6] bg-[#f6fff8] text-[#2e5e42]'
+                      : 'border-[#ead7ca] bg-white text-[#6b574d]'
+                  }`}
+                >
                   {purchaseStatus === 'PAID'
                     ? 'Pagamento confirmado. Seu plano foi ativado.'
                     : 'Estamos acompanhando o pagamento do PIX automaticamente.'}
-                </p>
+                </div>
+
                 {purchaseStatus === 'PAID' ? (
                   <Button asChild className="w-full bg-[#1f8e5b] text-white hover:bg-[#18764b]">
-                    <Link href="/dashboard/dominio">Ir para domínio</Link>
+                    <Link href="/dashboard/dominio">Ir para dominio</Link>
                   </Button>
                 ) : null}
               </CardContent>
