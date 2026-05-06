@@ -1,3 +1,5 @@
+import { resolveEffectivePlan, resolveNetworkFeePercent, type SubscriptionPlan } from "@/lib/plans";
+
 const CARD_METHODS = ["credit_card", "CREDIT_CARD", "card", "CARD"];
 const PIX_METHODS = ["pix", "PIX"];
 
@@ -25,13 +27,8 @@ function roundCents(value: number) {
   return Math.round(value);
 }
 
-function resolveFeePercentages(paymentMethod: "PIX" | "CREDIT_CARD") {
-  const defaultNetworkFee = readPercent("PLATFORM_NETWORK_FEE_PERCENTAGE", 10.9);
-  const networkFee =
-    paymentMethod === "CREDIT_CARD"
-      ? readPercent("PLATFORM_NETWORK_FEE_PERCENTAGE_CREDIT_CARD", defaultNetworkFee)
-      : readPercent("PLATFORM_NETWORK_FEE_PERCENTAGE_PIX", defaultNetworkFee);
-
+function resolveFeePercentages(paymentMethod: "PIX" | "CREDIT_CARD", plan: SubscriptionPlan) {
+  const networkFee = resolveNetworkFeePercent(paymentMethod, plan);
   const defaultProcessingFee = readPercent("PAGARME_PROCESSING_FEE_PERCENTAGE", 1.09);
   const processingFee =
     paymentMethod === "CREDIT_CARD"
@@ -45,22 +42,29 @@ export function calculateSplitFromOrder(params: {
   baseAmount: number;
   totalAmount: number;
   acquisitionSource: string;
+  plan?: SubscriptionPlan | { plan?: SubscriptionPlan | string | null; planExpiresAt?: Date | string | null } | null;
   hasClientRecipient: boolean;
   hasPartnerRecipient: boolean;
   hasAmbassadorRecipient: boolean;
   paymentMethod: "PIX" | "CREDIT_CARD";
 }) {
-  const { networkFee, processingFee } = resolveFeePercentages(params.paymentMethod);
-  const partnerFeePercentage = readPercent("PARTNER_COMMISSION_PERCENTAGE", 2);
-  const ambassadorFeePercentage = readPercent("AMBASSADOR_COMMISSION_PERCENTAGE", 3);
+  const effectivePlan =
+    typeof params.plan === "string" ? params.plan : resolveEffectivePlan(params.plan);
+  const { networkFee, processingFee } = resolveFeePercentages(params.paymentMethod, effectivePlan);
+  const partnerFeePercentage = readPercent("PARTNER_COMMISSION_PERCENTAGE", 1.5);
+  const ambassadorFeePercentage = readPercent("AMBASSADOR_COMMISSION_PERCENTAGE", 2.5);
 
   const baseInCents = roundCents(params.baseAmount * 100);
   const totalInCents = roundCents(params.totalAmount * 100);
 
+  const allowAffiliateCommission = effectivePlan === "FREE";
+
   const partnerEnabled =
+    allowAffiliateCommission &&
     params.hasPartnerRecipient &&
     ["PARTNER_DIRECT", "PARTNER_WITH_AMBASSADOR"].includes(params.acquisitionSource);
   const ambassadorEnabled =
+    allowAffiliateCommission &&
     params.hasAmbassadorRecipient &&
     ["AMBASSADOR_DIRECT", "PARTNER_WITH_AMBASSADOR"].includes(params.acquisitionSource);
 

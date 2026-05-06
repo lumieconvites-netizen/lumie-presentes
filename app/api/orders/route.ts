@@ -133,15 +133,21 @@ function calculateCommissionSplit(params: {
   plan: SubscriptionPlan;
 }) {
   const { processingFee: processingFeePercentage, networkFee: networkFeePercentage } = resolveFeePercentages(params.paymentMethod, params.plan);
-  const partnerFeePercentage = readPercent('PARTNER_COMMISSION_PERCENTAGE', 2);
-  const ambassadorFeePercentage = readPercent('AMBASSADOR_COMMISSION_PERCENTAGE', 3);
+  const partnerFeePercentage = readPercent('PARTNER_COMMISSION_PERCENTAGE', 1.5);
+  const ambassadorFeePercentage = readPercent('AMBASSADOR_COMMISSION_PERCENTAGE', 2.5);
 
   const baseInCents = roundCents(params.baseAmount * 100);
   const totalInCents = roundCents(params.totalAmount * 100);
 
-  const enablePartner = params.hasPartnerRecipient && ['PARTNER_DIRECT', 'PARTNER_WITH_AMBASSADOR'].includes(params.acquisitionSource);
+  const allowAffiliateCommission = params.plan === 'FREE';
+  const enablePartner =
+    allowAffiliateCommission &&
+    params.hasPartnerRecipient &&
+    ['PARTNER_DIRECT', 'PARTNER_WITH_AMBASSADOR'].includes(params.acquisitionSource);
   const enableAmbassador =
-    params.hasAmbassadorRecipient && ['AMBASSADOR_DIRECT', 'PARTNER_WITH_AMBASSADOR'].includes(params.acquisitionSource);
+    allowAffiliateCommission &&
+    params.hasAmbassadorRecipient &&
+    ['AMBASSADOR_DIRECT', 'PARTNER_WITH_AMBASSADOR'].includes(params.acquisitionSource);
 
   const partnerInCents = enablePartner ? roundCents((baseInCents * partnerFeePercentage) / 100) : 0;
   const ambassadorInCents = enableAmbassador ? roundCents((baseInCents * ambassadorFeePercentage) / 100) : 0;

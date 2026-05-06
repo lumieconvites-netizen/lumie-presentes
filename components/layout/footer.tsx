@@ -26,7 +26,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/tarifas" className="text-sm text-[#d8cfc9] hover:text-white transition-colors">
-                  Tarifas
+                  Planos
                 </Link>
               </li>
               <li>

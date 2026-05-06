@@ -33,7 +33,7 @@ export function formatDateTime(date: Date | string): string {
   }).format(dateObj);
 }
 
-const DEFAULT_PLATFORM_FEE_PERCENTAGE = Number(process.env.PLATFORM_FEE_PERCENTAGE ?? 11.99);
+const DEFAULT_PLATFORM_FEE_PERCENTAGE = Number(process.env.PLATFORM_FEE_PERCENTAGE ?? 6.99);
 
 export function calculateFee(baseAmount: number, feePercentage: number = DEFAULT_PLATFORM_FEE_PERCENTAGE): number {
   return (baseAmount * feePercentage) / 100;

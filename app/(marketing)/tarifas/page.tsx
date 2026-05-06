@@ -1,136 +1,206 @@
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, HelpCircle, Shield, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Crown, Gift, Globe2, HelpCircle, Shield, Sparkles } from 'lucide-react';
+
+const freeFeatures = [
+  'Lista de presentes online',
+  'Site gratuito da Lumie',
+  'Checkout com PIX e cartão',
+  'Dashboard de pagamentos',
+  'Recados dos convidados',
+  'RSVP e check-in por QR Code',
+];
+
+const exclusiveFeatures = [
+  'Tudo do plano gratuito',
+  'Domínio personalizado por 1 ano',
+  'Taxa reduzida nos presentes',
+  'Experiência mais exclusiva para o evento',
+  'Área de domínio no dashboard',
+  'Suporte para ativação do endereço',
+];
+
+const faqs = [
+  {
+    q: 'A Lumie Exclusive inclui o domínio?',
+    a: 'Sim. O plano inclui um domínio personalizado por 1 ano, dentro das extensões disponíveis na busca do dashboard.',
+  },
+  {
+    q: 'O plano gratuito continua existindo?',
+    a: 'Sim. Você pode criar sua lista gratuitamente e pagar apenas a taxa sobre presentes recebidos.',
+  },
+  {
+    q: 'O que muda nas taxas?',
+    a: 'No plano gratuito, a taxa sobre presentes é de 6,99%. No Lumie Exclusive, a taxa cai para 3,69%.',
+  },
+  {
+    q: 'Posso escolher quem paga a taxa?',
+    a: 'Sim. Você pode repassar a taxa ao convidado ou assumir o custo no valor recebido.',
+  },
+];
+
+function PlanFeature({ children }: { children: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#1f8e5b]" />
+      <p className="text-sm text-[#554840]">{children}</p>
+    </div>
+  );
+}
 
 export default function PricingPage() {
-  const inclusions = [
-    'Criação da lista sem custo de assinatura mensal',
-    'Editor visual e templates personalizáveis',
-    'Site exclusivo do evento com múltiplos recursos premium',
-    'Checkout com PIX e cartão de crédito',
-    'RSVP com sistema de check-in por QR Code',
-    'Dashboard de pagamentos e acompanhamento',
-    'Recados dos convidados e relatórios',
-    'Infraestrutura, segurança e suporte contínuo',
-  ];
-
-  const faqs = [
-    {
-      q: 'Por que existe taxa na plataforma?',
-      a: 'A taxa cobre custos operacionais da Lumie, processamento de pagamentos, antifraude, infraestrutura e suporte. Assim, você só paga quando realmente recebe.',
-    },
-    {
-      q: 'Quais taxas são aplicadas?',
-      a: 'A taxa padrão da plataforma é de 11,99%. Em pagamentos com cartão de crédito, o custo total da operação é de 15,99%.',
-    },
-    {
-      q: 'Eu pago para criar a lista?',
-      a: 'Não. Criar e configurar sua lista é gratuito. A cobrança acontece apenas quando houver pagamento aprovado.',
-    },
-    {
-      q: 'O convidado compra o presente físico?',
-      a: 'Não. O convidado escolhe um presente fictício da sua lista e paga o valor correspondente. Você recebe esse valor em dinheiro na sua conta e usa como preferir.',
-    },
-    {
-      q: 'Posso escolher quem arca com a taxa?',
-      a: 'Sim. Você pode repassar para o convidado ou assumir o custo, e ajustar essa configuração quando precisar.',
-    },
-  ];
-
   return (
-    <main className="bg-[#f7f2ed] text-[#2b2422]">
-      <section className="border-y border-[#ead6c8] bg-gradient-to-b from-[#f7f2ed] to-[#f2e6dc]">
-        <div className="container mx-auto px-6 py-20 text-center">
-          <h1 className="font-display text-4xl md:text-6xl text-primary leading-tight">
-            Tarifas transparentes, sem surpresa
-          </h1>
-          <p className="mx-auto mt-5 max-w-3xl text-lg md:text-xl text-[#5f4b42]">
-            A Lumie foi pensada para ser justa: você cria grátis e só paga quando recebe.
-          </p>
+    <main className="bg-[#f8f2ed] text-[#2b2422]">
+      <section className="border-b border-[#ead6c8] bg-[#fffaf6]">
+        <div className="container mx-auto px-6 py-16 md:py-20">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a5a42]">Planos Lumie</p>
+            <h1 className="mt-4 font-display text-4xl leading-tight text-primary md:text-6xl">
+              Escolha como sua lista vai receber presentes
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-lg text-[#5f4b42]">
+              Comece grátis ou ative o Lumie Exclusive para usar domínio personalizado e taxas menores nos presentes.
+            </p>
+          </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-20">
+      <section className="py-14 md:py-20">
         <div className="container mx-auto px-6">
-          <div className="mx-auto max-w-5xl rounded-[2rem] border border-[#e8d3c5] bg-white shadow-[0_16px_40px_rgba(84,56,42,0.08)] overflow-hidden">
-            <div className="bg-gradient-to-r from-[#a5482d] to-[#c65a3a] px-7 py-7 text-white">
-              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
-                <Sparkles className="h-6 w-6" />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-2xl border border-[#e8d3c5] bg-white p-6 shadow-[0_14px_34px_rgba(84,56,42,0.07)] md:p-8">
+              <div className="flex items-center justify-between gap-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff0e8] text-[#b54b2f]">
+                  <Gift className="h-6 w-6" />
+                </div>
+                <span className="rounded-full border border-[#ead6c8] px-3 py-1 text-xs font-medium text-[#6f584e]">
+                  Gratuito
+                </span>
               </div>
-              <h2 className="mt-4 font-display text-3xl md:text-4xl">Site Gratuito</h2>
-              <p className="mt-2 text-white/90">Sem mensalidade. Sem custo fixo.</p>
+
+              <h2 className="mt-5 font-display text-3xl text-[#2b2422]">Plano Gratuito</h2>
+              <p className="mt-2 text-[#66544b]">Para criar sua lista sem custo fixo e começar a receber presentes.</p>
+
+              <div className="mt-7 flex items-end gap-2">
+                <span className="font-display text-6xl leading-none text-primary">R$ 0</span>
+                <span className="pb-2 text-sm text-[#7a665d]">para criar</span>
+              </div>
+
+              <div className="mt-6 rounded-xl border border-[#ecd9cc] bg-[#fff8f3] p-4">
+                <p className="text-sm font-medium text-[#4a3a33]">Taxa sobre presentes recebidos</p>
+                <p className="mt-2 font-display text-4xl text-[#b54b2f]">6,99%</p>
+                <p className="mt-1 text-xs text-[#7a665d]">Aplicada em pagamentos aprovados.</p>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                {freeFeatures.map((item) => (
+                  <PlanFeature key={item}>{item}</PlanFeature>
+                ))}
+              </div>
+
+              <Link
+                href="/auth/cadastro"
+                className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#c65a3a] px-5 text-sm font-semibold text-white transition hover:brightness-105"
+              >
+                Criar lista grátis
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
 
-            <div className="grid md:grid-cols-[1.1fr,1fr] gap-0">
-              <div className="p-7 md:p-9 border-b md:border-b-0 md:border-r border-[#efdfd3]">
-                <p className="text-sm tracking-[0.18em] uppercase text-[#9c7866]">Taxa padrão da plataforma</p>
-                <p className="mt-3 font-display text-6xl leading-none text-primary">11,99%</p>
-                <p className="mt-3 text-[#635249]">Cobrança por pagamento aprovado.</p>
-
-                <div className="mt-6 rounded-xl border border-[#ead7ca] bg-[#fff8f3] px-4 py-3">
-                  <p className="text-sm text-[#7a6054]">
-                    Cartão de crédito: <strong className="text-[#5a4238]">15,99%</strong> (custos da operação de crédito).
-                  </p>
+            <div className="relative overflow-hidden rounded-2xl border border-[#d5b09e] bg-[#302622] p-6 text-white shadow-[0_18px_44px_rgba(50,35,29,0.18)] md:p-8">
+              <div className="absolute right-0 top-0 h-40 w-40 rounded-bl-[5rem] bg-[#c65a3a]/25" />
+              <div className="relative">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/12 text-[#ffd9c8]">
+                    <Crown className="h-6 w-6" />
+                  </div>
+                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white">
+                    Mais completo
+                  </span>
                 </div>
 
-                <div className="mt-7">
-                  <Link
-                    href="/auth/cadastro"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#c65a3a] px-6 py-3 font-semibold text-white transition hover:brightness-105"
-                  >
-                    Criar Minha Lista
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </div>
-              </div>
+                <h2 className="mt-5 font-display text-3xl">Lumie Exclusive</h2>
+                <p className="mt-2 text-[#eadbd3]">Para quem quer uma experiência premium com endereço próprio.</p>
 
-              <div className="p-7 md:p-9">
-                <p className="text-lg font-medium text-[#3f322d]">O que está incluído</p>
-                <div className="mt-4 space-y-3">
-                  {inclusions.map((item) => (
+                <div className="mt-7 flex items-end gap-2">
+                  <span className="font-display text-6xl leading-none">R$ 150</span>
+                  <span className="pb-2 text-sm text-[#d8c5bb]">por 1 ano</span>
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-white/15 bg-white/8 p-4">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Sparkles className="h-4 w-4 text-[#ffd9c8]" />
+                      Taxa reduzida
+                    </div>
+                    <p className="mt-2 font-display text-4xl">3,69%</p>
+                    <p className="mt-1 text-xs text-[#d8c5bb]">Sobre presentes recebidos.</p>
+                  </div>
+                  <div className="rounded-xl border border-white/15 bg-white/8 p-4">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Globe2 className="h-4 w-4 text-[#ffd9c8]" />
+                      Domínio incluso
+                    </div>
+                    <p className="mt-2 font-display text-4xl">1 ano</p>
+                    <p className="mt-1 text-xs text-[#d8c5bb]">Escolhido pelo dashboard.</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  {exclusiveFeatures.map((item) => (
                     <div key={item} className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 shrink-0 text-[#1fa05a] mt-0.5" />
-                      <p className="text-[#56453d]">{item}</p>
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#9df0bb]" />
+                      <p className="text-sm text-[#f4e8e1]">{item}</p>
                     </div>
                   ))}
                 </div>
+
+                <Link
+                  href="/auth/cadastro"
+                  className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-[#2f2622] transition hover:bg-[#fff1e8]"
+                >
+                  Começar com Exclusive
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-20 bg-[#f5ebe2] border-y border-[#ead6c8]">
+      <section className="border-y border-[#ead6c8] bg-[#fffaf6] py-14 md:py-16">
         <div className="container mx-auto px-6">
-          <h2 className="font-display text-3xl md:text-5xl text-center text-primary">Como a cobrança funciona</h2>
-          <p className="mt-4 text-center text-[#5f4b42] max-w-3xl mx-auto">
-            As taxas são aplicadas para sustentar os custos operacionais da plataforma, manter os sistemas implementados,
-            cobrir encargos bancários, garantir pagamentos seguros, prevenir fraudes e oferecer suporte especializado.
-          </p>
-
-          <div className="mt-10 grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            <div className="rounded-2xl border border-[#e7d3c6] bg-white p-6">
-              <h3 className="font-display text-2xl text-foreground">Repassar ao convidado</h3>
-              <p className="mt-3 text-[#615047]">
-                O convidado paga o valor do presente com a taxa aplicada, e você recebe o valor cheio do presente.
-              </p>
-              <div className="mt-5 rounded-xl border border-[#ead7ca] bg-[#fff8f3] p-4">
-                <p className="text-xs uppercase tracking-[0.16em] text-[#9c7866]">Exemplo sobre R$ 100,00</p>
-                <div className="mt-2 space-y-1.5 text-[#5f4b42]">
-                  <p>Convidado paga: <strong className="text-[#3f322d]">R$ 111,99</strong></p>
-                  <p>Você recebe: <strong className="text-[#1f8e5b]">R$ 100,00</strong></p>
-                </div>
+          <div className="mx-auto max-w-5xl">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h2 className="font-display text-3xl text-primary md:text-4xl">Como a cobrança funciona</h2>
+                <p className="mt-2 max-w-2xl text-[#5f4b42]">
+                  Você escolhe se a taxa será repassada ao convidado ou descontada do valor recebido.
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#e5d2c5] bg-white px-4 py-2 text-sm text-[#5f4b42]">
+                <Shield className="h-4 w-4 text-[#1f8e5b]" />
+                Checkout seguro via Pagar.me
               </div>
             </div>
-            <div className="rounded-2xl border border-[#e7d3c6] bg-white p-6">
-              <h3 className="font-display text-2xl text-foreground">Assumir a taxa</h3>
-              <p className="mt-3 text-[#615047]">
-                O convidado paga apenas o valor do presente, e o custo da operação é descontado no repasse.
-              </p>
-              <div className="mt-5 rounded-xl border border-[#ead7ca] bg-[#fff8f3] p-4">
-                <p className="text-xs uppercase tracking-[0.16em] text-[#9c7866]">Exemplo sobre R$ 100,00</p>
-                <div className="mt-2 space-y-1.5 text-[#5f4b42]">
-                  <p>Convidado paga: <strong className="text-[#3f322d]">R$ 100,00</strong></p>
-                  <p>Você recebe: <strong className="text-[#c65a3a]">R$ 88,01</strong></p>
+
+            <div className="mt-8 grid gap-5 md:grid-cols-2">
+              <div className="rounded-2xl border border-[#e7d3c6] bg-white p-6">
+                <h3 className="font-display text-2xl text-foreground">Repassar ao convidado</h3>
+                <p className="mt-3 text-[#615047]">
+                  O convidado paga o valor do presente com a taxa aplicada, e você recebe o valor cheio do presente.
+                </p>
+                <div className="mt-5 rounded-xl border border-[#ead7ca] bg-[#fff8f3] p-4 text-sm text-[#5f4b42]">
+                  Exemplo no Gratuito: presente de R$ 100,00 vira R$ 106,99 para o convidado.
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[#e7d3c6] bg-white p-6">
+                <h3 className="font-display text-2xl text-foreground">Assumir a taxa</h3>
+                <p className="mt-3 text-[#615047]">
+                  O convidado paga apenas o valor do presente, e a taxa é descontada no repasse.
+                </p>
+                <div className="mt-5 rounded-xl border border-[#ead7ca] bg-[#fff8f3] p-4 text-sm text-[#5f4b42]">
+                  Exemplo no Exclusive: presente de R$ 100,00 gera repasse de R$ 96,31.
                 </div>
               </div>
             </div>
@@ -138,19 +208,15 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="py-16 md:py-20">
+      <section className="py-14 md:py-16">
         <div className="container mx-auto px-6">
-          <div className="mx-auto max-w-5xl rounded-[2rem] border border-[#e8d3c5] bg-white p-8 md:p-10">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e8f7ee] text-[#1fa05a]">
-              <Shield className="h-7 w-7" />
-            </div>
-            <h2 className="mt-5 font-display text-3xl md:text-4xl text-primary">Perguntas frequentes</h2>
-
-            <div className="mt-7 space-y-4">
+          <div className="mx-auto max-w-4xl">
+            <h2 className="font-display text-3xl text-primary md:text-4xl">Perguntas frequentes</h2>
+            <div className="mt-6 space-y-4">
               {faqs.map((faq) => (
-                <div key={faq.q} className="rounded-2xl border border-[#eddccf] bg-[#fffaf6] px-5 py-4">
-                  <h3 className="flex items-start gap-2 text-[#332924] font-medium">
-                    <HelpCircle className="h-5 w-5 mt-0.5 text-[#c65a3a] shrink-0" />
+                <div key={faq.q} className="rounded-2xl border border-[#eddccf] bg-white px-5 py-4">
+                  <h3 className="flex items-start gap-2 font-medium text-[#332924]">
+                    <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#c65a3a]" />
                     {faq.q}
                   </h3>
                   <p className="mt-2 pl-7 text-[#655249]">{faq.a}</p>
@@ -158,22 +224,6 @@ export default function PricingPage() {
               ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-20 bg-[#c65a3a] text-center">
-        <div className="container mx-auto px-6">
-          <h2 className="font-display text-4xl md:text-6xl text-white">Pronto para começar?</h2>
-          <p className="mt-4 text-lg text-white/90 max-w-2xl mx-auto">
-            Crie sua lista agora e pague apenas quando começar a receber.
-          </p>
-          <Link
-            href="/auth/cadastro"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 font-semibold text-[#c65a3a] transition hover:bg-[#fff3ea]"
-          >
-            Criar Minha Lista Grátis
-            <ArrowRight className="h-5 w-5" />
-          </Link>
         </div>
       </section>
     </main>

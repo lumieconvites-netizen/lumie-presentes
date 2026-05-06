@@ -99,6 +99,8 @@ export async function GET(request: Request) {
                 id: true,
                 name: true,
                 email: true,
+                plan: true,
+                planExpiresAt: true,
                 acquisitionSource: true,
                 recipient: { select: { pagarmeRecipientId: true, createdAt: true } },
                 referredByAmbassador: {
@@ -182,6 +184,7 @@ export async function GET(request: Request) {
       baseAmount,
       totalAmount,
       acquisitionSource: user.acquisitionSource,
+      plan: user,
       hasClientRecipient: clientRecipientReadyAtOrder,
       hasPartnerRecipient: partnerRecipientReadyAtOrder,
       hasAmbassadorRecipient: ambassadorRecipientReadyAtOrder,

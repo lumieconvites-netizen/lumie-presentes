@@ -27,7 +27,7 @@ const faqs = [
     questions: [
       {
         q: 'Quanto custa criar uma lista?',
-        a: 'Criar sua lista é totalmente gratuito! Você só paga uma taxa de 11,99% por transação no pix, e 15,99% se for cartão de crédito quando um convidado presentear você. Não há mensalidades ou custos fixos.',
+        a: 'Criar sua lista é totalmente gratuito. Você só paga a taxa do plano escolhido quando um convidado presentear você. No plano gratuito, a taxa é de 6,99%.',
       },
       {
         q: 'Quantos presentes posso cadastrar?',
@@ -48,7 +48,7 @@ const faqs = [
     questions: [
       {
         q: 'Qual é a taxa cobrada?',
-        a: 'A taxa é de 11,99% por transação e 15,99% se for cartão de crédito. Você pode escolher repassar essa taxa para o convidado (que pagará o valor do presente + taxa) ou assumir você mesmo (a taxa será descontada do seu repasse).',
+        a: 'No plano gratuito, a taxa é de 6,99%. No Lumie Exclusive, a taxa é de 3,69%. Você pode escolher repassar essa taxa para o convidado ou assumir você mesmo.',
       },
       {
         q: 'Quais formas de pagamento são aceitas?',

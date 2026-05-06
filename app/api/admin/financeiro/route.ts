@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { reconcileRecentPendingOrders } from "@/lib/order-status-reconciliation";
 import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter";
+import { resolveEffectivePlan, resolveNetworkFeePercent } from "@/lib/plans";
 
 type MethodFilter = "all" | "card" | "pix";
 const CARD_METHODS = ["credit_card", "CREDIT_CARD", "card", "CARD"];
@@ -55,13 +56,8 @@ function isRealRecipientId(value?: string | null) {
   return !value.startsWith("pending_");
 }
 
-function resolveFeePercentages(paymentMethod: "PIX" | "CREDIT_CARD") {
-  const defaultNetworkFee = readPercent("PLATFORM_NETWORK_FEE_PERCENTAGE", 10.9);
-  const networkFee =
-    paymentMethod === "CREDIT_CARD"
-      ? readPercent("PLATFORM_NETWORK_FEE_PERCENTAGE_CREDIT_CARD", defaultNetworkFee)
-      : readPercent("PLATFORM_NETWORK_FEE_PERCENTAGE_PIX", defaultNetworkFee);
-
+function resolveFeePercentages(paymentMethod: "PIX" | "CREDIT_CARD", plan: "FREE" | "PREMIUM") {
+  const networkFee = resolveNetworkFeePercent(paymentMethod, plan);
   const defaultProcessingFee = readPercent("PAGARME_PROCESSING_FEE_PERCENTAGE", 1.09);
   const processingFee =
     paymentMethod === "CREDIT_CARD"
@@ -75,22 +71,29 @@ function calculateSplitFromOrder(params: {
   baseAmount: number;
   totalAmount: number;
   acquisitionSource: string;
+  plan?: "FREE" | "PREMIUM";
+  planExpiresAt?: Date | string | null;
   hasClientRecipient: boolean;
   hasPartnerRecipient: boolean;
   hasAmbassadorRecipient: boolean;
   paymentMethod: "PIX" | "CREDIT_CARD";
 }) {
-  const { networkFee, processingFee } = resolveFeePercentages(params.paymentMethod);
-  const partnerFeePercentage = readPercent("PARTNER_COMMISSION_PERCENTAGE", 2);
-  const ambassadorFeePercentage = readPercent("AMBASSADOR_COMMISSION_PERCENTAGE", 3);
+  const effectivePlan = resolveEffectivePlan(params);
+  const { networkFee, processingFee } = resolveFeePercentages(params.paymentMethod, effectivePlan);
+  const partnerFeePercentage = readPercent("PARTNER_COMMISSION_PERCENTAGE", 1.5);
+  const ambassadorFeePercentage = readPercent("AMBASSADOR_COMMISSION_PERCENTAGE", 2.5);
 
   const baseInCents = roundCents(params.baseAmount * 100);
   const totalInCents = roundCents(params.totalAmount * 100);
 
+  const allowAffiliateCommission = effectivePlan === "FREE";
+
   const partnerEnabled =
+    allowAffiliateCommission &&
     params.hasPartnerRecipient &&
     ["PARTNER_DIRECT", "PARTNER_WITH_AMBASSADOR"].includes(params.acquisitionSource);
   const ambassadorEnabled =
+    allowAffiliateCommission &&
     params.hasAmbassadorRecipient &&
     ["AMBASSADOR_DIRECT", "PARTNER_WITH_AMBASSADOR"].includes(params.acquisitionSource);
 
@@ -209,6 +212,8 @@ export async function GET(request: Request) {
                 id: true,
                 name: true,
                 email: true,
+                plan: true,
+                planExpiresAt: true,
                 acquisitionSource: true,
                 recipient: { select: { pagarmeRecipientId: true } },
                 referredByPartner: {
@@ -309,6 +314,8 @@ export async function GET(request: Request) {
       baseAmount,
       totalAmount,
       acquisitionSource: user.acquisitionSource,
+      plan: user.plan,
+      planExpiresAt: user.planExpiresAt,
       hasClientRecipient: isRealRecipientId(user.recipient?.pagarmeRecipientId),
       hasPartnerRecipient: isRealRecipientId(user.referredByPartner?.recipient?.pagarmeRecipientId),
       hasAmbassadorRecipient: isRealRecipientId(user.referredByAmbassador?.recipient?.pagarmeRecipientId),

@@ -20,11 +20,11 @@ export default function TermosPage() {
             <div className="grid gap-6 md:grid-cols-3">
               <div className="rounded-2xl border border-[#ecd9cc] bg-[#fffaf6] p-5">
                 <Wallet className="h-6 w-6 text-[#c65a3a]" />
-                <p className="mt-3 font-medium text-[#3c2f2a]">Taxa no PIX: 11,99%</p>
+                <p className="mt-3 font-medium text-[#3c2f2a]">Plano Gratuito: 6,99%</p>
               </div>
               <div className="rounded-2xl border border-[#ecd9cc] bg-[#fffaf6] p-5">
                 <Wallet className="h-6 w-6 text-[#c65a3a]" />
-                <p className="mt-3 font-medium text-[#3c2f2a]">Taxa no cartão: 15,99%</p>
+                <p className="mt-3 font-medium text-[#3c2f2a]">Lumie Exclusive: 3,69%</p>
               </div>
               <div className="rounded-2xl border border-[#ecd9cc] bg-[#fffaf6] p-5">
                 <Wallet className="h-6 w-6 text-[#c65a3a]" />
@@ -77,8 +77,7 @@ export default function TermosPage() {
                       transações aprovadas.
                     </p>
                     <p>
-                      As taxas aplicáveis são: 11,99% para pagamentos via PIX e 15,99% para pagamentos via cartão de
-                      crédito.
+                        As taxas aplicáveis são: 6,99% no plano Gratuito e 3,69% no plano Lumie Exclusive.
                     </p>
                     <p>
                       O titular pode optar por repassar a taxa ao convidado ou assumir o custo da taxa no valor a

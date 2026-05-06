@@ -450,7 +450,7 @@ export default function ConfiguracoesPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <div>
                     <h3 className="font-medium text-foreground">Repassar taxa ao convidado</h3>
-                    <p className="text-sm text-gray-500">Quando ativo, o convidado paga o valor do presente + 11,99%</p>
+                    <p className="text-sm text-gray-500">Quando ativo, o convidado paga o valor do presente + taxa do seu plano.</p>
                   </div>
 
                   <Switch
@@ -465,14 +465,14 @@ export default function ConfiguracoesPage() {
 
                   {settings.feePassedToGuest ? (
                     <div className="text-sm space-y-1">
-                      <p>- Convidado paga: <strong className="text-primary">R$ 111,99</strong></p>
+                      <p>- Convidado paga: <strong className="text-primary">R$ 106,99</strong></p>
                       <p>- Você recebe: <strong className="text-green-600">R$ 100,00</strong></p>
                     </div>
                   ) : (
                     <div className="text-sm space-y-1">
                       <p>- Convidado paga: <strong className="text-primary">R$ 100,00</strong></p>
-                      <p>- Você recebe: <strong className="text-green-600">R$ 88,01</strong></p>
-                      <p className="text-xs text-gray-500">Taxa de R$ 11,99 descontada</p>
+                      <p>- Você recebe: <strong className="text-green-600">R$ 93,01</strong></p>
+                      <p className="text-xs text-gray-500">Exemplo com taxa do plano gratuito</p>
                     </div>
                   )}
                 </div>

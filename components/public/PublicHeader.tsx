@@ -48,7 +48,7 @@ export default function PublicHeader() {
         <nav className="hidden md:flex items-center gap-6 text-sm text-terracota-800">
           <Link href="/" className="hover:text-terracota-600">Início</Link>
           <Link href="/como-funciona" className="hover:text-terracota-600">Como Funciona</Link>
-          <Link href="/tarifas" className="hover:text-terracota-600">Tarifas</Link>
+          <Link href="/tarifas" className="hover:text-terracota-600">Planos</Link>
           <Link href="/templates" className="hover:text-terracota-600">Templates</Link>
         </nav>
 

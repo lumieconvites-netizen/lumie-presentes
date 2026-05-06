@@ -26,7 +26,7 @@ export function resolveEffectivePlan(user?: PlanLike | null): SubscriptionPlan {
 }
 
 export function resolvePlatformFeePercent(paymentMethod: PaymentMethodForFees, plan: SubscriptionPlan) {
-  const defaultFree = readPercent("PLATFORM_FEE_PERCENTAGE", 11.99);
+  const defaultFree = readPercent("PLATFORM_FEE_PERCENTAGE", 6.99);
   const free =
     paymentMethod === "CREDIT_CARD"
       ? readPercent("PLATFORM_FEE_PERCENTAGE_CREDIT_CARD", defaultFree)
@@ -34,7 +34,7 @@ export function resolvePlatformFeePercent(paymentMethod: PaymentMethodForFees, p
 
   if (plan !== "PREMIUM") return free;
 
-  const defaultPremium = readPercent("PREMIUM_PLATFORM_FEE_PERCENTAGE", free);
+  const defaultPremium = readPercent("PREMIUM_PLATFORM_FEE_PERCENTAGE", 3.69);
   return paymentMethod === "CREDIT_CARD"
     ? readPercent("PREMIUM_PLATFORM_FEE_PERCENTAGE_CREDIT_CARD", defaultPremium)
     : readPercent("PREMIUM_PLATFORM_FEE_PERCENTAGE_PIX", defaultPremium);
@@ -42,7 +42,13 @@ export function resolvePlatformFeePercent(paymentMethod: PaymentMethodForFees, p
 
 export function resolveNetworkFeePercent(paymentMethod: PaymentMethodForFees, plan: SubscriptionPlan) {
   const platformFee = resolvePlatformFeePercent(paymentMethod, plan);
-  const defaultFree = readPercent("PLATFORM_NETWORK_FEE_PERCENTAGE", platformFee);
+  const defaultProcessing = readPercent("PAGARME_PROCESSING_FEE_PERCENTAGE", 1.09);
+  const processing =
+    paymentMethod === "CREDIT_CARD"
+      ? readPercent("PAGARME_PROCESSING_FEE_PERCENTAGE_CREDIT_CARD", defaultProcessing)
+      : readPercent("PAGARME_PROCESSING_FEE_PERCENTAGE_PIX", defaultProcessing);
+  const defaultCommercialFee = Math.max(platformFee - processing, 0);
+  const defaultFree = readPercent("PLATFORM_NETWORK_FEE_PERCENTAGE", defaultCommercialFee);
   const free =
     paymentMethod === "CREDIT_CARD"
       ? readPercent("PLATFORM_NETWORK_FEE_PERCENTAGE_CREDIT_CARD", defaultFree)
@@ -50,9 +56,8 @@ export function resolveNetworkFeePercent(paymentMethod: PaymentMethodForFees, pl
 
   if (plan !== "PREMIUM") return free;
 
-  const defaultPremium = readPercent("PREMIUM_PLATFORM_NETWORK_FEE_PERCENTAGE", platformFee);
+  const defaultPremium = readPercent("PREMIUM_PLATFORM_NETWORK_FEE_PERCENTAGE", defaultCommercialFee);
   return paymentMethod === "CREDIT_CARD"
     ? readPercent("PREMIUM_PLATFORM_NETWORK_FEE_PERCENTAGE_CREDIT_CARD", defaultPremium)
     : readPercent("PREMIUM_PLATFORM_NETWORK_FEE_PERCENTAGE_PIX", defaultPremium);
 }
-

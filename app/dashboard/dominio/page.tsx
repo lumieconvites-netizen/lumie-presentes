@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { CheckCircle2, Globe2, Loader2, Search, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -141,6 +142,9 @@ export default function CustomDomainPage() {
           <CardContent className="space-y-3 text-sm text-gray-600">
             <p>O domínio próprio fica liberado para clientes Premium. A URL gratuita da Lumie continua funcionando normalmente.</p>
             <p>Quando o plano for ativado, você poderá buscar domínios .com, .site e .net por aqui.</p>
+            <Button asChild className="bg-[#8E3D2C] text-white hover:bg-[#753124]">
+              <Link href="/tarifas">Ver planos</Link>
+            </Button>
           </CardContent>
         </Card>
       ) : (
