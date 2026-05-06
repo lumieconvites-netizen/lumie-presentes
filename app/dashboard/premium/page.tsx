@@ -271,7 +271,7 @@ export default function PremiumCheckoutPage() {
               </div>
 
               <div className="hidden p-5 lg:block">
-                <div className="overflow-hidden rounded-[28px] border border-[#2f211c] bg-[#2f211c] shadow-[0_24px_44px_rgba(32,22,18,0.24)]">
+                <div className="mx-auto max-w-[900px] overflow-hidden rounded-[28px] border border-[#2f211c] bg-[#2f211c] shadow-[0_24px_44px_rgba(32,22,18,0.24)]">
                   <div className="border-b border-white/10 bg-[#2f362d] px-5 py-3">
                     <div className="flex items-center gap-3">
                       <div className="flex gap-1.5">
@@ -298,30 +298,30 @@ export default function PremiumCheckoutPage() {
                   </div>
 
                   <div
-                    className="relative h-[430px] bg-cover bg-center"
-                    style={{ backgroundImage: "linear-gradient(to bottom, rgba(57,21,13,0.18), rgba(57,21,13,0.44)), url('/hero-image.jpg')" }}
+                    className="relative h-[240px] bg-cover bg-center"
+                    style={{ backgroundImage: "linear-gradient(to bottom, rgba(57,21,13,0.18), rgba(57,21,13,0.44)), url('/premium-mock-cap.png')" }}
                   >
                     <div className="absolute inset-0 bg-[rgba(95,47,35,0.24)]" />
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-                      <span className="text-2xl font-medium">15 anos</span>
-                      <h3 className="mt-4 font-display text-7xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.42)]">Isabella</h3>
+                      <span className="text-lg font-medium">15 anos</span>
+                      <h3 className="mt-3 font-display text-6xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.42)]">Isabella</h3>
                     </div>
                   </div>
 
-                  <div className="space-y-10 bg-[#faeee3] px-10 py-12">
+                  <div className="space-y-8 bg-[#faeee3] px-8 py-8">
                     <div className="text-center">
-                      <p className="font-display text-5xl text-[#d29d2f]">Falta Pouco!</p>
+                      <p className="font-display text-4xl text-[#d29d2f]">Falta Pouco!</p>
                     </div>
 
-                    <div className="mx-auto grid max-w-3xl grid-cols-4 gap-4">
+                    <div className="mx-auto grid max-w-3xl grid-cols-4 gap-3">
                       {[
                         ['188', 'DIAS'],
                         ['15', 'HORAS'],
                         ['22', 'MINUTOS'],
                         ['59', 'SEGUNDOS'],
                       ].map(([value, label]) => (
-                        <div key={label} className="rounded-2xl bg-white px-4 py-5 text-center shadow-[0_10px_20px_rgba(82,56,41,0.08)]">
-                          <div className="text-4xl font-bold text-[#111]">{value}</div>
+                        <div key={label} className="rounded-2xl bg-white px-4 py-4 text-center shadow-[0_10px_20px_rgba(82,56,41,0.08)]">
+                          <div className="text-3xl font-bold text-[#111]">{value}</div>
                           <div className="mt-2 text-xs tracking-[0.2em] text-[#b28658]">{label}</div>
                         </div>
                       ))}
@@ -331,8 +331,8 @@ export default function PremiumCheckoutPage() {
 
                     <div className="mx-auto overflow-hidden rounded-[22px] bg-[#1f1d1d] text-white shadow-[0_16px_24px_rgba(31,29,29,0.18)]">
                       <div
-                        className="h-[205px] bg-cover bg-center p-6"
-                        style={{ backgroundImage: "linear-gradient(to bottom, rgba(16,16,16,0.18), rgba(16,16,16,0.84)), url('/hero-slides/15-anos-03.jpg')" }}
+                        className="h-[170px] bg-cover bg-center p-6"
+                        style={{ backgroundImage: "linear-gradient(to bottom, rgba(16,16,16,0.18), rgba(16,16,16,0.84)), url('/premium-mock-pres.png')" }}
                       >
                         <div className="flex h-full flex-col justify-end">
                           <p className="font-display text-4xl">Lista de Presentes</p>
@@ -346,17 +346,16 @@ export default function PremiumCheckoutPage() {
                       </div>
                     </div>
 
-                    <div className="mx-auto max-w-4xl px-6 pb-2 pt-4 text-center">
-                      <p className="font-display text-6xl text-[#d29d2f]">A trajetória</p>
-                      <p className="mt-8 text-[18px] leading-10 text-[#8a5d32]">
+                    <div className="mx-auto max-w-4xl px-6 pb-2 pt-2 text-center">
+                      <p className="font-display text-5xl text-[#d29d2f]">A trajetória</p>
+                      <p className="mt-6 text-[16px] leading-8 text-[#8a5d32]">
                         Sou feita de sentimentos intensos, de risadas sinceras e de uma fé enorme no futuro. Carrego comigo
                         a doçura da infância, mas também a coragem de quem já aprendeu que crescer é aceitar desafios,
-                        aprender com os erros e continuar acreditando. Sou abraço apertado, sou lágrima que ensina, sou
-                        sorriso que ilumina.
+                        aprender com os erros e continuar acreditando.
                       </p>
-                      <p className="mt-8 text-[18px] leading-10 text-[#8a5d32]">
+                      <p className="mt-6 text-[16px] leading-8 text-[#8a5d32]">
                         Ao longo desses anos, fui descobrindo quem eu sou: alguém que sonha alto, que ama profundamente e
-                        que valoriza cada pessoa que faz parte da sua história.
+                        que valoriza cada pessoa que faz parte da sua história. É por isso que a celebro com o coração.
                       </p>
                     </div>
                   </div>
@@ -384,7 +383,7 @@ export default function PremiumCheckoutPage() {
 
                     <div
                       className="relative h-[228px] bg-cover bg-center"
-                      style={{ backgroundImage: "linear-gradient(to bottom, rgba(27,18,14,0.14), rgba(27,18,14,0.46)), url('/hero-slides/15-anos-01.jpg')" }}
+                      style={{ backgroundImage: "linear-gradient(to bottom, rgba(27,18,14,0.14), rgba(27,18,14,0.46)), url('/premium-mock-cap.png')" }}
                     >
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
                         <span className="text-sm tracking-wide">15 anos</span>
@@ -416,7 +415,7 @@ export default function PremiumCheckoutPage() {
                       <div className="overflow-hidden rounded-[22px] bg-[#1f1d1d] text-white shadow-[0_16px_24px_rgba(31,29,29,0.18)]">
                         <div
                           className="h-[180px] bg-cover bg-center p-4"
-                          style={{ backgroundImage: "linear-gradient(to bottom, rgba(16,16,16,0.16), rgba(16,16,16,0.8)), url('/hero-slides/15-anos-01.jpg')" }}
+                          style={{ backgroundImage: "linear-gradient(to bottom, rgba(16,16,16,0.16), rgba(16,16,16,0.8)), url('/premium-mock-pres.png')" }}
                         >
                           <div className="flex h-full flex-col justify-end">
                             <p className="font-display text-3xl">Lista de Presentes</p>
