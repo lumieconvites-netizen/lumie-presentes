@@ -204,14 +204,14 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
                 <Globe2 className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-semibold text-[#26352b]">Seu plano Premium inclui dominio personalizado</p>
+                <p className="font-semibold text-[#26352b]">Seu plano Premium inclui domínio personalizado</p>
                 <p className="mt-1 text-sm text-gray-600">
-                  Escolha seu dominio agora. Por enquanto, teste nomes com .com, .site ou .net.
+                  Escolha seu domínio agora. Por enquanto, teste nomes com .com, .site ou .net.
                 </p>
               </div>
             </div>
             <Button asChild className="bg-[#1f8e5b] text-white hover:bg-[#18764b]">
-              <Link href="/dashboard/dominio">Cadastrar dominio agora</Link>
+              <Link href="/dashboard/dominio">Cadastrar domínio agora</Link>
             </Button>
           </CardContent>
         </Card>

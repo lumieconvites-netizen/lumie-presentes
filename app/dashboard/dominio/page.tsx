@@ -54,10 +54,10 @@ export default function CustomDomainPage() {
     try {
       const response = await fetch('/api/domains/custom', { cache: 'no-store' });
       const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || 'Erro ao carregar dominio');
+      if (!response.ok) throw new Error(data?.error || 'Erro ao carregar domínio');
       setState(data);
     } catch (error: any) {
-      alert(error?.message || 'Erro ao carregar dominio');
+      alert(error?.message || 'Erro ao carregar domínio');
     } finally {
       setLoading(false);
     }
@@ -77,10 +77,10 @@ export default function CustomDomainPage() {
         body: JSON.stringify({ action: 'search', query }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || 'Erro ao buscar dominios');
+      if (!response.ok) throw new Error(data?.error || 'Erro ao buscar domínios');
       setSuggestions(data.suggestions || []);
     } catch (error: any) {
-      alert(error?.message || 'Erro ao buscar dominios');
+      alert(error?.message || 'Erro ao buscar domínios');
     } finally {
       setSearching(false);
     }
@@ -95,10 +95,10 @@ export default function CustomDomainPage() {
         body: JSON.stringify({ action: 'select', domain }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || 'Erro ao selecionar dominio');
+      if (!response.ok) throw new Error(data?.error || 'Erro ao selecionar domínio');
       await load();
     } catch (error: any) {
-      alert(error?.message || 'Erro ao selecionar dominio');
+      alert(error?.message || 'Erro ao selecionar domínio');
     } finally {
       setSavingDomain(null);
     }
@@ -124,8 +124,8 @@ export default function CustomDomainPage() {
     <div className="space-y-6 p-4 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dominio personalizado</h1>
-          <p className="mt-1 text-sm text-gray-600">Escolha um endereco exclusivo para sua lista premium.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Domínio personalizado</h1>
+          <p className="mt-1 text-sm text-gray-600">Escolha um endereço exclusivo para sua lista premium.</p>
         </div>
         <Badge variant={enabled ? 'default' : 'outline'}>{enabled ? 'Premium' : 'Gratuito'}</Badge>
       </div>
@@ -135,12 +135,12 @@ export default function CustomDomainPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe2 className="h-5 w-5 text-[#8E3D2C]" />
-              Disponivel no plano Premium
+              Disponível no plano Premium
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-gray-600">
-            <p>O dominio proprio fica liberado para clientes Premium. A URL gratuita da Lumie continua funcionando normalmente.</p>
-            <p>Quando o plano for ativado, voce podera buscar dominios .com, .site e .net por aqui.</p>
+            <p>O domínio próprio fica liberado para clientes Premium. A URL gratuita da Lumie continua funcionando normalmente.</p>
+            <p>Quando o plano for ativado, você poderá buscar domínios .com, .site e .net por aqui.</p>
           </CardContent>
         </Card>
       ) : (
@@ -163,14 +163,14 @@ export default function CustomDomainPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Buscar dominio</CardTitle>
+              <CardTitle>Buscar domínio</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="rayan-isa"
+                  placeholder="isabella15"
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' && !searching) searchDomains();
                   }}
@@ -187,7 +187,7 @@ export default function CustomDomainPage() {
                 ))}
               </div>
               <p className="text-sm text-gray-600">
-                Digite apenas o nome desejado e teste com .com, .site ou .net. Exemplo: rayan-isa.
+                Digite apenas o nome desejado e teste com .com, .site ou .net. Exemplo: isabella15.
               </p>
 
               {!configured ? (
@@ -217,7 +217,7 @@ export default function CustomDomainPage() {
                             item.available === null && 'text-gray-500'
                           )}
                         >
-                          {item.available === true ? 'Disponivel' : item.available === false ? 'Indisponivel' : item.error || 'Nao verificado'}
+                          {item.available === true ? 'Disponível' : item.available === false ? 'Indisponível' : item.error || 'Não verificado'}
                         </p>
                       </div>
                       <Button
