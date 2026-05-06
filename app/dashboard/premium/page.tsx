@@ -12,7 +12,6 @@ import {
   Copy,
   CreditCard,
   Crown,
-  ExternalLink,
   Gift,
   Globe2,
   Heart,
@@ -266,70 +265,88 @@ export default function PremiumCheckoutPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="overflow-hidden rounded-[28px] border border-[#dfc6b7] bg-white shadow-[0_20px_44px_rgba(49,34,28,0.12)]">
-              <div className="flex items-center gap-3 border-b border-[#efe0d6] bg-[#f9f3ee] px-5 py-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#ef8c7d]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#f2c26f]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#7dcf94]" />
-                </div>
-                <div className="flex-1 rounded-full border border-[#e8d8cd] bg-white px-4 py-2 text-sm text-[#6e594f]">
-                  https://seudominio.com
-                </div>
-                <ExternalLink className="h-4 w-4 text-[#8e6b5d]" />
+            <div className="overflow-hidden rounded-[28px] border border-[#dfc6b7] bg-[#f7ede4] shadow-[0_20px_44px_rgba(49,34,28,0.12)]">
+              <div className="border-b border-[#ead7ca] bg-[#f9f3ee] px-5 py-3">
+                <p className="text-sm font-medium text-[#6e594f]">Mock da página que os convidados veem</p>
               </div>
 
-              <div className="space-y-4 bg-[linear-gradient(180deg,#fffdfb_0%,#fff7f1_100%)] p-5">
-                <div className="rounded-[24px] border border-[#eddccf] bg-white p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.22em] text-[#af7d69]">Seu domínio exclusivo</p>
-                      <h3 className="mt-2 font-display text-2xl text-[#2d221f]">Isabella & Rafael</h3>
-                      <p className="mt-1 text-sm text-[#756258]">Uma página elegante para receber presentes e recados.</p>
+              <div className="flex justify-center p-5">
+                <div className="w-full max-w-[360px] rounded-[32px] bg-[#2a211d] p-3 shadow-[0_24px_40px_rgba(32,22,18,0.28)]">
+                  <div className="overflow-hidden rounded-[26px] bg-[#faeee3]">
+                    <div className="flex items-center gap-2 bg-[#2f362d] px-4 py-3 text-white">
+                      <div className="flex gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-white/80" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-white/55" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-white/35" />
+                      </div>
+                      <div className="flex-1 rounded-full bg-black/20 px-4 py-1.5 text-center text-xs">
+                        seudominio.com/site/isabella-beatriz-15
+                      </div>
                     </div>
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff1e8] text-[#bc5b3d]">
-                      <Heart className="h-6 w-6" />
-                    </div>
-                  </div>
 
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-[#f0dfd3] bg-[#fffaf6] p-3">
-                      <p className="text-xs text-[#9b7969]">Presentes</p>
-                      <p className="mt-1 text-lg font-semibold text-[#2d221f]">42 sugestões</p>
+                    <div className="bg-[#7d1408] px-4 py-3 text-white">
+                      <div className="flex items-center justify-between">
+                        <span className="font-display text-xl">I&R</span>
+                        <span className="text-lg">≡</span>
+                      </div>
                     </div>
-                    <div className="rounded-2xl border border-[#f0dfd3] bg-[#fffaf6] p-3">
-                      <p className="text-xs text-[#9b7969]">Pagamento</p>
-                      <p className="mt-1 text-lg font-semibold text-[#2d221f]">PIX e cartão</p>
-                    </div>
-                    <div className="rounded-2xl border border-[#f0dfd3] bg-[#fffaf6] p-3">
-                      <p className="text-xs text-[#9b7969]">Recados</p>
-                      <p className="mt-1 text-lg font-semibold text-[#2d221f]">Mensagens dos convidados</p>
-                    </div>
-                  </div>
 
-                  <div className="mt-4 rounded-2xl border border-[#f0dfd3] bg-[#2f2622] p-4 text-white">
-                    <p className="text-sm text-[#eadbd3]">Mock da página que os convidados veem</p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-[1.2fr,0.8fr]">
-                      <div className="rounded-2xl bg-white/8 p-4">
-                        <p className="text-lg font-semibold">Minha Lista de Presentes</p>
-                        <p className="mt-1 text-sm text-[#d8c5bb]">
-                          Sua presença é o meu maior presente, mas aqui estão algumas sugestões com muito carinho.
-                        </p>
-                        <div className="mt-4 grid grid-cols-2 gap-2">
-                          <div className="rounded-xl bg-white/10 p-3 text-sm">Jantar romântico</div>
-                          <div className="rounded-xl bg-white/10 p-3 text-sm">Noite especial</div>
-                          <div className="rounded-xl bg-white/10 p-3 text-sm">Viagem dos sonhos</div>
-                          <div className="rounded-xl bg-white/10 p-3 text-sm">Ajuda no novo lar</div>
+                    <div
+                      className="relative h-[260px] bg-cover bg-center"
+                      style={{ backgroundImage: "linear-gradient(to bottom, rgba(27,18,14,0.15), rgba(27,18,14,0.58)), url('/hero-image.jpg')" }}
+                    >
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
+                        <span className="text-sm tracking-wide">15 anos</span>
+                        <h3 className="mt-2 font-display text-5xl drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)]">Isabella</h3>
+                      </div>
+                    </div>
+
+                    <div className="space-y-5 bg-[#faeee3] p-4">
+                      <div className="text-center">
+                        <p className="font-display text-3xl text-[#d29d2f]">Falta Pouco!</p>
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          ['188', 'DIAS'],
+                          ['15', 'HORAS'],
+                          ['33', 'MINUTOS'],
+                          ['17', 'SEGUNDOS'],
+                        ].map(([value, label]) => (
+                          <div key={label} className="rounded-2xl bg-white px-2 py-4 text-center shadow-[0_8px_16px_rgba(82,56,41,0.08)]">
+                            <div className="text-2xl font-bold text-[#161616]">{value}</div>
+                            <div className="mt-1 text-[10px] tracking-[0.18em] text-[#b28658]">{label}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="h-px bg-[#ead5c3]" />
+
+                      <div className="overflow-hidden rounded-[22px] bg-[#1f1d1d] text-white shadow-[0_16px_24px_rgba(31,29,29,0.18)]">
+                        <div
+                          className="h-[210px] bg-cover bg-center p-4"
+                          style={{ backgroundImage: "linear-gradient(to bottom, rgba(16,16,16,0.16), rgba(16,16,16,0.8)), url('/hero-image.jpg')" }}
+                        >
+                          <div className="flex h-full flex-col justify-end">
+                            <p className="font-display text-3xl">Lista de Presentes</p>
+                            <p className="mt-2 max-w-[250px] text-sm text-white/90">
+                              Esta é nossa lista de presentes. Ficamos felizes em compartilhar esse momento com você.
+                            </p>
+                            <div className="mt-4 inline-flex w-fit items-center rounded-xl bg-[#b66439] px-5 py-2.5 text-sm font-medium text-white">
+                              Presentear
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="rounded-2xl bg-[#fff7f1] p-4 text-[#2d221f]">
-                        <p className="text-sm text-[#8d6c5c]">Checkout Lumie</p>
-                        <p className="mt-2 font-semibold">Presenteie em poucos cliques</p>
-                        <div className="mt-3 space-y-2">
-                          <div className="rounded-xl border border-[#eed7c8] px-3 py-2 text-sm">Escolha um presente</div>
-                          <div className="rounded-xl border border-[#eed7c8] px-3 py-2 text-sm">Escreva um recado</div>
-                          <div className="rounded-xl border border-[#eed7c8] px-3 py-2 text-sm">Pague com PIX ou cartão</div>
-                        </div>
+
+                      <div className="px-3 pb-2 pt-4 text-center">
+                        <p className="font-display text-4xl text-[#d29d2f]">A trajetória</p>
+                        <p className="mt-5 text-[15px] leading-8 text-[#8a5d32]">
+                          Sou feita de sentimentos intensos, de risadas sinceras e de uma fé enorme no futuro.
+                        </p>
+                        <p className="mt-5 text-[15px] leading-8 text-[#8a5d32]">
+                          Ao longo desses anos, fui descobrindo quem eu sou e construindo memórias com quem eu amo.
+                        </p>
                       </div>
                     </div>
                   </div>
