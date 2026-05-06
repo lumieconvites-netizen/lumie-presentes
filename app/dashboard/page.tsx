@@ -3,6 +3,7 @@ import { getActingUserContext } from '@/lib/acting-user';
 import { getPrimaryGiftListIdForUser } from '@/lib/primary-gift-list';
 import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
 import DashboardPageClient, { type DashboardData } from '@/components/dashboard/dashboard-page-client';
+import { resolveEffectivePlan } from '@/lib/plans';
 
 export default async function DashboardPage() {
   const ctx = await getActingUserContext();
@@ -34,7 +35,16 @@ export default async function DashboardPage() {
       });
 
       if (giftList) {
-        const [totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount] = await Promise.all([
+        const [userPlan, customDomain, totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: ctx.effectiveUserId },
+            select: { plan: true, planExpiresAt: true },
+          }),
+          prisma.customDomain.findFirst({
+            where: { giftListId: primaryGiftListId },
+            orderBy: { createdAt: 'desc' },
+            select: { domain: true, status: true },
+          }),
           prisma.giftItem.count({
             where: {
               giftListId: primaryGiftListId,
@@ -101,6 +111,8 @@ export default async function DashboardPage() {
 
         initialData = {
           ...giftList,
+          plan: resolveEffectivePlan(userPlan),
+          customDomain,
           summary: {
             totalGifts,
             activeGifts,

@@ -22,6 +22,7 @@ import {
   Settings,
   Landmark,
   Info,
+  Globe2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -53,6 +54,8 @@ export type DashboardData = {
   isPublished: boolean;
   title: string;
   description: string | null;
+  plan?: 'FREE' | 'PREMIUM';
+  customDomain?: { domain: string; status: string } | null;
   summary: DashboardSummary;
 };
 
@@ -118,6 +121,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
 
   const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
   const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);
+  const shouldShowPremiumDomainPrompt = data?.plan === 'PREMIUM' && !data?.customDomain;
 
   const copyPublicLink = async () => {
     if (!data?.slug || copying) return;
@@ -191,6 +195,27 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
           </div>
         </div>
       </div>
+
+      {shouldShowPremiumDomainPrompt ? (
+        <Card className="border-[#d7e7df] bg-gradient-to-r from-[#f4fff8] to-white">
+          <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#dcf7e6] text-[#1f8e5b]">
+                <Globe2 className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-[#26352b]">Seu plano Premium inclui dominio personalizado</p>
+                <p className="mt-1 text-sm text-gray-600">
+                  Escolha seu dominio agora. Por enquanto, teste nomes com .com, .site ou .net.
+                </p>
+              </div>
+            </div>
+            <Button asChild className="bg-[#1f8e5b] text-white hover:bg-[#18764b]">
+              <Link href="/dashboard/dominio">Cadastrar dominio agora</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-[#d7e8db] bg-gradient-to-br from-[#f3fff6] to-white">

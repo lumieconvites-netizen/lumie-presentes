@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { CheckCircle2, Globe2, Loader2, Search, ShieldCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -185,6 +186,9 @@ export default function CustomDomainPage() {
                   <span key={tld} className="rounded-full border px-2 py-1">.{tld}</span>
                 ))}
               </div>
+              <p className="text-sm text-gray-600">
+                Digite apenas o nome desejado e teste com .com, .site ou .net. Exemplo: rayan-isa.
+              </p>
 
               {!configured ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -195,10 +199,24 @@ export default function CustomDomainPage() {
               {suggestions.length ? (
                 <div className="divide-y rounded-lg border">
                   {suggestions.map((item) => (
-                    <div key={item.domain} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div
+                      key={item.domain}
+                      className={cn(
+                        'flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between',
+                        item.available === true && 'bg-green-50/70',
+                        item.available === false && 'bg-red-50/70'
+                      )}
+                    >
                       <div>
                         <p className="font-medium">{item.domain}</p>
-                        <p className="text-sm text-gray-500">
+                        <p
+                          className={cn(
+                            'text-sm font-medium',
+                            item.available === true && 'text-green-700',
+                            item.available === false && 'text-red-700',
+                            item.available === null && 'text-gray-500'
+                          )}
+                        >
                           {item.available === true ? 'Disponivel' : item.available === false ? 'Indisponivel' : item.error || 'Nao verificado'}
                         </p>
                       </div>
@@ -222,4 +240,3 @@ export default function CustomDomainPage() {
     </div>
   );
 }
-
