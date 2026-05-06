@@ -497,6 +497,42 @@ export default function PremiumCheckoutPage() {
               </CardHeader>
 
               <CardContent className="space-y-5">
+                <Card className="border-[#ead8cc] bg-[#fffaf6]">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg text-[#2d221f]">Resumo do plano</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm text-gray-700">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Gift className="h-4 w-4 text-[#b85537]" />
+                        Valor do plano
+                      </span>
+                      <strong>{formatBRL(amount)}</strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Clock3 className="h-4 w-4 text-[#b85537]" />
+                        Duracao
+                      </span>
+                      <strong>1 ano</strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-[#b85537]" />
+                        Taxa dos presentes
+                      </span>
+                      <strong>3,69%</strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Globe2 className="h-4 w-4 text-[#b85537]" />
+                        Dominio
+                      </span>
+                      <strong>1 ano incluso</strong>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#43342e]">Nome</label>
@@ -578,69 +614,6 @@ export default function PremiumCheckoutPage() {
               <MobileGuestPreview />
             </div>
           </div>
-
-          <div className="rounded-[28px] border border-[#dfc6b7] bg-[#2f2622] p-6 text-white shadow-[0_20px_44px_rgba(49,34,28,0.22)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm text-[#d7c5bb]">Status do seu plano</p>
-                <p className="mt-2 text-2xl font-semibold">{isPremium ? 'Premium ativo' : 'Plano gratuito'}</p>
-              </div>
-              <Badge variant={isPremium ? 'default' : 'outline'} className="border-white/20 bg-white/10 text-white">
-                {isPremium ? 'Ativo' : 'Disponivel'}
-              </Badge>
-            </div>
-
-            <div className="mt-6 space-y-3 text-sm text-[#ebddd6]">
-              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span>Preco do plano</span>
-                <strong>{formatBRL(amount)}</strong>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span>Duracao</span>
-                <strong>1 ano</strong>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span>Dominio</span>
-                <strong>Escolhido depois da ativacao</strong>
-              </div>
-            </div>
-          </div>
-
-          <Card className="border-[#e7d5c9]">
-            <CardHeader>
-              <CardTitle className="text-xl text-[#2d221f]">Resumo do plano</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm text-gray-700">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Gift className="h-4 w-4 text-[#b85537]" />
-                  Valor do plano
-                </span>
-                <strong>{formatBRL(amount)}</strong>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Clock3 className="h-4 w-4 text-[#b85537]" />
-                  Duracao
-                </span>
-                <strong>1 ano</strong>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#b85537]" />
-                  Taxa dos presentes
-                </span>
-                <strong>3,69%</strong>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Globe2 className="h-4 w-4 text-[#b85537]" />
-                  Dominio
-                </span>
-                <strong>1 ano incluso</strong>
-              </div>
-            </CardContent>
-          </Card>
 
           <Card className="border-[#e6d3c8] bg-white/90">
             <CardHeader className="pb-3">
