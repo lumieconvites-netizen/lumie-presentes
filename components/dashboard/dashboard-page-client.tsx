@@ -205,9 +205,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
               </span>
               <div>
                 <p className="font-semibold text-[#26352b]">Seu plano Premium inclui domínio personalizado</p>
-                <p className="mt-1 text-sm text-gray-600">
-                  Escolha seu domínio agora. Por enquanto, teste nomes com .com, .site ou .net.
-                </p>
+                <p className="mt-1 text-sm text-gray-600">Escolha seu domínio agora.</p>
               </div>
             </div>
             <Button asChild className="bg-[#1f8e5b] text-white hover:bg-[#18764b]">
