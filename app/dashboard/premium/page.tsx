@@ -12,8 +12,10 @@ import {
   Copy,
   CreditCard,
   Crown,
+  ExternalLink,
   Gift,
   Globe2,
+  Heart,
   Loader2,
   QrCode,
   ShieldCheck,
@@ -93,10 +95,10 @@ export default function PremiumCheckoutPage() {
     try {
       const res = await fetch('/api/plans/exclusive', { cache: 'no-store' });
       const json = await parseJsonSafe(res);
-      if (!res.ok) throw new Error(json?.error || 'Nao foi possivel carregar o plano.');
+      if (!res.ok) throw new Error(json?.error || 'Não foi possível carregar o plano.');
       setData(json);
     } catch (error: any) {
-      alert(error?.message || 'Nao foi possivel carregar o plano.');
+      alert(error?.message || 'Não foi possível carregar o plano.');
     } finally {
       setLoading(false);
     }
@@ -163,7 +165,7 @@ export default function PremiumCheckoutPage() {
         }),
       });
       const json = await parseJsonSafe(res);
-      if (!res.ok) throw new Error(json?.details || json?.error || 'Nao foi possivel processar a compra.');
+      if (!res.ok) throw new Error(json?.details || json?.error || 'Não foi possível processar a compra.');
 
       setPurchaseStatus(String(json?.status ?? 'PENDING'));
 
@@ -180,7 +182,7 @@ export default function PremiumCheckoutPage() {
       alert('Pagamento aprovado. Seu plano Lumie Exclusive foi ativado.');
       window.location.assign('/dashboard/dominio');
     } catch (error: any) {
-      alert(error?.message || 'Nao foi possivel concluir a compra.');
+      alert(error?.message || 'Não foi possível concluir a compra.');
     } finally {
       setSubmitting(false);
     }
@@ -193,7 +195,7 @@ export default function PremiumCheckoutPage() {
       setCopyFeedback(true);
       window.setTimeout(() => setCopyFeedback(false), 1800);
     } catch {
-      alert('Nao foi possivel copiar o codigo PIX.');
+      alert('Não foi possível copiar o código PIX.');
     }
   };
 
@@ -213,7 +215,7 @@ export default function PremiumCheckoutPage() {
   return (
     <div className="space-y-6 p-4 md:p-6">
       <Card className="overflow-hidden border-[#e6d3c8] bg-[radial-gradient(circle_at_top_left,_rgba(255,241,232,0.95),_rgba(255,255,255,1)_58%)] shadow-[0_18px_48px_rgba(77,51,39,0.10)]">
-        <CardContent className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1.1fr,0.9fr]">
+        <CardContent className="grid gap-8 p-6 md:p-8 xl:grid-cols-[1.05fr,0.95fr]">
           <div className="space-y-5">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#ecd7ca] bg-white/90 px-4 py-2 text-sm text-[#6e594f]">
               <Crown className="h-4 w-4 text-[#8e3d2c]" />
@@ -222,11 +224,11 @@ export default function PremiumCheckoutPage() {
 
             <div>
               <h1 className="font-display text-3xl leading-tight text-[#2d221f] md:text-5xl">
-                Seu plano premium com dominio proprio, taxa menor e suporte exclusivo.
+                Seu plano premium com domínio próprio, taxa menor e suporte exclusivo.
               </h1>
               <p className="mt-4 max-w-2xl text-[15px] leading-7 text-[#67544a]">
-                Ative agora e deixe sua lista pronta para receber presentes com uma experiencia mais elegante, mais
-                profissional e com dominio escolhido direto pelo dashboard.
+                Ative agora e deixe sua lista pronta para receber presentes com uma experiência mais elegante, mais
+                profissional e com domínio escolhido direto pelo dashboard.
               </p>
             </div>
 
@@ -242,18 +244,18 @@ export default function PremiumCheckoutPage() {
                 <p className="mt-1 text-sm text-[#705b51]">nos presentes</p>
               </div>
               <div className="rounded-2xl border border-[#ecd8cc] bg-white/90 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-[#8e6b5d]">Ativacao</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8e6b5d]">Ativação</p>
                 <p className="mt-2 font-display text-4xl text-[#2d221f]">Imediata</p>
-                <p className="mt-1 text-sm text-[#705b51]">apos pagamento</p>
+                <p className="mt-1 text-sm text-[#705b51]">após pagamento</p>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               {[
-                'Dominio personalizado por 1 ano',
+                'Domínio personalizado por 1 ano',
                 'Tudo do plano gratuito, com taxa reduzida',
                 'Suporte exclusivo com a nossa equipe',
-                'Checkout por PIX e cartao com confirmacao automatica',
+                'Checkout por PIX e cartão com confirmação automática',
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3 rounded-2xl border border-[#ead7ca] bg-white/85 p-4">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#1f8e5b]" />
@@ -264,6 +266,77 @@ export default function PremiumCheckoutPage() {
           </div>
 
           <div className="space-y-4">
+            <div className="overflow-hidden rounded-[28px] border border-[#dfc6b7] bg-white shadow-[0_20px_44px_rgba(49,34,28,0.12)]">
+              <div className="flex items-center gap-3 border-b border-[#efe0d6] bg-[#f9f3ee] px-5 py-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#ef8c7d]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#f2c26f]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#7dcf94]" />
+                </div>
+                <div className="flex-1 rounded-full border border-[#e8d8cd] bg-white px-4 py-2 text-sm text-[#6e594f]">
+                  https://seudominio.com
+                </div>
+                <ExternalLink className="h-4 w-4 text-[#8e6b5d]" />
+              </div>
+
+              <div className="space-y-4 bg-[linear-gradient(180deg,#fffdfb_0%,#fff7f1_100%)] p-5">
+                <div className="rounded-[24px] border border-[#eddccf] bg-white p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.22em] text-[#af7d69]">Seu domínio exclusivo</p>
+                      <h3 className="mt-2 font-display text-2xl text-[#2d221f]">Isabella & Rafael</h3>
+                      <p className="mt-1 text-sm text-[#756258]">Uma página elegante para receber presentes e recados.</p>
+                    </div>
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff1e8] text-[#bc5b3d]">
+                      <Heart className="h-6 w-6" />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-[#f0dfd3] bg-[#fffaf6] p-3">
+                      <p className="text-xs text-[#9b7969]">Presentes</p>
+                      <p className="mt-1 text-lg font-semibold text-[#2d221f]">42 sugestões</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#f0dfd3] bg-[#fffaf6] p-3">
+                      <p className="text-xs text-[#9b7969]">Pagamento</p>
+                      <p className="mt-1 text-lg font-semibold text-[#2d221f]">PIX e cartão</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#f0dfd3] bg-[#fffaf6] p-3">
+                      <p className="text-xs text-[#9b7969]">Recados</p>
+                      <p className="mt-1 text-lg font-semibold text-[#2d221f]">Mensagens dos convidados</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-[#f0dfd3] bg-[#2f2622] p-4 text-white">
+                    <p className="text-sm text-[#eadbd3]">Mock da página que os convidados veem</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-[1.2fr,0.8fr]">
+                      <div className="rounded-2xl bg-white/8 p-4">
+                        <p className="text-lg font-semibold">Minha Lista de Presentes</p>
+                        <p className="mt-1 text-sm text-[#d8c5bb]">
+                          Sua presença é o meu maior presente, mas aqui estão algumas sugestões com muito carinho.
+                        </p>
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                          <div className="rounded-xl bg-white/10 p-3 text-sm">Jantar romântico</div>
+                          <div className="rounded-xl bg-white/10 p-3 text-sm">Noite especial</div>
+                          <div className="rounded-xl bg-white/10 p-3 text-sm">Viagem dos sonhos</div>
+                          <div className="rounded-xl bg-white/10 p-3 text-sm">Ajuda no novo lar</div>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl bg-[#fff7f1] p-4 text-[#2d221f]">
+                        <p className="text-sm text-[#8d6c5c]">Checkout Lumie</p>
+                        <p className="mt-2 font-semibold">Presenteie em poucos cliques</p>
+                        <div className="mt-3 space-y-2">
+                          <div className="rounded-xl border border-[#eed7c8] px-3 py-2 text-sm">Escolha um presente</div>
+                          <div className="rounded-xl border border-[#eed7c8] px-3 py-2 text-sm">Escreva um recado</div>
+                          <div className="rounded-xl border border-[#eed7c8] px-3 py-2 text-sm">Pague com PIX ou cartão</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="rounded-[28px] border border-[#dfc6b7] bg-[#2f2622] p-6 text-white shadow-[0_20px_44px_rgba(49,34,28,0.22)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -271,22 +344,22 @@ export default function PremiumCheckoutPage() {
                   <p className="mt-2 text-2xl font-semibold">{isPremium ? 'Premium ativo' : 'Plano gratuito'}</p>
                 </div>
                 <Badge variant={isPremium ? 'default' : 'outline'} className="border-white/20 bg-white/10 text-white">
-                  {isPremium ? 'Ativo' : 'Disponivel'}
+                  {isPremium ? 'Ativo' : 'Disponível'}
                 </Badge>
               </div>
 
               <div className="mt-6 space-y-3 text-sm text-[#ebddd6]">
                 <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <span>Preco do plano</span>
+                  <span>Preço do plano</span>
                   <strong>{formatBRL(amount)}</strong>
                 </div>
                 <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <span>Duracao</span>
+                  <span>Duração</span>
                   <strong>1 ano</strong>
                 </div>
                 <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <span>Dominio</span>
-                  <strong>Escolhido depois da ativacao</strong>
+                  <span>Domínio</span>
+                  <strong>Escolhido depois da ativação</strong>
                 </div>
               </div>
             </div>
@@ -300,19 +373,19 @@ export default function PremiumCheckoutPage() {
                   <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#fff2ea] text-xs font-semibold text-[#b45133]">
                     1
                   </span>
-                  <p>Seu plano e ativado automaticamente assim que o pagamento for confirmado.</p>
+                  <p>Seu plano é ativado automaticamente assim que o pagamento for confirmado.</p>
                 </div>
                 <div className="flex gap-3">
                   <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#fff2ea] text-xs font-semibold text-[#b45133]">
                     2
                   </span>
-                  <p>Depois disso, voce escolhe o dominio pela area de dominio no dashboard.</p>
+                  <p>Depois disso, você escolhe o domínio pela área de domínio no dashboard.</p>
                 </div>
                 <div className="flex gap-3">
                   <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#fff2ea] text-xs font-semibold text-[#b45133]">
                     3
                   </span>
-                  <p>A Lumie registra o endereco escolhido dentro das opcoes disponiveis para o plano.</p>
+                  <p>A Lumie registra o endereço escolhido dentro das opções disponíveis para o plano.</p>
                 </div>
               </CardContent>
             </Card>
@@ -326,16 +399,16 @@ export default function PremiumCheckoutPage() {
             <div className="flex items-start gap-3">
               <ShieldCheck className="mt-1 h-5 w-5 text-[#1f8e5b]" />
               <div>
-                <p className="font-semibold text-[#22352a]">Seu Lumie Exclusive ja esta ativo.</p>
+                <p className="font-semibold text-[#22352a]">Seu Lumie Exclusive já está ativo.</p>
                 <p className="mt-1 text-sm text-gray-600">
                   {data?.user.planExpiresAt
                     ? `Expira em ${new Date(data.user.planExpiresAt).toLocaleDateString('pt-BR')}.`
-                    : 'Seu plano ja esta habilitado.'}
+                    : 'Seu plano já está habilitado.'}
                 </p>
               </div>
             </div>
             <Button asChild className="bg-[#1f8e5b] text-white hover:bg-[#18764b]">
-              <Link href="/dashboard/dominio">Ir para dominio</Link>
+              <Link href="/dashboard/dominio">Ir para domínio</Link>
             </Button>
           </CardContent>
         </Card>
@@ -373,7 +446,7 @@ export default function PremiumCheckoutPage() {
                   </span>
                   <div>
                     <p className="font-semibold text-[#2d221f]">PIX</p>
-                    <p className="text-sm text-[#6a554a]">Aprovacao rapida e acompanhamento automatico.</p>
+                    <p className="text-sm text-[#6a554a]">Aprovação rápida e acompanhamento automático.</p>
                   </div>
                 </div>
               </button>
@@ -392,8 +465,8 @@ export default function PremiumCheckoutPage() {
                     <CreditCard className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="font-semibold text-[#2d221f]">Cartao</p>
-                    <p className="text-sm text-[#6a554a]">Ativacao imediata quando o pagamento for aprovado.</p>
+                    <p className="font-semibold text-[#2d221f]">Cartão</p>
+                    <p className="text-sm text-[#6a554a]">Ativação imediata quando o pagamento for aprovado.</p>
                   </div>
                 </div>
               </button>
@@ -424,12 +497,12 @@ export default function PremiumCheckoutPage() {
               <div className="rounded-2xl border border-[#ecd8cc] bg-[#fffaf6] p-4">
                 <div className="mb-4 flex items-center gap-2 text-sm font-medium text-[#564841]">
                   <CreditCard className="h-4 w-4 text-[#b85537]" />
-                  Dados do cartao
+                  Dados do cartão
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-[#43342e]">Numero do cartao</label>
+                    <label className="text-sm font-medium text-[#43342e]">Número do cartão</label>
                     <Input value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} />
                   </div>
                   <div className="space-y-2 md:col-span-2">
@@ -437,7 +510,7 @@ export default function PremiumCheckoutPage() {
                     <Input value={cardHolderName} onChange={(e) => setCardHolderName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#43342e]">Mes</label>
+                    <label className="text-sm font-medium text-[#43342e]">Mês</label>
                     <Input value={cardExpMonth} onChange={(e) => setCardExpMonth(e.target.value)} placeholder="12" />
                   </div>
                   <div className="space-y-2">
@@ -452,8 +525,8 @@ export default function PremiumCheckoutPage() {
               </div>
             ) : (
               <div className="rounded-2xl border border-[#dcecdf] bg-[#f8fffa] p-4 text-sm text-[#476152]">
-                Ao gerar o PIX, voce recebe o QR Code e o codigo copia e cola aqui mesmo na tela. A pagina acompanha a
-                confirmacao automaticamente.
+                Ao gerar o PIX, você recebe o QR Code e o código copia e cola aqui mesmo na tela. A página acompanha a
+                confirmação automaticamente.
               </div>
             )}
 
@@ -464,7 +537,7 @@ export default function PremiumCheckoutPage() {
               className="h-12 w-full bg-[#8e3d2c] text-white hover:bg-[#7a3426]"
             >
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {paymentMethod === 'PIX' ? 'Gerar PIX do plano' : 'Pagar com cartao'}
+              {paymentMethod === 'PIX' ? 'Gerar PIX do plano' : 'Pagar com cartão'}
             </Button>
           </CardContent>
         </Card>
@@ -485,7 +558,7 @@ export default function PremiumCheckoutPage() {
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Clock3 className="h-4 w-4 text-[#b85537]" />
-                  Duracao
+                  Duração
                 </span>
                 <strong>1 ano</strong>
               </div>
@@ -499,7 +572,7 @@ export default function PremiumCheckoutPage() {
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Globe2 className="h-4 w-4 text-[#b85537]" />
-                  Dominio
+                  Domínio
                 </span>
                 <strong>1 ano incluso</strong>
               </div>
@@ -509,7 +582,7 @@ export default function PremiumCheckoutPage() {
           {(data?.referrals.partner || data?.referrals.ambassador) && (
             <Card className="border-[#e7d5c9]">
               <CardHeader>
-                <CardTitle className="text-xl text-[#2d221f]">Comissao da compra</CardTitle>
+                <CardTitle className="text-xl text-[#2d221f]">Comissão da compra</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-gray-700">
                 {data.referrals.partner ? (
@@ -531,7 +604,7 @@ export default function PremiumCheckoutPage() {
           {data?.latestPurchase ? (
             <Card className="border-[#e7d5c9]">
               <CardHeader>
-                <CardTitle className="text-xl text-[#2d221f]">Ultima tentativa</CardTitle>
+                <CardTitle className="text-xl text-[#2d221f]">Última tentativa</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-[#625046]">
                 <div className="flex items-center justify-between">
@@ -539,7 +612,7 @@ export default function PremiumCheckoutPage() {
                   <strong>{data.latestPurchase.status}</strong>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>Metodo</span>
+                  <span>Método</span>
                   <strong>{data.latestPurchase.paymentMethod ?? '-'}</strong>
                 </div>
                 <div className="flex items-center justify-between">
@@ -573,12 +646,12 @@ export default function PremiumCheckoutPage() {
                         />
                         <Button type="button" variant="outline" className="w-full" onClick={handleCopyPix}>
                           <Copy className="mr-2 h-4 w-4" />
-                          {copyFeedback ? 'Codigo copiado' : 'Copiar codigo PIX'}
+                          {copyFeedback ? 'Código copiado' : 'Copiar código PIX'}
                         </Button>
                       </>
                     ) : null}
                     {pixPayload.expiresAt ? (
-                      <p className="text-xs text-[#78655b]">Valido ate {formatDate(pixPayload.expiresAt)}.</p>
+                      <p className="text-xs text-[#78655b]">Válido até {formatDate(pixPayload.expiresAt)}.</p>
                     ) : null}
                   </div>
                 </div>
@@ -597,7 +670,7 @@ export default function PremiumCheckoutPage() {
 
                 {purchaseStatus === 'PAID' ? (
                   <Button asChild className="w-full bg-[#1f8e5b] text-white hover:bg-[#18764b]">
-                    <Link href="/dashboard/dominio">Ir para dominio</Link>
+                    <Link href="/dashboard/dominio">Ir para domínio</Link>
                   </Button>
                 ) : null}
               </CardContent>
