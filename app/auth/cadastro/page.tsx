@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const searchParams = useSearchParams();
   const selectedTemplate = searchParams.get('template') || '';
   const inviteCodeFromUrl = searchParams.get('code') || '';
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
   const isPartnerMode = searchParams.get('tipo') === 'parceiro';
   const roleFromUrl = isPartnerMode ? 'PARTNER' : 'CLIENT';
   const [step, setStep] = useState<Step>('register');
@@ -109,14 +110,15 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
         toast.success('E-mail confirmado. Faça login para continuar.');
-        router.push('/login');
+        router.push(`/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       } else {
         toast.success('Conta confirmada com sucesso.');
-        router.push('/dashboard');
+        router.push(callbackUrl);
         router.refresh();
       }
     } catch (error: any) {
@@ -298,7 +300,10 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Já tem uma conta? </span>
-            <Link href="/auth/login" className="text-terracota-600 hover:text-terracota-700 font-medium">
+            <Link
+              href={`/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+              className="text-terracota-600 hover:text-terracota-700 font-medium"
+            >
               Faça login
             </Link>
           </div>

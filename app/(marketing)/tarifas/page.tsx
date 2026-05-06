@@ -86,7 +86,7 @@ export default function PricingPage() {
   const { status } = useSession();
   const selectedExample = feeExamples[selectedPlan];
   const exclusiveHref =
-    status === 'authenticated' ? '/dashboard/premium' : '/auth/login?callbackUrl=/dashboard/premium';
+    status === 'authenticated' ? '/dashboard/premium' : '/auth/cadastro?callbackUrl=/dashboard/premium';
 
   return (
     <main className="bg-[#f8f2ed] text-[#2b2422]">

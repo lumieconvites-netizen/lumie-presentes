@@ -143,7 +143,7 @@ export default function CustomDomainPage() {
             <p>O domínio próprio fica liberado para clientes Premium. A URL gratuita da Lumie continua funcionando normalmente.</p>
             <p>Quando o plano for ativado, você poderá buscar domínios .com, .site e .net por aqui.</p>
             <Button asChild className="bg-[#8E3D2C] text-white hover:bg-[#753124]">
-              <Link href="/tarifas">Ver planos</Link>
+              <Link href="/tarifas">Ver diferenças</Link>
             </Button>
           </CardContent>
         </Card>

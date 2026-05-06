@@ -224,14 +224,14 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
                 <Globe2 className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-semibold text-[#3c2b24]">Adquira o plano premium</p>
+                <p className="font-semibold text-[#3c2b24]">Veja as diferenças do plano premium</p>
                 <p className="mt-1 text-sm text-gray-600">
                   Veja as diferenças, o valor e ative o Lumie Exclusive para liberar domínio personalizado.
                 </p>
               </div>
             </div>
             <Button asChild className="bg-[#8e3d2c] text-white hover:bg-[#7a3426]">
-              <Link href="/tarifas">Ver planos</Link>
+              <Link href="/tarifas">Ver diferenças</Link>
             </Button>
           </CardContent>
         </Card>
