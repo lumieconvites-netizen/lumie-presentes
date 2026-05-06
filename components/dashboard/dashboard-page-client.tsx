@@ -122,6 +122,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
   const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
   const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);
   const shouldShowPremiumDomainPrompt = data?.plan === 'PREMIUM' && !data?.customDomain;
+  const shouldShowUpgradePrompt = data?.plan === 'FREE';
 
   const copyPublicLink = async () => {
     if (!data?.slug || copying) return;
@@ -210,6 +211,27 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
             </div>
             <Button asChild className="bg-[#1f8e5b] text-white hover:bg-[#18764b]">
               <Link href="/dashboard/dominio">Cadastrar domínio agora</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {shouldShowUpgradePrompt ? (
+        <Card className="border-[#ead8cc] bg-gradient-to-r from-[#fff8f2] to-white">
+          <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ffe7dc] text-[#b55334]">
+                <Globe2 className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-[#3c2b24]">Adquira o plano premium</p>
+                <p className="mt-1 text-sm text-gray-600">
+                  Veja as diferenças, o valor e ative o Lumie Exclusive para liberar domínio personalizado.
+                </p>
+              </div>
+            </div>
+            <Button asChild className="bg-[#8e3d2c] text-white hover:bg-[#7a3426]">
+              <Link href="/tarifas">Ver planos</Link>
             </Button>
           </CardContent>
         </Card>

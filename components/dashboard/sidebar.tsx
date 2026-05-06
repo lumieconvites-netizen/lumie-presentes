@@ -39,19 +39,22 @@ function SidebarNav({
   limitedMode,
   canViewBankInLimitedMode,
   canViewSettingsInLimitedMode,
+  showDomainItem,
 }: {
   pathname: string;
   onNavigate?: () => void;
   limitedMode?: boolean;
   canViewBankInLimitedMode?: boolean;
   canViewSettingsInLimitedMode?: boolean;
+  showDomainItem?: boolean;
 }) {
+  const visibleItems = menuItems.filter((item) => showDomainItem || item.href !== '/dashboard/dominio');
   const limitedItems = menuItems.filter((item) =>
     ['/dashboard/presentes', '/dashboard/editor', '/dashboard/rsvp'].includes(item.href) ||
     (canViewBankInLimitedMode && item.href === '/dashboard/banco') ||
     (canViewSettingsInLimitedMode && item.href === '/dashboard/configuracoes')
   );
-  const items = limitedMode ? limitedItems : menuItems;
+  const items = limitedMode ? limitedItems : visibleItems;
   return (
     <nav className="flex-1 p-4 space-y-1">
       {items.map((item) => {
@@ -86,10 +89,12 @@ export default function DashboardSidebar({
   limitedMode = false,
   canViewBankInLimitedMode = false,
   canViewSettingsInLimitedMode = false,
+  showDomainItem = true,
 }: {
   limitedMode?: boolean;
   canViewBankInLimitedMode?: boolean;
   canViewSettingsInLimitedMode?: boolean;
+  showDomainItem?: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -132,6 +137,7 @@ export default function DashboardSidebar({
           limitedMode={limitedMode}
           canViewBankInLimitedMode={canViewBankInLimitedMode}
           canViewSettingsInLimitedMode={canViewSettingsInLimitedMode}
+          showDomainItem={showDomainItem}
         />
       </aside>
     </>

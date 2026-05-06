@@ -6,6 +6,7 @@ import AffiliateLimitedGuard from '@/components/dashboard/affiliate-limited-guar
 import { UserProviderGate } from '@/components/providers/user-provider-gate';
 import { getPrimaryGiftListIdForUser } from '@/lib/primary-gift-list';
 import { prisma } from '@/lib/prisma';
+import { resolveEffectivePlan } from '@/lib/plans';
 
 export default async function DashboardLayout({
   children,
@@ -42,6 +43,12 @@ export default async function DashboardLayout({
   const isLimitedMode = isAffiliateLimitedMode || isEmployeeLimitedMode;
   const canViewBankInLimitedMode = isAffiliateLimitedMode || isEmployeeLimitedMode;
   const canViewSettingsInLimitedMode = isEmployeeLimitedMode;
+  const planUser = await prisma.user.findUnique({
+    where: { id: ctx.effectiveUserId },
+    select: { plan: true, planExpiresAt: true },
+  });
+  const effectivePlan = resolveEffectivePlan(planUser);
+  const showDomainItem = effectivePlan === 'PREMIUM';
 
   if (!isLimitedMode && ctx.effectiveUser.role === 'PARTNER') {
     redirect('/parceiro');
@@ -62,6 +69,7 @@ export default async function DashboardLayout({
           limitedMode={isLimitedMode}
           canViewBankInLimitedMode={canViewBankInLimitedMode}
           canViewSettingsInLimitedMode={canViewSettingsInLimitedMode}
+          showDomainItem={showDomainItem}
         />
         <div className="flex-1 min-w-0 flex flex-col">
           <DashboardHeader

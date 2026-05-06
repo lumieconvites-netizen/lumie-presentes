@@ -1,5 +1,9 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Crown, Gift, Globe2, HelpCircle, Shield, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const freeFeatures = [
   'Lista de presentes online',
@@ -14,9 +18,7 @@ const exclusiveFeatures = [
   'Tudo do plano gratuito',
   'Domínio personalizado por 1 ano',
   'Taxa reduzida nos presentes',
-  'Experiência mais exclusiva para o evento',
-  'Área de domínio no dashboard',
-  'Suporte para ativação do endereço',
+  'Suporte exclusivo com a nossa equipe',
 ];
 
 const faqs = [
@@ -34,20 +36,54 @@ const faqs = [
   },
   {
     q: 'Posso escolher quem paga a taxa?',
-    a: 'Sim. Você pode repassar a taxa ao convidado ou assumir o custo no valor recebido.',
+    a: 'Sim. Você pode repassar a taxa para o convidado ou assumir o custo no valor recebido.',
   },
 ];
 
-function PlanFeature({ children }: { children: string }) {
+type PlanKey = 'FREE' | 'PREMIUM';
+
+const feeExamples: Record<
+  PlanKey,
+  {
+    passToGuest: { title: string; text: string };
+    absorb: { title: string; text: string };
+  }
+> = {
+  FREE: {
+    passToGuest: {
+      title: 'Repassar ao convidado',
+      text: 'Exemplo no Gratuito: presente de R$ 100,00 vira R$ 106,99 para o convidado.',
+    },
+    absorb: {
+      title: 'Assumir a taxa',
+      text: 'Exemplo no Gratuito: presente de R$ 100,00 gera repasse de R$ 93,01.',
+    },
+  },
+  PREMIUM: {
+    passToGuest: {
+      title: 'Repassar ao convidado',
+      text: 'Exemplo no Exclusive: presente de R$ 100,00 vira R$ 103,69 para o convidado.',
+    },
+    absorb: {
+      title: 'Assumir a taxa',
+      text: 'Exemplo no Exclusive: presente de R$ 100,00 gera repasse de R$ 96,31.',
+    },
+  },
+};
+
+function PlanFeature({ children, dark = false }: { children: string; dark?: boolean }) {
   return (
     <div className="flex items-start gap-3">
-      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#1f8e5b]" />
-      <p className="text-sm text-[#554840]">{children}</p>
+      <CheckCircle2 className={cn('mt-0.5 h-5 w-5 shrink-0', dark ? 'text-[#9df0bb]' : 'text-[#1f8e5b]')} />
+      <p className={cn('text-sm', dark ? 'text-[#f4e8e1]' : 'text-[#554840]')}>{children}</p>
     </div>
   );
 }
 
 export default function PricingPage() {
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>('FREE');
+  const selectedExample = feeExamples[selectedPlan];
+
   return (
     <main className="bg-[#f8f2ed] text-[#2b2422]">
       <section className="border-b border-[#ead6c8] bg-[#fffaf6]">
@@ -147,10 +183,9 @@ export default function PricingPage() {
 
                 <div className="mt-6 space-y-3">
                   {exclusiveFeatures.map((item) => (
-                    <div key={item} className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#9df0bb]" />
-                      <p className="text-sm text-[#f4e8e1]">{item}</p>
-                    </div>
+                    <PlanFeature key={item} dark>
+                      {item}
+                    </PlanFeature>
                   ))}
                 </div>
 
@@ -183,24 +218,51 @@ export default function PricingPage() {
               </div>
             </div>
 
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedPlan('FREE')}
+                className={cn(
+                  'rounded-full border px-4 py-2 text-sm font-medium transition',
+                  selectedPlan === 'FREE'
+                    ? 'border-[#c65a3a] bg-[#c65a3a] text-white'
+                    : 'border-[#e5d2c5] bg-white text-[#6a544a] hover:bg-[#fff3ea]'
+                )}
+              >
+                Ver taxas do Gratuito
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedPlan('PREMIUM')}
+                className={cn(
+                  'rounded-full border px-4 py-2 text-sm font-medium transition',
+                  selectedPlan === 'PREMIUM'
+                    ? 'border-[#3a2d28] bg-[#3a2d28] text-white'
+                    : 'border-[#e5d2c5] bg-white text-[#6a544a] hover:bg-[#fff3ea]'
+                )}
+              >
+                Ver taxas do Exclusive
+              </button>
+            </div>
+
             <div className="mt-8 grid gap-5 md:grid-cols-2">
               <div className="rounded-2xl border border-[#e7d3c6] bg-white p-6">
-                <h3 className="font-display text-2xl text-foreground">Repassar ao convidado</h3>
+                <h3 className="font-display text-2xl text-foreground">{selectedExample.passToGuest.title}</h3>
                 <p className="mt-3 text-[#615047]">
                   O convidado paga o valor do presente com a taxa aplicada, e você recebe o valor cheio do presente.
                 </p>
                 <div className="mt-5 rounded-xl border border-[#ead7ca] bg-[#fff8f3] p-4 text-sm text-[#5f4b42]">
-                  Exemplo no Gratuito: presente de R$ 100,00 vira R$ 106,99 para o convidado.
+                  {selectedExample.passToGuest.text}
                 </div>
               </div>
 
               <div className="rounded-2xl border border-[#e7d3c6] bg-white p-6">
-                <h3 className="font-display text-2xl text-foreground">Assumir a taxa</h3>
+                <h3 className="font-display text-2xl text-foreground">{selectedExample.absorb.title}</h3>
                 <p className="mt-3 text-[#615047]">
                   O convidado paga apenas o valor do presente, e a taxa é descontada no repasse.
                 </p>
                 <div className="mt-5 rounded-xl border border-[#ead7ca] bg-[#fff8f3] p-4 text-sm text-[#5f4b42]">
-                  Exemplo no Exclusive: presente de R$ 100,00 gera repasse de R$ 96,31.
+                  {selectedExample.absorb.text}
                 </div>
               </div>
             </div>
