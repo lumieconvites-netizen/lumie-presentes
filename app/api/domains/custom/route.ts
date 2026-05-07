@@ -4,6 +4,7 @@ import { getActingUserContext } from "@/lib/acting-user";
 import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 import { buildDomainSuggestions, normalizeSupportedDomain } from "@/lib/custom-domains";
 import {
+  ensurePremiumDomainEntitlementForUser,
   getDomainEntitlementForUser,
   markExpiredDomainEntitlements,
   reserveDomainEntitlementForUser,
@@ -35,6 +36,9 @@ async function getDomainContext() {
 export async function GET() {
   const data = await getDomainContext();
   if (!data) return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+  if (data.effectivePlan === "PREMIUM") {
+    await ensurePremiumDomainEntitlementForUser(data.ctx.effectiveUserId);
+  }
   await markExpiredDomainEntitlements(data.ctx.effectiveUserId);
 
   let customDomain = data.giftListId
@@ -79,6 +83,7 @@ export async function POST(request: Request) {
   if (data.effectivePlan !== "PREMIUM") {
     return NextResponse.json({ error: "Dominio personalizado esta disponivel apenas no plano Premium." }, { status: 403 });
   }
+  await ensurePremiumDomainEntitlementForUser(data.ctx.effectiveUserId);
   await markExpiredDomainEntitlements(data.ctx.effectiveUserId);
 
   const body = await request.json().catch(() => null);
