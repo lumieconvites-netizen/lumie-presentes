@@ -12,6 +12,7 @@ const PIX_METHODS = ["pix", "PIX"];
 const PAGARME_PIX_PERCENT = 1.09;
 const PAGARME_CARD_PERCENT = 3.29;
 const CARD_LIQUIDATION_WINDOW_DAYS = 45;
+const GATEWAY_SPLIT_LOOKUP_TIMEOUT_MS = 3500;
 
 function cardPaymentMethodWhere() {
   return {
@@ -110,6 +111,15 @@ function extractGatewaySplitSnapshot(payload: any): null | {
   return null;
 }
 
+async function getOrderWithTimeout(orderId: string) {
+  return Promise.race([
+    getOrder(orderId),
+    new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`Timeout ao ler pedido ${orderId} na Pagar.me`)), GATEWAY_SPLIT_LOOKUP_TIMEOUT_MS);
+    }),
+  ]);
+}
+
 function resolveFeePercentages(paymentMethod: "PIX" | "CREDIT_CARD", plan: "FREE" | "PREMIUM") {
   const networkFee = resolveNetworkFeePercent(paymentMethod, plan);
   const defaultProcessingFee = paymentMethod === "CREDIT_CARD" ? 3.29 : 1.09;
@@ -204,6 +214,7 @@ export async function GET(request: Request) {
   const partnerId = (searchParams.get("partnerId") ?? "").trim();
   const ambassadorId = (searchParams.get("ambassadorId") ?? "").trim();
 
+  try {
   try {
     await reconcileRecentPendingOrders({
       throttleKey: "admin-financeiro",
@@ -388,7 +399,7 @@ export async function GET(request: Request) {
     let split = calculatedSplit;
     if (order.pagarmeOrderId) {
       try {
-        const gatewayOrder = await getOrder(order.pagarmeOrderId);
+        const gatewayOrder = await getOrderWithTimeout(order.pagarmeOrderId);
         const gatewaySplit = extractGatewaySplitSnapshot(gatewayOrder);
         if (gatewaySplit) {
           split = gatewaySplit;
@@ -566,4 +577,8 @@ export async function GET(request: Request) {
     pendingCards: normalizedPendingCards,
     orders: normalizedOrders.slice(0, 200),
   });
+  } catch (error) {
+    console.error("Falha ao carregar admin/financeiro:", error);
+    return NextResponse.json({ error: "Erro ao carregar financeiro." }, { status: 500 });
+  }
 }

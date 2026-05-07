@@ -73,6 +73,16 @@ type FinanceResponse = {
 const brl = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const dateBr = (value?: string | null) => (value ? new Date(value).toLocaleDateString('pt-BR') : '-');
 
+async function parseJsonSafe(res: Response) {
+  const text = await res.text().catch(() => '');
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminFinanceiroPage() {
   const [period, setPeriod] = useState<PeriodFilter>('total');
   const [method, setMethod] = useState<MethodFilter>('all');
@@ -96,8 +106,9 @@ export default function AdminFinanceiroPage() {
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/financeiro?${query}`, { cache: 'no-store' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || 'Erro ao carregar financeiro');
+      const json = await parseJsonSafe(res);
+      if (!res.ok) throw new Error(json?.error || `Erro ao carregar financeiro (${res.status})`);
+      if (!json) throw new Error('A API do financeiro retornou uma resposta vazia.');
       setData(json);
     } catch (error: any) {
       alert(error?.message || 'Erro ao carregar financeiro');
