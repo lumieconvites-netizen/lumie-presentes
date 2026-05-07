@@ -4,6 +4,7 @@ import { getPrimaryGiftListIdForUser } from '@/lib/primary-gift-list';
 import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
 import DashboardPageClient, { type DashboardData } from '@/components/dashboard/dashboard-page-client';
 import { resolveEffectivePlan } from '@/lib/plans';
+import { buildGiftListPublicUrls } from '@/lib/public-url';
 
 export default async function DashboardPage() {
   const ctx = await getActingUserContext();
@@ -113,6 +114,10 @@ export default async function DashboardPage() {
           ...giftList,
           plan: resolveEffectivePlan(userPlan),
           customDomain,
+          publicUrl: buildGiftListPublicUrls(
+            giftList.slug,
+            customDomain?.status === 'ACTIVE' ? customDomain.domain : null
+          ).siteUrl,
           summary: {
             totalGifts,
             activeGifts,

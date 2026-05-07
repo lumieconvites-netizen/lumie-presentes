@@ -9,6 +9,7 @@ import {
 import { getActingUserContext } from "@/lib/acting-user";
 import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 import { resolveEffectivePlan, resolvePlatformFeePercent } from "@/lib/plans";
+import { buildGiftListPublicUrls } from "@/lib/public-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,7 +57,8 @@ export async function GET(req: Request) {
     }
 
     if (view === "editor") {
-      const editorPayload = await prisma.giftList.findUnique({
+      const [editorPayload, activeCustomDomain] = await Promise.all([
+        prisma.giftList.findUnique({
         where: { id: giftList.id },
         select: {
           id: true,
@@ -87,20 +89,31 @@ export async function GET(req: Request) {
             },
           },
         },
-      });
+        }),
+        prisma.customDomain.findFirst({
+          where: { giftListId: giftList.id, status: "ACTIVE" },
+          orderBy: { createdAt: "desc" },
+          select: { domain: true },
+        }),
+      ]);
 
-      return NextResponse.json(editorPayload ?? giftList);
+      return NextResponse.json({
+        ...(editorPayload ?? giftList),
+        publicUrls: buildGiftListPublicUrls(giftList.slug, activeCustomDomain?.domain ?? null),
+      });
     }
 
     if (view === "header") {
-      const headerPayload = await prisma.giftList.findUnique({
-        where: { id: giftList.id },
-        select: {
-          id: true,
-          slug: true,
-        },
+      const activeCustomDomain = await prisma.customDomain.findFirst({
+        where: { giftListId: giftList.id, status: "ACTIVE" },
+        orderBy: { createdAt: "desc" },
+        select: { domain: true },
       });
-      return NextResponse.json(headerPayload ?? { id: giftList.id, slug: giftList.slug });
+      return NextResponse.json({
+        id: giftList.id,
+        slug: giftList.slug,
+        publicUrl: buildGiftListPublicUrls(giftList.slug, activeCustomDomain?.domain ?? null).siteUrl,
+      });
     }
 
     if (view === "presentes") {

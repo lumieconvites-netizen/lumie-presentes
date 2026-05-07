@@ -38,6 +38,7 @@ export default function ConfiguracoesPage() {
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [slugMessage, setSlugMessage] = useState('');
   const [copyingUrl, setCopyingUrl] = useState(false);
+  const [activeCustomDomain, setActiveCustomDomain] = useState<string | null>(null);
 
   useEffect(() => {
     if (sessionImage) setPhoto(sessionImage);
@@ -96,6 +97,24 @@ export default function ConfiguracoesPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/domains/custom', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data?.customDomain?.status === 'ACTIVE' && data.customDomain.domain) {
+          setActiveCustomDomain(String(data.customDomain.domain));
+        }
+      })
+      .catch(() => null);
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -289,7 +308,9 @@ export default function ConfiguracoesPage() {
     []
   );
   const previewSlug = slugInput.trim() || giftListSlug;
-  const publicUrl = `${publicBase}/site/${previewSlug || 'seu-slug'}`;
+  const publicUrl = activeCustomDomain
+    ? `https://${activeCustomDomain}`
+    : `${publicBase}/site/${previewSlug || 'seu-slug'}`;
 
   const handleCopyUrl = async () => {
     try {

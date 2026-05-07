@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getPublicBaseUrl, getPublicCheckInUrl, normalizeCheckInSlug } from "@/lib/rsvp";
 import { getActingUserContext } from "@/lib/acting-user";
 import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
+import { buildGiftListPublicUrls } from "@/lib/public-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -82,6 +83,14 @@ async function getCheckInGuestsSafely(giftListId: string) {
   }
 }
 
+async function getActiveCustomDomain(giftListId: string) {
+  return prisma.customDomain.findFirst({
+    where: { giftListId, status: "ACTIVE" },
+    orderBy: { createdAt: "desc" },
+    select: { domain: true },
+  });
+}
+
 export async function GET(request: Request) {
   try {
     const ctx = await getActingUserContext();
@@ -112,16 +121,17 @@ export async function GET(request: Request) {
     const resolvedView = parsedUrl.searchParams.get("view");
 
     if (resolvedView === "dashboard") {
-      const [settings, metrics] = await Promise.all([
+      const [settings, metrics, activeCustomDomain] = await Promise.all([
         prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
         getRsvpMetrics(giftList.id),
+        getActiveCustomDomain(giftList.id),
       ]);
       const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
 
       return NextResponse.json({
         list: giftList,
         publicBaseUrl: getPublicBaseUrl(),
-        publicRsvpUrl: `${getPublicBaseUrl()}/site/${encodeURIComponent(giftList.slug)}/confirmar-presenca`,
+        publicRsvpUrl: buildGiftListPublicUrls(giftList.slug, activeCustomDomain?.domain ?? null).rsvpUrl,
         publicCheckInUrl: getPublicCheckInUrl(resolvedCheckInSlug),
         settings: settings
           ? { ...settings, checkInSlug: settings.checkInSlug || resolvedCheckInSlug }
@@ -144,17 +154,18 @@ export async function GET(request: Request) {
 
     if (resolvedView === "checkin") {
       const includeGuests = parsedUrl.searchParams.get("includeGuests") === "1";
-      const [settings, metrics, guests] = await Promise.all([
+      const [settings, metrics, guests, activeCustomDomain] = await Promise.all([
         prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
         getCheckInMetrics(giftList.id),
         includeGuests ? getCheckInGuestsSafely(giftList.id) : Promise.resolve([]),
+        getActiveCustomDomain(giftList.id),
       ]);
       const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
 
       return NextResponse.json({
         list: giftList,
         publicBaseUrl: getPublicBaseUrl(),
-        publicRsvpUrl: `${getPublicBaseUrl()}/site/${encodeURIComponent(giftList.slug)}/confirmar-presenca`,
+        publicRsvpUrl: buildGiftListPublicUrls(giftList.slug, activeCustomDomain?.domain ?? null).rsvpUrl,
         publicCheckInUrl: getPublicCheckInUrl(resolvedCheckInSlug),
         settings: settings
           ? { ...settings, checkInSlug: settings.checkInSlug || resolvedCheckInSlug }
@@ -177,7 +188,7 @@ export async function GET(request: Request) {
     }
 
     if (resolvedView === "config") {
-      const [settings, guests] = await Promise.all([
+      const [settings, guests, activeCustomDomain] = await Promise.all([
         prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
         prisma.rsvpGuest.findMany({
           where: { giftListId: giftList.id },
@@ -198,6 +209,7 @@ export async function GET(request: Request) {
             createdAt: true,
           },
         }),
+        getActiveCustomDomain(giftList.id),
       ]);
 
       const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
@@ -205,7 +217,7 @@ export async function GET(request: Request) {
       return NextResponse.json({
         list: giftList,
         publicBaseUrl: getPublicBaseUrl(),
-        publicRsvpUrl: `${getPublicBaseUrl()}/site/${encodeURIComponent(giftList.slug)}/confirmar-presenca`,
+        publicRsvpUrl: buildGiftListPublicUrls(giftList.slug, activeCustomDomain?.domain ?? null).rsvpUrl,
         publicCheckInUrl: getPublicCheckInUrl(resolvedCheckInSlug),
         settings: settings
           ? { ...settings, checkInSlug: settings.checkInSlug || resolvedCheckInSlug }
@@ -226,7 +238,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const [settings, guests, metrics] = await Promise.all([
+    const [settings, guests, metrics, activeCustomDomain] = await Promise.all([
       prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
       prisma.rsvpGuest.findMany({
         where: { giftListId: giftList.id },
@@ -248,6 +260,7 @@ export async function GET(request: Request) {
         },
       }),
       getRsvpMetrics(giftList.id),
+      getActiveCustomDomain(giftList.id),
     ]);
 
     const resolvedCheckInSlug = settings?.checkInSlug || normalizeCheckInSlug(giftList.slug);
@@ -255,7 +268,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       list: giftList,
       publicBaseUrl: getPublicBaseUrl(),
-      publicRsvpUrl: `${getPublicBaseUrl()}/site/${encodeURIComponent(giftList.slug)}/confirmar-presenca`,
+      publicRsvpUrl: buildGiftListPublicUrls(giftList.slug, activeCustomDomain?.domain ?? null).rsvpUrl,
       publicCheckInUrl: getPublicCheckInUrl(resolvedCheckInSlug),
       settings: settings
         ? { ...settings, checkInSlug: settings.checkInSlug || resolvedCheckInSlug }

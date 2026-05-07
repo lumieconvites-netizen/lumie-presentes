@@ -304,9 +304,10 @@ export default function PageBuilder() {
   }, [giftList, listGifts, pageBlocks, theme]);
 
   const siteHref = useMemo(() => {
+    if (giftList?.publicUrls?.siteUrl) return giftList.publicUrls.siteUrl;
     if (!giftList?.slug) return '/site';
     return `/site/${encodeURIComponent(giftList.slug)}`;
-  }, [giftList?.slug]);
+  }, [giftList?.publicUrls?.siteUrl, giftList?.slug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -638,7 +639,7 @@ export default function PageBuilder() {
   };
 
   const copyPublishedLink = async () => {
-    const fullUrl = `${window.location.origin}${siteHref}`;
+    const fullUrl = /^https?:\/\//i.test(siteHref) ? siteHref : `${window.location.origin}${siteHref}`;
     await navigator.clipboard.writeText(fullUrl);
       alert('Link copiado.');
   };

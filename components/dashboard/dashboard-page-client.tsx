@@ -56,6 +56,7 @@ export type DashboardData = {
   description: string | null;
   plan?: 'FREE' | 'PREMIUM';
   customDomain?: { domain: string; status: string } | null;
+  publicUrl?: string;
   summary: DashboardSummary;
 };
 
@@ -119,7 +120,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
   const withdrawFee = WITHDRAW_FEE_CENTS / 100;
   const collectedTotal = availableNow + nonFailedTransferAmount + nonFailedTransferCount * withdrawFee;
 
-  const publicLink = data?.slug ? `/site/${data.slug}` : '/site';
+  const publicLink = data?.publicUrl || (data?.slug ? `/site/${data.slug}` : '/site');
   const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);
   const shouldShowPremiumDomainPrompt = data?.plan === 'PREMIUM' && !data?.customDomain;
   const shouldShowUpgradePrompt = data?.plan === 'FREE';
@@ -129,8 +130,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
 
     try {
       setCopying(true);
-      const url = `${window.location.origin}/site/${data.slug}`;
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(data.publicUrl || `${window.location.origin}/site/${data.slug}`);
       alert('Link copiado com sucesso.');
     } catch {
       alert('Não foi possível copiar o link agora.');

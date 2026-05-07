@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { getActingUserContext } from '@/lib/acting-user';
 import { getPrimaryGiftListIdForUser } from '@/lib/primary-gift-list';
 import { getPublicBaseUrl, getPublicCheckInUrl, normalizeCheckInSlug } from '@/lib/rsvp';
+import { buildGiftListPublicUrls } from '@/lib/public-url';
 import DashboardRsvpPageClient, { type OverviewResponse } from '@/components/dashboard/rsvp-page-client';
 
 export default async function DashboardRsvpPage() {
@@ -23,7 +24,7 @@ export default async function DashboardRsvpPage() {
       });
 
       if (giftList) {
-        const [settings, totalGuests, checkedIn, grouped] = await Promise.all([
+        const [settings, totalGuests, checkedIn, grouped, activeCustomDomain] = await Promise.all([
           prisma.rsvpSettings.findUnique({ where: { giftListId: giftList.id } }),
           prisma.rsvpGuest.count({ where: { giftListId: giftList.id } }),
           prisma.rsvpGuest.count({ where: { giftListId: giftList.id, checkedInAt: { not: null } } }),
@@ -31,6 +32,11 @@ export default async function DashboardRsvpPage() {
             by: ['status'],
             where: { giftListId: giftList.id },
             _count: { _all: true },
+          }),
+          prisma.customDomain.findFirst({
+            where: { giftListId: giftList.id, status: 'ACTIVE' },
+            orderBy: { createdAt: 'desc' },
+            select: { domain: true },
           }),
         ]);
 
@@ -46,7 +52,7 @@ export default async function DashboardRsvpPage() {
 
         initialData = {
           list: giftList,
-          publicRsvpUrl: `${getPublicBaseUrl()}/site/${encodeURIComponent(giftList.slug)}/confirmar-presenca`,
+          publicRsvpUrl: buildGiftListPublicUrls(giftList.slug, activeCustomDomain?.domain ?? null).rsvpUrl,
           publicCheckInUrl: getPublicCheckInUrl(resolvedCheckInSlug),
           settings: {
             enabled: settings?.enabled ?? false,

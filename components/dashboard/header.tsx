@@ -56,6 +56,7 @@ export default function DashboardHeader({
 
   const [impersonation, setImpersonation] = useState<ImpersonationData | null>(null);
   const [siteSlug, setSiteSlug] = useState(initialSiteSlug);
+  const [siteHref, setSiteHref] = useState(initialSiteSlug ? `/site/${encodeURIComponent(initialSiteSlug)}` : '/site');
   const [notifications, setNotifications] = useState<NotificationSummary>({
     unreadCount: 0,
     latestEventAt: null,
@@ -110,6 +111,7 @@ export default function DashboardHeader({
       .then((res) => res.json())
       .then((data) => {
         if (data?.slug) setSiteSlug(String(data.slug));
+        if (data?.publicUrl) setSiteHref(String(data.publicUrl));
       })
       .catch(() => null);
   }, [initialSiteSlug]);
@@ -349,7 +351,7 @@ export default function DashboardHeader({
               </DropdownMenuItem>
               {!limitedMode ? (
                 <DropdownMenuItem asChild>
-                  <Link href={siteSlug ? `/site/${encodeURIComponent(siteSlug)}` : '/site'} className="cursor-pointer">
+                  <Link href={siteHref} className="cursor-pointer">
                     <Globe className="w-4 h-4 mr-2" />
                     Ver Site
                   </Link>
