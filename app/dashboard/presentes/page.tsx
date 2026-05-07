@@ -109,6 +109,7 @@ export default function PresentesDashboard() {
 
   const [giftListId, setGiftListId] = useState('');
   const [giftListSlug, setGiftListSlug] = useState('');
+  const [publicGiftsUrl, setPublicGiftsUrl] = useState('/site/presentes');
   const [giftListFeeMode, setGiftListFeeMode] = useState<'PASS_TO_GUEST' | 'ABSORB'>('PASS_TO_GUEST');
   const [feePercentPix, setFeePercentPix] = useState(7.99);
 
@@ -198,6 +199,7 @@ export default function PresentesDashboard() {
 
       setGiftListId(glData.id);
       setGiftListSlug(glData.slug || '');
+      setPublicGiftsUrl(glData?.publicUrls?.giftsUrl || (glData.slug ? `/site/${encodeURIComponent(glData.slug)}/presentes` : '/site/presentes'));
       setGiftListFeeMode(glData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
       setFeePercentPix(Number(glData?.feePercentPix ?? 7.99));
       setBankAccountConfigured(Boolean(glData?.bankAccountConfigured));
@@ -813,7 +815,7 @@ export default function PresentesDashboard() {
               <Input type="search" placeholder="Buscar presentes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
             <Button variant="outline" className="w-full sm:w-auto" asChild>
-              <Link href={giftListSlug ? `/site/${encodeURIComponent(giftListSlug)}/presentes` : '/site/presentes'} target="_blank">
+              <Link href={publicGiftsUrl} target="_blank">
                 Ver página de presentes
               </Link>
             </Button>

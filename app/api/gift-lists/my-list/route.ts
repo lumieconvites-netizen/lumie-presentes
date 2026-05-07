@@ -117,7 +117,7 @@ export async function GET(req: Request) {
     }
 
     if (view === "presentes") {
-      const [presentesPayload, recipient, userPlan] = await Promise.all([
+      const [presentesPayload, recipient, userPlan, activeCustomDomain] = await Promise.all([
         prisma.giftList.findUnique({
           where: { id: giftList.id },
           select: {
@@ -158,6 +158,11 @@ export async function GET(req: Request) {
           where: { id: ctx.effectiveUserId },
           select: { plan: true, planExpiresAt: true },
         }),
+        prisma.customDomain.findFirst({
+          where: { giftListId: giftList.id, status: "ACTIVE" },
+          orderBy: { createdAt: "desc" },
+          select: { domain: true },
+        }),
       ]);
       const effectivePlan = resolveEffectivePlan(userPlan);
 
@@ -167,6 +172,7 @@ export async function GET(req: Request) {
         feePercentPix: resolvePlatformFeePercent("PIX", effectivePlan),
         feePercentCreditCard: resolvePlatformFeePercent("CREDIT_CARD", effectivePlan),
         bankAccountConfigured: hasConfiguredBankAccount(recipient?.bankAccount),
+        publicUrls: buildGiftListPublicUrls(giftList.slug, activeCustomDomain?.domain ?? null),
       });
     }
 

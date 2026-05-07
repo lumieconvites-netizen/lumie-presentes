@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Globe2, Loader2, Search, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Copy, ExternalLink, Globe2, Loader2, Search, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -75,6 +75,7 @@ export default function CustomDomainPage() {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [savingDomain, setSavingDomain] = useState<string | null>(null);
+  const [copyingDomainUrl, setCopyingDomainUrl] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -146,6 +147,20 @@ export default function CustomDomainPage() {
 
   const enabled = Boolean(state?.enabled);
   const configured = Boolean(state?.vercelConfigured);
+  const activeDomain = state?.customDomain?.status === 'ACTIVE' ? state.customDomain.domain : null;
+  const activeDomainUrl = activeDomain ? `https://${activeDomain}` : null;
+
+  async function copyActiveDomainUrl() {
+    if (!activeDomainUrl) return;
+    try {
+      setCopyingDomainUrl(true);
+      await navigator.clipboard.writeText(activeDomainUrl);
+    } catch {
+      alert('Não foi possível copiar o link agora.');
+    } finally {
+      setTimeout(() => setCopyingDomainUrl(false), 900);
+    }
+  }
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -175,27 +190,29 @@ export default function CustomDomainPage() {
         </Card>
       ) : (
         <>
-          <Card className="border-[#ead8cc] bg-[#fffdf9]">
-            <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="font-semibold text-[#3c2b24]">1 domínio incluído no seu Lumie Exclusive</p>
-                <p className="mt-1 text-sm text-gray-600">
+          {!activeDomain ? (
+            <Card className="border-[#ead8cc] bg-[#fffdf9]">
+              <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-semibold text-[#3c2b24]">1 domínio incluído no seu Lumie Exclusive</p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {state?.entitlement?.hasReservedSlot
+                      ? 'Seu direito ao domínio já está reservado. O próximo passo será conectar a compra automática com o registrador.'
+                      : state?.entitlement?.hasAvailableSlot
+                        ? 'Seu plano já liberou 1 domínio para reservar. Escolha uma opção disponível abaixo.'
+                        : 'No momento, não encontramos um direito de domínio disponível para esta conta.'}
+                  </p>
+                </div>
+                <Badge variant="outline">
                   {state?.entitlement?.hasReservedSlot
-                    ? 'Seu direito ao domínio já está reservado. O próximo passo será conectar a compra automática com o registrador.'
+                    ? 'Direito reservado'
                     : state?.entitlement?.hasAvailableSlot
-                      ? 'Seu plano já liberou 1 domínio para reservar. Escolha uma opção disponível abaixo.'
-                      : 'No momento, não encontramos um direito de domínio disponível para esta conta.'}
-                </p>
-              </div>
-              <Badge variant="outline">
-                {state?.entitlement?.hasReservedSlot
-                  ? 'Direito reservado'
-                  : state?.entitlement?.hasAvailableSlot
-                    ? '1 disponível'
-                    : 'Indisponível'}
-              </Badge>
-            </CardContent>
-          </Card>
+                      ? '1 disponível'
+                      : 'Indisponível'}
+                </Badge>
+              </CardContent>
+            </Card>
+          ) : null}
 
           {state?.customDomain ? (
             <Card className="border-[#d9eadf] bg-[#fbfffc]">
@@ -208,7 +225,23 @@ export default function CustomDomainPage() {
                   <p className="mt-1 text-sm text-gray-600">Status: {statusLabel(state.customDomain.status)}</p>
                   {state.customDomain.lastError ? <p className="mt-1 text-xs text-amber-700">{state.customDomain.lastError}</p> : null}
                 </div>
-                <Badge variant="outline">{statusLabel(state.customDomain.status)}</Badge>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  {activeDomainUrl ? (
+                    <>
+                      <Button type="button" variant="outline" size="sm" onClick={copyActiveDomainUrl}>
+                        <Copy className="mr-2 h-4 w-4" />
+                        {copyingDomainUrl ? 'Copiado!' : 'Copiar site'}
+                      </Button>
+                      <Button asChild type="button" size="sm" className="bg-[#8E3D2C] text-white hover:bg-[#753124]">
+                        <Link href={activeDomainUrl} target="_blank">
+                          <ExternalLink className="mr-2 h-4 w-4" />
+                          Abrir site
+                        </Link>
+                      </Button>
+                    </>
+                  ) : null}
+                  <Badge variant="outline">{statusLabel(state.customDomain.status)}</Badge>
+                </div>
               </CardContent>
             </Card>
           ) : null}
