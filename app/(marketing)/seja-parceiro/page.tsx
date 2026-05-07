@@ -13,12 +13,18 @@ import {
 
 const averageGiftsPerClient = 25;
 const averageGiftValue = 100;
+const partnerCommissionRate = 0.015;
+const partnerCommissionLabel = '1,5%';
 const clientsProjection = [1, 5, 15, 30, 60];
+
+function formatCurrency(value: number, options?: Intl.NumberFormatOptions) {
+  return value.toLocaleString('pt-BR', options);
+}
 
 const revenueExamples = clientsProjection.map((clientes) => {
   const mediaPresentesRecebidos = clientes * averageGiftsPerClient;
   const totalPresentes = mediaPresentesRecebidos * averageGiftValue;
-  const comissao = totalPresentes * 0.02;
+  const comissao = totalPresentes * partnerCommissionRate;
 
   return {
     clientes,
@@ -55,7 +61,7 @@ export default function SejaParceiroPage() {
               <p className="text-base md:text-lg text-[#5f534e] max-w-2xl">
                 A LUMIÊ transforma experiências e, agora, também transforma seus resultados. 💼🌷
                 <br />
-                Ao se tornar parceira, você recebe <strong>2% de comissão</strong> sobre todos os presentes convertidos em dinheiro nas listas dos seus clientes.
+                Ao se tornar parceira, você recebe <strong>{partnerCommissionLabel} de comissão</strong> sobre todos os presentes convertidos em dinheiro nas listas dos seus clientes.
               </p>
 
               <Button asChild size="lg" className="rounded-xl px-8 py-6 text-base">
@@ -107,7 +113,7 @@ export default function SejaParceiroPage() {
             <div className="rounded-2xl border border-[#eadacf] bg-[#fffaf6] p-7">
               <BadgeDollarSign className="w-8 h-8 text-primary mb-4" />
               <h3 className="font-display text-2xl text-[#2b2422] mb-2">3. Você recebe comissão.</h3>
-              <p className="text-[#61554f]">Ganhe 2% sobre os presentes convertidos em dinheiro nas listas indicadas.</p>
+              <p className="text-[#61554f]">Ganhe {partnerCommissionLabel} sobre os presentes convertidos em dinheiro nas listas indicadas.</p>
             </div>
           </div>
         </div>
@@ -163,7 +169,7 @@ export default function SejaParceiroPage() {
             <h2 className="font-display text-3xl md:text-4xl text-[#2b2422]">Projeção de faturamento do parceiro</h2>
           </div>
           <p className="text-[#685b55] text-sm md:text-base mb-8">
-            Cenários ilustrativos com média de {averageGiftsPerClient} presentes por cliente e ticket médio de R$ {averageGiftValue.toLocaleString('pt-BR')} por presente.
+            Cenários ilustrativos com média de {averageGiftsPerClient} presentes por cliente e ticket médio de R$ {formatCurrency(averageGiftValue)} por presente.
           </p>
 
           <div className="overflow-x-auto rounded-2xl border border-[#e3d2c6] bg-white">
@@ -173,16 +179,18 @@ export default function SejaParceiroPage() {
                   <th className="px-5 py-4 font-semibold">Clientes</th>
                   <th className="px-5 py-4 font-semibold">Média de presentes recebidos</th>
                   <th className="px-5 py-4 font-semibold">Total de presentes recebidos (R$)</th>
-                  <th className="px-5 py-4 font-semibold">Comissão (2%)</th>
+                  <th className="px-5 py-4 font-semibold">Comissão ({partnerCommissionLabel})</th>
                 </tr>
               </thead>
               <tbody>
                 {revenueExamples.map((item) => (
                   <tr key={item.clientes} className="border-t border-[#f0e2d8] text-[#5f534e]">
                     <td className="px-5 py-4">{item.clientes}</td>
-                    <td className="px-5 py-4">{item.mediaPresentesRecebidos} presentes (R$ {item.valorMedioPorPresente.toLocaleString('pt-BR')} cada)</td>
-                    <td className="px-5 py-4">R$ {item.totalPresentes.toLocaleString('pt-BR')}</td>
-                    <td className="px-5 py-4 font-semibold text-[#1e8a43]">R$ {item.comissao.toLocaleString('pt-BR')}</td>
+                    <td className="px-5 py-4">{item.mediaPresentesRecebidos} presentes (R$ {formatCurrency(item.valorMedioPorPresente)} cada)</td>
+                    <td className="px-5 py-4">R$ {formatCurrency(item.totalPresentes)}</td>
+                    <td className="px-5 py-4 font-semibold text-[#1e8a43]">
+                      R$ {formatCurrency(item.comissao, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
                   </tr>
                 ))}
               </tbody>
