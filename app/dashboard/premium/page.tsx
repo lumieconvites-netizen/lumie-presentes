@@ -129,11 +129,11 @@ function DesktopGuestPreview() {
 
         <div className="mx-auto overflow-hidden rounded-[20px] bg-[#1f1d1d] text-white shadow-[0_16px_24px_rgba(31,29,29,0.18)]">
           <div
-            className="h-[126px] bg-cover bg-center p-5"
+            className="h-[148px] bg-cover bg-center p-5"
             style={{ backgroundImage: "linear-gradient(to bottom, rgba(16,16,16,0.18), rgba(16,16,16,0.84)), url('/premium-mock-pres.png')" }}
           >
             <div className="flex h-full flex-col justify-end">
-              <p className="font-display text-[2.05rem]">Lista de Presentes</p>
+              <p className="font-display text-[2.05rem] leading-none">Lista de Presentes</p>
               <p className="mt-1.5 max-w-[420px] text-xs text-white/95">
                 Esta e nossa lista de presentes. Ficamos felizes em compartilhar esse momento com voce.
               </p>
@@ -193,7 +193,7 @@ function MobileGuestPreview() {
 
         <div className="space-y-4 bg-[#faeee3] p-3.5">
           <div className="text-center">
-            <p className="font-display text-[2rem] text-[#d29d2f]">Falta Pouco!</p>
+            <p className="font-display text-[1.7rem] text-[#d29d2f]">Falta Pouco!</p>
           </div>
 
           <div className="grid grid-cols-4 gap-1.5">
@@ -218,7 +218,7 @@ function MobileGuestPreview() {
               style={{ backgroundImage: "linear-gradient(to bottom, rgba(16,16,16,0.16), rgba(16,16,16,0.8)), url('/premium-mock-pres.png')" }}
             >
               <div className="flex h-full flex-col justify-end">
-                <p className="font-display text-[2rem] leading-none">Lista de Presentes</p>
+                <p className="font-display text-[1.55rem] leading-none">Lista de Presentes</p>
                 <p className="mt-1.5 max-w-[220px] text-[11px] leading-4 text-white/90">
                   Esta e nossa lista de presentes. Ficamos felizes em compartilhar esse momento com voce.
                 </p>
@@ -230,7 +230,7 @@ function MobileGuestPreview() {
           </div>
 
           <div className="px-2 pb-1 pt-3 text-center">
-            <p className="font-display text-[2.55rem] text-[#d29d2f]">A trajetoria</p>
+            <p className="font-display text-[2.1rem] text-[#d29d2f]">A trajetoria</p>
             <p className="mt-4 text-[13px] leading-7 text-[#8a5d32]">
               Sou feita de sentimentos intensos, de risadas sinceras e de uma fe enorme no futuro.
             </p>
