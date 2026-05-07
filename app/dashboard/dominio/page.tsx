@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -59,6 +59,15 @@ function statusLabel(status: DomainStatus['status']) {
   return 'Selecionado';
 }
 
+async function parseJsonSafe(response: Response) {
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function CustomDomainPage() {
   const [state, setState] = useState<DomainState | null>(null);
   const [query, setQuery] = useState('');
@@ -71,7 +80,7 @@ export default function CustomDomainPage() {
     setLoading(true);
     try {
       const response = await fetch('/api/domains/custom', { cache: 'no-store' });
-      const data = await response.json();
+      const data = await parseJsonSafe(response);
       if (!response.ok) throw new Error(data?.error || 'Erro ao carregar domínio');
       setState(data);
     } catch (error: any) {
@@ -94,7 +103,7 @@ export default function CustomDomainPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'search', query }),
       });
-      const data = await response.json();
+      const data = await parseJsonSafe(response);
       if (!response.ok) throw new Error(data?.error || 'Erro ao buscar domínios');
       setSuggestions(data.suggestions || []);
     } catch (error: any) {
@@ -112,7 +121,7 @@ export default function CustomDomainPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'select', domain }),
       });
-      const data = await response.json();
+      const data = await parseJsonSafe(response);
       if (!response.ok) throw new Error(data?.error || 'Erro ao selecionar domínio');
       await load();
     } catch (error: any) {
@@ -169,21 +178,21 @@ export default function CustomDomainPage() {
           <Card className="border-[#ead8cc] bg-[#fffdf9]">
             <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="font-semibold text-[#3c2b24]">1 domÃ­nio incluÃ­do no seu Lumie Exclusive</p>
+                <p className="font-semibold text-[#3c2b24]">1 domínio incluído no seu Lumie Exclusive</p>
                 <p className="mt-1 text-sm text-gray-600">
                   {state?.entitlement?.hasReservedSlot
-                    ? 'Seu direito ao domÃ­nio jÃ¡ estÃ¡ reservado. O prÃ³ximo passo serÃ¡ conectar a compra automÃ¡tica com o registrador.'
+                    ? 'Seu direito ao domínio já está reservado. O próximo passo será conectar a compra automática com o registrador.'
                     : state?.entitlement?.hasAvailableSlot
-                      ? 'Seu plano jÃ¡ liberou 1 domÃ­nio para reservar. Escolha uma opÃ§Ã£o disponÃ­vel abaixo.'
-                      : 'No momento, nÃ£o encontramos um direito de domÃ­nio disponÃ­vel para esta conta.'}
+                      ? 'Seu plano já liberou 1 domínio para reservar. Escolha uma opção disponível abaixo.'
+                      : 'No momento, não encontramos um direito de domínio disponível para esta conta.'}
                 </p>
               </div>
               <Badge variant="outline">
                 {state?.entitlement?.hasReservedSlot
                   ? 'Direito reservado'
                   : state?.entitlement?.hasAvailableSlot
-                    ? '1 disponÃ­vel'
-                    : 'IndisponÃ­vel'}
+                    ? '1 disponível'
+                    : 'Indisponível'}
               </Badge>
             </CardContent>
           </Card>
