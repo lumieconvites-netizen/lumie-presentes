@@ -94,6 +94,7 @@ export async function GET(request: Request) {
             id: true,
             title: true,
             slug: true,
+            feeMode: true,
             user: {
               select: {
                 id: true,
@@ -184,6 +185,7 @@ export async function GET(request: Request) {
       baseAmount,
       totalAmount,
       acquisitionSource: user.acquisitionSource,
+      feeMode: order.giftList.feeMode,
       plan: user,
       hasClientRecipient: clientRecipientReadyAtOrder,
       hasPartnerRecipient: partnerRecipientReadyAtOrder,

@@ -127,6 +127,7 @@ function calculateCommissionSplit(params: {
   baseAmount: number;
   totalAmount: number;
   acquisitionSource: string;
+  feeMode: 'PASS_TO_GUEST' | 'ABSORB';
   hasPartnerRecipient: boolean;
   hasAmbassadorRecipient: boolean;
   paymentMethod: 'PIX' | 'CREDIT_CARD';
@@ -153,8 +154,13 @@ function calculateCommissionSplit(params: {
   const ambassadorInCents = enableAmbassador ? roundCents((baseInCents * ambassadorFeePercentage) / 100) : 0;
   const platformCommercialPercentage = Math.max(networkFeePercentage - (enablePartner ? partnerFeePercentage : 0) - (enableAmbassador ? ambassadorFeePercentage : 0), 0);
   const platformGrossPercentage = platformCommercialPercentage + processingFeePercentage;
-  const platformInCents = roundCents((baseInCents * platformGrossPercentage) / 100);
-  const clientInCents = Math.max(totalInCents - platformInCents - partnerInCents - ambassadorInCents, 0);
+  let platformInCents = roundCents((baseInCents * platformGrossPercentage) / 100);
+  let clientInCents = Math.max(totalInCents - platformInCents - partnerInCents - ambassadorInCents, 0);
+
+  if (params.feeMode === 'PASS_TO_GUEST') {
+    platformInCents = Math.max(totalInCents - baseInCents - partnerInCents - ambassadorInCents, 0);
+    clientInCents = Math.max(totalInCents - platformInCents - partnerInCents - ambassadorInCents, 0);
+  }
 
   return {
     totalInCents,
@@ -337,6 +343,7 @@ export async function POST(request: Request) {
           baseAmount: calculation.baseAmount,
           totalAmount: calculation.totalAmount,
           acquisitionSource: gift.giftList.user.acquisitionSource,
+          feeMode: gift.giftList.feeMode,
           hasPartnerRecipient: isRealRecipientId(partnerRecipientId),
           hasAmbassadorRecipient: isRealRecipientId(ambassadorRecipientId),
           paymentMethod: data.paymentMethod,

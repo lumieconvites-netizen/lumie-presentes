@@ -125,6 +125,7 @@ function calculateSplitFromOrder(params: {
   baseAmount: number;
   totalAmount: number;
   acquisitionSource: string;
+  feeMode?: "PASS_TO_GUEST" | "ABSORB" | string | null;
   plan?: "FREE" | "PREMIUM";
   planExpiresAt?: Date | string | null;
   hasClientRecipient: boolean;
@@ -173,8 +174,13 @@ function calculateSplitFromOrder(params: {
     0
   );
   const platformGrossPercentage = platformCommercialPercentage + processingFee;
-  const platformInCents = roundCents((baseInCents * platformGrossPercentage) / 100);
-  const clientInCents = Math.max(totalInCents - platformInCents - partnerInCents - ambassadorInCents, 0);
+  let platformInCents = roundCents((baseInCents * platformGrossPercentage) / 100);
+  let clientInCents = Math.max(totalInCents - platformInCents - partnerInCents - ambassadorInCents, 0);
+
+  if (params.feeMode === "PASS_TO_GUEST") {
+    platformInCents = Math.max(totalInCents - baseInCents - partnerInCents - ambassadorInCents, 0);
+    clientInCents = Math.max(totalInCents - platformInCents - partnerInCents - ambassadorInCents, 0);
+  }
 
   return {
     splitApplied: true,
@@ -262,6 +268,7 @@ export async function GET(request: Request) {
             id: true,
             title: true,
             slug: true,
+            feeMode: true,
             user: {
               select: {
                 id: true,
@@ -369,6 +376,7 @@ export async function GET(request: Request) {
       baseAmount,
       totalAmount,
       acquisitionSource: user.acquisitionSource,
+      feeMode: order.giftList.feeMode,
       plan: user.plan,
       planExpiresAt: user.planExpiresAt,
       hasClientRecipient: isRealRecipientId(user.recipient?.pagarmeRecipientId),
