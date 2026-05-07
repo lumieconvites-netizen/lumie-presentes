@@ -16,6 +16,7 @@ import {
   Globe2,
   Heart,
   Loader2,
+  Menu,
   QrCode,
   ShieldCheck,
   Sparkles,
@@ -70,22 +71,22 @@ function formatDate(value?: string | null) {
 
 function DesktopGuestPreview() {
   return (
-    <div className="mx-auto hidden max-w-[900px] overflow-hidden rounded-[28px] border border-[#2f211c] bg-[#2f211c] shadow-[0_24px_44px_rgba(32,22,18,0.24)] lg:block">
-      <div className="border-b border-white/10 bg-[#2f362d] px-5 py-3">
+    <div className="mx-auto hidden max-w-[840px] overflow-hidden rounded-[26px] border border-[#2f211c] bg-[#2f211c] shadow-[0_20px_36px_rgba(32,22,18,0.22)] lg:block">
+      <div className="border-b border-white/10 bg-[#2f362d] px-4 py-2.5">
         <div className="flex items-center gap-3">
           <div className="flex gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-white/80" />
-            <span className="h-2.5 w-2.5 rounded-full bg-white/55" />
-            <span className="h-2.5 w-2.5 rounded-full bg-white/35" />
+            <span className="h-2 w-2 rounded-full bg-white/80" />
+            <span className="h-2 w-2 rounded-full bg-white/55" />
+            <span className="h-2 w-2 rounded-full bg-white/35" />
           </div>
-          <div className="flex-1 rounded-full bg-black/20 px-4 py-2 text-center text-sm text-white">seudominio.com</div>
+          <div className="flex-1 rounded-full bg-black/20 px-4 py-1.5 text-center text-xs text-white">seudominio.com</div>
         </div>
       </div>
 
-      <div className="bg-[#7d1408] px-8 py-4 text-white">
+      <div className="bg-[#7d1408] px-7 py-3 text-white">
         <div className="flex items-center justify-between">
-          <span className="font-display text-2xl">I&R</span>
-          <div className="flex items-center gap-8 text-sm font-medium uppercase tracking-wide">
+          <span className="font-display text-xl">I&R</span>
+          <div className="flex items-center gap-7 text-xs font-medium uppercase tracking-wide">
             <span>Meu site</span>
             <span>Lista de presentes</span>
             <span>Confirmar presenca</span>
@@ -95,62 +96,62 @@ function DesktopGuestPreview() {
       </div>
 
       <div
-        className="relative h-[240px] bg-cover bg-center"
+        className="relative h-[210px] bg-cover bg-center"
         style={{ backgroundImage: "linear-gradient(to bottom, rgba(57,21,13,0.18), rgba(57,21,13,0.44)), url('/premium-mock-cap.png')" }}
       >
         <div className="absolute inset-0 bg-[rgba(95,47,35,0.24)]" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-          <span className="text-lg font-medium">15 anos</span>
-          <h3 className="mt-3 font-display text-6xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.42)]">Isabella</h3>
+          <span className="text-base font-medium">15 anos</span>
+          <h3 className="mt-2 font-display text-5xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.42)]">Isabella</h3>
         </div>
       </div>
 
-      <div className="space-y-8 bg-[#faeee3] px-8 py-8">
+      <div className="space-y-6 bg-[#faeee3] px-6 py-6">
         <div className="text-center">
-          <p className="font-display text-4xl text-[#d29d2f]">Falta Pouco!</p>
+          <p className="font-display text-[2.15rem] text-[#d29d2f]">Falta Pouco!</p>
         </div>
 
-        <div className="mx-auto grid max-w-3xl grid-cols-4 gap-3">
+        <div className="mx-auto grid max-w-[620px] grid-cols-4 gap-3">
           {[
             ['188', 'DIAS'],
             ['15', 'HORAS'],
             ['22', 'MINUTOS'],
             ['59', 'SEGUNDOS'],
           ].map(([value, label]) => (
-            <div key={label} className="rounded-2xl bg-white px-4 py-4 text-center shadow-[0_10px_20px_rgba(82,56,41,0.08)]">
-              <div className="text-3xl font-bold text-[#111]">{value}</div>
-              <div className="mt-2 text-xs tracking-[0.2em] text-[#b28658]">{label}</div>
+            <div key={label} className="rounded-2xl bg-white px-4 py-3.5 text-center shadow-[0_10px_20px_rgba(82,56,41,0.08)]">
+              <div className="text-2xl font-bold text-[#111]">{value}</div>
+              <div className="mt-1.5 text-[10px] tracking-[0.18em] text-[#b28658]">{label}</div>
             </div>
           ))}
         </div>
 
         <div className="mx-auto h-px max-w-4xl bg-[#ead5c3]" />
 
-        <div className="mx-auto overflow-hidden rounded-[22px] bg-[#1f1d1d] text-white shadow-[0_16px_24px_rgba(31,29,29,0.18)]">
+        <div className="mx-auto overflow-hidden rounded-[20px] bg-[#1f1d1d] text-white shadow-[0_16px_24px_rgba(31,29,29,0.18)]">
           <div
-            className="h-[170px] bg-cover bg-center p-6"
+            className="h-[126px] bg-cover bg-center p-5"
             style={{ backgroundImage: "linear-gradient(to bottom, rgba(16,16,16,0.18), rgba(16,16,16,0.84)), url('/premium-mock-pres.png')" }}
           >
             <div className="flex h-full flex-col justify-end">
-              <p className="font-display text-4xl">Lista de Presentes</p>
-              <p className="mt-2 max-w-[520px] text-sm text-white/95">
+              <p className="font-display text-[2.05rem]">Lista de Presentes</p>
+              <p className="mt-1.5 max-w-[420px] text-xs text-white/95">
                 Esta e nossa lista de presentes. Ficamos felizes em compartilhar esse momento com voce.
               </p>
-              <div className="mt-5 inline-flex w-fit items-center rounded-xl bg-[#b66439] px-5 py-2.5 text-sm font-medium text-white">
+              <div className="mt-3 inline-flex w-fit items-center rounded-xl bg-[#b66439] px-4 py-2 text-xs font-medium text-white">
                 Presentear
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mx-auto max-w-4xl px-6 pb-2 pt-2 text-center">
-          <p className="font-display text-5xl text-[#d29d2f]">A trajetoria</p>
-          <p className="mt-6 text-[16px] leading-8 text-[#8a5d32]">
+        <div className="mx-auto max-w-4xl px-4 pb-1 pt-1 text-center">
+          <p className="font-display text-[2.85rem] text-[#d29d2f]">A trajetoria</p>
+          <p className="mx-auto mt-5 max-w-[720px] text-[15px] leading-7 text-[#8a5d32]">
             Sou feita de sentimentos intensos, de risadas sinceras e de uma fe enorme no futuro. Carrego comigo a
             docura da infancia, mas tambem a coragem de quem ja aprendeu que crescer e aceitar desafios, aprender com
             os erros e continuar acreditando.
           </p>
-          <p className="mt-6 text-[16px] leading-8 text-[#8a5d32]">
+          <p className="mx-auto mt-5 max-w-[760px] text-[15px] leading-7 text-[#8a5d32]">
             Ao longo desses anos, fui descobrindo quem eu sou: alguem que sonha alto, que ama profundamente e que
             valoriza cada pessoa que faz parte da sua historia.
           </p>
@@ -162,78 +163,78 @@ function DesktopGuestPreview() {
 
 function MobileGuestPreview() {
   return (
-    <div className="mx-auto w-full max-w-[360px] rounded-[32px] bg-[#2a211d] p-3 shadow-[0_24px_40px_rgba(32,22,18,0.28)] lg:hidden">
+    <div className="mx-auto w-full max-w-[332px] rounded-[30px] bg-[#2a211d] p-2.5 shadow-[0_22px_36px_rgba(32,22,18,0.26)] lg:hidden">
       <div className="overflow-hidden rounded-[26px] bg-[#faeee3]">
-        <div className="flex items-center gap-2 bg-[#2f362d] px-4 py-3 text-white">
+        <div className="flex items-center gap-2 bg-[#2f362d] px-3.5 py-2.5 text-white">
           <div className="flex gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-white/80" />
-            <span className="h-2.5 w-2.5 rounded-full bg-white/55" />
-            <span className="h-2.5 w-2.5 rounded-full bg-white/35" />
+            <span className="h-2 w-2 rounded-full bg-white/80" />
+            <span className="h-2 w-2 rounded-full bg-white/55" />
+            <span className="h-2 w-2 rounded-full bg-white/35" />
           </div>
-          <div className="flex-1 rounded-full bg-black/20 px-4 py-1.5 text-center text-xs text-white">seudominio.com</div>
+          <div className="flex-1 rounded-full bg-black/20 px-3 py-1 text-center text-[10px] text-white">seudominio.com</div>
         </div>
 
-        <div className="bg-[#7d1408] px-4 py-3 text-white">
+        <div className="bg-[#7d1408] px-4 py-2.5 text-white">
           <div className="flex items-center justify-between">
-            <span className="font-display text-xl">I&R</span>
-            <span className="text-lg">≡</span>
+            <span className="font-display text-lg">I&R</span>
+            <Menu className="h-4 w-4" />
           </div>
         </div>
 
         <div
-          className="relative h-[228px] bg-cover bg-center"
+          className="relative h-[196px] bg-cover bg-center"
           style={{ backgroundImage: "linear-gradient(to bottom, rgba(27,18,14,0.14), rgba(27,18,14,0.46)), url('/premium-mock-cap.png')" }}
         >
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-            <span className="text-sm tracking-wide">15 anos</span>
-            <h3 className="mt-2 font-display text-5xl drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)]">Isabella</h3>
+            <span className="text-xs tracking-wide">15 anos</span>
+            <h3 className="mt-1.5 font-display text-[3rem] drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)]">Isabella</h3>
           </div>
         </div>
 
-        <div className="space-y-5 bg-[#faeee3] p-4">
+        <div className="space-y-4 bg-[#faeee3] p-3.5">
           <div className="text-center">
-            <p className="font-display text-3xl text-[#d29d2f]">Falta Pouco!</p>
+            <p className="font-display text-[2rem] text-[#d29d2f]">Falta Pouco!</p>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-1.5">
             {[
               ['188', 'DIAS'],
               ['15', 'HORAS'],
               ['33', 'MINUTOS'],
               ['17', 'SEGUNDOS'],
             ].map(([value, label]) => (
-              <div key={label} className="rounded-2xl bg-white px-2 py-4 text-center shadow-[0_8px_16px_rgba(82,56,41,0.08)]">
-                <div className="text-2xl font-bold text-[#161616]">{value}</div>
-                <div className="mt-1 text-[10px] tracking-[0.18em] text-[#b28658]">{label}</div>
+              <div key={label} className="rounded-[18px] bg-white px-1.5 py-3 text-center shadow-[0_8px_16px_rgba(82,56,41,0.08)]">
+                <div className="text-[1.7rem] font-bold leading-none text-[#161616]">{value}</div>
+                <div className="mt-1 text-[9px] tracking-[0.14em] text-[#b28658]">{label}</div>
               </div>
             ))}
           </div>
 
           <div className="h-px bg-[#ead5c3]" />
 
-          <div className="overflow-hidden rounded-[22px] bg-[#1f1d1d] text-white shadow-[0_16px_24px_rgba(31,29,29,0.18)]">
+          <div className="overflow-hidden rounded-[20px] bg-[#1f1d1d] text-white shadow-[0_16px_24px_rgba(31,29,29,0.18)]">
             <div
-              className="h-[180px] bg-cover bg-center p-4"
+              className="h-[162px] bg-cover bg-center p-3.5"
               style={{ backgroundImage: "linear-gradient(to bottom, rgba(16,16,16,0.16), rgba(16,16,16,0.8)), url('/premium-mock-pres.png')" }}
             >
               <div className="flex h-full flex-col justify-end">
-                <p className="font-display text-3xl">Lista de Presentes</p>
-                <p className="mt-2 max-w-[250px] text-sm text-white/90">
+                <p className="font-display text-[2rem] leading-none">Lista de Presentes</p>
+                <p className="mt-1.5 max-w-[220px] text-[11px] leading-4 text-white/90">
                   Esta e nossa lista de presentes. Ficamos felizes em compartilhar esse momento com voce.
                 </p>
-                <div className="mt-4 inline-flex w-fit items-center rounded-xl bg-[#b66439] px-5 py-2.5 text-sm font-medium text-white">
+                <div className="mt-3 inline-flex w-fit items-center rounded-xl bg-[#b66439] px-4 py-2 text-xs font-medium text-white">
                   Presentear
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="px-3 pb-2 pt-4 text-center">
-            <p className="font-display text-4xl text-[#d29d2f]">A trajetoria</p>
-            <p className="mt-5 text-[15px] leading-8 text-[#8a5d32]">
+          <div className="px-2 pb-1 pt-3 text-center">
+            <p className="font-display text-[2.55rem] text-[#d29d2f]">A trajetoria</p>
+            <p className="mt-4 text-[13px] leading-7 text-[#8a5d32]">
               Sou feita de sentimentos intensos, de risadas sinceras e de uma fe enorme no futuro.
             </p>
-            <p className="mt-5 text-[15px] leading-8 text-[#8a5d32]">
+            <p className="mt-4 text-[13px] leading-7 text-[#8a5d32]">
               Ao longo desses anos, fui descobrindo quem eu sou e construindo memorias com quem eu amo.
             </p>
           </div>
