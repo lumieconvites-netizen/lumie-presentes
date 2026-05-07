@@ -30,13 +30,30 @@ type DomainState = {
   plan: 'FREE' | 'PREMIUM';
   enabled: boolean;
   customDomain: DomainStatus | null;
+  entitlement: {
+    hasAvailableSlot: boolean;
+    hasReservedSlot: boolean;
+    activeCount: number;
+    active: {
+      id: string;
+      status: 'AVAILABLE' | 'RESERVED' | 'CONSUMED' | 'EXPIRED' | 'RELEASED';
+      expiresAt: string | null;
+      reservedAt: string | null;
+      customDomain: {
+        id: string;
+        domain: string;
+        status: DomainStatus['status'];
+        expiresAt: string | null;
+      } | null;
+    } | null;
+  } | null;
   supportedTlds: string[];
   vercelConfigured: boolean;
 };
 
 function statusLabel(status: DomainStatus['status']) {
   if (status === 'ACTIVE') return 'Ativo';
-  if (status === 'PURCHASE_PENDING') return 'Compra pendente';
+  if (status === 'PURCHASE_PENDING') return 'Reservado para registro';
   if (status === 'EXPIRED') return 'Expirado';
   if (status === 'FAILED') return 'Falhou';
   return 'Selecionado';
@@ -149,6 +166,28 @@ export default function CustomDomainPage() {
         </Card>
       ) : (
         <>
+          <Card className="border-[#ead8cc] bg-[#fffdf9]">
+            <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-semibold text-[#3c2b24]">1 domÃ­nio incluÃ­do no seu Lumie Exclusive</p>
+                <p className="mt-1 text-sm text-gray-600">
+                  {state?.entitlement?.hasReservedSlot
+                    ? 'Seu direito ao domÃ­nio jÃ¡ estÃ¡ reservado. O prÃ³ximo passo serÃ¡ conectar a compra automÃ¡tica com o registrador.'
+                    : state?.entitlement?.hasAvailableSlot
+                      ? 'Seu plano jÃ¡ liberou 1 domÃ­nio para reservar. Escolha uma opÃ§Ã£o disponÃ­vel abaixo.'
+                      : 'No momento, nÃ£o encontramos um direito de domÃ­nio disponÃ­vel para esta conta.'}
+                </p>
+              </div>
+              <Badge variant="outline">
+                {state?.entitlement?.hasReservedSlot
+                  ? 'Direito reservado'
+                  : state?.entitlement?.hasAvailableSlot
+                    ? '1 disponÃ­vel'
+                    : 'IndisponÃ­vel'}
+              </Badge>
+            </CardContent>
+          </Card>
+
           {state?.customDomain ? (
             <Card className="border-[#d9eadf] bg-[#fbfffc]">
               <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">

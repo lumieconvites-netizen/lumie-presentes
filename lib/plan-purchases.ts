@@ -47,6 +47,31 @@ export async function activatePremiumPlanPurchase(planPurchaseId: string) {
       },
     });
 
+    const existingEntitlement = await tx.domainEntitlement.findUnique({
+      where: { planPurchaseId: purchase.id },
+      select: { id: true, status: true },
+    });
+
+    if (existingEntitlement) {
+      await tx.domainEntitlement.update({
+        where: { id: existingEntitlement.id },
+        data: {
+          expiresAt,
+          releasedAt: existingEntitlement.status === 'EXPIRED' ? null : undefined,
+          status: existingEntitlement.status === 'EXPIRED' ? 'AVAILABLE' : undefined,
+        },
+      });
+    } else {
+      await tx.domainEntitlement.create({
+        data: {
+          userId: user.id,
+          planPurchaseId: purchase.id,
+          status: 'AVAILABLE',
+          expiresAt,
+        },
+      });
+    }
+
     return { expiresAt };
   });
 }

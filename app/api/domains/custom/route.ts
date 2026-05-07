@@ -3,40 +3,17 @@ import { prisma } from "@/lib/prisma";
 import { getActingUserContext } from "@/lib/acting-user";
 import { getPrimaryGiftListIdForUser } from "@/lib/primary-gift-list";
 import { buildDomainSuggestions, normalizeSupportedDomain } from "@/lib/custom-domains";
+import {
+  getDomainEntitlementForUser,
+  markExpiredDomainEntitlements,
+  reserveDomainEntitlementForUser,
+  summarizeDomainEntitlement,
+} from "@/lib/domain-entitlements";
+import { checkRegistrarAvailability, prepareRegistrarRegistration } from "@/lib/domain-registrars";
 import { resolveEffectivePlan } from "@/lib/plans";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type AvailabilityResult = {
-  domain: string;
-  available: boolean | null;
-  error?: string;
-};
-
-async function fetchVercelAvailability(domain: string): Promise<AvailabilityResult> {
-  const token = process.env.VERCEL_API_TOKEN?.trim();
-  const teamId = process.env.VERCEL_TEAM_ID?.trim() || process.env.VERCEL_ORG_ID?.trim();
-
-  if (!token) {
-    return { domain, available: null, error: "VERCEL_API_TOKEN nao configurado" };
-  }
-
-  const url = new URL(`https://api.vercel.com/v1/registrar/domains/${encodeURIComponent(domain)}/availability`);
-  if (teamId) url.searchParams.set("teamId", teamId);
-
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    return { domain, available: null, error: `Vercel ${response.status}` };
-  }
-
-  const data = await response.json();
-  return { domain, available: Boolean(data?.available) };
-}
 
 async function getDomainContext() {
   const ctx = await getActingUserContext();
@@ -57,6 +34,7 @@ async function getDomainContext() {
 export async function GET() {
   const data = await getDomainContext();
   if (!data) return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+  await markExpiredDomainEntitlements(data.ctx.effectiveUserId);
 
   const customDomain = data.giftListId
     ? await prisma.customDomain.findFirst({
@@ -74,11 +52,13 @@ export async function GET() {
         },
       })
     : null;
+  const entitlement = await getDomainEntitlementForUser(data.ctx.effectiveUserId);
 
   return NextResponse.json({
     plan: data.effectivePlan,
     enabled: data.effectivePlan === "PREMIUM",
     customDomain,
+    entitlement: summarizeDomainEntitlement(entitlement),
     supportedTlds: ["com", "site", "net"],
     vercelConfigured: Boolean(process.env.VERCEL_API_TOKEN?.trim()),
   });
@@ -91,6 +71,7 @@ export async function POST(request: Request) {
   if (data.effectivePlan !== "PREMIUM") {
     return NextResponse.json({ error: "Dominio personalizado esta disponivel apenas no plano Premium." }, { status: 403 });
   }
+  await markExpiredDomainEntitlements(data.ctx.effectiveUserId);
 
   const body = await request.json().catch(() => null);
   const action = typeof body?.action === "string" ? body.action : "search";
@@ -102,7 +83,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Digite pelo menos 3 caracteres para buscar." }, { status: 400 });
     }
 
-    const results = await Promise.all(suggestions.map(fetchVercelAvailability));
+    const results = await Promise.all(suggestions.map(checkRegistrarAvailability));
     return NextResponse.json({ suggestions: results });
   }
 
@@ -112,7 +93,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Escolha um dominio .com, .site ou .net valido." }, { status: 400 });
     }
 
-    const availability = await fetchVercelAvailability(domain);
+    const entitlement = await getDomainEntitlementForUser(data.ctx.effectiveUserId);
+    const activeEntitlement = entitlement.reserved ?? entitlement.available;
+    if (!activeEntitlement) {
+      return NextResponse.json(
+        { error: "Nenhum direito de dominio disponivel para esta conta. Ative um plano antes de continuar." },
+        { status: 409 }
+      );
+    }
+
+    const availability = await checkRegistrarAvailability(domain);
     if (availability.available === false) {
       return NextResponse.json({ error: "Este dominio nao esta disponivel." }, { status: 409 });
     }
@@ -126,21 +116,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Este dominio ja esta vinculado a outra lista." }, { status: 409 });
     }
 
-    const customDomain = existing
+    const currentCustomDomain = await prisma.customDomain.findFirst({
+      where: { giftListId: data.giftListId, userId: data.ctx.effectiveUserId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, domain: true, status: true },
+    });
+
+    const registrationPreparation = await prepareRegistrarRegistration({
+      domain,
+      userId: data.ctx.effectiveUserId,
+      giftListId: data.giftListId,
+    });
+
+    const customDomain = currentCustomDomain
       ? await prisma.customDomain.update({
-          where: { id: existing.id },
+          where: { id: currentCustomDomain.id },
           data: {
-            giftListId: data.giftListId,
-            status: "SELECTED",
+            domain,
+            status: "PURCHASE_PENDING",
             availabilityCheckedAt: new Date(),
-            lastError: availability.error ?? null,
+            expiresAt: activeEntitlement.expiresAt ?? null,
+            lastError: registrationPreparation.ok ? null : registrationPreparation.message,
           },
           select: {
             id: true,
             domain: true,
             status: true,
             availabilityCheckedAt: true,
+            registeredAt: true,
+            expiresAt: true,
             lastError: true,
+            createdAt: true,
           },
         })
       : await prisma.customDomain.create({
@@ -148,20 +154,41 @@ export async function POST(request: Request) {
             userId: data.ctx.effectiveUserId,
             giftListId: data.giftListId,
             domain,
-            status: "SELECTED",
+            status: "PURCHASE_PENDING",
             availabilityCheckedAt: new Date(),
-            lastError: availability.error ?? null,
+            expiresAt: activeEntitlement.expiresAt ?? null,
+            lastError: registrationPreparation.ok ? null : registrationPreparation.message,
           },
           select: {
             id: true,
             domain: true,
             status: true,
             availabilityCheckedAt: true,
+            registeredAt: true,
+            expiresAt: true,
             lastError: true,
+            createdAt: true,
           },
         });
 
-    return NextResponse.json({ customDomain });
+    const reserved = await reserveDomainEntitlementForUser({
+      userId: data.ctx.effectiveUserId,
+      customDomainId: customDomain.id,
+      expiresAt: activeEntitlement.expiresAt ?? null,
+    });
+
+    if (!reserved) {
+      return NextResponse.json(
+        { error: "Nao foi possivel reservar o direito deste dominio. Tente novamente em instantes." },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json({
+      customDomain,
+      entitlement: summarizeDomainEntitlement(await getDomainEntitlementForUser(data.ctx.effectiveUserId)),
+      registration: registrationPreparation,
+    });
   }
 
   return NextResponse.json({ error: "Acao invalida." }, { status: 400 });

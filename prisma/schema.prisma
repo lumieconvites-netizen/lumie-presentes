@@ -33,6 +33,7 @@ model User {
 
   giftLists                   GiftList[]
   customDomains               CustomDomain[]
+  domainEntitlements          DomainEntitlement[]
   planPurchases               PlanPurchase[] @relation("PremiumPlanPurchases")
   partnerPlanPurchases        PlanPurchase[] @relation("PartnerPlanPurchaseRecipient")
   ambassadorPlanPurchases     PlanPurchase[] @relation("AmbassadorPlanPurchaseRecipient")
@@ -172,8 +173,9 @@ model CustomDomain {
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
 
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  giftList           GiftList            @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  domainEntitlements DomainEntitlement[]
 
   @@index([userId])
   @@index([giftListId])
@@ -187,6 +189,37 @@ enum CustomDomainStatus {
   ACTIVE
   EXPIRED
   FAILED
+}
+
+model DomainEntitlement {
+  id             String                  @id @default(cuid())
+  userId         String
+  planPurchaseId String                  @unique
+  customDomainId String?                 @unique
+  status         DomainEntitlementStatus @default(AVAILABLE)
+  reservedAt     DateTime?
+  consumedAt     DateTime?
+  releasedAt     DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planPurchase PlanPurchase  @relation(fields: [planPurchaseId], references: [id], onDelete: Cascade)
+  customDomain CustomDomain? @relation(fields: [customDomainId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([userId, expiresAt])
+  @@index([status, expiresAt])
+  @@map("domain_entitlements")
+}
+
+enum DomainEntitlementStatus {
+  AVAILABLE
+  RESERVED
+  CONSUMED
+  EXPIRED
+  RELEASED
 }
 
 // ===== LAYOUT DA PÁGINA =====
@@ -454,9 +487,10 @@ model PlanPurchase {
   createdAt                  DateTime           @default(now())
   updatedAt                  DateTime           @updatedAt
 
-  user           User  @relation("PremiumPlanPurchases", fields: [userId], references: [id], onDelete: Cascade)
-  partnerUser    User? @relation("PartnerPlanPurchaseRecipient", fields: [partnerUserId], references: [id], onDelete: SetNull)
-  ambassadorUser User? @relation("AmbassadorPlanPurchaseRecipient", fields: [ambassadorUserId], references: [id], onDelete: SetNull)
+  user              User               @relation("PremiumPlanPurchases", fields: [userId], references: [id], onDelete: Cascade)
+  partnerUser       User?              @relation("PartnerPlanPurchaseRecipient", fields: [partnerUserId], references: [id], onDelete: SetNull)
+  ambassadorUser    User?              @relation("AmbassadorPlanPurchaseRecipient", fields: [ambassadorUserId], references: [id], onDelete: SetNull)
+  domainEntitlement DomainEntitlement?
 
   @@index([userId, createdAt])
   @@index([partnerUserId, createdAt])
