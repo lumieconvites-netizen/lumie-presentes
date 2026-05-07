@@ -33,7 +33,7 @@ const faqs = [
   },
   {
     q: 'O que muda nas taxas?',
-    a: 'No plano gratuito, a taxa sobre presentes e de 6,99%. No Lumie Exclusive, a taxa cai para 3,69%.',
+    a: 'No plano gratuito, a taxa sobre presentes e de 7,99% no PIX e 13,99% no credito. No Lumie Exclusive, a taxa cai para 3,69% no PIX e 7,99% no credito.',
   },
   {
     q: 'Posso escolher quem paga a taxa?',
@@ -55,7 +55,7 @@ const feeExamples: Record<
   FREE: {
     passToGuest: {
       title: 'Repassar ao convidado',
-      text: 'Exemplo no Gratuito: presente de R$ 100,00 vira R$ 106,99 para o convidado.',
+      text: 'Exemplo no Gratuito: presente de R$ 100,00 vira R$ 107,99 para o convidado no PIX.',
     },
     absorb: {
       title: 'Assumir a taxa',
@@ -155,7 +155,7 @@ export default function PricingPage() {
 
               <div className="mt-6 rounded-xl border border-[#ecd9cc] bg-[#fff8f3] p-4">
                 <p className="text-sm font-medium text-[#4a3a33]">Taxa sobre presentes recebidos</p>
-                <p className="mt-2 font-display text-4xl text-[#b54b2f]">6,99%</p>
+                <p className="mt-2 font-display text-4xl text-[#b54b2f]">7,99%</p>
                 <p className="mt-1 text-xs text-[#7a665d]">Aplicada em pagamentos aprovados.</p>
               </div>
 

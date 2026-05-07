@@ -20,7 +20,7 @@ export default function TermosPage() {
             <div className="grid gap-6 md:grid-cols-3">
               <div className="rounded-2xl border border-[#ecd9cc] bg-[#fffaf6] p-5">
                 <Wallet className="h-6 w-6 text-[#c65a3a]" />
-                <p className="mt-3 font-medium text-[#3c2f2a]">Plano Gratuito: 6,99%</p>
+                <p className="mt-3 font-medium text-[#3c2f2a]">Plano Gratuito: 7,99% no PIX e 13,99% no crédito</p>
               </div>
               <div className="rounded-2xl border border-[#ecd9cc] bg-[#fffaf6] p-5">
                 <Wallet className="h-6 w-6 text-[#c65a3a]" />
@@ -77,7 +77,7 @@ export default function TermosPage() {
                       transações aprovadas.
                     </p>
                     <p>
-                        As taxas aplicáveis são: 6,99% no plano Gratuito e 3,69% no plano Lumie Exclusive.
+                        As taxas aplicáveis são: 7,99% no PIX e 13,99% no crédito no plano Gratuito; 3,69% no PIX e 7,99% no crédito no plano Lumie Exclusive.
                     </p>
                     <p>
                       O titular pode optar por repassar a taxa ao convidado ou assumir o custo da taxa no valor a

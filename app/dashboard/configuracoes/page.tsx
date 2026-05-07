@@ -465,14 +465,14 @@ export default function ConfiguracoesPage() {
 
                   {settings.feePassedToGuest ? (
                     <div className="text-sm space-y-1">
-                      <p>- Convidado paga: <strong className="text-primary">R$ 106,99</strong></p>
+                      <p>- Convidado paga: <strong className="text-primary">R$ 107,99</strong></p>
                       <p>- Você recebe: <strong className="text-green-600">R$ 100,00</strong></p>
                     </div>
                   ) : (
                     <div className="text-sm space-y-1">
                       <p>- Convidado paga: <strong className="text-primary">R$ 100,00</strong></p>
                       <p>- Você recebe: <strong className="text-green-600">R$ 93,01</strong></p>
-                      <p className="text-xs text-gray-500">Exemplo com taxa do plano gratuito</p>
+                      <p className="text-xs text-gray-500">Exemplo com taxa do plano gratuito no PIX</p>
                     </div>
                   )}
                 </div>

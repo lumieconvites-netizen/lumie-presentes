@@ -110,7 +110,7 @@ export default function PresentesDashboard() {
   const [giftListId, setGiftListId] = useState('');
   const [giftListSlug, setGiftListSlug] = useState('');
   const [giftListFeeMode, setGiftListFeeMode] = useState<'PASS_TO_GUEST' | 'ABSORB'>('PASS_TO_GUEST');
-  const [feePercentPix, setFeePercentPix] = useState(6.99);
+  const [feePercentPix, setFeePercentPix] = useState(7.99);
 
   const [gifts, setGifts] = useState<EditableGift[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,7 +199,7 @@ export default function PresentesDashboard() {
       setGiftListId(glData.id);
       setGiftListSlug(glData.slug || '');
       setGiftListFeeMode(glData?.feeMode === 'ABSORB' ? 'ABSORB' : 'PASS_TO_GUEST');
-      setFeePercentPix(Number(glData?.feePercentPix ?? 6.99));
+      setFeePercentPix(Number(glData?.feePercentPix ?? 7.99));
       setBankAccountConfigured(Boolean(glData?.bankAccountConfigured));
       setIsPublished(Boolean(glData?.isPublished));
 

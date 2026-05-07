@@ -76,7 +76,7 @@ function readPercent(name: string, fallback: number) {
 function resolveFeePercentages(paymentMethod: 'PIX' | 'CREDIT_CARD', plan: SubscriptionPlan) {
   const platformFee = resolvePlatformFeePercent(paymentMethod, plan);
   const networkFee = resolveNetworkFeePercent(paymentMethod, plan);
-  const defaultProcessingFee = readPercent('PAGARME_PROCESSING_FEE_PERCENTAGE', 1.09);
+  const defaultProcessingFee = paymentMethod === 'CREDIT_CARD' ? 3.29 : 1.09;
   const processingFee =
     paymentMethod === 'CREDIT_CARD'
       ? readPercent('PAGARME_PROCESSING_FEE_PERCENTAGE_CREDIT_CARD', defaultProcessingFee)

@@ -201,7 +201,7 @@ export default function CheckoutPageClient({
   }, [pixData?.orderId, guestEmail]);
 
   const feeMode = giftData?.giftList.feeMode ?? 'PASS_TO_GUEST';
-  const feePercentPix = Number(giftData?.giftList.feePercentPix ?? 6.99);
+  const feePercentPix = Number(giftData?.giftList.feePercentPix ?? 7.99);
   const feePercentCreditCard = Number(giftData?.giftList.feePercentCreditCard ?? feePercentPix);
   const available = giftData?.gift.availableQty ?? 0;
   const qtyMax = Math.max(1, available);
