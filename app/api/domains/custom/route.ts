@@ -62,7 +62,10 @@ export async function GET() {
           },
         })
       : null;
-    if (customDomain?.status === "PURCHASE_PENDING") {
+    if (
+      customDomain?.status === "PURCHASE_PENDING" ||
+      (customDomain?.status === "FAILED" && customDomain.registrarOrderId)
+    ) {
       customDomain = await syncCustomDomainProvisioning(customDomain.id).catch((error) => {
         console.error("Erro ao sincronizar dominio personalizado:", error);
         return customDomain;

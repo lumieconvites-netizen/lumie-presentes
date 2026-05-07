@@ -42,37 +42,37 @@ export async function syncCustomDomainProvisioning(customDomainId: string) {
   if (!customDomain) return null;
   if (customDomain.status === 'ACTIVE' || customDomain.status === 'EXPIRED') return customDomain;
 
-  const preparation = await prepareRegistrarRegistration({
-    domain: customDomain.domain,
-    userId: customDomain.userId,
-    giftListId: customDomain.giftListId,
-  });
-
-  if (!preparation.ok) {
-    return prisma.customDomain.update({
-      where: { id: customDomain.id },
-      data: {
-        status: 'FAILED',
-        lastError: truncateMessage(preparation.message),
-      },
-      select: customDomainSelect,
-    });
-  }
-
-  if (!isRegistrarPurchaseConfigured()) {
-    return prisma.customDomain.update({
-      where: { id: customDomain.id },
-      data: {
-        status: 'PURCHASE_PENDING',
-        lastError: truncateMessage(preparation.message),
-      },
-      select: customDomainSelect,
-    });
-  }
-
   let registrarOrderId = customDomain.registrarOrderId;
 
   if (!registrarOrderId) {
+    const preparation = await prepareRegistrarRegistration({
+      domain: customDomain.domain,
+      userId: customDomain.userId,
+      giftListId: customDomain.giftListId,
+    });
+
+    if (!preparation.ok) {
+      return prisma.customDomain.update({
+        where: { id: customDomain.id },
+        data: {
+          status: 'FAILED',
+          lastError: truncateMessage(preparation.message),
+        },
+        select: customDomainSelect,
+      });
+    }
+
+    if (!isRegistrarPurchaseConfigured()) {
+      return prisma.customDomain.update({
+        where: { id: customDomain.id },
+        data: {
+          status: 'PURCHASE_PENDING',
+          lastError: truncateMessage(preparation.message),
+        },
+        select: customDomainSelect,
+      });
+    }
+
     let purchase: Awaited<ReturnType<typeof buyRegistrarDomain>>;
     try {
       purchase = await buyRegistrarDomain(customDomain.domain, 1);
