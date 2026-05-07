@@ -63,7 +63,10 @@ export async function GET() {
         })
       : null;
     if (customDomain?.status === "PURCHASE_PENDING") {
-      customDomain = await syncCustomDomainProvisioning(customDomain.id);
+      customDomain = await syncCustomDomainProvisioning(customDomain.id).catch((error) => {
+        console.error("Erro ao sincronizar dominio personalizado:", error);
+        return customDomain;
+      });
     }
     const entitlement = await getDomainEntitlementForUser(data.ctx.effectiveUserId);
 

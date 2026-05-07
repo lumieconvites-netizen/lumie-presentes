@@ -12,6 +12,10 @@ function truncateMessage(value: string, max = 220) {
   return value.length > max ? `${value.slice(0, max - 3)}...` : value;
 }
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error || 'Erro desconhecido.');
+}
+
 export async function syncCustomDomainProvisioning(customDomainId: string) {
   const customDomainSelect = {
     id: true,
@@ -69,7 +73,22 @@ export async function syncCustomDomainProvisioning(customDomainId: string) {
   let registrarOrderId = customDomain.registrarOrderId;
 
   if (!registrarOrderId) {
-    const purchase = await buyRegistrarDomain(customDomain.domain, 1);
+    let purchase: Awaited<ReturnType<typeof buyRegistrarDomain>>;
+    try {
+      purchase = await buyRegistrarDomain(customDomain.domain, 1);
+    } catch (error) {
+      return prisma.customDomain.update({
+        where: { id: customDomain.id },
+        data: {
+          status: 'PURCHASE_PENDING',
+          registrarOrderStatus: 'purchase_failed',
+          purchaseAttemptedAt: new Date(),
+          lastError: truncateMessage(getErrorMessage(error)),
+        },
+        select: customDomainSelect,
+      });
+    }
+
     registrarOrderId = String(purchase?.orderId || '').trim() || null;
 
     await prisma.customDomain.update({

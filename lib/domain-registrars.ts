@@ -49,12 +49,21 @@ function getProjectSlug() {
   return process.env.VERCEL_TEAM_SLUG?.trim() || undefined;
 }
 
+function normalizeE164Phone(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('+')) return `+${trimmed.slice(1).replace(/\D/g, '')}`;
+
+  const digits = trimmed.replace(/\D/g, '');
+  return digits ? `+${digits}` : '';
+}
+
 function getRegistrarContactInformation(): RegistrarContactInformation | null {
   const contact = {
     firstName: process.env.VERCEL_DOMAIN_CONTACT_FIRST_NAME?.trim() || '',
     lastName: process.env.VERCEL_DOMAIN_CONTACT_LAST_NAME?.trim() || '',
     email: process.env.VERCEL_DOMAIN_CONTACT_EMAIL?.trim() || '',
-    phone: process.env.VERCEL_DOMAIN_CONTACT_PHONE?.trim() || '',
+    phone: normalizeE164Phone(process.env.VERCEL_DOMAIN_CONTACT_PHONE || ''),
     address1: process.env.VERCEL_DOMAIN_CONTACT_ADDRESS1?.trim() || '',
     city: process.env.VERCEL_DOMAIN_CONTACT_CITY?.trim() || '',
     state: process.env.VERCEL_DOMAIN_CONTACT_STATE?.trim() || '',
