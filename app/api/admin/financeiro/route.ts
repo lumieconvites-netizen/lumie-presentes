@@ -4,6 +4,7 @@ import { requireAdminSession } from "@/lib/admin-auth";
 import { reconcileRecentPendingOrders } from "@/lib/order-status-reconciliation";
 import { buildCreatedAtWhere, normalizePeriodFilter } from "@/lib/period-filter";
 import { resolveEffectivePlan, resolveNetworkFeePercent } from "@/lib/plans";
+import { getOrder } from "@/lib/pagarme";
 
 type MethodFilter = "all" | "card" | "pix";
 const CARD_METHODS = ["credit_card", "CREDIT_CARD", "card", "CARD"];
@@ -54,6 +55,59 @@ function normalizePaymentMethod(value?: string | null): "card" | "pix" | "other"
 function isRealRecipientId(value?: string | null) {
   if (!value) return false;
   return !value.startsWith("pending_");
+}
+
+function readCentsLike(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return Math.round(value);
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return Math.round(parsed);
+  }
+  return null;
+}
+
+function extractGatewaySplitSnapshot(payload: any): null | {
+  clientInCents: number;
+  platformInCents: number;
+  partnerInCents: number;
+  ambassadorInCents: number;
+  splitApplied: boolean;
+  partnerEnabled: boolean;
+  ambassadorEnabled: boolean;
+} {
+  const metadataCandidates = [
+    payload?.metadata,
+    payload?.charges?.[0]?.metadata,
+    payload?.charges?.[0]?.last_transaction?.metadata,
+  ];
+
+  for (const metadata of metadataCandidates) {
+    if (!metadata || typeof metadata !== "object") continue;
+
+    const clientInCents = readCentsLike((metadata as any).splitClientInCents);
+    const platformInCents = readCentsLike((metadata as any).splitPlatformInCents);
+    const partnerInCents = readCentsLike((metadata as any).splitPartnerInCents);
+    const ambassadorInCents = readCentsLike((metadata as any).splitAmbassadorInCents);
+
+    if (
+      clientInCents !== null &&
+      platformInCents !== null &&
+      partnerInCents !== null &&
+      ambassadorInCents !== null
+    ) {
+      return {
+        clientInCents,
+        platformInCents,
+        partnerInCents,
+        ambassadorInCents,
+        splitApplied: String((metadata as any).splitApplied ?? "true").toLowerCase() !== "false",
+        partnerEnabled: partnerInCents > 0,
+        ambassadorEnabled: ambassadorInCents > 0,
+      };
+    }
+  }
+
+  return null;
 }
 
 function resolveFeePercentages(paymentMethod: "PIX" | "CREDIT_CARD", plan: "FREE" | "PREMIUM") {
@@ -200,6 +254,7 @@ export async function GET(request: Request) {
         paymentMethod: true,
         baseAmount: true,
         totalAmount: true,
+        pagarmeOrderId: true,
         paidAt: true,
         createdAt: true,
         giftList: {
@@ -303,14 +358,14 @@ export async function GET(request: Request) {
   >();
   const clientTotals = new Map<string, { id: string; name: string; email: string; amount: number; orders: number }>();
 
-  const normalizedOrders = orders.map((order) => {
+  const normalizedOrders = await Promise.all(orders.map(async (order) => {
     const paymentMethod = normalizePaymentMethod(order.paymentMethod);
     const totalAmount = Number(order.totalAmount);
     const baseAmount = Number(order.baseAmount);
     const paymentMethodForSplit = paymentMethod === "card" ? "CREDIT_CARD" : "PIX";
     const user = order.giftList.user;
 
-    const split = calculateSplitFromOrder({
+    const calculatedSplit = calculateSplitFromOrder({
       baseAmount,
       totalAmount,
       acquisitionSource: user.acquisitionSource,
@@ -321,6 +376,23 @@ export async function GET(request: Request) {
       hasAmbassadorRecipient: isRealRecipientId(user.referredByAmbassador?.recipient?.pagarmeRecipientId),
       paymentMethod: paymentMethodForSplit,
     });
+
+    let split = calculatedSplit;
+    if (order.pagarmeOrderId) {
+      try {
+        const gatewayOrder = await getOrder(order.pagarmeOrderId);
+        const gatewaySplit = extractGatewaySplitSnapshot(gatewayOrder);
+        if (gatewaySplit) {
+          split = gatewaySplit;
+        }
+      } catch (error) {
+        console.error("Falha ao ler split real da Pagar.me para admin/financeiro:", {
+          orderId: order.id,
+          pagarmeOrderId: order.pagarmeOrderId,
+          error,
+        });
+      }
+    }
 
     const clientReceived = split.clientInCents / 100;
     const platformReceived = split.platformInCents / 100;
@@ -427,7 +499,7 @@ export async function GET(request: Request) {
         ambassadorReceived,
       },
     };
-  });
+  }));
 
   const pendingCardAmount = pendingCardOrders.reduce((acc, order) => acc + Number(order.totalAmount), 0);
   const normalizedPendingCards = pendingCardOrders.map((order) => ({
