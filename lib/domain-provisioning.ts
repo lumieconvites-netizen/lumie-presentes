@@ -119,16 +119,15 @@ export async function syncCustomDomainProvisioning(customDomainId: string) {
   const orderStatus = String(order?.status || '').toLowerCase();
   const domainOrder = Array.isArray(order?.domains) ? order.domains[0] : null;
   const domainStatus = String(domainOrder?.status || '').toLowerCase();
+  const orderError = String(domainOrder?.error?.code || order?.error?.code || '').trim();
 
-  if (orderStatus === 'failed' || domainStatus === 'failed') {
+  if (orderError || orderStatus === 'failed' || domainStatus === 'failed') {
     return prisma.customDomain.update({
       where: { id: customDomain.id },
       data: {
         status: 'FAILED',
         registrarOrderStatus: orderStatus || domainStatus,
-        lastError: truncateMessage(
-          String(domainOrder?.error?.code || order?.error?.code || 'Falha ao comprar dominio no registrador.')
-        ),
+        lastError: truncateMessage(orderError || 'Falha ao comprar dominio no registrador.'),
       },
       select: customDomainSelect,
     });
