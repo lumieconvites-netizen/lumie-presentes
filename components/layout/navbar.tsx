@@ -58,12 +58,13 @@ export function Navbar() {
             {status === 'authenticated' ? (
               <Link
                 href="/dashboard"
-                className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead9cd] text-[#6d564b] transition-colors hover:bg-[#fff3ea] hover:text-primary"
+                className="pointer-events-auto inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#d8a18b] bg-[#fff7f2] px-4 text-sm font-semibold text-[#8e3d2c] shadow-sm transition hover:border-[#c65a3a] hover:bg-[#fff1e8]"
                 onClick={() => setNavigating(true)}
                 aria-label="Voltar para o dashboard"
                 title="Voltar para o dashboard"
               >
                 <LayoutDashboard className="h-4 w-4" />
+                Meu painel
               </Link>
             ) : (
               <>
@@ -90,11 +91,12 @@ export function Navbar() {
             {status === 'authenticated' ? (
               <Link
                 href="/dashboard"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e8d8cc] text-[#6d564b]"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#d8a18b] bg-[#fff7f2] px-3 text-xs font-semibold text-[#8e3d2c]"
                 onClick={() => setNavigating(true)}
                 aria-label="Voltar para o dashboard"
               >
-                <LayoutDashboard className="h-4 w-4" />
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                Painel
               </Link>
             ) : (
               <>
