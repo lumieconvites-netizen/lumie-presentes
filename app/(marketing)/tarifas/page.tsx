@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 const freeFeatures = [
   'Lista de presentes online',
   'Site gratuito da Lumie',
-  'Checkout com PIX e cartao',
+  'Checkout com PIX e cartão',
   'Dashboard de pagamentos',
   'Recados dos convidados',
   'RSVP e check-in por QR Code',
@@ -17,27 +17,27 @@ const freeFeatures = [
 
 const exclusiveFeatures = [
   'Tudo do plano gratuito',
-  'Dominio personalizado por 1 ano',
+  'Domínio personalizado por 1 ano',
   'Taxa reduzida nos presentes',
   'Suporte exclusivo com a nossa equipe',
 ];
 
 const faqs = [
   {
-    q: 'A Lumie Exclusive inclui o dominio?',
-    a: 'Sim. O plano inclui um dominio personalizado por 1 ano, dentro das extensoes disponiveis na busca do dashboard.',
+    q: 'A Lumie Exclusive inclui o domínio?',
+    a: 'Sim. O plano inclui um domínio personalizado por 1 ano, dentro das extensões disponíveis na busca do dashboard.',
   },
   {
     q: 'O plano gratuito continua existindo?',
-    a: 'Sim. Voce pode criar sua lista gratuitamente e pagar apenas a taxa sobre presentes recebidos.',
+    a: 'Sim. Você pode criar sua lista gratuitamente e pagar apenas a taxa sobre presentes recebidos.',
   },
   {
     q: 'O que muda nas taxas?',
-    a: 'No plano gratuito, a taxa sobre presentes e de 7,99% no PIX e 13,99% no credito. No Lumie Exclusive, a taxa cai para 3,69% no PIX e 7,99% no credito.',
+    a: 'No plano gratuito, a taxa sobre presentes é de 7,99% no PIX e 13,99% no crédito. No Lumie Exclusive, a taxa cai para 3,69% no PIX e 7,99% no crédito.',
   },
   {
     q: 'Posso escolher quem paga a taxa?',
-    a: 'Sim. Voce pode repassar a taxa para o convidado ou assumir o custo no valor recebido.',
+    a: 'Sim. Você pode repassar a taxa para o convidado ou assumir o custo no valor recebido.',
   },
 ];
 
@@ -126,7 +126,7 @@ export default function PricingPage() {
               Escolha como sua lista vai receber presentes
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg text-[#5f4b42]">
-              Comece gratis ou ative o Lumie Exclusive para usar dominio personalizado e taxas menores nos presentes.
+              Comece grátis ou ative o Lumie Exclusive para usar domínio personalizado e taxas menores nos presentes.
             </p>
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function PricingPage() {
               </div>
 
               <h2 className="mt-5 font-display text-3xl text-[#2b2422]">Plano Gratuito</h2>
-              <p className="mt-2 text-[#66544b]">Para criar sua lista sem custo fixo e comecar a receber presentes.</p>
+              <p className="mt-2 text-[#66544b]">Para criar sua lista sem custo fixo e começar a receber presentes.</p>
 
               <div className="mt-7 flex items-end gap-2">
                 <span className="font-display text-6xl leading-none text-primary">R$ 0</span>
@@ -174,7 +174,7 @@ export default function PricingPage() {
                   href="/auth/cadastro"
                   className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#c65a3a] px-5 text-sm font-semibold text-white transition hover:brightness-105"
                 >
-                  Criar lista gratis
+                  Criar lista grátis
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               )}
@@ -193,7 +193,7 @@ export default function PricingPage() {
                 </div>
 
                 <h2 className="mt-5 font-display text-3xl">Lumie Exclusive</h2>
-                <p className="mt-2 text-[#eadbd3]">Para quem quer uma experiencia premium com endereco proprio.</p>
+                <p className="mt-2 text-[#eadbd3]">Para quem quer uma experiência premium com endereço próprio.</p>
 
                 <div className="mt-7 flex items-end gap-2">
                   <span className="font-display text-6xl leading-none">R$ 150</span>
@@ -212,7 +212,7 @@ export default function PricingPage() {
                   <div className="rounded-xl border border-white/15 bg-white/8 p-4">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       <Globe2 className="h-4 w-4 text-[#ffd9c8]" />
-                      Dominio incluso
+                      Domínio incluso
                     </div>
                     <p className="mt-2 font-display text-4xl">1 ano</p>
                     <p className="mt-1 text-xs text-[#d8c5bb]">Escolhido pelo dashboard.</p>
@@ -245,9 +245,9 @@ export default function PricingPage() {
           <div className="mx-auto max-w-5xl">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <h2 className="font-display text-3xl text-primary md:text-4xl">Como a cobranca funciona</h2>
+                <h2 className="font-display text-3xl text-primary md:text-4xl">Como a cobrança funciona</h2>
                 <p className="mt-2 max-w-2xl text-[#5f4b42]">
-                  Voce escolhe se a taxa sera repassada ao convidado ou descontada do valor recebido.
+                  Você escolhe se a taxa será repassada ao convidado ou descontada do valor recebido.
                 </p>
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-[#e5d2c5] bg-white px-4 py-2 text-sm text-[#5f4b42]">
@@ -287,7 +287,7 @@ export default function PricingPage() {
               <div className="rounded-2xl border border-[#e7d3c6] bg-white p-6">
                 <h3 className="font-display text-2xl text-foreground">{selectedExample.passToGuest.title}</h3>
                 <p className="mt-3 text-[#615047]">
-                  O convidado paga o valor do presente com a taxa aplicada, e voce recebe o valor cheio do presente.
+                  O convidado paga o valor do presente com a taxa aplicada, e você recebe o valor cheio do presente.
                 </p>
                 <div className="mt-5 rounded-xl border border-[#ead7ca] bg-[#fff8f3] p-4 text-sm text-[#5f4b42]">
                   {selectedExample.passToGuest.text}
@@ -297,7 +297,7 @@ export default function PricingPage() {
               <div className="rounded-2xl border border-[#e7d3c6] bg-white p-6">
                 <h3 className="font-display text-2xl text-foreground">{selectedExample.absorb.title}</h3>
                 <p className="mt-3 text-[#615047]">
-                  O convidado paga apenas o valor do presente, e a taxa e descontada no repasse.
+                  O convidado paga apenas o valor do presente, e a taxa é descontada no repasse.
                 </p>
                 <div className="mt-5 rounded-xl border border-[#ead7ca] bg-[#fff8f3] p-4 text-sm text-[#5f4b42]">
                   {selectedExample.absorb.text}
