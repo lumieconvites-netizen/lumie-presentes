@@ -46,6 +46,7 @@ export function ConfirmClient({
   publicTitle,
   publicDescription,
   searchPlaceholder,
+  siteHref = `/site/${encodeURIComponent(slug)}`,
 }: {
   slug: string;
   eventTitle: string;
@@ -55,6 +56,7 @@ export function ConfirmClient({
   publicTitle: string;
   publicDescription: string;
   searchPlaceholder: string;
+  siteHref?: string;
 }) {
   const [step, setStep] = useState<Step>('search');
   const [query, setQuery] = useState('');
@@ -212,7 +214,7 @@ export function ConfirmClient({
 
             <div className="mt-4">
               <Button variant="ghost" asChild>
-                <Link href={`/site/${encodeURIComponent(slug)}`}>Voltar para o site</Link>
+                <Link href={siteHref}>Voltar para o site</Link>
               </Button>
             </div>
           </div>
@@ -363,7 +365,7 @@ export function ConfirmClient({
             )}
 
             <Button className="bg-[#c65a3a] hover:bg-[#b34f32] text-white" asChild>
-              <Link href={`/site/${encodeURIComponent(slug)}`}>Voltar para o site</Link>
+              <Link href={siteHref}>Voltar para o site</Link>
             </Button>
           </div>
         )}

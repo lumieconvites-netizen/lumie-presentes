@@ -1,7 +1,10 @@
 ﻿import Link from 'next/link';
 import Image from 'next/image';
+import { headers } from 'next/headers';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
+import SiteRenderer from '@/components/site/SiteRenderer';
+import { resolveActiveCustomDomainHost } from '@/lib/public-site-resolver';
 import { ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Brush, ShoppingBag, Plane, Users, BellRing, FileSpreadsheet, UserPlus, MapPin, Navigation2, CalendarDays, Smartphone, ListMusic, LayoutTemplate, PlayCircle } from 'lucide-react';
 
 const heroSlides = [
@@ -92,7 +95,41 @@ const showcaseArrivalFeatures = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const headerStore = headers();
+  const host = headerStore.get('x-forwarded-host') || headerStore.get('host');
+  const resolvedDomain = await resolveActiveCustomDomainHost(host);
+
+  if (resolvedDomain?.giftList) {
+    const list = resolvedDomain.giftList;
+    const rawBlocks = list.pageLayout?.blocks;
+    const rawTheme = list.pageLayout?.theme;
+    const blocks = Array.isArray(rawBlocks) ? (rawBlocks as any[]) : [];
+    const theme =
+      rawTheme && typeof rawTheme === 'object' && !Array.isArray(rawTheme)
+        ? (rawTheme as any)
+        : null;
+
+    return (
+      <SiteRenderer
+        list={{
+          id: list.id,
+          slug: list.slug,
+          title: list.title,
+          description: list.description,
+          eventDate: list.eventDate,
+          hostName: list.user?.name ?? '',
+          hostImage: list.user?.image ?? null,
+        }}
+        blocks={blocks}
+        theme={theme}
+        gifts={list.gifts}
+        messages={list.messages}
+        useRootPaths
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f5f2]">
       <Navbar />

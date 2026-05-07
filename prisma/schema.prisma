@@ -166,6 +166,10 @@ model CustomDomain {
   domain                String             @unique
   status                CustomDomainStatus @default(SELECTED)
   provider              String             @default("VERCEL")
+  registrarOrderId      String?
+  registrarOrderStatus  String?
+  purchaseAttemptedAt   DateTime?
+  projectDomainVerifiedAt DateTime?
   availabilityCheckedAt DateTime?
   registeredAt          DateTime?
   expiresAt             DateTime?

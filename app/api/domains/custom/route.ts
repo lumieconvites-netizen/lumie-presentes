@@ -10,6 +10,7 @@ import {
   summarizeDomainEntitlement,
 } from "@/lib/domain-entitlements";
 import { checkRegistrarAvailability, prepareRegistrarRegistration } from "@/lib/domain-registrars";
+import { syncCustomDomainProvisioning } from "@/lib/domain-provisioning";
 import { resolveEffectivePlan } from "@/lib/plans";
 
 export const runtime = "nodejs";
@@ -36,7 +37,7 @@ export async function GET() {
   if (!data) return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   await markExpiredDomainEntitlements(data.ctx.effectiveUserId);
 
-  const customDomain = data.giftListId
+  let customDomain = data.giftListId
     ? await prisma.customDomain.findFirst({
         where: { giftListId: data.giftListId },
         orderBy: { createdAt: "desc" },
@@ -44,6 +45,10 @@ export async function GET() {
           id: true,
           domain: true,
           status: true,
+          registrarOrderId: true,
+          registrarOrderStatus: true,
+          purchaseAttemptedAt: true,
+          projectDomainVerifiedAt: true,
           availabilityCheckedAt: true,
           registeredAt: true,
           expiresAt: true,
@@ -52,6 +57,9 @@ export async function GET() {
         },
       })
     : null;
+  if (customDomain?.status === "PURCHASE_PENDING") {
+    customDomain = await syncCustomDomainProvisioning(customDomain.id);
+  }
   const entitlement = await getDomainEntitlementForUser(data.ctx.effectiveUserId);
 
   return NextResponse.json({
@@ -134,6 +142,11 @@ export async function POST(request: Request) {
           data: {
             domain,
             status: "PURCHASE_PENDING",
+            registrarOrderId: null,
+            registrarOrderStatus: null,
+            purchaseAttemptedAt: null,
+            projectDomainVerifiedAt: null,
+            registeredAt: null,
             availabilityCheckedAt: new Date(),
             expiresAt: activeEntitlement.expiresAt ?? null,
             lastError: registrationPreparation.ok ? null : registrationPreparation.message,
@@ -142,6 +155,10 @@ export async function POST(request: Request) {
             id: true,
             domain: true,
             status: true,
+            registrarOrderId: true,
+            registrarOrderStatus: true,
+            purchaseAttemptedAt: true,
+            projectDomainVerifiedAt: true,
             availabilityCheckedAt: true,
             registeredAt: true,
             expiresAt: true,
@@ -155,6 +172,10 @@ export async function POST(request: Request) {
             giftListId: data.giftListId,
             domain,
             status: "PURCHASE_PENDING",
+            registrarOrderId: null,
+            registrarOrderStatus: null,
+            purchaseAttemptedAt: null,
+            projectDomainVerifiedAt: null,
             availabilityCheckedAt: new Date(),
             expiresAt: activeEntitlement.expiresAt ?? null,
             lastError: registrationPreparation.ok ? null : registrationPreparation.message,
@@ -163,6 +184,10 @@ export async function POST(request: Request) {
             id: true,
             domain: true,
             status: true,
+            registrarOrderId: true,
+            registrarOrderStatus: true,
+            purchaseAttemptedAt: true,
+            projectDomainVerifiedAt: true,
             availabilityCheckedAt: true,
             registeredAt: true,
             expiresAt: true,
@@ -184,8 +209,10 @@ export async function POST(request: Request) {
       );
     }
 
+    const provisionedDomain = await syncCustomDomainProvisioning(customDomain.id);
+
     return NextResponse.json({
-      customDomain,
+      customDomain: provisionedDomain ?? customDomain,
       entitlement: summarizeDomainEntitlement(await getDomainEntitlementForUser(data.ctx.effectiveUserId)),
       registration: registrationPreparation,
     });

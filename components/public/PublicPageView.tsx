@@ -245,13 +245,22 @@ export default function PublicPageView({ blocks, gifts, messages, settings, them
     : { backgroundColor };
 
   const listSlug = settings?.slug ? String(settings.slug) : '';
+  const useRootPaths = Boolean(settings?.useRootPaths);
   const isTemplatePreview = Boolean(settings?.isTemplatePreview);
   const templatePreviewSlug = settings?.templatePreviewSlug ? String(settings.templatePreviewSlug) : '';
-  const presentsHref = listSlug ? `/site/${encodeURIComponent(listSlug)}/presentes` : '/site/presentes';
+  const presentsHref = useRootPaths
+    ? '/presentes'
+    : listSlug
+      ? `/site/${encodeURIComponent(listSlug)}/presentes`
+      : '/site/presentes';
   const templatePresentsPreviewHref = templatePreviewSlug
     ? `/templates/${encodeURIComponent(templatePreviewSlug)}/presentes`
     : '/templates';
-  const rsvpHref = listSlug ? `/site/${encodeURIComponent(listSlug)}/confirmar-presenca` : '#';
+  const rsvpHref = useRootPaths
+    ? '/confirmar-presenca'
+    : listSlug
+      ? `/site/${encodeURIComponent(listSlug)}/confirmar-presenca`
+      : '#';
   const meuSiteHref = header.menuMeuSiteUrl || '';
   const giftsMenuHref = header.menuGiftsUrl || '';
   const rsvpMenuHref = header.menuRsvpUrl || '';

@@ -16,6 +16,7 @@ interface SiteRendererProps {
   theme: any;
   gifts: any[];
   messages: any[];
+  useRootPaths?: boolean;
 }
 
 function mapGift(g: any) {
@@ -42,13 +43,13 @@ function mapMessage(m: any) {
   };
 }
 
-export default function SiteRenderer({ list, blocks, theme, gifts, messages }: SiteRendererProps) {
+export default function SiteRenderer({ list, blocks, theme, gifts, messages, useRootPaths = false }: SiteRendererProps) {
   return (
     <PublicPageView
       blocks={Array.isArray(blocks) ? blocks : []}
       gifts={(gifts ?? []).map(mapGift)}
       messages={(messages ?? []).map(mapMessage)}
-      settings={{ slug: list?.slug }}
+      settings={{ slug: list?.slug, useRootPaths }}
       theme={theme ?? {}}
     />
   );
