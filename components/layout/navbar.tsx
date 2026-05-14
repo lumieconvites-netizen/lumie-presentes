@@ -4,15 +4,24 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
   const [navigating, setNavigating] = useState(false);
+  const sessionName = session?.user?.name || session?.user?.email || 'Usuário';
+  const sessionImage = (session?.user as any)?.image as string | null | undefined;
+  const initials = sessionName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase() || 'U';
   const hideOnTemplatePreview = /^\/templates\/[^/]+(?:\/presentes)?$/.test(pathname ?? '');
   const hideOnTemplatesWhenLogged = (pathname ?? '') === '/templates' && status === 'authenticated';
 
@@ -58,12 +67,18 @@ export function Navbar() {
             {status === 'authenticated' ? (
               <Link
                 href="/dashboard"
-                className="pointer-events-auto inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#d8a18b] bg-[#fff7f2] px-4 text-sm font-semibold text-[#8e3d2c] shadow-sm transition hover:border-[#c65a3a] hover:bg-[#fff1e8]"
+                className="pointer-events-auto inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#ead9cd] bg-white py-1 pl-1 pr-4 text-sm font-semibold text-[#4f3f38] shadow-sm transition hover:border-[#d8a18b] hover:bg-[#fff8f4] hover:text-[#8e3d2c]"
                 onClick={() => setNavigating(true)}
                 aria-label="Voltar para o dashboard"
                 title="Voltar para o dashboard"
               >
-                <LayoutDashboard className="h-4 w-4" />
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#c65a3a] text-xs font-semibold text-white">
+                  {sessionImage ? (
+                    <Image src={sessionImage} alt={sessionName} width={32} height={32} className="h-8 w-8 object-cover" />
+                  ) : (
+                    initials
+                  )}
+                </span>
                 Meu painel
               </Link>
             ) : (
@@ -91,11 +106,17 @@ export function Navbar() {
             {status === 'authenticated' ? (
               <Link
                 href="/dashboard"
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#d8a18b] bg-[#fff7f2] px-3 text-xs font-semibold text-[#8e3d2c]"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#ead9cd] bg-white py-1 pl-1 pr-3 text-xs font-semibold text-[#4f3f38]"
                 onClick={() => setNavigating(true)}
                 aria-label="Voltar para o dashboard"
               >
-                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#c65a3a] text-[10px] font-semibold text-white">
+                  {sessionImage ? (
+                    <Image src={sessionImage} alt={sessionName} width={28} height={28} className="h-7 w-7 object-cover" />
+                  ) : (
+                    initials
+                  )}
+                </span>
                 Painel
               </Link>
             ) : (

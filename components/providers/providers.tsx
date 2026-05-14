@@ -2,10 +2,12 @@
 
 import { SessionProvider } from 'next-auth/react';
 import { Toaster } from 'react-hot-toast';
+import { InactivityLogout } from './inactivity-logout';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
+      <InactivityLogout />
       {children}
       <Toaster
         position="top-right"
