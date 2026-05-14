@@ -4,7 +4,8 @@ import { headers } from 'next/headers';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
 import SiteRenderer from '@/components/site/SiteRenderer';
-import { resolveActiveCustomDomainHost } from '@/lib/public-site-resolver';
+import SiteUnderConstruction from '@/components/site/SiteUnderConstruction';
+import { resolveCustomDomainHost } from '@/lib/public-site-resolver';
 import { ImageIcon, MessageCircleHeart, TimerReset, Sparkles, CreditCard, CheckCircle2, Gift, Brush, ShoppingBag, Plane, Users, BellRing, FileSpreadsheet, UserPlus, MapPin, Navigation2, CalendarDays, Smartphone, ListMusic, LayoutTemplate, PlayCircle } from 'lucide-react';
 
 const heroSlides = [
@@ -98,9 +99,9 @@ const showcaseArrivalFeatures = [
 export default async function HomePage() {
   const headerStore = headers();
   const host = headerStore.get('x-forwarded-host') || headerStore.get('host');
-  const resolvedDomain = await resolveActiveCustomDomainHost(host);
+  const resolvedDomain = await resolveCustomDomainHost(host);
 
-  if (resolvedDomain?.giftList) {
+  if (resolvedDomain?.giftList?.isPublished) {
     const list = resolvedDomain.giftList;
     const rawBlocks = list.pageLayout?.blocks;
     const rawTheme = list.pageLayout?.theme;
@@ -126,6 +127,16 @@ export default async function HomePage() {
         gifts={list.gifts}
         messages={list.messages}
         useRootPaths
+      />
+    );
+  }
+
+  if (resolvedDomain?.giftList) {
+    return (
+      <SiteUnderConstruction
+        domain={resolvedDomain.domain}
+        title={resolvedDomain.giftList.title}
+        hostName={resolvedDomain.giftList.user?.name ?? null}
       />
     );
   }

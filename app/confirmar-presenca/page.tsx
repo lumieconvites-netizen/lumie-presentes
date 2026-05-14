@@ -1,7 +1,8 @@
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { ConfirmClient } from '@/app/site/[slug]/confirmar-presenca/confirm-client';
-import { resolveActiveCustomDomainHost } from '@/lib/public-site-resolver';
+import SiteUnderConstruction from '@/components/site/SiteUnderConstruction';
+import { resolveCustomDomainHost } from '@/lib/public-site-resolver';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,10 +11,19 @@ export const revalidate = 0;
 export default async function ConfirmarPresencaByDomainPage() {
   const headerStore = headers();
   const host = headerStore.get('x-forwarded-host') || headerStore.get('host');
-  const resolved = await resolveActiveCustomDomainHost(host);
+  const resolved = await resolveCustomDomainHost(host);
   const list = resolved?.giftList;
 
-  if (!list || !list.isPublished) return notFound();
+  if (!list) return notFound();
+  if (!list.isPublished) {
+    return (
+      <SiteUnderConstruction
+        domain={resolved?.domain}
+        title={list.title}
+        hostName={list.user?.name ?? null}
+      />
+    );
+  }
 
   if (!list.rsvpSettings?.enabled) {
     return (

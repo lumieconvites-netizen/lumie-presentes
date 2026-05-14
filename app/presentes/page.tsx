@@ -4,8 +4,9 @@ import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import GiftsFilterMenu from '@/components/public/GiftsFilterMenu';
+import SiteUnderConstruction from '@/components/site/SiteUnderConstruction';
 import { buildEffectiveAvailabilityMap } from '@/lib/gift-availability';
-import { resolveActiveCustomDomainHost } from '@/lib/public-site-resolver';
+import { resolveCustomDomainHost } from '@/lib/public-site-resolver';
 import { resolveThemeBodyFont, resolveThemeTitleFont } from '@/lib/theme-fonts';
 import { resolveEffectivePlan, resolvePlatformFeePercent } from '@/lib/plans';
 
@@ -31,10 +32,19 @@ export default async function SiteGiftsByDomainPage({
 }) {
   const headerStore = headers();
   const host = headerStore.get('x-forwarded-host') || headerStore.get('host');
-  const resolved = await resolveActiveCustomDomainHost(host);
+  const resolved = await resolveCustomDomainHost(host);
   const list = resolved?.giftList;
 
-  if (!list || !list.isPublished) return notFound();
+  if (!list) return notFound();
+  if (!list.isPublished) {
+    return (
+      <SiteUnderConstruction
+        domain={resolved?.domain}
+        title={list.title}
+        hostName={list.user?.name ?? null}
+      />
+    );
+  }
 
   const rawFilter = (searchParams?.f || '').toLowerCase();
   const activeFilter: 'all' | 'available' | 'price_desc' | 'price_asc' | 'name_asc' =

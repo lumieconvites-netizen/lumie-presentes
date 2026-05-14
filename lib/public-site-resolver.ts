@@ -31,6 +31,30 @@ export async function resolvePublishedGiftListByDomain(domain: string) {
   });
 }
 
+export async function resolveCustomDomainHost(host?: string | null) {
+  const normalized = normalizeRequestHost(host);
+  if (!normalized) return null;
+
+  return prisma.customDomain.findFirst({
+    where: {
+      domain: normalized,
+      status: 'ACTIVE',
+    },
+    select: {
+      domain: true,
+      giftList: {
+        include: {
+          user: { select: { name: true, image: true, plan: true, planExpiresAt: true } },
+          pageLayout: true,
+          gifts: { orderBy: { order: 'asc' } },
+          messages: { orderBy: { createdAt: 'desc' } },
+          rsvpSettings: true,
+        },
+      },
+    },
+  });
+}
+
 export async function resolveActiveCustomDomainHost(host?: string | null) {
   const normalized = normalizeRequestHost(host);
   if (!normalized) return null;
