@@ -3,6 +3,7 @@ import DashboardSidebar from '@/components/dashboard/sidebar';
 import DashboardHeader from '@/components/dashboard/header';
 import { getActingUserContext } from '@/lib/acting-user';
 import AffiliateLimitedGuard from '@/components/dashboard/affiliate-limited-guard';
+import PremiumWhatsappSupport from '@/components/dashboard/premium-whatsapp-support';
 import { UserProviderGate } from '@/components/providers/user-provider-gate';
 import { getPrimaryGiftListIdForUser } from '@/lib/primary-gift-list';
 import { prisma } from '@/lib/prisma';
@@ -84,6 +85,7 @@ export default async function DashboardLayout({
             canViewSettingsInLimitedMode={canViewSettingsInLimitedMode}
           />
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">{children}</main>
+          {effectivePlan === 'PREMIUM' ? <PremiumWhatsappSupport /> : null}
         </div>
       </div>
     </UserProviderGate>
