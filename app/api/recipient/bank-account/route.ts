@@ -70,6 +70,18 @@ function isRecipientNotFoundError(error: unknown) {
   return combined.includes(" 404") || combined.includes("not found") || combined.includes("nao encontrado");
 }
 
+function normalizeRecipientStatus(input?: string | null) {
+  const status = String(input ?? "").trim().toLowerCase();
+  if (["active", "ativo", "approved", "enabled"].includes(status)) return "active";
+  if (["refused", "rejected", "denied", "inactive", "disabled"].includes(status)) return "refused";
+  if (["pending", "created", "processing", "waiting"].includes(status)) return "pending";
+  return status || "active";
+}
+
+function isRefusedRecipientStatus(input?: string | null) {
+  return normalizeRecipientStatus(input) === "refused";
+}
+
 export async function GET() {
   const ctx = await getActingUserContext();
   if (!ctx) {
@@ -140,8 +152,12 @@ export async function PUT(request: Request) {
       normalizeComparableHolderName(currentBankAccount?.holderName) &&
       normalizeComparableHolderName(currentBankAccount?.holderName) !==
         normalizeComparableHolderName(bankAccount.holderName);
+    const recipientWasRefused = isRefusedRecipientStatus(existingRecipient?.status);
     const shouldCreateNewRecipient =
-      !hasRealRecipient || Boolean(holderDocumentChanged) || Boolean(holderNameChanged);
+      !hasRealRecipient ||
+      Boolean(holderDocumentChanged) ||
+      Boolean(holderNameChanged) ||
+      Boolean(recipientWasRefused);
     let nextRecipientId = existingRecipient?.pagarmeRecipientId ?? `pending_${ctx.effectiveUserId}`;
     let nextStatus = hasRealRecipient ? existingRecipient?.status ?? "active" : "pending";
     let warning: string | null = null;
@@ -160,12 +176,12 @@ export async function PUT(request: Request) {
       try {
         if (hasRealRecipient && existingRecipient?.pagarmeRecipientId && !shouldCreateNewRecipient) {
           try {
-            await updateRecipientDefaultBankAccountWithGateway({
+            const updated = await updateRecipientDefaultBankAccountWithGateway({
               recipientId: existingRecipient.pagarmeRecipientId,
               bankAccount: gatewayBankAccount,
             });
             nextRecipientId = existingRecipient.pagarmeRecipientId;
-            nextStatus = "active";
+            nextStatus = normalizeRecipientStatus(updated?.status);
           } catch (updateError) {
             if (!isRecipientNotFoundError(updateError)) {
               throw updateError;
@@ -183,7 +199,7 @@ export async function PUT(request: Request) {
               },
             });
             nextRecipientId = created?.id ?? nextRecipientId;
-            nextStatus = "active";
+            nextStatus = normalizeRecipientStatus(created?.status);
             warning =
               "Conta salva. O recebedor anterior nao foi encontrado na Pagar.me e um novo recebedor foi criado automaticamente.";
           }
@@ -200,7 +216,11 @@ export async function PUT(request: Request) {
             },
           });
           nextRecipientId = created?.id ?? nextRecipientId;
-          nextStatus = "active";
+          nextStatus = normalizeRecipientStatus(created?.status);
+          if (recipientWasRefused) {
+            warning =
+              "Conta salva. Como o recebedor anterior foi recusado pela Pagar.me, um novo recebedor foi criado automaticamente.";
+          }
         }
       } catch (error: any) {
         console.error("Falha ao sincronizar recebedor na Pagar.me:", error);
