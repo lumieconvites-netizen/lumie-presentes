@@ -65,6 +65,30 @@ function isRealRecipientId(value?: string | null) {
   return !value.startsWith('pending_');
 }
 
+function isActiveRecipient(recipient?: { pagarmeRecipientId?: string | null; status?: string | null } | null) {
+  return isRealRecipientId(recipient?.pagarmeRecipientId) && String(recipient?.status ?? '').toLowerCase() === 'active';
+}
+
+function findGatewayRecipientIds(message: string) {
+  return Array.from(new Set(message.match(/re_[a-z0-9]+/gi) ?? []));
+}
+
+function isRecipientCannotTransactError(message: string) {
+  return /recipient.+cannot transact/i.test(message) || /cannot transact/i.test(message);
+}
+
+async function markRecipientsRefusedFromGatewayMessage(message: string) {
+  if (!isRecipientCannotTransactError(message)) return;
+
+  const recipientIds = findGatewayRecipientIds(message);
+  if (!recipientIds.length) return;
+
+  await prisma.recipient.updateMany({
+    where: { pagarmeRecipientId: { in: recipientIds } },
+    data: { status: 'refused' },
+  });
+}
+
 function readPercent(name: string, fallback: number) {
   const raw = process.env[name];
   if (!raw) return fallback;
@@ -334,18 +358,38 @@ export async function POST(request: Request) {
     if (canUsePagarme) {
       try {
         const platformRecipientId = process.env.PAGARME_PLATFORM_RECIPIENT_ID;
-        const clientRecipientId = gift.giftList.user.recipient?.pagarmeRecipientId;
+        const clientRecipient = gift.giftList.user.recipient;
+        const partnerRecipient = gift.giftList.user.referredByPartner?.recipient;
+        const ambassadorRecipient = gift.giftList.user.referredByAmbassador?.recipient;
+        const clientRecipientId = clientRecipient?.pagarmeRecipientId;
 
-        const partnerRecipientId = gift.giftList.user.referredByPartner?.recipient?.pagarmeRecipientId;
-        const ambassadorRecipientId = gift.giftList.user.referredByAmbassador?.recipient?.pagarmeRecipientId;
+        const partnerRecipientId = partnerRecipient?.pagarmeRecipientId;
+        const ambassadorRecipientId = ambassadorRecipient?.pagarmeRecipientId;
+
+        if (!isActiveRecipient(clientRecipient)) {
+          await prisma.order.update({
+            where: { id: order.id },
+            data: { status: 'REFUSED' },
+          });
+
+          return NextResponse.json(
+            {
+              error: 'A conta bancária da anfitriã ainda não está aprovada para receber pagamentos.',
+              details: 'Oriente a anfitriã a revisar e salvar os dados bancários antes de tentar novamente.',
+              orderId: order.id,
+              recipientStatus: clientRecipient?.status ?? null,
+            },
+            { status: 400 }
+          );
+        }
 
         const splitAmounts = calculateCommissionSplit({
           baseAmount: calculation.baseAmount,
           totalAmount: calculation.totalAmount,
           acquisitionSource: gift.giftList.user.acquisitionSource,
           feeMode: gift.giftList.feeMode,
-          hasPartnerRecipient: isRealRecipientId(partnerRecipientId),
-          hasAmbassadorRecipient: isRealRecipientId(ambassadorRecipientId),
+          hasPartnerRecipient: isActiveRecipient(partnerRecipient),
+          hasAmbassadorRecipient: isActiveRecipient(ambassadorRecipient),
           paymentMethod: data.paymentMethod,
           plan: effectivePlan,
         });
@@ -357,10 +401,10 @@ export async function POST(request: Request) {
           splitAmounts.clientInCents >= 0
             ? [
                 { recipientId: clientRecipientId as string, amountInCents: splitAmounts.clientInCents },
-                ...(splitAmounts.partnerInCents > 0 && isRealRecipientId(partnerRecipientId)
+                ...(splitAmounts.partnerInCents > 0 && isActiveRecipient(partnerRecipient)
                   ? [{ recipientId: partnerRecipientId as string, amountInCents: splitAmounts.partnerInCents }]
                   : []),
-                ...(splitAmounts.ambassadorInCents > 0 && isRealRecipientId(ambassadorRecipientId)
+                ...(splitAmounts.ambassadorInCents > 0 && isActiveRecipient(ambassadorRecipient)
                   ? [{ recipientId: ambassadorRecipientId as string, amountInCents: splitAmounts.ambassadorInCents }]
                   : []),
                 { recipientId: platformRecipientId, amountInCents: splitAmounts.platformInCents },
@@ -574,6 +618,17 @@ export async function POST(request: Request) {
         }
 
         if (isFailed) {
+          const combinedGatewayMessage = [
+            failReason,
+            firstGatewayReason,
+            transaction?.status_reason,
+            transaction?.gateway_response?.errors?.[0]?.message,
+            transaction?.acquirer_message,
+          ]
+            .filter(Boolean)
+            .join('\n');
+          await markRecipientsRefusedFromGatewayMessage(combinedGatewayMessage);
+
           console.warn('Pagamento recusado pela Pagar.me', {
             orderId: order.id,
             chargeStatus: charge?.status ?? null,
@@ -616,6 +671,7 @@ export async function POST(request: Request) {
         const details = sanitizeGatewayErrorDetails(
           gatewayError?.message || 'Falha ao criar cobranca no gateway'
         );
+        await markRecipientsRefusedFromGatewayMessage(details);
         console.error('Falha ao criar cobranca Pagar.me:', details);
         await prisma.order.update({
           where: { id: order.id },

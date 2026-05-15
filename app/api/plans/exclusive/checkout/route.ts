@@ -37,6 +37,10 @@ function isRealRecipientId(value?: string | null) {
   return Boolean(value && !value.startsWith('pending_'));
 }
 
+function isActiveRecipient(recipient?: { pagarmeRecipientId?: string | null; status?: string | null } | null) {
+  return isRealRecipientId(recipient?.pagarmeRecipientId) && String(recipient?.status ?? '').toLowerCase() === 'active';
+}
+
 function isValidCpf(cpf: string) {
   const digits = onlyDigits(cpf);
   if (digits.length !== 11) return false;
@@ -145,7 +149,7 @@ export async function POST(request: Request) {
         select: {
           id: true,
           recipient: {
-            select: { pagarmeRecipientId: true },
+            select: { pagarmeRecipientId: true, status: true },
           },
         },
       },
@@ -153,7 +157,7 @@ export async function POST(request: Request) {
         select: {
           id: true,
           recipient: {
-            select: { pagarmeRecipientId: true },
+            select: { pagarmeRecipientId: true, status: true },
           },
         },
       },
@@ -164,12 +168,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Usuario nao encontrado.' }, { status: 404 });
   }
 
-  const partnerRecipientId = user.referredByPartner?.recipient?.pagarmeRecipientId ?? null;
-  const ambassadorRecipientId = user.referredByAmbassador?.recipient?.pagarmeRecipientId ?? null;
-  const partnerCommissionInCents = isRealRecipientId(partnerRecipientId)
+  const partnerRecipient = user.referredByPartner?.recipient ?? null;
+  const ambassadorRecipient = user.referredByAmbassador?.recipient ?? null;
+  const partnerRecipientId = partnerRecipient?.pagarmeRecipientId ?? null;
+  const ambassadorRecipientId = ambassadorRecipient?.pagarmeRecipientId ?? null;
+  const partnerCommissionInCents = isActiveRecipient(partnerRecipient)
     ? LUMIE_EXCLUSIVE_PARTNER_COMMISSION_CENTS
     : 0;
-  const ambassadorCommissionInCents = isRealRecipientId(ambassadorRecipientId)
+  const ambassadorCommissionInCents = isActiveRecipient(ambassadorRecipient)
     ? LUMIE_EXCLUSIVE_AMBASSADOR_COMMISSION_CENTS
     : 0;
   const platformInCents =
