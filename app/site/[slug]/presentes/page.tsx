@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
 import { buildEffectiveAvailabilityMap } from "@/lib/gift-availability";
-import { getPublishedSiteStaticParams } from "@/lib/public-site-static-params";
 import { resolveThemeBodyFont, resolveThemeTitleFont } from "@/lib/theme-fonts";
 import GiftsFilterMenu from "@/components/public/GiftsFilterMenu";
 import { resolveEffectivePlan, resolvePlatformFeePercent } from "@/lib/plans";
@@ -21,12 +20,8 @@ function calculateDisplayPrice(basePrice: number, feeMode: "PASS_TO_GUEST" | "AB
 const heroTextShadow = "0 2px 10px rgba(0,0,0,0.32)";
 
 export const runtime = "nodejs";
-export const dynamic = "force-static";
-export const revalidate = 60;
-
-export async function generateStaticParams() {
-  return getPublishedSiteStaticParams();
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function SiteGiftsBySlugPage({
   params,
