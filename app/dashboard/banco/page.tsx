@@ -15,6 +15,7 @@ import {
 type BankAccountForm = {
   holderName: string;
   holderDocument: string;
+  holderBirthdate: string;
   bankCode: string;
   agency: string;
   agencyDigit: string;
@@ -26,6 +27,7 @@ type BankAccountForm = {
 const initialState: BankAccountForm = {
   holderName: "",
   holderDocument: "",
+  holderBirthdate: "",
   bankCode: "",
   agency: "",
   agencyDigit: "",
@@ -68,6 +70,7 @@ export default function BancoDashboardPage() {
           setForm({
             holderName: bankAccount.holderName ?? "",
             holderDocument: bankAccount.holderDocument ?? "",
+            holderBirthdate: bankAccount.holderBirthdate ?? "",
             bankCode: normalizeBankCode(bankAccount.bankCode ?? ""),
             agency: bankAccount.agency ?? "",
             agencyDigit: bankAccount.agencyDigit ?? "",
@@ -187,6 +190,19 @@ export default function BancoDashboardPage() {
             />
             <p className="mt-1 text-xs text-gray-500">
               Use apenas o documento do titular da conta.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Data de nascimento do titular</label>
+            <Input
+              type="date"
+              value={form.holderBirthdate}
+              onChange={(e) => setForm((p) => ({ ...p, holderBirthdate: e.target.value }))}
+              readOnly={readOnly}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Obrigatória para CPF. O titular da conta precisa ter 18 anos ou mais.
             </p>
           </div>
 

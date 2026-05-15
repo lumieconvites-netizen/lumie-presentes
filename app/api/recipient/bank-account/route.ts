@@ -15,6 +15,7 @@ import {
 const bankAccountSchema = z.object({
   holderName: z.string().min(3, "Nome do titular invalido"),
   holderDocument: z.string().min(11, "CPF/CNPJ invalido"),
+  holderBirthdate: z.string().optional(),
   bankCode: z.string().min(3, "Codigo do banco invalido"),
   agency: z.string().min(1, "Agencia obrigatoria"),
   agencyDigit: z.string().optional(),
@@ -25,6 +26,47 @@ const bankAccountSchema = z.object({
 
 function digitsOnly(value?: string | null) {
   return (value ?? "").replace(/\D/g, "");
+}
+
+function isIndividualDocument(document: string) {
+  return digitsOnly(document).length === 11;
+}
+
+function parseBirthdate(value?: string | null) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return date;
+}
+
+function calculateAge(birthdate: Date, today = new Date()) {
+  let age = today.getUTCFullYear() - birthdate.getUTCFullYear();
+  const currentMonth = today.getUTCMonth();
+  const birthMonth = birthdate.getUTCMonth();
+  if (
+    currentMonth < birthMonth ||
+    (currentMonth === birthMonth && today.getUTCDate() < birthdate.getUTCDate())
+  ) {
+    age -= 1;
+  }
+  return age;
+}
+
+function formatBirthdate(date: Date) {
+  return date.toISOString().slice(0, 10);
 }
 
 function isRealRecipientId(value?: string | null) {
@@ -122,10 +164,33 @@ export async function PUT(request: Request) {
       ...parsed,
       bankCode: normalizedBankCode,
     };
-    const gatewayBankAccount = {
+    const ownerDocument = digitsOnly(bankAccount.holderDocument);
+    const holderBirthdate = parseBirthdate(bankAccount.holderBirthdate);
+
+    if (isIndividualDocument(ownerDocument)) {
+      if (!holderBirthdate) {
+        return NextResponse.json(
+          { error: "Informe a data de nascimento do titular da conta." },
+          { status: 400 }
+        );
+      }
+
+      if (calculateAge(holderBirthdate) < 18) {
+        return NextResponse.json(
+          { error: "Nao e permitido cadastrar conta bancaria em nome de menor de 18 anos." },
+          { status: 400 }
+        );
+      }
+    }
+
+    const normalizedBankAccount = {
       ...bankAccount,
-      bankCode: normalizeRecipientTransferBankCode(bankAccount.bankCode),
-      holderName: normalizeGatewayHolderName(bankAccount.holderName),
+      holderBirthdate: holderBirthdate ? formatBirthdate(holderBirthdate) : "",
+    };
+    const gatewayBankAccount = {
+      ...normalizedBankAccount,
+      bankCode: normalizeRecipientTransferBankCode(normalizedBankAccount.bankCode),
+      holderName: normalizeGatewayHolderName(normalizedBankAccount.holderName),
     };
 
     const user = await prisma.user.findUnique({
@@ -142,7 +207,6 @@ export async function PUT(request: Request) {
       select: { id: true, pagarmeRecipientId: true, bankAccount: true, status: true },
     });
 
-    const ownerDocument = digitsOnly(bankAccount.holderDocument);
     const hasRealRecipient = isRealRecipientId(existingRecipient?.pagarmeRecipientId);
     const currentBankAccount = (existingRecipient?.bankAccount ?? null) as Record<string, any> | null;
     const holderDocumentChanged =
@@ -189,7 +253,7 @@ export async function PUT(request: Request) {
 
             const created = await createRecipientWithGateway({
               owner: {
-                name: user.name?.trim() || bankAccount.holderName.trim(),
+                name: user.name?.trim() || normalizedBankAccount.holderName.trim(),
                 email: user.email,
                 document: ownerDocument,
               },
@@ -206,7 +270,7 @@ export async function PUT(request: Request) {
         } else {
           const created = await createRecipientWithGateway({
             owner: {
-              name: user.name?.trim() || bankAccount.holderName.trim(),
+              name: user.name?.trim() || normalizedBankAccount.holderName.trim(),
               email: user.email,
               document: ownerDocument,
             },
@@ -240,12 +304,12 @@ export async function PUT(request: Request) {
       create: {
         userId: ctx.effectiveUserId,
         pagarmeRecipientId: nextRecipientId,
-        bankAccount: bankAccount as any,
+        bankAccount: normalizedBankAccount as any,
         status: nextStatus,
       },
       update: {
         pagarmeRecipientId: nextRecipientId,
-        bankAccount: bankAccount as any,
+        bankAccount: normalizedBankAccount as any,
         status: nextStatus,
       },
       select: {

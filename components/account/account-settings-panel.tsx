@@ -22,6 +22,7 @@ type UserMe = {
 type BankAccountForm = {
   holderName: string;
   holderDocument: string;
+  holderBirthdate: string;
   bankCode: string;
   agency: string;
   agencyDigit: string;
@@ -33,6 +34,7 @@ type BankAccountForm = {
 const emptyBank: BankAccountForm = {
   holderName: '',
   holderDocument: '',
+  holderBirthdate: '',
   bankCode: '',
   agency: '',
   agencyDigit: '',
@@ -92,6 +94,7 @@ export default function AccountSettingsPanel({
               setBank({
                 holderName: account.holderName ?? '',
                 holderDocument: account.holderDocument ?? '',
+                holderBirthdate: account.holderBirthdate ?? '',
                 bankCode: normalizeBankCode(account.bankCode ?? ''),
                 agency: account.agency ?? '',
                 agencyDigit: account.agencyDigit ?? '',
@@ -269,6 +272,18 @@ export default function AccountSettingsPanel({
               />
               <p className="mt-1 text-xs text-gray-500">
                 Use apenas o documento do titular da conta.
+              </p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Data de nascimento do titular</label>
+              <Input
+                type="date"
+                value={bank.holderBirthdate}
+                onChange={(e) => setBank((p) => ({ ...p, holderBirthdate: e.target.value }))}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Obrigatória para CPF. O titular da conta precisa ter 18 anos ou mais.
               </p>
             </div>
 
