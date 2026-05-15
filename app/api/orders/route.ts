@@ -85,7 +85,7 @@ async function markRecipientsRefusedFromGatewayMessage(message: string) {
 
   await prisma.recipient.updateMany({
     where: { pagarmeRecipientId: { in: recipientIds } },
-    data: { status: 'refused' },
+    data: { status: 'refused', statusFinalizedAt: new Date() },
   });
 }
 

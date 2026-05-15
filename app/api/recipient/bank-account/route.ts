@@ -306,11 +306,17 @@ export async function PUT(request: Request) {
         pagarmeRecipientId: nextRecipientId,
         bankAccount: normalizedBankAccount as any,
         status: nextStatus,
+        lastStatusCheckedAt: null,
+        statusCheckAttempts: 0,
+        statusFinalizedAt: nextStatus === "refused" ? new Date() : null,
       },
       update: {
         pagarmeRecipientId: nextRecipientId,
         bankAccount: normalizedBankAccount as any,
         status: nextStatus,
+        lastStatusCheckedAt: null,
+        statusCheckAttempts: 0,
+        statusFinalizedAt: nextStatus === "refused" ? new Date() : null,
       },
       select: {
         id: true,

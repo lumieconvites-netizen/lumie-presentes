@@ -155,6 +155,23 @@ function isDashboardWithdrawTransfer(transfer) {
   return source === "lumie_dashboard_withdraw";
 }
 
+function normalizeRecipientStatus(input) {
+  const status = String(input || "").trim().toLowerCase();
+  if (["active", "ativo", "approved", "enabled"].includes(status)) return "active";
+  if (["refused", "rejected", "denied", "inactive", "disabled"].includes(status)) return "refused";
+  if (["pending", "created", "processing", "waiting"].includes(status)) return "pending";
+  return status || "unknown";
+}
+
+function pickRecipientStatus(payload) {
+  return normalizeRecipientStatus(
+    payload?.status ||
+      payload?.recipient?.status ||
+      payload?.data?.status ||
+      payload?.result?.status
+  );
+}
+
 function transferTimestamp(transfer) {
   const value = transfer?.updated_at || transfer?.updatedAt || transfer?.created_at || transfer?.createdAt;
   const ts = new Date(value || 0).getTime();
@@ -459,6 +476,43 @@ app.post("/transfer", async (req, res) => {
       ok: true,
       provider: "pagarme",
       transfer: parsed,
+    });
+  } catch (error) {
+    return fail(res, 500, String(error && error.message ? error.message : "Erro no gateway"));
+  }
+});
+
+app.get("/recipient/:recipientId/status", async (req, res) => {
+  if (!pagarmeSecretKey) return fail(res, 500, "PAGARME_SECRET_KEY nao configurada");
+  if (!gatewayToken) return fail(res, 500, "WITHDRAW_GATEWAY_TOKEN nao configurada");
+
+  const token = readAuthToken(req);
+  if (!token || token !== gatewayToken) {
+    return fail(res, 401, "Nao autorizado");
+  }
+
+  const recipientId = String(req.params.recipientId || "").trim();
+  if (!recipientId) return fail(res, 400, "recipientId obrigatorio");
+
+  try {
+    const { response, parsed } = await pagarmeGet(`/recipients/${encodeURIComponent(recipientId)}`);
+    if (!response.ok) {
+      return res.status(response.status).json({
+        ok: false,
+        provider: "pagarme",
+        recipientId,
+        status: response.status,
+        result: parsed,
+      });
+    }
+
+    const status = pickRecipientStatus(parsed);
+    return res.json({
+      ok: true,
+      provider: "pagarme",
+      recipientId,
+      status,
+      rawStatus: parsed?.status || null,
     });
   } catch (error) {
     return fail(res, 500, String(error && error.message ? error.message : "Erro no gateway"));

@@ -78,6 +78,12 @@ type RecipientFinancialSummary = {
   } | null;
 };
 
+type RecipientGatewayStatus = {
+  recipientId: string;
+  status: string;
+  rawStatus?: string | null;
+};
+
 function readAmount(input: any): number {
   if (Array.isArray(input)) return input.reduce((acc, item) => acc + readAmount(item), 0);
   if (typeof input === "number" && Number.isFinite(input)) return input;
@@ -250,6 +256,23 @@ export async function getRecipientFinancialSummaryWithGateway(
     nonFailedTransferAmount: 0,
     nonFailedTransferCount: 0,
     latestPendingTransfer: null,
+  };
+}
+
+export async function getRecipientStatusWithGateway(recipientId: string): Promise<RecipientGatewayStatus> {
+  const { baseUrl } = readGatewayConfig();
+  if (!baseUrl) {
+    throw new Error("WITHDRAW_GATEWAY_URL nao configurada");
+  }
+
+  const payload = await callGateway(`/recipient/${encodeURIComponent(recipientId)}/status`, {
+    method: "GET",
+  });
+
+  return {
+    recipientId: String(payload?.recipientId ?? recipientId),
+    status: String(payload?.status ?? payload?.recipient?.status ?? "unknown"),
+    rawStatus: payload?.rawStatus ?? payload?.recipient?.status ?? null,
   };
 }
 

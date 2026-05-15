@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/media-cleanup-jobs",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/recipient-status-sync",
+      "schedule": "*/10 * * * *"
     }
   ]
 }

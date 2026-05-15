@@ -345,16 +345,20 @@ model Message {
 // ===== PAGAR.ME =====
 
 model Recipient {
-  id                 String   @id @default(cuid())
-  userId             String   @unique
-  pagarmeRecipientId String   @unique
-  bankAccount        Json
-  status             String   @default("pending")
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  pagarmeRecipientId  String    @unique
+  bankAccount         Json
+  status              String    @default("pending")
+  lastStatusCheckedAt DateTime?
+  statusCheckAttempts Int       @default(0)
+  statusFinalizedAt   DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([status, statusFinalizedAt, lastStatusCheckedAt])
   @@map("recipients")
 }
 
