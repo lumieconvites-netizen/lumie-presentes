@@ -30,6 +30,8 @@ export type DashboardSummary = {
   totalGifts: number;
   activeGifts: number;
   pendingOrdersCount: number;
+  pendingCardOrdersCount?: number;
+  pendingCardAmount?: number | string;
   recentPayments: Array<{
     id: string;
     guestName: string;
@@ -113,6 +115,8 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
   const recentMessages = summary?.recentMessages ?? [];
   const availableNow = Math.max(0, Number(financial?.available ?? 0)) / 100;
   const waitingFunds = Math.max(0, Number(financial?.waitingFunds ?? 0)) / 100;
+  const localPendingCardAmount = Math.max(0, Number(summary?.pendingCardAmount ?? 0));
+  const pendingCardDisplayAmount = Math.max(waitingFunds, localPendingCardAmount);
   const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0)) / 100;
   const pendingTransferCount = Math.max(0, Number(financial?.pendingTransferCount ?? 0));
   const nonFailedTransferAmount = Math.max(0, Number(financial?.nonFailedTransferAmount ?? 0)) / 100;
@@ -272,7 +276,7 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {waitingFunds.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              {pendingCardDisplayAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
             <p className="text-xs text-gray-500 mt-1">Em processamento (cartão)</p>
           </CardContent>

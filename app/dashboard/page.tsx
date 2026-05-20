@@ -6,6 +6,20 @@ import DashboardPageClient, { type DashboardData } from '@/components/dashboard/
 import { resolveEffectivePlan } from '@/lib/plans';
 import { buildGiftListPublicUrls } from '@/lib/public-url';
 
+const CARD_METHODS = ['credit_card', 'CREDIT_CARD', 'card', 'CARD'];
+const CARD_LIQUIDATION_WINDOW_DAYS = 45;
+
+function cardPaymentMethodWhere() {
+  return {
+    OR: [
+      { paymentMethod: { in: CARD_METHODS } },
+      { paymentMethod: { contains: 'credit', mode: 'insensitive' as const } },
+      { paymentMethod: { contains: 'card', mode: 'insensitive' as const } },
+      { paymentMethod: { contains: 'cartao', mode: 'insensitive' as const } },
+    ],
+  };
+}
+
 export default async function DashboardPage() {
   const ctx = await getActingUserContext();
 
@@ -36,7 +50,19 @@ export default async function DashboardPage() {
       });
 
       if (giftList) {
-        const [userPlan, customDomain, totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount] = await Promise.all([
+        const cardLiquidationCutoff = new Date();
+        cardLiquidationCutoff.setDate(cardLiquidationCutoff.getDate() - CARD_LIQUIDATION_WINDOW_DAYS);
+
+        const [
+          userPlan,
+          customDomain,
+          totalGifts,
+          activeGifts,
+          recentMessages,
+          recentPayments,
+          pendingOrdersCount,
+          pendingCardOrders,
+        ] = await Promise.all([
           prisma.user.findUnique({
             where: { id: ctx.effectiveUserId },
             select: { plan: true, planExpiresAt: true },
@@ -108,7 +134,28 @@ export default async function DashboardPage() {
               status: { in: ['PENDING', 'AUTHORIZED'] },
             },
           }),
+          prisma.order.findMany({
+            where: {
+              giftListId: primaryGiftListId,
+              AND: [
+                cardPaymentMethodWhere(),
+                {
+                  status: 'PAID',
+                  paidAt: { gte: cardLiquidationCutoff },
+                },
+              ],
+            },
+            select: {
+              totalAmount: true,
+              feeAmount: true,
+            },
+          }),
         ]);
+
+        const pendingCardAmount = pendingCardOrders.reduce(
+          (acc, order) => acc + Math.max(Number(order.totalAmount) - Number(order.feeAmount), 0),
+          0
+        );
 
         initialData = {
           ...giftList,
@@ -122,6 +169,8 @@ export default async function DashboardPage() {
             totalGifts,
             activeGifts,
             pendingOrdersCount,
+            pendingCardOrdersCount: pendingCardOrders.length,
+            pendingCardAmount,
             recentPayments: recentPayments.map((payment) => ({
               ...payment,
               totalAmount: Number(payment.totalAmount),

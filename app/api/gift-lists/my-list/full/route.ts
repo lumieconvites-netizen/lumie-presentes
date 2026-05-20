@@ -9,6 +9,20 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const CARD_METHODS = ["credit_card", "CREDIT_CARD", "card", "CARD"];
+const CARD_LIQUIDATION_WINDOW_DAYS = 45;
+
+function cardPaymentMethodWhere() {
+  return {
+    OR: [
+      { paymentMethod: { in: CARD_METHODS } },
+      { paymentMethod: { contains: "credit", mode: "insensitive" as const } },
+      { paymentMethod: { contains: "card", mode: "insensitive" as const } },
+      { paymentMethod: { contains: "cartao", mode: "insensitive" as const } },
+    ],
+  };
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -44,7 +58,10 @@ export async function GET(req: Request) {
       });
       if (!giftList) return NextResponse.json({ error: "Lista nao encontrada" }, { status: 404 });
 
-      const [totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount, pendingCardOrdersCount] =
+      const cardLiquidationCutoff = new Date();
+      cardLiquidationCutoff.setDate(cardLiquidationCutoff.getDate() - CARD_LIQUIDATION_WINDOW_DAYS);
+
+      const [totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount, pendingCardOrders] =
         await Promise.all([
           prisma.giftItem.count({
             where: {
@@ -108,14 +125,28 @@ export async function GET(req: Request) {
               status: { in: ["PENDING", "AUTHORIZED"] },
             },
           }),
-          prisma.order.count({
+          prisma.order.findMany({
             where: {
               giftListId: primaryGiftListId,
-              paymentMethod: "credit_card",
-              status: { in: ["PENDING", "AUTHORIZED"] },
+              AND: [
+                cardPaymentMethodWhere(),
+                {
+                  status: "PAID",
+                  paidAt: { gte: cardLiquidationCutoff },
+                },
+              ],
+            },
+            select: {
+              totalAmount: true,
+              feeAmount: true,
             },
           }),
         ]);
+
+      const pendingCardAmount = pendingCardOrders.reduce(
+        (acc, order) => acc + Math.max(Number(order.totalAmount) - Number(order.feeAmount), 0),
+        0
+      );
 
       return NextResponse.json({
         ...giftList,
@@ -123,7 +154,8 @@ export async function GET(req: Request) {
           totalGifts,
           activeGifts,
           pendingOrdersCount,
-          pendingCardOrdersCount,
+          pendingCardOrdersCount: pendingCardOrders.length,
+          pendingCardAmount,
           recentPayments,
           recentMessages,
         },
