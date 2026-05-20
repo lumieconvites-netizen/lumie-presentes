@@ -32,6 +32,7 @@ export type DashboardSummary = {
   pendingOrdersCount: number;
   pendingCardOrdersCount?: number;
   pendingCardAmount?: number | string;
+  collectedAmount?: number | string;
   recentPayments: Array<{
     id: string;
     guestName: string;
@@ -122,7 +123,9 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
   const nonFailedTransferAmount = Math.max(0, Number(financial?.nonFailedTransferAmount ?? 0)) / 100;
   const nonFailedTransferCount = Math.max(0, Number(financial?.nonFailedTransferCount ?? 0));
   const withdrawFee = WITHDRAW_FEE_CENTS / 100;
-  const collectedTotal = availableNow + nonFailedTransferAmount + nonFailedTransferCount * withdrawFee;
+  const gatewayCollectedTotal = availableNow + nonFailedTransferAmount + nonFailedTransferCount * withdrawFee;
+  const localCollectedAmount = Math.max(0, Number(summary?.collectedAmount ?? 0));
+  const collectedTotal = Math.max(gatewayCollectedTotal, localCollectedAmount);
 
   const publicLink = data?.publicUrl || (data?.slug ? `/site/${data.slug}` : '/site');
   const statusLabel = useMemo(() => (data?.isPublished ? 'Publicada' : 'Rascunho'), [data?.isPublished]);

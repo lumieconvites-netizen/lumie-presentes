@@ -61,7 +61,7 @@ export async function GET(req: Request) {
       const cardLiquidationCutoff = new Date();
       cardLiquidationCutoff.setDate(cardLiquidationCutoff.getDate() - CARD_LIQUIDATION_WINDOW_DAYS);
 
-      const [totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount, pendingCardOrders] =
+      const [totalGifts, activeGifts, recentMessages, recentPayments, pendingOrdersCount, pendingCardOrders, paidOrdersForSummary] =
         await Promise.all([
           prisma.giftItem.count({
             where: {
@@ -141,12 +141,27 @@ export async function GET(req: Request) {
               feeAmount: true,
             },
           }),
+          prisma.order.findMany({
+            where: {
+              giftListId: primaryGiftListId,
+              status: "PAID",
+            },
+            select: {
+              totalAmount: true,
+              feeAmount: true,
+            },
+          }),
         ]);
 
       const pendingCardAmount = pendingCardOrders.reduce(
         (acc, order) => acc + Math.max(Number(order.totalAmount) - Number(order.feeAmount), 0),
         0
       );
+      const paidClientAmount = paidOrdersForSummary.reduce(
+        (acc, order) => acc + Math.max(Number(order.totalAmount) - Number(order.feeAmount), 0),
+        0
+      );
+      const collectedAmount = Math.max(paidClientAmount - pendingCardAmount, 0);
 
       return NextResponse.json({
         ...giftList,
@@ -156,6 +171,7 @@ export async function GET(req: Request) {
           pendingOrdersCount,
           pendingCardOrdersCount: pendingCardOrders.length,
           pendingCardAmount,
+          collectedAmount,
           recentPayments,
           recentMessages,
         },

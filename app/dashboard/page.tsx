@@ -62,6 +62,7 @@ export default async function DashboardPage() {
           recentPayments,
           pendingOrdersCount,
           pendingCardOrders,
+          paidOrdersForSummary,
         ] = await Promise.all([
           prisma.user.findUnique({
             where: { id: ctx.effectiveUserId },
@@ -150,12 +151,27 @@ export default async function DashboardPage() {
               feeAmount: true,
             },
           }),
+          prisma.order.findMany({
+            where: {
+              giftListId: primaryGiftListId,
+              status: 'PAID',
+            },
+            select: {
+              totalAmount: true,
+              feeAmount: true,
+            },
+          }),
         ]);
 
         const pendingCardAmount = pendingCardOrders.reduce(
           (acc, order) => acc + Math.max(Number(order.totalAmount) - Number(order.feeAmount), 0),
           0
         );
+        const paidClientAmount = paidOrdersForSummary.reduce(
+          (acc, order) => acc + Math.max(Number(order.totalAmount) - Number(order.feeAmount), 0),
+          0
+        );
+        const collectedAmount = Math.max(paidClientAmount - pendingCardAmount, 0);
 
         initialData = {
           ...giftList,
@@ -171,6 +187,7 @@ export default async function DashboardPage() {
             pendingOrdersCount,
             pendingCardOrdersCount: pendingCardOrders.length,
             pendingCardAmount,
+            collectedAmount,
             recentPayments: recentPayments.map((payment) => ({
               ...payment,
               totalAmount: Number(payment.totalAmount),
