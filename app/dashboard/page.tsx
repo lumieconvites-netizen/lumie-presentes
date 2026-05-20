@@ -7,7 +7,7 @@ import { resolveEffectivePlan } from '@/lib/plans';
 import { buildGiftListPublicUrls } from '@/lib/public-url';
 
 const CARD_METHODS = ['credit_card', 'CREDIT_CARD', 'card', 'CARD'];
-const CARD_LIQUIDATION_WINDOW_DAYS = 45;
+const CARD_LIQUIDATION_WINDOW_DAYS = 31;
 
 function cardPaymentMethodWhere() {
   return {

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const CARD_METHODS = ["credit_card", "CREDIT_CARD", "card", "CARD"];
-const CARD_LIQUIDATION_WINDOW_DAYS = 45;
+const CARD_LIQUIDATION_WINDOW_DAYS = 31;
 
 function cardPaymentMethodWhere() {
   return {
