@@ -117,7 +117,8 @@ export default function DashboardPageClient({ initialData }: { initialData: Dash
   const availableNow = Math.max(0, Number(financial?.available ?? 0)) / 100;
   const waitingFunds = Math.max(0, Number(financial?.waitingFunds ?? 0)) / 100;
   const localPendingCardAmount = Math.max(0, Number(summary?.pendingCardAmount ?? 0));
-  const pendingCardDisplayAmount = Math.max(waitingFunds, localPendingCardAmount);
+  const shouldTrustGatewayPending = waitingFunds > 0 || availableNow > 0;
+  const pendingCardDisplayAmount = shouldTrustGatewayPending ? waitingFunds : localPendingCardAmount;
   const pendingTransferAmount = Math.max(0, Number(financial?.pendingTransferAmount ?? 0)) / 100;
   const pendingTransferCount = Math.max(0, Number(financial?.pendingTransferCount ?? 0));
   const nonFailedTransferAmount = Math.max(0, Number(financial?.nonFailedTransferAmount ?? 0)) / 100;
