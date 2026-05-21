@@ -5,6 +5,7 @@ import { sendVerificationCodeEmailReliable } from "@/lib/email-jobs";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
 import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
+import { logSecurityEvent } from "@/lib/security-events";
 
 const resendSchema = z.object({
   email: z.string().email("Email invalido"),
@@ -19,6 +20,11 @@ export async function POST(request: Request) {
       window: "10 m",
     });
     if (!ipRate.allowed) {
+      await logSecurityEvent({
+        type: "AUTH_RESEND_VERIFICATION_IP_RATE_LIMITED",
+        request,
+        route: "/api/auth/resend-verification",
+      });
       return NextResponse.json({ error: "Muitas tentativas. Aguarde alguns minutos." }, { status: 429 });
     }
 
@@ -27,6 +33,12 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (isBlockedEmailDomain(normalizedEmail)) {
+      await logSecurityEvent({
+        type: "AUTH_RESEND_VERIFICATION_BLOCKED_EMAIL_DOMAIN",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/resend-verification",
+      });
       return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 400 });
     }
 
@@ -36,6 +48,12 @@ export async function POST(request: Request) {
       window: "10 m",
     });
     if (!emailRate.allowed) {
+      await logSecurityEvent({
+        type: "AUTH_RESEND_VERIFICATION_RATE_LIMITED",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/resend-verification",
+      });
       return NextResponse.json({ error: "Limite de reenvios atingido. Aguarde alguns minutos." }, { status: 429 });
     }
 
@@ -49,6 +67,12 @@ export async function POST(request: Request) {
     });
 
     if (!pending || !pending.passwordHash) {
+      await logSecurityEvent({
+        type: "AUTH_RESEND_VERIFICATION_NOT_FOUND",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/resend-verification",
+      });
       return NextResponse.json(
         { error: "Nao existe cadastro pendente para este email." },
         { status: 404 }
@@ -87,6 +111,13 @@ export async function POST(request: Request) {
       to: normalizedEmail,
       code,
       name: pending.name ?? undefined,
+    });
+    await logSecurityEvent({
+      type: "AUTH_RESEND_VERIFICATION_SENT",
+      email: normalizedEmail,
+      request,
+      route: "/api/auth/resend-verification",
+      metadata: { delivery: emailResult.delivery },
     });
 
     return NextResponse.json({

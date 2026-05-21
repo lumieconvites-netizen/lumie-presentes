@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { isBlockedEmailDomain } from "@/lib/email-guard";
+import { logSecurityEvent } from "@/lib/security-events";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -17,8 +18,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email e senha sao obrigatorios");
         }
 
+        const normalizedEmail = credentials.email.trim().toLowerCase();
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: normalizedEmail },
           select: {
             id: true,
             email: true,
@@ -32,25 +35,61 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
+          await logSecurityEvent({
+            type: "AUTH_LOGIN_UNKNOWN_EMAIL",
+            email: normalizedEmail,
+            route: "next-auth:credentials",
+          });
           throw new Error("Usuário não cadastrado");
         }
 
         if (user.isBlocked) {
+          await logSecurityEvent({
+            type: "AUTH_LOGIN_BLOCKED_USER",
+            email: user.email,
+            userId: user.id,
+            route: "next-auth:credentials",
+          });
           throw new Error("Conta bloqueada. Fale com o suporte");
         }
 
         if (user.role === "CLIENT" && isBlockedEmailDomain(user.email)) {
+          await logSecurityEvent({
+            type: "AUTH_LOGIN_BLOCKED_EMAIL_DOMAIN",
+            email: user.email,
+            userId: user.id,
+            route: "next-auth:credentials",
+          });
           throw new Error("Conta bloqueada. Use um email real para acessar a Lumie");
         }
 
         if (!user.emailVerified) {
+          await logSecurityEvent({
+            type: "AUTH_LOGIN_UNVERIFIED_EMAIL",
+            email: user.email,
+            userId: user.id,
+            route: "next-auth:credentials",
+          });
           throw new Error("Confirme seu email com o codigo enviado antes de entrar");
         }
 
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) {
+          await logSecurityEvent({
+            type: "AUTH_LOGIN_WRONG_PASSWORD",
+            email: user.email,
+            userId: user.id,
+            route: "next-auth:credentials",
+          });
           throw new Error("Senha incorreta");
         }
+
+        await logSecurityEvent({
+          type: "AUTH_LOGIN_SUCCESS",
+          email: user.email,
+          userId: user.id,
+          route: "next-auth:credentials",
+        });
 
         return {
           id: user.id,

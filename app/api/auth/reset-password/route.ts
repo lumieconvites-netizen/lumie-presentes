@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { PASSWORD_RESET_TEMPLATE_SLUG } from "@/lib/password-reset";
 import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
+import { logSecurityEvent } from "@/lib/security-events";
 
 const resetPasswordSchema = z
   .object({
@@ -24,6 +25,12 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (isBlockedEmailDomain(normalizedEmail)) {
+      await logSecurityEvent({
+        type: "AUTH_RESET_PASSWORD_BLOCKED_EMAIL_DOMAIN",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/reset-password",
+      });
       return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 400 });
     }
 
@@ -39,10 +46,22 @@ export async function POST(request: Request) {
     });
 
     if (!token) {
+      await logSecurityEvent({
+        type: "AUTH_RESET_PASSWORD_INVALID_CODE",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/reset-password",
+      });
       return NextResponse.json({ error: "Codigo invalido" }, { status: 400 });
     }
 
     if (token.expiresAt < new Date()) {
+      await logSecurityEvent({
+        type: "AUTH_RESET_PASSWORD_EXPIRED_CODE",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/reset-password",
+      });
       return NextResponse.json({ error: "Codigo expirado. Solicite um novo." }, { status: 400 });
     }
 
@@ -52,6 +71,12 @@ export async function POST(request: Request) {
     });
 
     if (!user || !user.password) {
+      await logSecurityEvent({
+        type: "AUTH_RESET_PASSWORD_USER_NOT_FOUND",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/reset-password",
+      });
       return NextResponse.json({ error: "Usuario nao encontrado." }, { status: 404 });
     }
 
@@ -72,6 +97,14 @@ export async function POST(request: Request) {
         },
         data: { usedAt: new Date() },
       });
+    });
+
+    await logSecurityEvent({
+      type: "AUTH_RESET_PASSWORD_SUCCESS",
+      email: normalizedEmail,
+      userId: user.id,
+      request,
+      route: "/api/auth/reset-password",
     });
 
     return NextResponse.json({ message: "Senha redefinida com sucesso." });

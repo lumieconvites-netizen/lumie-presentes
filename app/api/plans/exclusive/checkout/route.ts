@@ -12,6 +12,10 @@ import {
   LUMIE_EXCLUSIVE_PRICE_CENTS,
 } from '@/lib/premium-plan';
 import { getBlockedEmailMessage, isBlockedEmailDomain } from '@/lib/email-guard';
+import { logSecurityEvent } from '@/lib/security-events';
+
+const PREMIUM_CHECKOUT_REFUSED_LIMIT = 3;
+const PREMIUM_CHECKOUT_REFUSED_WINDOW_MINUTES = 30;
 
 const checkoutSchema = z.object({
   paymentMethod: z.enum(['PIX', 'CREDIT_CARD']),
@@ -170,8 +174,57 @@ export async function POST(request: Request) {
   }
 
   if (isBlockedEmailDomain(user.email)) {
+    await logSecurityEvent({
+      type: 'PREMIUM_CHECKOUT_BLOCKED_EMAIL_DOMAIN',
+      email: user.email,
+      userId: user.id,
+      request,
+      route: '/api/plans/exclusive/checkout',
+      metadata: { paymentMethod: data.paymentMethod },
+    });
     return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 403 });
   }
+
+  if (data.paymentMethod === 'CREDIT_CARD') {
+    const refusedCutoff = new Date();
+    refusedCutoff.setMinutes(refusedCutoff.getMinutes() - PREMIUM_CHECKOUT_REFUSED_WINDOW_MINUTES);
+    const recentRefusedAttempts = await prisma.planPurchase.count({
+      where: {
+        userId: user.id,
+        status: 'REFUSED',
+        paymentMethod: 'credit_card',
+        createdAt: { gte: refusedCutoff },
+      },
+    });
+
+    if (recentRefusedAttempts >= PREMIUM_CHECKOUT_REFUSED_LIMIT) {
+      await logSecurityEvent({
+        type: 'PREMIUM_CHECKOUT_REFUSED_LIMIT_BLOCKED',
+        email: user.email,
+        userId: user.id,
+        request,
+        route: '/api/plans/exclusive/checkout',
+        metadata: {
+          paymentMethod: data.paymentMethod,
+          recentRefusedAttempts,
+          windowMinutes: PREMIUM_CHECKOUT_REFUSED_WINDOW_MINUTES,
+        },
+      });
+      return NextResponse.json(
+        { error: 'Muitas tentativas recusadas. Aguarde 30 minutos antes de tentar novamente.' },
+        { status: 429 }
+      );
+    }
+  }
+
+  await logSecurityEvent({
+    type: 'PREMIUM_CHECKOUT_ATTEMPT',
+    email: user.email,
+    userId: user.id,
+    request,
+    route: '/api/plans/exclusive/checkout',
+    metadata: { paymentMethod: data.paymentMethod },
+  });
 
   const partnerRecipient = user.referredByPartner?.recipient ?? null;
   const ambassadorRecipient = user.referredByAmbassador?.recipient ?? null;
@@ -354,9 +407,38 @@ export async function POST(request: Request) {
 
     if (approvedNow) {
       await activatePremiumPlanPurchase(planPurchase.id);
+      await logSecurityEvent({
+        type: 'PREMIUM_CHECKOUT_APPROVED',
+        email: user.email,
+        userId: user.id,
+        request,
+        route: '/api/plans/exclusive/checkout',
+        metadata: {
+          paymentMethod: data.paymentMethod,
+          planPurchaseId: planPurchase.id,
+          pagarmeOrderId: latestOrder?.id ?? null,
+          chargeStatus,
+          transactionStatus,
+        },
+      });
     }
 
     if (isFailed) {
+      await logSecurityEvent({
+        type: 'PREMIUM_CHECKOUT_REFUSED',
+        email: user.email,
+        userId: user.id,
+        request,
+        route: '/api/plans/exclusive/checkout',
+        metadata: {
+          paymentMethod: data.paymentMethod,
+          planPurchaseId: planPurchase.id,
+          pagarmeOrderId: latestOrder?.id ?? null,
+          chargeStatus,
+          transactionStatus,
+          reason: transaction?.status_reason || transaction?.acquirer_message || null,
+        },
+      });
       return NextResponse.json(
         {
           error: 'Pagamento recusado pela Pagar.me.',
@@ -382,6 +464,18 @@ export async function POST(request: Request) {
     await prisma.planPurchase.update({
       where: { id: planPurchase.id },
       data: { status: 'REFUSED' },
+    });
+    await logSecurityEvent({
+      type: 'PREMIUM_CHECKOUT_GATEWAY_ERROR',
+      email: user.email,
+      userId: user.id,
+      request,
+      route: '/api/plans/exclusive/checkout',
+      metadata: {
+        paymentMethod: data.paymentMethod,
+        planPurchaseId: planPurchase.id,
+        details,
+      },
     });
     return NextResponse.json(
       {

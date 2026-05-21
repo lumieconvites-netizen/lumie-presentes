@@ -395,6 +395,25 @@ model AccountRetentionAuditLog {
   @@map("account_retention_audit_logs")
 }
 
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  type      String
+  email     String?
+  userId    String?
+  ip        String?
+  userAgent String?
+  route     String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([email, createdAt])
+  @@index([userId, createdAt])
+  @@index([ip, createdAt])
+  @@index([createdAt])
+  @@map("security_events")
+}
+
 // ===== TEMPLATES =====
 
 model Template {

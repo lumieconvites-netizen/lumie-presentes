@@ -6,6 +6,7 @@ import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
 import { resolveSignupTemplateBySlug } from "@/lib/template-selection";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
 import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
+import { logSecurityEvent } from "@/lib/security-events";
 
 const verifySchema = z.object({
   email: z.string().email("Email invalido"),
@@ -21,6 +22,11 @@ export async function POST(request: Request) {
       window: "10 m",
     });
     if (!ipRate.allowed) {
+      await logSecurityEvent({
+        type: "AUTH_VERIFY_EMAIL_IP_RATE_LIMITED",
+        request,
+        route: "/api/auth/verify-email",
+      });
       return NextResponse.json({ error: "Muitas tentativas. Aguarde alguns minutos." }, { status: 429 });
     }
 
@@ -29,6 +35,12 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (isBlockedEmailDomain(normalizedEmail)) {
+      await logSecurityEvent({
+        type: "AUTH_VERIFY_EMAIL_BLOCKED_EMAIL_DOMAIN",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/verify-email",
+      });
       return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 400 });
     }
 
@@ -38,6 +50,12 @@ export async function POST(request: Request) {
       window: "10 m",
     });
     if (!emailRate.allowed) {
+      await logSecurityEvent({
+        type: "AUTH_VERIFY_EMAIL_RATE_LIMITED",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/verify-email",
+      });
       return NextResponse.json({ error: "Muitas tentativas para este email. Aguarde alguns minutos." }, { status: 429 });
     }
 
@@ -52,10 +70,22 @@ export async function POST(request: Request) {
     });
 
     if (!verification) {
+      await logSecurityEvent({
+        type: "AUTH_VERIFY_EMAIL_INVALID_CODE",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/verify-email",
+      });
       return NextResponse.json({ error: "Codigo invalido" }, { status: 400 });
     }
 
     if (verification.expiresAt < new Date()) {
+      await logSecurityEvent({
+        type: "AUTH_VERIFY_EMAIL_EXPIRED_CODE",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/verify-email",
+      });
       return NextResponse.json({ error: "Codigo expirado. Solicite um novo." }, { status: 400 });
     }
 
@@ -190,6 +220,14 @@ export async function POST(request: Request) {
         where: { id: verification.id },
         data: { usedAt: new Date() },
       });
+    });
+
+    await logSecurityEvent({
+      type: "AUTH_VERIFY_EMAIL_SUCCESS",
+      email: normalizedEmail,
+      request,
+      route: "/api/auth/verify-email",
+      metadata: { requestedRole },
     });
 
     return NextResponse.json({ message: "Email confirmado com sucesso." });

@@ -7,6 +7,7 @@ import { generateVerificationCode, getVerificationExpiry } from "@/lib/verificat
 import { resolveReferralForSignup } from "@/lib/referrals";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
 import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
+import { logSecurityEvent } from "@/lib/security-events";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -26,6 +27,11 @@ export async function POST(request: Request) {
       window: "10 m",
     });
     if (!ipRate.allowed) {
+      await logSecurityEvent({
+        type: "AUTH_REGISTER_IP_RATE_LIMITED",
+        request,
+        route: "/api/auth/register",
+      });
       return NextResponse.json({ error: "Muitas tentativas. Aguarde alguns minutos." }, { status: 429 });
     }
 
@@ -34,6 +40,13 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (isBlockedEmailDomain(normalizedEmail)) {
+      await logSecurityEvent({
+        type: "AUTH_REGISTER_BLOCKED_EMAIL_DOMAIN",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/register",
+        metadata: { name, role: role ?? "CLIENT" },
+      });
       return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 400 });
     }
 
@@ -43,6 +56,13 @@ export async function POST(request: Request) {
       window: "10 m",
     });
     if (!emailRate.allowed) {
+      await logSecurityEvent({
+        type: "AUTH_REGISTER_EMAIL_RATE_LIMITED",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/register",
+        metadata: { name, role: role ?? "CLIENT" },
+      });
       return NextResponse.json({ error: "Muitas tentativas para este email. Aguarde alguns minutos." }, { status: 429 });
     }
 
@@ -109,6 +129,13 @@ export async function POST(request: Request) {
     });
 
     const emailResult = await sendVerificationCodeEmailReliable({ to: normalizedEmail, code, name });
+    await logSecurityEvent({
+      type: "AUTH_REGISTER_VERIFICATION_SENT",
+      email: normalizedEmail,
+      request,
+      route: "/api/auth/register",
+      metadata: { name, requestedRole, delivery: emailResult.delivery },
+    });
 
     return NextResponse.json(
       {

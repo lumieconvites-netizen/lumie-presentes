@@ -5,6 +5,7 @@ import { generateVerificationCode, getVerificationExpiry } from "@/lib/verificat
 import { sendPasswordResetCodeEmailReliable } from "@/lib/email-jobs";
 import { PASSWORD_RESET_TEMPLATE_SLUG } from "@/lib/password-reset";
 import { isBlockedEmailDomain } from "@/lib/email-guard";
+import { logSecurityEvent } from "@/lib/security-events";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Email invalido"),
@@ -17,6 +18,12 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (isBlockedEmailDomain(normalizedEmail)) {
+      await logSecurityEvent({
+        type: "AUTH_FORGOT_PASSWORD_BLOCKED_EMAIL_DOMAIN",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/forgot-password",
+      });
       return NextResponse.json({
         message: "Se o email existir na plataforma, enviaremos um codigo de recuperacao.",
       });
@@ -28,6 +35,12 @@ export async function POST(request: Request) {
     });
 
     if (!user || !user.password) {
+      await logSecurityEvent({
+        type: "AUTH_FORGOT_PASSWORD_UNKNOWN_EMAIL",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/forgot-password",
+      });
       return NextResponse.json({
         message: "Se o email existir na plataforma, enviaremos um codigo de recuperacao.",
       });
@@ -63,6 +76,13 @@ export async function POST(request: Request) {
       to: normalizedEmail,
       code,
       name: user.name ?? undefined,
+    });
+    await logSecurityEvent({
+      type: "AUTH_FORGOT_PASSWORD_SENT",
+      email: normalizedEmail,
+      userId: user.id,
+      request,
+      route: "/api/auth/forgot-password",
     });
 
     return NextResponse.json({
