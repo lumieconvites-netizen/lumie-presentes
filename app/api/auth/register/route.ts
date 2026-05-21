@@ -7,6 +7,7 @@ import { generateVerificationCode, getVerificationExpiry } from "@/lib/verificat
 import { resolveReferralForSignup } from "@/lib/referrals";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
 import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
+import { getBlockedIpMessage, isBlockedIp } from "@/lib/ip-guard";
 import { logSecurityEvent } from "@/lib/security-events";
 
 const registerSchema = z.object({
@@ -21,6 +22,16 @@ const registerSchema = z.object({
 export async function POST(request: Request) {
   try {
     const ip = getRequestIp(request);
+    if (isBlockedIp(ip)) {
+      await logSecurityEvent({
+        type: "AUTH_REGISTER_BLOCKED_IP",
+        request,
+        route: "/api/auth/register",
+        metadata: { ip },
+      });
+      return NextResponse.json({ error: getBlockedIpMessage() }, { status: 403 });
+    }
+
     const ipRate = await enforceRateLimit({
       key: `auth:register:ip:${ip}`,
       requests: 12,

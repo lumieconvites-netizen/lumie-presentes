@@ -6,6 +6,7 @@ const BLOCKED_EMAIL_DOMAINS = [
   "sgm.ovh",
   "ukm.ovh",
   "dv2.host",
+  "kanonmail.com",
 ];
 
 const BLOCKED_EMAIL_TLDS = ["ovh", "host"];

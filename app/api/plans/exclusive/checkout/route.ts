@@ -12,6 +12,7 @@ import {
   LUMIE_EXCLUSIVE_PRICE_CENTS,
 } from '@/lib/premium-plan';
 import { getBlockedEmailMessage, isBlockedEmailDomain } from '@/lib/email-guard';
+import { getBlockedIpMessage, isBlockedIp } from '@/lib/ip-guard';
 import { logSecurityEvent } from '@/lib/security-events';
 
 const PREMIUM_CHECKOUT_REFUSED_LIMIT = 3;
@@ -96,6 +97,18 @@ export async function POST(request: Request) {
   }
 
   const ip = getRequestIp(request);
+  if (isBlockedIp(ip)) {
+    await logSecurityEvent({
+      type: 'PREMIUM_CHECKOUT_BLOCKED_IP',
+      email: ctx.effectiveUser.email ?? null,
+      userId: ctx.effectiveUserId,
+      request,
+      route: '/api/plans/exclusive/checkout',
+      metadata: { ip },
+    });
+    return NextResponse.json({ error: getBlockedIpMessage() }, { status: 403 });
+  }
+
   const ipRate = await enforceRateLimit({
     key: `plans:exclusive:ip:${ip}`,
     requests: 20,

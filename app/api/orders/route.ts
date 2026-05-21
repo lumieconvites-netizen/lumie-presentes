@@ -4,6 +4,7 @@ import { calculateTotal } from '@/lib/utils';
 import { createCreditCardOrder, createPixOrder, getOrder } from '@/lib/pagarme';
 import { z } from 'zod';
 import { enforceRateLimit, getRequestIp } from '@/lib/rate-limit';
+import { getBlockedIpMessage, isBlockedIp } from '@/lib/ip-guard';
 import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
 import { getEffectiveAvailabilityForGift } from '@/lib/gift-availability';
 import {
@@ -210,6 +211,10 @@ function calculateCommissionSplit(params: {
 export async function POST(request: Request) {
   try {
     const ip = getRequestIp(request);
+    if (isBlockedIp(ip)) {
+      return NextResponse.json({ error: getBlockedIpMessage() }, { status: 403 });
+    }
+
     const ipRate = await enforceRateLimit({
       key: `checkout:orders:ip:${ip}`,
       requests: 40,
