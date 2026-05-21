@@ -12,7 +12,7 @@ import {
   LUMIE_EXCLUSIVE_PRICE_CENTS,
 } from '@/lib/premium-plan';
 import { getBlockedEmailMessage, isBlockedEmailDomain } from '@/lib/email-guard';
-import { getBlockedIpMessage, isBlockedIp } from '@/lib/ip-guard';
+import { blockIpTemporarily, getBlockedIpMessage, isBlockedIp } from '@/lib/ip-guard';
 import { logSecurityEvent } from '@/lib/security-events';
 
 const PREMIUM_CHECKOUT_REFUSED_LIMIT = 3;
@@ -250,6 +250,7 @@ export async function POST(request: Request) {
     });
 
     if (recentIpRefusedAttempts >= PREMIUM_CHECKOUT_IP_REFUSED_LIMIT) {
+      await blockIpTemporarily(ip);
       await logSecurityEvent({
         type: 'PREMIUM_CHECKOUT_IP_REFUSED_LIMIT_BLOCKED',
         email: user.email,
