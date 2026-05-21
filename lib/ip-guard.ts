@@ -3,8 +3,6 @@ const DEFAULT_BLOCKED_IPS = [
 ];
 
 const BLOCKED_IP_KEY_PREFIX = "lumie:blocked-ip:";
-const DEFAULT_BLOCK_TTL_SECONDS = 24 * 60 * 60;
-
 function readConfiguredBlockedIps() {
   return (process.env.BLOCKED_IPS ?? "")
     .split(",")
@@ -57,11 +55,11 @@ export async function isBlockedIpAsync(ip?: string | null) {
   return Boolean(payload?.result);
 }
 
-export async function blockIpTemporarily(ip?: string | null, ttlSeconds = DEFAULT_BLOCK_TTL_SECONDS) {
+export async function blockIpPermanently(ip?: string | null) {
   const value = String(ip ?? "").trim();
   if (!value || value === "unknown") return false;
 
-  await redisCommand(["SET", blockedIpKey(value), "1", "EX", String(ttlSeconds)]);
+  await redisCommand(["SET", blockedIpKey(value), "1"]);
   return true;
 }
 

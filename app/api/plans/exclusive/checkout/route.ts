@@ -12,7 +12,7 @@ import {
   LUMIE_EXCLUSIVE_PRICE_CENTS,
 } from '@/lib/premium-plan';
 import { getBlockedEmailMessage, isBlockedEmailDomain } from '@/lib/email-guard';
-import { blockIpTemporarily, getBlockedIpMessage, isBlockedIp } from '@/lib/ip-guard';
+import { blockIpPermanently, getBlockedIpMessage, isBlockedIp } from '@/lib/ip-guard';
 import { logSecurityEvent } from '@/lib/security-events';
 
 const PREMIUM_CHECKOUT_REFUSED_LIMIT = 3;
@@ -250,7 +250,7 @@ export async function POST(request: Request) {
     });
 
     if (recentIpRefusedAttempts >= PREMIUM_CHECKOUT_IP_REFUSED_LIMIT) {
-      await blockIpTemporarily(ip);
+      await blockIpPermanently(ip);
       await logSecurityEvent({
         type: 'PREMIUM_CHECKOUT_IP_REFUSED_LIMIT_BLOCKED',
         email: user.email,
@@ -264,7 +264,7 @@ export async function POST(request: Request) {
         },
       });
       return NextResponse.json(
-        { error: 'Muitas tentativas recusadas neste acesso. Aguarde 1 hora antes de tentar novamente.' },
+        { error: 'Muitas tentativas suspeitas foram detectadas neste acesso.' },
         { status: 429 }
       );
     }
