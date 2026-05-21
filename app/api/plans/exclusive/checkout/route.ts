@@ -17,6 +17,12 @@ import { logSecurityEvent } from '@/lib/security-events';
 
 const PREMIUM_CHECKOUT_REFUSED_LIMIT = 3;
 const PREMIUM_CHECKOUT_REFUSED_WINDOW_MINUTES = 30;
+const PREMIUM_CHECKOUT_IP_REFUSED_LIMIT = 3;
+const PREMIUM_CHECKOUT_IP_REFUSED_WINDOW_MINUTES = 60;
+const PREMIUM_CHECKOUT_BLOCKING_EVENT_TYPES = [
+  'PREMIUM_CHECKOUT_REFUSED',
+  'PREMIUM_CHECKOUT_GATEWAY_ERROR',
+] as const;
 
 const checkoutSchema = z.object({
   paymentMethod: z.enum(['PIX', 'CREDIT_CARD']),
@@ -87,6 +93,12 @@ function isInvalidRequestError(error: any) {
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function minutesAgo(minutes: number) {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - minutes);
+  return date;
 }
 
 export async function POST(request: Request) {
@@ -199,8 +211,7 @@ export async function POST(request: Request) {
   }
 
   if (data.paymentMethod === 'CREDIT_CARD') {
-    const refusedCutoff = new Date();
-    refusedCutoff.setMinutes(refusedCutoff.getMinutes() - PREMIUM_CHECKOUT_REFUSED_WINDOW_MINUTES);
+    const refusedCutoff = minutesAgo(PREMIUM_CHECKOUT_REFUSED_WINDOW_MINUTES);
     const recentRefusedAttempts = await prisma.planPurchase.count({
       where: {
         userId: user.id,
@@ -225,6 +236,34 @@ export async function POST(request: Request) {
       });
       return NextResponse.json(
         { error: 'Muitas tentativas recusadas. Aguarde 30 minutos antes de tentar novamente.' },
+        { status: 429 }
+      );
+    }
+
+    const ipRefusedCutoff = minutesAgo(PREMIUM_CHECKOUT_IP_REFUSED_WINDOW_MINUTES);
+    const recentIpRefusedAttempts = await prisma.securityEvent.count({
+      where: {
+        ip,
+        type: { in: [...PREMIUM_CHECKOUT_BLOCKING_EVENT_TYPES] },
+        createdAt: { gte: ipRefusedCutoff },
+      },
+    });
+
+    if (recentIpRefusedAttempts >= PREMIUM_CHECKOUT_IP_REFUSED_LIMIT) {
+      await logSecurityEvent({
+        type: 'PREMIUM_CHECKOUT_IP_REFUSED_LIMIT_BLOCKED',
+        email: user.email,
+        userId: user.id,
+        request,
+        route: '/api/plans/exclusive/checkout',
+        metadata: {
+          paymentMethod: data.paymentMethod,
+          recentIpRefusedAttempts,
+          windowMinutes: PREMIUM_CHECKOUT_IP_REFUSED_WINDOW_MINUTES,
+        },
+      });
+      return NextResponse.json(
+        { error: 'Muitas tentativas recusadas neste acesso. Aguarde 1 hora antes de tentar novamente.' },
         { status: 429 }
       );
     }
