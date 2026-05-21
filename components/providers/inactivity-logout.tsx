@@ -37,15 +37,6 @@ export function InactivityLogout() {
       return;
     }
 
-    writeLastActivity();
-
-    const markActive = () => {
-      const now = Date.now();
-      if (now - lastWriteRef.current < 1000) return;
-      lastWriteRef.current = now;
-      writeLastActivity();
-    };
-
     const logoutIfIdle = async () => {
       if (signingOutRef.current) return;
       const idleFor = Date.now() - readLastActivity();
@@ -57,6 +48,21 @@ export function InactivityLogout() {
         return;
       }
       await signOut({ redirect: false });
+    };
+
+    const markActive = () => {
+      if (signingOutRef.current) return;
+      const now = Date.now();
+      const idleFor = now - readLastActivity();
+
+      if (idleFor >= INACTIVITY_LIMIT_MS) {
+        logoutIfIdle().catch(() => null);
+        return;
+      }
+
+      if (now - lastWriteRef.current < 1000) return;
+      lastWriteRef.current = now;
+      writeLastActivity();
     };
 
     const onVisibilityChange = () => {
@@ -74,6 +80,12 @@ export function InactivityLogout() {
       'scroll',
       'touchstart',
     ];
+
+    logoutIfIdle()
+      .then(() => {
+        if (!signingOutRef.current) writeLastActivity();
+      })
+      .catch(() => null);
 
     activityEvents.forEach((eventName) => {
       window.addEventListener(eventName, markActive, { passive: true });
