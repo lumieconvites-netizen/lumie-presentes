@@ -12,6 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import toast from 'react-hot-toast';
 
+const LAST_ACTIVITY_KEY = 'lumie:last-activity-at';
+
+function refreshSessionActivity() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,6 +54,7 @@ export default function LoginPage() {
       }
 
       if (result.ok) {
+        refreshSessionActivity();
         toast.success('Login realizado com sucesso.');
         try {
           const sessionRes = await fetch('/api/auth/session', { cache: 'no-store' });

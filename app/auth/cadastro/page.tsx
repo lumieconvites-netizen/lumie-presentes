@@ -14,6 +14,13 @@ import toast from 'react-hot-toast';
 
 type Step = 'register' | 'verify';
 
+const LAST_ACTIVITY_KEY = 'lumie:last-activity-at';
+
+function refreshSessionActivity() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -117,6 +124,7 @@ export default function RegisterPage() {
         toast.success('E-mail confirmado. Faça login para continuar.');
         router.push(`/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       } else {
+        refreshSessionActivity();
         toast.success('Conta confirmada com sucesso.');
         router.push(callbackUrl);
         router.refresh();
