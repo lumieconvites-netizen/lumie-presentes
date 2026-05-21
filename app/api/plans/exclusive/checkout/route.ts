@@ -11,6 +11,7 @@ import {
   LUMIE_EXCLUSIVE_PARTNER_COMMISSION_CENTS,
   LUMIE_EXCLUSIVE_PRICE_CENTS,
 } from '@/lib/premium-plan';
+import { getBlockedEmailMessage, isBlockedEmailDomain } from '@/lib/email-guard';
 
 const checkoutSchema = z.object({
   paymentMethod: z.enum(['PIX', 'CREDIT_CARD']),
@@ -166,6 +167,10 @@ export async function POST(request: Request) {
 
   if (!user || !user.email) {
     return NextResponse.json({ error: 'Usuario nao encontrado.' }, { status: 404 });
+  }
+
+  if (isBlockedEmailDomain(user.email)) {
+    return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 403 });
   }
 
   const partnerRecipient = user.referredByPartner?.recipient ?? null;

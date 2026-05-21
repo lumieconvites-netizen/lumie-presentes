@@ -4,6 +4,7 @@ import { z } from "zod";
 import { sendVerificationCodeEmailReliable } from "@/lib/email-jobs";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
+import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
 
 const resendSchema = z.object({
   email: z.string().email("Email invalido"),
@@ -24,6 +25,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email } = resendSchema.parse(body);
     const normalizedEmail = email.trim().toLowerCase();
+
+    if (isBlockedEmailDomain(normalizedEmail)) {
+      return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 400 });
+    }
 
     const emailRate = await enforceRateLimit({
       key: `auth:resend:email:${normalizedEmail}`,

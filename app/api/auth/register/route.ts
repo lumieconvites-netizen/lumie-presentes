@@ -6,6 +6,7 @@ import { sendVerificationCodeEmailReliable } from "@/lib/email-jobs";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { resolveReferralForSignup } from "@/lib/referrals";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
+import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -31,6 +32,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, email, password, templateSlug, role, inviteCode } = registerSchema.parse(body);
     const normalizedEmail = email.trim().toLowerCase();
+
+    if (isBlockedEmailDomain(normalizedEmail)) {
+      return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 400 });
+    }
 
     const emailRate = await enforceRateLimit({
       key: `auth:register:email:${normalizedEmail}`,

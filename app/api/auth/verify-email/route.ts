@@ -5,6 +5,7 @@ import { ensureDefaultReferralCodesForUser, resolveReferralForSignup } from "@/l
 import { buildGiftListSlug, isLegacyGiftListSlug } from "@/lib/gift-list-slug";
 import { resolveSignupTemplateBySlug } from "@/lib/template-selection";
 import { enforceRateLimit, getRequestIp } from "@/lib/rate-limit";
+import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
 
 const verifySchema = z.object({
   email: z.string().email("Email invalido"),
@@ -26,6 +27,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, code } = verifySchema.parse(body);
     const normalizedEmail = email.trim().toLowerCase();
+
+    if (isBlockedEmailDomain(normalizedEmail)) {
+      return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 400 });
+    }
 
     const emailRate = await enforceRateLimit({
       key: `auth:verify-email:email:${normalizedEmail}`,

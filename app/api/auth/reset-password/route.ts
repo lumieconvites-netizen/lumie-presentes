@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { PASSWORD_RESET_TEMPLATE_SLUG } from "@/lib/password-reset";
+import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
 
 const resetPasswordSchema = z
   .object({
@@ -21,6 +22,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, code, password } = resetPasswordSchema.parse(body);
     const normalizedEmail = email.trim().toLowerCase();
+
+    if (isBlockedEmailDomain(normalizedEmail)) {
+      return NextResponse.json({ error: getBlockedEmailMessage() }, { status: 400 });
+    }
 
     const token = await prisma.emailVerificationCode.findFirst({
       where: {

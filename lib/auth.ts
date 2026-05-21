@@ -2,6 +2,7 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { isBlockedEmailDomain } from "@/lib/email-guard";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -36,6 +37,10 @@ export const authOptions: NextAuthOptions = {
 
         if (user.isBlocked) {
           throw new Error("Conta bloqueada. Fale com o suporte");
+        }
+
+        if (user.role === "CLIENT" && isBlockedEmailDomain(user.email)) {
+          throw new Error("Conta bloqueada. Use um email real para acessar a Lumie");
         }
 
         if (!user.emailVerified) {

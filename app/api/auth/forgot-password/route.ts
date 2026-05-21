@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { generateVerificationCode, getVerificationExpiry } from "@/lib/verification";
 import { sendPasswordResetCodeEmailReliable } from "@/lib/email-jobs";
 import { PASSWORD_RESET_TEMPLATE_SLUG } from "@/lib/password-reset";
+import { isBlockedEmailDomain } from "@/lib/email-guard";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Email invalido"),
@@ -14,6 +15,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email } = forgotPasswordSchema.parse(body);
     const normalizedEmail = email.trim().toLowerCase();
+
+    if (isBlockedEmailDomain(normalizedEmail)) {
+      return NextResponse.json({
+        message: "Se o email existir na plataforma, enviaremos um codigo de recuperacao.",
+      });
+    }
 
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
