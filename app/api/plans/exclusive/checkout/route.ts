@@ -108,6 +108,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Plano disponivel apenas para clientes.' }, { status: 403 });
   }
 
+  const allowNewExclusivePurchases = process.env.LUMIE_EXCLUSIVE_NEW_PURCHASES_ENABLED === 'true';
+  if (!allowNewExclusivePurchases) {
+    await logSecurityEvent({
+      type: 'PREMIUM_CHECKOUT_DISABLED',
+      email: ctx.effectiveUser.email ?? null,
+      userId: ctx.effectiveUserId,
+      request,
+      route: '/api/plans/exclusive/checkout',
+      metadata: { reason: 'new_purchases_disabled' },
+    });
+    return NextResponse.json(
+      { error: 'Lumie Exclusive nao esta disponivel para novas compras no momento.' },
+      { status: 410 }
+    );
+  }
+
   const ip = getRequestIp(request);
   if (isBlockedIp(ip)) {
     await logSecurityEvent({

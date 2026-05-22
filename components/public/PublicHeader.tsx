@@ -24,9 +24,6 @@ export default function PublicHeader() {
           <Link href="/como-funciona" className="hover:text-terracota-600">
             Como Funciona
           </Link>
-          <Link href="/tarifas" className="hover:text-terracota-600">
-            Planos
-          </Link>
           <Link href="/templates" className="hover:text-terracota-600">
             Templates
           </Link>

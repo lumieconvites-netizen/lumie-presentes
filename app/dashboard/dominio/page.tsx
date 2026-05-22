@@ -167,7 +167,7 @@ export default function CustomDomainPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Domínio personalizado</h1>
-          <p className="mt-1 text-sm text-gray-600">Escolha um endereço exclusivo para sua lista premium.</p>
+          <p className="mt-1 text-sm text-gray-600">Gerencie o endereço personalizado da sua lista.</p>
         </div>
         <Badge variant={enabled ? 'default' : 'outline'}>{enabled ? 'Premium' : 'Gratuito'}</Badge>
       </div>
@@ -177,15 +177,11 @@ export default function CustomDomainPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe2 className="h-5 w-5 text-[#8E3D2C]" />
-              Disponível no plano Premium
+              Domínio personalizado indisponível
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-gray-600">
-            <p>O domínio próprio fica liberado para clientes Premium. A URL gratuita da Lumie continua funcionando normalmente.</p>
-            <p>Quando o plano for ativado, você poderá buscar domínios .com, .site e .net por aqui.</p>
-            <Button asChild className="bg-[#8E3D2C] text-white hover:bg-[#753124]">
-              <Link href="/tarifas">Ver diferenças</Link>
-            </Button>
+            <p>Sua URL gratuita da Lumie continua funcionando normalmente.</p>
           </CardContent>
         </Card>
       ) : (

@@ -17,14 +17,10 @@ export default function TermosPage() {
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-6">
           <div className="mx-auto max-w-5xl rounded-[2rem] border border-[#e8d3c5] bg-white p-7 md:p-10 shadow-[0_14px_36px_rgba(85,55,40,0.08)]">
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2">
               <div className="rounded-2xl border border-[#ecd9cc] bg-[#fffaf6] p-5">
                 <Wallet className="h-6 w-6 text-[#c65a3a]" />
-                <p className="mt-3 font-medium text-[#3c2f2a]">Plano Gratuito: 7,99% no PIX e 13,99% no crédito</p>
-              </div>
-              <div className="rounded-2xl border border-[#ecd9cc] bg-[#fffaf6] p-5">
-                <Wallet className="h-6 w-6 text-[#c65a3a]" />
-                <p className="mt-3 font-medium text-[#3c2f2a]">Lumie Exclusive: 3,69%</p>
+                <p className="mt-3 font-medium text-[#3c2f2a]">Taxa padrão: 7,99% no PIX e 13,99% no crédito</p>
               </div>
               <div className="rounded-2xl border border-[#ecd9cc] bg-[#fffaf6] p-5">
                 <Wallet className="h-6 w-6 text-[#c65a3a]" />
@@ -77,7 +73,7 @@ export default function TermosPage() {
                       transações aprovadas.
                     </p>
                     <p>
-                        As taxas aplicáveis são: 7,99% no PIX e 13,99% no crédito no plano Gratuito; 3,69% no PIX e 7,99% no crédito no plano Lumie Exclusive.
+                        As taxas aplicáveis são informadas no checkout e podem variar conforme a configuração vigente da conta.
                     </p>
                     <p>
                       O titular pode optar por repassar a taxa ao convidado ou assumir o custo da taxa no valor a

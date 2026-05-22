@@ -4,7 +4,14 @@ import { calculateTotal } from '@/lib/utils';
 import { createCreditCardOrder, createPixOrder, getOrder } from '@/lib/pagarme';
 import { z } from 'zod';
 import { enforceRateLimit, getRequestIp } from '@/lib/rate-limit';
-import { getBlockedIpMessage, isBlockedIp } from '@/lib/ip-guard';
+import {
+  blockIpPermanently,
+  blockIpTemporarily,
+  getBlockedIpMessage,
+  isBlockedIp,
+  registerIpBlockStrike,
+} from '@/lib/ip-guard';
+import { logSecurityEvent } from '@/lib/security-events';
 import { reconcilePendingOrdersForGiftList } from '@/lib/order-status-reconciliation';
 import { getEffectiveAvailabilityForGift } from '@/lib/gift-availability';
 import {
@@ -37,6 +44,14 @@ const orderSchema = z.object({
   message: z.string().optional(),
   signature: z.string().optional(),
 });
+
+const GIFT_CHECKOUT_IP_REFUSED_LIMIT = 3;
+const GIFT_CHECKOUT_IP_REFUSED_WINDOW_MINUTES = 60;
+const GIFT_CHECKOUT_TEMP_BLOCK_SECONDS = 60 * 60;
+const GIFT_CHECKOUT_BLOCKING_EVENT_TYPES = [
+  'GIFT_CHECKOUT_REFUSED',
+  'GIFT_CHECKOUT_GATEWAY_ERROR',
+] as const;
 
 function onlyDigits(value?: string | null) {
   return (value ?? '').replace(/\D/g, '');
@@ -131,6 +146,12 @@ function isInvalidRequestError(error: any) {
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function minutesAgo(minutes: number) {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - minutes);
+  return date;
 }
 
 function sanitizeGatewayErrorDetails(input: unknown) {
@@ -277,6 +298,41 @@ export async function POST(request: Request) {
       }
       if (!cvv || cvv.length < 3 || cvv.length > 4) {
         return NextResponse.json({ error: 'CVV invalido.' }, { status: 400 });
+      }
+
+      const recentIpRefusedAttempts = await prisma.securityEvent.count({
+        where: {
+          ip,
+          type: { in: [...GIFT_CHECKOUT_BLOCKING_EVENT_TYPES] },
+          createdAt: { gte: minutesAgo(GIFT_CHECKOUT_IP_REFUSED_WINDOW_MINUTES) },
+        },
+      });
+
+      if (recentIpRefusedAttempts >= GIFT_CHECKOUT_IP_REFUSED_LIMIT) {
+        const strikes = await registerIpBlockStrike(ip);
+        const permanent = strikes >= 2;
+        if (permanent) {
+          await blockIpPermanently(ip);
+        } else {
+          await blockIpTemporarily(ip, GIFT_CHECKOUT_TEMP_BLOCK_SECONDS);
+        }
+
+        await logSecurityEvent({
+          type: permanent ? 'GIFT_CHECKOUT_IP_PERMANENT_BLOCKED' : 'GIFT_CHECKOUT_IP_TEMP_BLOCKED',
+          email: data.guestEmail,
+          request,
+          route: '/api/orders',
+          metadata: {
+            ip,
+            strikes,
+            paymentMethod: data.paymentMethod,
+            recentIpRefusedAttempts,
+            windowMinutes: GIFT_CHECKOUT_IP_REFUSED_WINDOW_MINUTES,
+            ttlSeconds: permanent ? null : GIFT_CHECKOUT_TEMP_BLOCK_SECONDS,
+          },
+        });
+
+        return NextResponse.json({ error: getBlockedIpMessage() }, { status: 429 });
       }
     }
 
@@ -643,6 +699,24 @@ export async function POST(request: Request) {
             gatewayErrorMessage: transaction?.gateway_response?.errors?.[0]?.message ?? null,
           });
 
+          if (data.paymentMethod === 'CREDIT_CARD') {
+            await logSecurityEvent({
+              type: 'GIFT_CHECKOUT_REFUSED',
+              email: data.guestEmail,
+              request,
+              route: '/api/orders',
+              metadata: {
+                ip,
+                orderId: order.id,
+                giftListId: data.giftListId,
+                giftId: data.giftId,
+                chargeStatus: charge?.status ?? null,
+                transactionStatus: transaction?.status ?? null,
+                gatewayReason: firstGatewayReason,
+              },
+            });
+          }
+
           return NextResponse.json(
             {
               error: 'Pagamento recusado pela Pagar.me.',
@@ -682,6 +756,21 @@ export async function POST(request: Request) {
           where: { id: order.id },
           data: { status: 'REFUSED' },
         });
+        if (data.paymentMethod === 'CREDIT_CARD') {
+          await logSecurityEvent({
+            type: 'GIFT_CHECKOUT_GATEWAY_ERROR',
+            email: data.guestEmail,
+            request,
+            route: '/api/orders',
+            metadata: {
+              ip,
+              orderId: order.id,
+              giftListId: data.giftListId,
+              giftId: data.giftId,
+              details,
+            },
+          });
+        }
         const gatewayMessage =
           data.paymentMethod === 'CREDIT_CARD'
             ? 'Nao foi possivel processar o cartao neste momento.'

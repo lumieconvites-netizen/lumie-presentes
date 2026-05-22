@@ -471,7 +471,7 @@ export default function ConfiguracoesPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <div>
                     <h3 className="font-medium text-foreground">Repassar taxa ao convidado</h3>
-                    <p className="text-sm text-gray-500">Quando ativo, o convidado paga o valor do presente + taxa do seu plano.</p>
+                    <p className="text-sm text-gray-500">Quando ativo, o convidado paga o valor do presente + taxa da plataforma.</p>
                   </div>
 
                   <Switch
@@ -493,7 +493,7 @@ export default function ConfiguracoesPage() {
                     <div className="text-sm space-y-1">
                       <p>- Convidado paga: <strong className="text-primary">R$ 100,00</strong></p>
                       <p>- Você recebe: <strong className="text-green-600">R$ 93,01</strong></p>
-                      <p className="text-xs text-gray-500">Exemplo com taxa do plano gratuito no PIX</p>
+                      <p className="text-xs text-gray-500">Exemplo com a taxa padrão no PIX</p>
                     </div>
                   )}
                 </div>

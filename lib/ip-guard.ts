@@ -3,6 +3,7 @@ const DEFAULT_BLOCKED_IPS = [
 ];
 
 const BLOCKED_IP_KEY_PREFIX = "lumie:blocked-ip:";
+const BLOCKED_IP_STRIKE_KEY_PREFIX = "lumie:blocked-ip-strikes:";
 function readConfiguredBlockedIps() {
   return (process.env.BLOCKED_IPS ?? "")
     .split(",")
@@ -26,6 +27,10 @@ function readRedisConfig() {
 
 function blockedIpKey(ip: string) {
   return `${BLOCKED_IP_KEY_PREFIX}${ip}`;
+}
+
+function blockedIpStrikeKey(ip: string) {
+  return `${BLOCKED_IP_STRIKE_KEY_PREFIX}${ip}`;
 }
 
 async function redisCommand<T = any>(command: unknown[]) {
@@ -61,6 +66,29 @@ export async function blockIpPermanently(ip?: string | null) {
 
   await redisCommand(["SET", blockedIpKey(value), "1"]);
   return true;
+}
+
+export async function blockIpTemporarily(ip?: string | null, ttlSeconds = 3600) {
+  const value = String(ip ?? "").trim();
+  if (!value || value === "unknown") return false;
+
+  await redisCommand(["SET", blockedIpKey(value), "1", "EX", String(ttlSeconds)]);
+  return true;
+}
+
+export async function registerIpBlockStrike(ip?: string | null) {
+  const value = String(ip ?? "").trim();
+  if (!value || value === "unknown") return 0;
+
+  const key = blockedIpStrikeKey(value);
+  const payload = await redisCommand<number>(["INCR", key]);
+  const strikes = Number(payload?.result ?? 0);
+
+  if (strikes === 1) {
+    await redisCommand(["EXPIRE", key, "2592000"]);
+  }
+
+  return strikes;
 }
 
 export function getBlockedIpMessage() {
