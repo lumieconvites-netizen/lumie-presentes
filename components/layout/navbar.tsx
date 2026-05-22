@@ -58,6 +58,7 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-8 text-sm">
               <Link href="/" className={linkClass('/')}>Inicio</Link>
               <Link href="/como-funciona" className={linkClass('/como-funciona')}>Como Funciona</Link>
+              <Link href="/tarifas" className={linkClass('/tarifas')}>Tarifas</Link>
               <Link href="/templates" className={linkClass('/templates')}>Templates</Link>
             </div>
           </div>
@@ -153,6 +154,7 @@ export function Navbar() {
             <div className="flex flex-col text-sm">
               <Link href="/" className={cn('rounded-md px-3 py-2', linkClass('/'))}>Inicio</Link>
               <Link href="/como-funciona" className={cn('rounded-md px-3 py-2', linkClass('/como-funciona'))}>Como Funciona</Link>
+              <Link href="/tarifas" className={cn('rounded-md px-3 py-2', linkClass('/tarifas'))}>Tarifas</Link>
               <Link href="/templates" className={cn('rounded-md px-3 py-2', linkClass('/templates'))}>Templates</Link>
             </div>
           </div>
