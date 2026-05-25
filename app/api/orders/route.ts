@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { calculateTotal } from '@/lib/utils';
 import { createCreditCardOrder, createPixOrder, getOrder } from '@/lib/pagarme';
 import { z } from 'zod';
+import crypto from 'crypto';
 import { enforceRateLimit, getRequestIp } from '@/lib/rate-limit';
 import {
   blockIpPermanently,
@@ -56,6 +57,12 @@ const orderSchema = z.object({
   signature: z.string().optional(),
 });
 
+const GIFT_CHECKOUT_IP_RATE_LIMIT = 10;
+const GIFT_CHECKOUT_EMAIL_RATE_LIMIT = 5;
+const GIFT_CHECKOUT_CPF_RATE_LIMIT = 5;
+const GIFT_CHECKOUT_CPF_RATE_WINDOW = '10 m';
+const GIFT_CHECKOUT_DIFFERENT_CARD_LIMIT = 3;
+const GIFT_CHECKOUT_DIFFERENT_CARD_WINDOW_MINUTES = 60;
 const GIFT_CHECKOUT_IP_REFUSED_LIMIT = 3;
 const GIFT_CHECKOUT_IP_REFUSED_WINDOW_MINUTES = 60;
 const GIFT_CHECKOUT_TEMP_BLOCK_SECONDS = 60 * 60;
@@ -66,6 +73,48 @@ const GIFT_CHECKOUT_BLOCKING_EVENT_TYPES = [
 
 function onlyDigits(value?: string | null) {
   return (value ?? '').replace(/\D/g, '');
+}
+
+function normalizeEmail(value?: string | null) {
+  return value?.trim().toLowerCase() || null;
+}
+
+function buildCardFingerprint(cardNumber: string) {
+  const secret = process.env.CHECKOUT_CARD_FINGERPRINT_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+  const key = secret || 'lumie-card-fingerprint-fallback';
+  return crypto.createHmac('sha256', key).update(cardNumber).digest('hex');
+}
+
+async function hasTooManyDifferentCards(params: {
+  guestEmail: string | null;
+  guestDocument: string;
+  cardFingerprint: string;
+}) {
+  const cutoff = minutesAgo(GIFT_CHECKOUT_DIFFERENT_CARD_WINDOW_MINUTES);
+  const identityFilters = [
+    params.guestEmail ? { guestEmail: params.guestEmail } : null,
+    params.guestDocument ? { guestDocument: params.guestDocument } : null,
+  ].filter(Boolean) as Array<{ guestEmail: string } | { guestDocument: string }>;
+
+  if (!identityFilters.length) return { blocked: false, differentCards: 0 };
+
+  const recentCards = await prisma.checkoutCardAttempt.findMany({
+    where: {
+      OR: identityFilters,
+      createdAt: { gte: cutoff },
+    },
+    distinct: ['cardFingerprint'],
+    select: { cardFingerprint: true },
+  });
+
+  const fingerprints = new Set(recentCards.map((entry) => entry.cardFingerprint));
+  const isNewCard = !fingerprints.has(params.cardFingerprint);
+  const differentCards = fingerprints.size + (isNewCard ? 1 : 0);
+
+  return {
+    blocked: isNewCard && fingerprints.size >= GIFT_CHECKOUT_DIFFERENT_CARD_LIMIT,
+    differentCards,
+  };
 }
 
 function isValidCpf(cpf: string) {
@@ -273,7 +322,7 @@ export async function POST(request: Request) {
 
     const ipRate = await enforceRateLimit({
       key: `checkout:orders:ip:${ip}`,
-      requests: 40,
+      requests: GIFT_CHECKOUT_IP_RATE_LIMIT,
       window: "5 m",
     });
     if (!ipRate.allowed) {
@@ -288,21 +337,31 @@ export async function POST(request: Request) {
       throttleKey: `checkout-order:${data.giftListId}`,
     });
 
+    const normalizedGuestEmail = normalizeEmail(data.guestEmail);
+    const guestDocument = onlyDigits(data.guestDocument);
+    const guestArea = onlyDigits(data.guestPhoneArea);
+    const guestNumber = onlyDigits(data.guestPhoneNumber);
+
     const emailRate = await enforceRateLimit({
-      key: `checkout:orders:email:${data.guestEmail.trim().toLowerCase()}`,
-      requests: 12,
+      key: `checkout:orders:email:${normalizedGuestEmail}`,
+      requests: GIFT_CHECKOUT_EMAIL_RATE_LIMIT,
       window: "5 m",
     });
     if (!emailRate.allowed) {
       return NextResponse.json({ error: "Muitas tentativas para este email. Aguarde alguns minutos." }, { status: 429 });
     }
 
-    const guestDocument = onlyDigits(data.guestDocument);
-    const guestArea = onlyDigits(data.guestPhoneArea);
-    const guestNumber = onlyDigits(data.guestPhoneNumber);
-
     if (!guestDocument || !isValidCpf(guestDocument)) {
       return NextResponse.json({ error: 'CPF invalido' }, { status: 400 });
+    }
+
+    const cpfRate = await enforceRateLimit({
+      key: `checkout:orders:cpf:${guestDocument}`,
+      requests: GIFT_CHECKOUT_CPF_RATE_LIMIT,
+      window: GIFT_CHECKOUT_CPF_RATE_WINDOW,
+    });
+    if (!cpfRate.allowed) {
+      return NextResponse.json({ error: "Muitas tentativas para este CPF. Aguarde alguns minutos." }, { status: 429 });
     }
 
     if (!guestArea || guestArea.length !== 2 || !guestNumber || guestNumber.length < 9) {
@@ -338,6 +397,46 @@ export async function POST(request: Request) {
       const billingAddress = normalizeBillingAddress(data.billingAddress);
       if (!billingAddress) {
         return NextResponse.json({ error: 'Endereço de cobrança do cartão inválido.' }, { status: 400 });
+      }
+
+      const cardFingerprint = buildCardFingerprint(cardNumber);
+      const differentCards = await hasTooManyDifferentCards({
+        guestEmail: normalizedGuestEmail,
+        guestDocument,
+        cardFingerprint,
+      });
+
+      if (differentCards.blocked) {
+        await prisma.checkoutCardAttempt.create({
+          data: {
+            giftListId: data.giftListId,
+            guestEmail: normalizedGuestEmail,
+            guestDocument,
+            ip,
+            cardFingerprint,
+            status: 'BLOCKED_DIFFERENT_CARDS',
+          },
+        });
+
+        await logSecurityEvent({
+          type: 'GIFT_CHECKOUT_DIFFERENT_CARDS_BLOCKED',
+          email: normalizedGuestEmail,
+          request,
+          route: '/api/orders',
+          metadata: {
+            ip,
+            giftListId: data.giftListId,
+            giftId: data.giftId,
+            differentCards: differentCards.differentCards,
+            limit: GIFT_CHECKOUT_DIFFERENT_CARD_LIMIT,
+            windowMinutes: GIFT_CHECKOUT_DIFFERENT_CARD_WINDOW_MINUTES,
+          },
+        });
+
+        return NextResponse.json(
+          { error: "Muitas tentativas com cartões diferentes. Aguarde antes de tentar novamente." },
+          { status: 429 }
+        );
       }
 
       const recentIpRefusedAttempts = await prisma.securityEvent.count({
@@ -430,7 +529,7 @@ export async function POST(request: Request) {
         giftListId: data.giftListId,
         giftItemId: data.giftId,
         guestName: data.guestName,
-        guestEmail: data.guestEmail,
+        guestEmail: normalizedGuestEmail,
         quantity: data.quantity,
         baseAmount: calculation.baseAmount,
         feeAmount: calculation.feeAmount,
@@ -439,6 +538,20 @@ export async function POST(request: Request) {
         paymentMethod: data.paymentMethod === 'CREDIT_CARD' ? 'credit_card' : 'pix',
       },
     });
+
+    if (data.paymentMethod === 'CREDIT_CARD') {
+      await prisma.checkoutCardAttempt.create({
+        data: {
+          orderId: order.id,
+          giftListId: data.giftListId,
+          guestEmail: normalizedGuestEmail,
+          guestDocument,
+          ip,
+          cardFingerprint: buildCardFingerprint(onlyDigits(data.card?.number)),
+          status: 'PENDING',
+        },
+      });
+    }
 
     if (data.message && gift.giftList.allowMessages) {
       await prisma.message.create({
@@ -472,6 +585,12 @@ export async function POST(request: Request) {
             where: { id: order.id },
             data: { status: 'REFUSED' },
           });
+          if (data.paymentMethod === 'CREDIT_CARD') {
+            await prisma.checkoutCardAttempt.updateMany({
+              where: { orderId: order.id },
+              data: { status: 'REFUSED_RECIPIENT' },
+            });
+          }
 
           return NextResponse.json(
             {
@@ -527,7 +646,7 @@ export async function POST(request: Request) {
           splitRules,
           customer: {
             name: data.guestName,
-            email: data.guestEmail,
+            email: normalizedGuestEmail ?? data.guestEmail,
             document: guestDocument,
             areaCode: guestArea,
             number: guestNumber,
@@ -706,6 +825,12 @@ export async function POST(request: Request) {
                 },
               });
             }
+            if (data.paymentMethod === 'CREDIT_CARD') {
+              await tx.checkoutCardAttempt.updateMany({
+                where: { orderId: order.id },
+                data: { status: 'APPROVED' },
+              });
+            }
           });
         } else {
           await prisma.order.update({
@@ -717,6 +842,12 @@ export async function POST(request: Request) {
               ...(isFailed ? { status: 'REFUSED' as const } : {}),
             },
           });
+          if (data.paymentMethod === 'CREDIT_CARD') {
+            await prisma.checkoutCardAttempt.updateMany({
+              where: { orderId: order.id },
+              data: { status: isFailed ? 'REFUSED' : 'PROCESSING' },
+            });
+          }
         }
 
         if (isFailed) {
@@ -797,6 +928,12 @@ export async function POST(request: Request) {
           where: { id: order.id },
           data: { status: 'REFUSED' },
         });
+        if (data.paymentMethod === 'CREDIT_CARD') {
+          await prisma.checkoutCardAttempt.updateMany({
+            where: { orderId: order.id },
+            data: { status: 'GATEWAY_ERROR' },
+          });
+        }
         if (data.paymentMethod === 'CREDIT_CARD') {
           await logSecurityEvent({
             type: 'GIFT_CHECKOUT_GATEWAY_ERROR',

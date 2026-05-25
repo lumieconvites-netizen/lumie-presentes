@@ -298,6 +298,7 @@ model Order {
   message Message? @relation("OrderToMessage")
 
   webhookEvents WebhookEvent[]
+  checkoutCardAttempts CheckoutCardAttempt[]
 
   @@index([giftListId])
   @@index([status, createdAt])
@@ -306,6 +307,27 @@ model Order {
   @@index([paidAt])
   @@index([pagarmeOrderId])
   @@map("orders")
+}
+
+model CheckoutCardAttempt {
+  id              String   @id @default(cuid())
+  orderId         String?
+  giftListId      String?
+  guestEmail      String?
+  guestDocument   String?
+  ip              String?
+  cardFingerprint String
+  status          String
+  createdAt       DateTime @default(now())
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([guestEmail, createdAt])
+  @@index([guestDocument, createdAt])
+  @@index([ip, createdAt])
+  @@index([cardFingerprint, createdAt])
+  @@index([status, createdAt])
+  @@map("checkout_card_attempts")
 }
 
 enum OrderStatus {
