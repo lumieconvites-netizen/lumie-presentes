@@ -11,6 +11,27 @@ import { Label } from '@/components/ui/label';
 
 type Step = 'request' | 'reset';
 
+function validatePassword(password: string, email: string) {
+  const errors: string[] = [];
+  const normalized = password.toLowerCase();
+  const emailUser = email.trim().toLowerCase().split('@')[0] ?? '';
+
+  if (password.length < 8) errors.push('8 caracteres');
+  if (!/[a-z]/.test(password)) errors.push('letra minúscula');
+  if (!/[A-Z]/.test(password)) errors.push('letra maiúscula');
+  if (!/\d/.test(password)) errors.push('número');
+  if (!/[^A-Za-z0-9]/.test(password)) errors.push('símbolo');
+  if (['12345678', '123456789', 'senha123', 'senha1234', 'password1'].includes(normalized)) {
+    errors.push('não ser comum');
+  }
+  if ('0123456789'.includes(password.replace(/\D/g, '')) || '9876543210'.includes(password.replace(/\D/g, ''))) {
+    errors.push('sem sequência numérica');
+  }
+  if (emailUser.length >= 4 && normalized.includes(emailUser)) errors.push('não conter email');
+
+  return errors;
+}
+
 export default function RecuperarSenhaPage() {
   const [step, setStep] = useState<Step>('request');
   const [isLoading, setIsLoading] = useState(false);
@@ -50,8 +71,9 @@ export default function RecuperarSenhaPage() {
     e.preventDefault();
     if (isLoading) return;
 
-    if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+    const passwordErrors = validatePassword(password, email);
+    if (passwordErrors.length) {
+      toast.error(`A senha deve conter: ${passwordErrors.join(', ')}`);
       return;
     }
 
@@ -177,7 +199,7 @@ export default function RecuperarSenhaPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Minimo 6 caracteres"
+                  placeholder="Mínimo 8, com número e símbolo"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

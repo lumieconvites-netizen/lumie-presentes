@@ -5,13 +5,14 @@ import bcrypt from "bcryptjs";
 import { PASSWORD_RESET_TEMPLATE_SLUG } from "@/lib/password-reset";
 import { getBlockedEmailMessage, isBlockedEmailDomain } from "@/lib/email-guard";
 import { logSecurityEvent } from "@/lib/security-events";
+import { validatePasswordStrength } from "@/lib/password-policy";
 
 const resetPasswordSchema = z
   .object({
     email: z.string().email("Email invalido"),
     code: z.string().length(6, "Codigo invalido"),
-    password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-    confirmPassword: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+    password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres"),
+    confirmPassword: z.string().min(8, "A senha deve ter pelo menos 8 caracteres"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas nao coincidem",
@@ -23,6 +24,17 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, code, password } = resetPasswordSchema.parse(body);
     const normalizedEmail = email.trim().toLowerCase();
+    const passwordStrength = validatePasswordStrength(password, { email: normalizedEmail });
+    if (!passwordStrength.ok) {
+      await logSecurityEvent({
+        type: "AUTH_RESET_PASSWORD_WEAK_PASSWORD",
+        email: normalizedEmail,
+        request,
+        route: "/api/auth/reset-password",
+        metadata: { reasons: passwordStrength.errors },
+      });
+      return NextResponse.json({ error: passwordStrength.message }, { status: 400 });
+    }
 
     if (isBlockedEmailDomain(normalizedEmail)) {
       await logSecurityEvent({

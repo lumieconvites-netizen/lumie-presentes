@@ -99,6 +99,7 @@ export async function POST(request: Request) {
           purpose: "REGISTER",
           name: pending.name,
           passwordHash: pending.passwordHash,
+          document: pending.document,
           templateSlug: pending.templateSlug,
           requestedRole: pending.requestedRole,
           inviteCode: pending.inviteCode,

@@ -21,6 +21,49 @@ function refreshSessionActivity() {
   window.localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
 }
 
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, '');
+}
+
+function isValidCpf(value: string) {
+  const digits = onlyDigits(value);
+  if (digits.length !== 11) return false;
+  if (/^(\d)\1+$/.test(digits)) return false;
+
+  const calc = (base: string, factor: number) => {
+    let total = 0;
+    for (const n of base) total += Number(n) * factor--;
+    const rest = total % 11;
+    return rest < 2 ? 0 : 11 - rest;
+  };
+
+  return calc(digits.slice(0, 9), 10) === Number(digits[9]) &&
+    calc(digits.slice(0, 10), 11) === Number(digits[10]);
+}
+
+function validatePassword(password: string, email: string, name: string) {
+  const errors: string[] = [];
+  const normalized = password.toLowerCase();
+  const emailUser = email.trim().toLowerCase().split('@')[0] ?? '';
+  const nameParts = name.toLowerCase().split(/\s+/).filter((part) => part.length >= 3);
+
+  if (password.length < 8) errors.push('8 caracteres');
+  if (!/[a-z]/.test(password)) errors.push('letra minúscula');
+  if (!/[A-Z]/.test(password)) errors.push('letra maiúscula');
+  if (!/\d/.test(password)) errors.push('número');
+  if (!/[^A-Za-z0-9]/.test(password)) errors.push('símbolo');
+  if (['12345678', '123456789', 'senha123', 'senha1234', 'password1'].includes(normalized)) {
+    errors.push('não ser comum');
+  }
+  if ('0123456789'.includes(password.replace(/\D/g, '')) || '9876543210'.includes(password.replace(/\D/g, ''))) {
+    errors.push('sem sequência numérica');
+  }
+  if (emailUser.length >= 4 && normalized.includes(emailUser)) errors.push('não conter email');
+  if (nameParts.some((part) => normalized.includes(part))) errors.push('não conter nome');
+
+  return errors;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,6 +80,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    document: '',
     password: '',
     confirmPassword: '',
     role: roleFromUrl as 'CLIENT' | 'PARTNER',
@@ -51,8 +95,14 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+    if (!isValidCpf(formData.document)) {
+      toast.error('Digite um CPF válido');
+      return;
+    }
+
+    const passwordErrors = validatePassword(formData.password, formData.email, formData.name);
+    if (passwordErrors.length) {
+      toast.error(`A senha deve conter: ${passwordErrors.join(', ')}`);
       return;
     }
 
@@ -65,6 +115,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
+          document: formData.document,
           password: formData.password,
           templateSlug: selectedTemplate || undefined,
           role: formData.role,
@@ -209,12 +260,28 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="document">CPF</Label>
+                <Input
+                  id="document"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Somente números"
+                  value={formData.document}
+                  onChange={(e) =>
+                    setFormData({ ...formData, document: e.target.value.replace(/\D/g, '').slice(0, 11) })
+                  }
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 8, com número e símbolo"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required

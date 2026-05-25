@@ -101,6 +101,16 @@ export async function POST(request: Request) {
     });
 
     await prisma.$transaction(async (tx) => {
+      if (verification.document) {
+        const documentOwner = await tx.user.findUnique({
+          where: { document: verification.document },
+          select: { id: true, email: true },
+        });
+        if (documentOwner && documentOwner.email !== normalizedEmail) {
+          throw new Error("Este CPF ja esta vinculado a uma conta.");
+        }
+      }
+
       const existingUser = await tx.user.findUnique({
         where: { email: normalizedEmail },
         select: { id: true },
@@ -111,6 +121,7 @@ export async function POST(request: Request) {
           where: { id: existingUser.id },
           data: {
             name: verification.name,
+            document: verification.document,
             password: verification.passwordHash,
             emailVerified: new Date(),
             role: requestedRole,
@@ -127,6 +138,7 @@ export async function POST(request: Request) {
             {
               email: normalizedEmail,
               name: verification.name ?? "Novo usuario",
+              document: verification.document,
               password: verification.passwordHash,
               emailVerified: new Date(),
               role: requestedRole,
@@ -236,6 +248,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
     }
     if (error instanceof Error && error.message.toLowerCase().includes("codigo")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    if (error instanceof Error && error.message.toLowerCase().includes("cpf")) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
