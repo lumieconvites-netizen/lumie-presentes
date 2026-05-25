@@ -105,6 +105,13 @@ export default function CheckoutPageClient({
   const [cardExpYear, setCardExpYear] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [cardInstallments, setCardInstallments] = useState(1);
+  const [billingZipCode, setBillingZipCode] = useState('');
+  const [billingStreet, setBillingStreet] = useState('');
+  const [billingNumber, setBillingNumber] = useState('');
+  const [billingNeighborhood, setBillingNeighborhood] = useState('');
+  const [billingComplement, setBillingComplement] = useState('');
+  const [billingCity, setBillingCity] = useState('');
+  const [billingState, setBillingState] = useState('');
   const [pixData, setPixData] = useState<{
     qrCode: string | null;
     qrCodeUrl: string | null;
@@ -235,6 +242,12 @@ export default function CheckoutPageClient({
       if (!cardExpMonth.trim()) return alert('Digite o mes de validade.');
       if (!cardExpYear.trim()) return alert('Digite o ano de validade.');
       if (!cardCvv.trim()) return alert('Digite o CVV.');
+      if (billingZipCode.replace(/\D/g, '').length !== 8) return alert('Digite um CEP valido para o endereco de cobranca.');
+      if (!billingStreet.trim()) return alert('Digite a rua do endereco de cobranca.');
+      if (!billingNumber.trim()) return alert('Digite o numero do endereco de cobranca.');
+      if (!billingNeighborhood.trim()) return alert('Digite o bairro do endereco de cobranca.');
+      if (!billingCity.trim()) return alert('Digite a cidade do endereco de cobranca.');
+      if (billingState.trim().length !== 2) return alert('Digite a UF do endereco de cobranca.');
     }
 
     const phoneDigits = guestPhone.replace(/\D/g, '');
@@ -265,6 +278,18 @@ export default function CheckoutPageClient({
                   expYear: cardExpYear,
                   cvv: cardCvv,
                   installments: cardInstallments,
+                }
+              : undefined,
+          billingAddress:
+            paymentMethod === 'CREDIT_CARD'
+              ? {
+                  zipCode: billingZipCode,
+                  street: billingStreet,
+                  number: billingNumber,
+                  neighborhood: billingNeighborhood,
+                  complement: billingComplement,
+                  city: billingCity,
+                  state: billingState,
                 }
               : undefined,
           quantity,
@@ -484,6 +509,52 @@ export default function CheckoutPageClient({
                         setCardInstallments(Math.max(1, Math.min(12, Number(e.target.value) || 1)))
                       }
                     />
+                  </div>
+                  <div className="border-t pt-3">
+                    <div className="mb-3 text-sm font-medium">Endereço de cobrança</div>
+                    <div className="grid gap-3">
+                      <Input
+                        placeholder="CEP"
+                        value={billingZipCode}
+                        onChange={(e) => setBillingZipCode(e.target.value)}
+                      />
+                      <Input
+                        placeholder="Rua"
+                        value={billingStreet}
+                        onChange={(e) => setBillingStreet(e.target.value)}
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <Input
+                          placeholder="Número"
+                          value={billingNumber}
+                          onChange={(e) => setBillingNumber(e.target.value)}
+                        />
+                        <Input
+                          placeholder="Complemento (opcional)"
+                          value={billingComplement}
+                          onChange={(e) => setBillingComplement(e.target.value)}
+                        />
+                      </div>
+                      <Input
+                        placeholder="Bairro"
+                        value={billingNeighborhood}
+                        onChange={(e) => setBillingNeighborhood(e.target.value)}
+                      />
+                      <div className="grid grid-cols-3 gap-3">
+                        <Input
+                          className="col-span-2"
+                          placeholder="Cidade"
+                          value={billingCity}
+                          onChange={(e) => setBillingCity(e.target.value)}
+                        />
+                        <Input
+                          placeholder="UF"
+                          maxLength={2}
+                          value={billingState}
+                          onChange={(e) => setBillingState(e.target.value.toUpperCase())}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : null}

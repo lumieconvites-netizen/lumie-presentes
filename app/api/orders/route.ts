@@ -40,6 +40,17 @@ const orderSchema = z.object({
       installments: z.number().int().min(1).max(12).optional(),
     })
     .optional(),
+  billingAddress: z
+    .object({
+      zipCode: z.string().min(8),
+      street: z.string().min(2),
+      number: z.string().min(1),
+      neighborhood: z.string().min(2),
+      complement: z.string().optional(),
+      city: z.string().min(2),
+      state: z.string().min(2).max(2),
+    })
+    .optional(),
   quantity: z.number().int().positive(),
   message: z.string().optional(),
   signature: z.string().optional(),
@@ -167,6 +178,30 @@ function sanitizeGatewayErrorDetails(input: unknown) {
   }
 
   return message.length > 220 ? `${message.slice(0, 217)}...` : message;
+}
+
+function normalizeBillingAddress(address?: z.infer<typeof orderSchema>['billingAddress']) {
+  if (!address) return null;
+
+  const zipCode = onlyDigits(address.zipCode);
+  const state = address.state.trim().toUpperCase();
+  const street = address.street.trim();
+  const number = address.number.trim();
+  const neighborhood = address.neighborhood.trim();
+  const complement = address.complement?.trim() || null;
+  const city = address.city.trim();
+
+  if (zipCode.length !== 8) return null;
+  if (!street || !number || !neighborhood || !city || state.length !== 2) return null;
+
+  return {
+    line1: `${number}, ${street}, ${neighborhood}`.slice(0, 256),
+    line2: complement ? complement.slice(0, 128) : null,
+    zipCode,
+    city: city.slice(0, 64),
+    state,
+    country: 'BR',
+  };
 }
 
 function calculateCommissionSplit(params: {
@@ -298,6 +333,11 @@ export async function POST(request: Request) {
       }
       if (!cvv || cvv.length < 3 || cvv.length > 4) {
         return NextResponse.json({ error: 'CVV invalido.' }, { status: 400 });
+      }
+
+      const billingAddress = normalizeBillingAddress(data.billingAddress);
+      if (!billingAddress) {
+        return NextResponse.json({ error: 'Endereço de cobrança do cartão inválido.' }, { status: 400 });
       }
 
       const recentIpRefusedAttempts = await prisma.securityEvent.count({
@@ -533,6 +573,7 @@ export async function POST(request: Request) {
                 cvv: onlyDigits(data.card?.cvv),
               },
               installments: data.card?.installments ?? 1,
+              billingAddress: normalizeBillingAddress(data.billingAddress) ?? undefined,
             });
           }
 

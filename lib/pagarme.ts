@@ -560,18 +560,35 @@ type CreateCreditCardOrderInput = {
     expYear: string;
     cvv: string;
   };
+  billingAddress?: {
+    line1: string;
+    line2?: string | null;
+    zipCode: string;
+    city: string;
+    state: string;
+    country?: string;
+  };
   installments?: number;
   metadata?: Record<string, any>;
 };
 
 export async function createCreditCardOrder(input: CreateCreditCardOrderInput) {
-  const billingAddress = {
-    line_1: process.env.PAGARME_BILLING_LINE_1 ?? "Av Paulista, 1000",
-    zip_code: process.env.PAGARME_BILLING_ZIP_CODE ?? "01310000",
-    city: process.env.PAGARME_BILLING_CITY ?? "Sao Paulo",
-    state: process.env.PAGARME_BILLING_STATE ?? "SP",
-    country: process.env.PAGARME_BILLING_COUNTRY ?? "BR",
-  };
+  const billingAddress = input.billingAddress
+    ? {
+        line_1: input.billingAddress.line1,
+        ...(input.billingAddress.line2 ? { line_2: input.billingAddress.line2 } : {}),
+        zip_code: input.billingAddress.zipCode,
+        city: input.billingAddress.city,
+        state: input.billingAddress.state,
+        country: input.billingAddress.country ?? "BR",
+      }
+    : {
+        line_1: process.env.PAGARME_BILLING_LINE_1 ?? "Av Paulista, 1000",
+        zip_code: process.env.PAGARME_BILLING_ZIP_CODE ?? "01310000",
+        city: process.env.PAGARME_BILLING_CITY ?? "Sao Paulo",
+        state: process.env.PAGARME_BILLING_STATE ?? "SP",
+        country: process.env.PAGARME_BILLING_COUNTRY ?? "BR",
+      };
 
   const splitRules =
     input.splitRules && input.splitRules.length > 0
