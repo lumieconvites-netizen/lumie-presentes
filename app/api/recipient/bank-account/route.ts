@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   createRecipientWithGateway,
+  getRecipientStatusWithGateway,
   updateRecipientDefaultBankAccountWithGateway,
 } from "@/lib/withdraw-gateway";
 import { z } from "zod";
@@ -124,13 +125,17 @@ function isRefusedRecipientStatus(input?: string | null) {
   return normalizeRecipientStatus(input) === "refused";
 }
 
+function shouldRefreshRecipientStatus(input?: string | null) {
+  return ["pending", "created", "processing", "waiting"].includes(normalizeRecipientStatus(input));
+}
+
 export async function GET() {
   const ctx = await getActingUserContext();
   if (!ctx) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   }
 
-  const recipient = await prisma.recipient.findUnique({
+  let recipient = await prisma.recipient.findUnique({
     where: { userId: ctx.effectiveUserId },
     select: {
       id: true,
@@ -140,6 +145,37 @@ export async function GET() {
       updatedAt: true,
     },
   });
+
+  if (
+    recipient &&
+    isRealRecipientId(recipient.pagarmeRecipientId) &&
+    shouldRefreshRecipientStatus(recipient.status)
+  ) {
+    try {
+      const gatewayStatus = await getRecipientStatusWithGateway(recipient.pagarmeRecipientId);
+      const nextStatus = normalizeRecipientStatus(gatewayStatus.status);
+      if (nextStatus !== "unknown") {
+        recipient = await prisma.recipient.update({
+          where: { id: recipient.id },
+          data: {
+            status: nextStatus,
+            lastStatusCheckedAt: new Date(),
+            statusCheckAttempts: { increment: 1 },
+            statusFinalizedAt: nextStatus === "refused" ? new Date() : null,
+          },
+          select: {
+            id: true,
+            pagarmeRecipientId: true,
+            bankAccount: true,
+            status: true,
+            updatedAt: true,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Falha ao consultar status do recebedor na Pagar.me:", error);
+    }
+  }
 
   return NextResponse.json({ recipient });
 }

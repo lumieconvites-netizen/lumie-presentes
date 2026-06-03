@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { getRecipientStatusWithGateway } from "@/lib/withdraw-gateway";
 
 const ACTIVE_SAFETY_WINDOW_MS = 2 * 60 * 60 * 1000;
-const PENDING_WINDOW_MS = 48 * 60 * 60 * 1000;
 const DEFAULT_INTERVAL_MS = 10 * 60 * 1000;
 
 function isRealRecipientId(value?: string | null) {
@@ -39,18 +38,15 @@ export async function syncRecipientStatuses(options?: {
   const intervalMs = Math.max(options?.intervalMs ?? DEFAULT_INTERVAL_MS, 60_000);
   const dryRun = Boolean(options?.dryRun);
   const lastCheckCutoff = new Date(now.getTime() - intervalMs);
-  const pendingCutoff = new Date(now.getTime() - PENDING_WINDOW_MS);
   const activeCutoff = new Date(now.getTime() - ACTIVE_SAFETY_WINDOW_MS);
 
   const recipients = await prisma.recipient.findMany({
     where: {
       statusFinalizedAt: null,
       pagarmeRecipientId: { not: { startsWith: "pending_" } },
-      statusCheckAttempts: { lt: 144 },
       OR: [
         {
           status: { in: ["pending", "created", "processing", "waiting"] },
-          updatedAt: { gte: pendingCutoff },
         },
         {
           status: "active",
