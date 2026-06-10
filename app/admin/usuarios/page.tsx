@@ -28,6 +28,7 @@ type AdminUser = {
 
 type RoleFilter = 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
 type UserApiResponse = { users: AdminUser[]; total: number; hasMore: boolean };
+type AffiliateOption = { id: string; name: string | null; email: string; role: AdminUser['role'] };
 
 const ROLE_OPTIONS: { value: RoleFilter; label: string }[] = [
   { value: 'CLIENT', label: 'Clientes' },
@@ -59,6 +60,8 @@ export default function AdminUsersPage() {
   const [q, setQ] = useState('');
   const [limit, setLimit] = useState(INITIAL_LIMIT);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [partners, setPartners] = useState<AffiliateOption[]>([]);
+  const [ambassadors, setAmbassadors] = useState<AffiliateOption[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -83,6 +86,29 @@ export default function AdminUsersPage() {
   useEffect(() => {
     setLimit(INITIAL_LIMIT);
   }, [role, debouncedQuery]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const response = await fetch('/api/admin/users?roles=PARTNER,AMBASSADOR&take=200', { cache: 'no-store' });
+        const data: UserApiResponse & { error?: string } = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro ao carregar parceiros e embaixadores');
+        if (cancelled) return;
+
+        const options = data.users || [];
+        setPartners(options.filter((user) => user.role === 'PARTNER'));
+        setAmbassadors(options.filter((user) => user.role === 'AMBASSADOR'));
+      } catch (error: any) {
+        if (!cancelled) alert(error?.message || 'Erro ao carregar parceiros e embaixadores');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function reloadUsers(activeQuery: string) {
     const response = await fetch(`/api/admin/users?${activeQuery}`, { cache: 'no-store' });
@@ -190,6 +216,10 @@ export default function AdminUsersPage() {
     await patchUser(user.id, payload);
   }
 
+  async function updateReferrals(user: AdminUser, payload: { referredByPartnerId?: string | null; referredByAmbassadorId?: string | null }) {
+    await patchUser(user.id, payload);
+  }
+
   const metricLabel =
     role === 'CLIENT'
       ? 'Origem'
@@ -264,7 +294,15 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="p-2">
                     {role === 'CLIENT' ? (
-                      <OriginDisplay user={user} />
+                      <div className="space-y-2">
+                        <OriginDisplay user={user} />
+                        <ReferralControls
+                          user={user}
+                          partners={partners}
+                          ambassadors={ambassadors}
+                          onSave={(payload) => updateReferrals(user, payload)}
+                        />
+                      </div>
                     ) : null}
                     {role === 'PARTNER' ? <Badge variant="outline">{user._count.referredClientsAsPartner} clientes</Badge> : null}
                     {role === 'AMBASSADOR' ? (
@@ -351,6 +389,121 @@ function OriginDisplay({ user }: { user: AdminUser }) {
           LUMIÊ
         </span>
       ) : null}
+    </div>
+  );
+}
+
+function formatOptionLabel(user: AffiliateOption) {
+  return `${user.name || 'Sem nome'} - ${user.email}`;
+}
+
+function ReferralControls({
+  user,
+  partners,
+  ambassadors,
+  onSave,
+}: {
+  user: AdminUser;
+  partners: AffiliateOption[];
+  ambassadors: AffiliateOption[];
+  onSave: (payload: { referredByPartnerId?: string | null; referredByAmbassadorId?: string | null }) => Promise<void>;
+}) {
+  const [partnerId, setPartnerId] = useState(user.referredByPartner?.id ?? 'none');
+  const [ambassadorId, setAmbassadorId] = useState(user.referredByAmbassador?.id ?? 'none');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setPartnerId(user.referredByPartner?.id ?? 'none');
+    setAmbassadorId(user.referredByAmbassador?.id ?? 'none');
+  }, [user.referredByPartner?.id, user.referredByAmbassador?.id]);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await onSave({
+        referredByPartnerId: partnerId === 'none' ? null : partnerId,
+        referredByAmbassadorId: ambassadorId === 'none' ? null : ambassadorId,
+      });
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao atualizar vinculos');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function clear() {
+    if (!window.confirm('Desvincular parceiro e embaixador deste cliente?')) return;
+    setSaving(true);
+    try {
+      setPartnerId('none');
+      setAmbassadorId('none');
+      await onSave({ referredByPartnerId: null, referredByAmbassadorId: null });
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao desvincular');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="grid max-w-[560px] gap-2 rounded-md border border-[#ead9cd] bg-[#fffaf6] p-2">
+      <div className="grid gap-2 md:grid-cols-2">
+        <label className="space-y-1 text-xs text-gray-600">
+          <span>Parceiro</span>
+          <select
+            className="h-9 w-full rounded-md border border-[#e7d8cb] bg-white px-2 text-xs"
+            value={partnerId}
+            onChange={(event) => setPartnerId(event.target.value)}
+            disabled={saving}
+          >
+            <option value="none">Sem parceiro</option>
+            {partners.map((partner) => (
+              <option key={partner.id} value={partner.id}>
+                {formatOptionLabel(partner)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="space-y-1 text-xs text-gray-600">
+          <span>Embaixador</span>
+          <select
+            className="h-9 w-full rounded-md border border-[#e7d8cb] bg-white px-2 text-xs"
+            value={ambassadorId}
+            onChange={(event) => setAmbassadorId(event.target.value)}
+            disabled={saving}
+          >
+            <option value="none">Sem embaixador</option>
+            {ambassadors.map((ambassador) => (
+              <option key={ambassador.id} value={ambassador.id}>
+                {formatOptionLabel(ambassador)}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          type="button"
+          variant="outline"
+          disabled={saving}
+          onClick={save}
+        >
+          {saving ? 'Salvando...' : 'Salvar vinculo'}
+        </Button>
+        <Button
+          size="sm"
+          type="button"
+          variant="outline"
+          className="border-red-300 text-red-600 hover:bg-red-50"
+          disabled={saving || (partnerId === 'none' && ambassadorId === 'none')}
+          onClick={clear}
+        >
+          Desvincular
+        </Button>
+      </div>
     </div>
   );
 }

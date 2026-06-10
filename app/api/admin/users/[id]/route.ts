@@ -12,7 +12,22 @@ const patchSchema = z.object({
   blockReason: z.string().max(400).optional().nullable(),
   name: z.string().min(2).max(120).optional(),
   email: z.string().email().optional(),
+  referredByPartnerId: z.string().optional().nullable(),
+  referredByAmbassadorId: z.string().optional().nullable(),
 });
+
+function normalizeRelationId(value?: string | null) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized || normalized === "none") return null;
+  return normalized;
+}
+
+function resolveAcquisitionSource(partnerId?: string | null, ambassadorId?: string | null) {
+  if (partnerId && ambassadorId) return "PARTNER_WITH_AMBASSADOR";
+  if (partnerId) return "PARTNER_DIRECT";
+  if (ambassadorId) return "AMBASSADOR_DIRECT";
+  return "PLATFORM_DIRECT";
+}
 
 export async function PATCH(
   request: Request,
@@ -52,6 +67,76 @@ export async function PATCH(
 
     const isBlockedToggle = typeof data.isBlocked === "boolean";
     const shouldSetBlockedMeta = isBlockedToggle ? data.isBlocked : undefined;
+    const relationPatchRequested =
+      typeof data.referredByPartnerId !== "undefined" ||
+      typeof data.referredByAmbassadorId !== "undefined";
+
+    let relationUpdateData: Record<string, unknown> = {};
+
+    if (relationPatchRequested) {
+      const targetUser = await prisma.user.findUnique({
+        where: { id: params.id },
+        select: {
+          id: true,
+          role: true,
+          referredByPartnerId: true,
+          referredByAmbassadorId: true,
+        },
+      });
+
+      if (!targetUser) {
+        return NextResponse.json({ error: "Usuario nao encontrado." }, { status: 404 });
+      }
+
+      if (targetUser.role !== "CLIENT") {
+        return NextResponse.json(
+          { error: "Vinculos de parceiro/embaixador so podem ser alterados em clientes." },
+          { status: 400 }
+        );
+      }
+
+      const nextPartnerId =
+        typeof data.referredByPartnerId !== "undefined"
+          ? normalizeRelationId(data.referredByPartnerId)
+          : targetUser.referredByPartnerId;
+      const nextAmbassadorId =
+        typeof data.referredByAmbassadorId !== "undefined"
+          ? normalizeRelationId(data.referredByAmbassadorId)
+          : targetUser.referredByAmbassadorId;
+
+      if (nextPartnerId) {
+        if (nextPartnerId === params.id) {
+          return NextResponse.json({ error: "O cliente nao pode ser parceiro dele mesmo." }, { status: 400 });
+        }
+        const partner = await prisma.user.findUnique({
+          where: { id: nextPartnerId },
+          select: { id: true, role: true },
+        });
+        if (!partner || partner.role !== "PARTNER") {
+          return NextResponse.json({ error: "Parceiro selecionado invalido." }, { status: 400 });
+        }
+      }
+
+      if (nextAmbassadorId) {
+        if (nextAmbassadorId === params.id) {
+          return NextResponse.json({ error: "O cliente nao pode ser embaixador dele mesmo." }, { status: 400 });
+        }
+        const ambassador = await prisma.user.findUnique({
+          where: { id: nextAmbassadorId },
+          select: { id: true, role: true },
+        });
+        if (!ambassador || ambassador.role !== "AMBASSADOR") {
+          return NextResponse.json({ error: "Embaixador selecionado invalido." }, { status: 400 });
+        }
+      }
+
+      relationUpdateData = {
+        referredByPartnerId: nextPartnerId,
+        referredByAmbassadorId: nextAmbassadorId,
+        acquisitionSource: resolveAcquisitionSource(nextPartnerId, nextAmbassadorId),
+        appliedReferralCode: null,
+      };
+    }
 
     const updateData: any = {
       ...(typeof data.role === "string" ? { role: data.role } : {}),
@@ -73,6 +158,7 @@ export async function PATCH(
         : {}),
       ...(typeof data.name === "string" ? { name: data.name.trim() } : {}),
       ...(typeof data.email === "string" ? { email: data.email.trim().toLowerCase() } : {}),
+      ...relationUpdateData,
     };
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -106,6 +192,7 @@ export async function PATCH(
             ...(typeof data.isBlocked === "boolean" ? { isBlocked: data.isBlocked } : {}),
             ...(typeof data.name === "string" ? { name: data.name.trim() } : {}),
             ...(typeof data.email === "string" ? { email: data.email.trim().toLowerCase() } : {}),
+            ...relationUpdateData,
           },
           select: {
             id: true,
