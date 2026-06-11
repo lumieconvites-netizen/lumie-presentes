@@ -46,10 +46,23 @@ export default async function DashboardLayout({
   const canViewSettingsInLimitedMode = isEmployeeLimitedMode;
   const planUser = await prisma.user.findUnique({
     where: { id: ctx.effectiveUserId },
-    select: { plan: true, planExpiresAt: true },
+    select: {
+      plan: true,
+      planExpiresAt: true,
+      acquisitionSource: true,
+      referredByPartnerId: true,
+      referredByAmbassadorId: true,
+    },
   });
   const effectivePlan = resolveEffectivePlan(planUser);
   const showDomainItem = effectivePlan === 'PREMIUM';
+  const isDirectFreeClient =
+    ctx.effectiveUser.role === 'CLIENT' &&
+    effectivePlan === 'FREE' &&
+    planUser?.acquisitionSource === 'PLATFORM_DIRECT' &&
+    !planUser.referredByPartnerId &&
+    !planUser.referredByAmbassadorId;
+  const showWhatsappSupport = effectivePlan === 'PREMIUM' || isDirectFreeClient;
 
   if (!isLimitedMode && ctx.effectiveUser.role === 'PARTNER') {
     redirect('/parceiro');
@@ -85,7 +98,7 @@ export default async function DashboardLayout({
             canViewSettingsInLimitedMode={canViewSettingsInLimitedMode}
           />
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">{children}</main>
-          {effectivePlan === 'PREMIUM' ? <PremiumWhatsappSupport /> : null}
+          {showWhatsappSupport ? <PremiumWhatsappSupport /> : null}
         </div>
       </div>
     </UserProviderGate>

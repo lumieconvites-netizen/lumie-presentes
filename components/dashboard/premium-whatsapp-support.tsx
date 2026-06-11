@@ -56,11 +56,12 @@ export default function PremiumWhatsappSupport() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#1fa855] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(31,168,85,0.28)] transition hover:bg-[#178d47]"
+        className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/70 bg-[#1fa855] text-white shadow-[0_12px_30px_rgba(31,168,85,0.28)] transition hover:bg-[#178d47] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1fa855] focus-visible:ring-offset-2"
         aria-expanded={open}
+        aria-label="Abrir atendimento pelo WhatsApp"
+        title="Atendimento pelo WhatsApp"
       >
-        <MessageCircle className="h-5 w-5" />
-        Entre em contato conosco
+        <MessageCircle className="h-7 w-7" />
       </button>
     </div>
   );
