@@ -19,9 +19,9 @@ export default function PremiumWhatsappSupport() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end gap-3 sm:right-5">
       {open ? (
-        <div className="w-[min(calc(100vw-2.5rem),360px)] rounded-2xl border border-[#ead9cd] bg-white p-4 shadow-[0_18px_50px_rgba(50,35,29,0.18)]">
+        <div className="w-[min(calc(100vw-2rem),360px)] rounded-2xl border border-[#ead9cd] bg-white p-4 shadow-[0_18px_50px_rgba(50,35,29,0.18)]">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-[#2f2622]">Como podemos ajudar?</p>
