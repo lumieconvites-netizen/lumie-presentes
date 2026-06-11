@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, X } from 'lucide-react';
+import { MessageCircle, Phone, X } from 'lucide-react';
 
 const WHATSAPP_NUMBER = '5516981873064';
 
@@ -54,21 +54,17 @@ export default function PremiumWhatsappSupport() {
       ) : null}
 
       <div className="flex items-center gap-3 rounded-full border border-[#cfeedd] bg-white/95 py-2 pl-4 pr-2 shadow-[0_12px_30px_rgba(31,168,85,0.16)] backdrop-blur-sm">
-        <span className="text-sm font-semibold text-[#23613d]">Fale conosco.</span>
+        <span className="text-sm font-semibold text-[#23613d]">Dúvida? Fale conosco!</span>
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="relative inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/70 bg-[#1fa855] text-white shadow-[0_12px_30px_rgba(31,168,85,0.28)] transition hover:bg-[#178d47] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1fa855] focus-visible:ring-offset-2"
+          className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/80 bg-[#1fa855] text-white shadow-[0_12px_30px_rgba(31,168,85,0.28)] transition hover:bg-[#178d47] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1fa855] focus-visible:ring-offset-2"
           aria-expanded={open}
           aria-label="Abrir atendimento pelo WhatsApp"
           title="Atendimento pelo WhatsApp"
         >
-          <span className="absolute inset-[13px] rounded-full border-2 border-white" aria-hidden="true" />
-          <span
-            className="absolute bottom-[12px] left-[13px] h-2.5 w-2.5 rotate-[-22deg] border-b-2 border-l-2 border-white bg-[#1fa855]"
-            aria-hidden="true"
-          />
-          <Phone className="relative z-10 h-5 w-5" />
+          <MessageCircle className="h-7 w-7" strokeWidth={1.8} />
+          <Phone className="absolute h-3.5 w-3.5" strokeWidth={2.4} />
         </button>
       </div>
     </div>
