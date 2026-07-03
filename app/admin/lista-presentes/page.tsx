@@ -26,6 +26,23 @@ type GiftModelItem = {
   totalQuantity: number;
 };
 
+type ClientGiftList = {
+  id: string;
+  title: string;
+  slug: string;
+  user: { email: string; name: string | null };
+  _count: { gifts: number; orders: number; messages: number };
+};
+
+type ClientGiftItem = {
+  id: string;
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  basePrice: number | string;
+  totalQuantity: number;
+};
+
 type GiftModelCategoryDetail = GiftModelCategory & {
   items: GiftModelItem[];
 };
@@ -47,6 +64,13 @@ export default function AdminGiftModelsPage() {
   const [syncing, setSyncing] = useState(false);
   const [uploadingItemImage, setUploadingItemImage] = useState(false);
   const [uploadingCategoryThumbnail, setUploadingCategoryThumbnail] = useState(false);
+  const [clientListQuery, setClientListQuery] = useState('');
+  const [clientLists, setClientLists] = useState<ClientGiftList[]>([]);
+  const [selectedClientList, setSelectedClientList] = useState<ClientGiftList | null>(null);
+  const [clientGifts, setClientGifts] = useState<ClientGiftItem[]>([]);
+  const [selectedClientGiftIds, setSelectedClientGiftIds] = useState<string[]>([]);
+  const [importTargetSlug, setImportTargetSlug] = useState('');
+  const [importingClientGifts, setImportingClientGifts] = useState(false);
 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategorySlug, setNewCategorySlug] = useState('');
@@ -98,6 +122,27 @@ export default function AdminGiftModelsPage() {
     setSelectedSlug(slug);
   }
 
+  async function loadClientLists() {
+    const params = new URLSearchParams();
+    if (clientListQuery.trim()) params.set('q', clientListQuery.trim());
+    const res = await fetch(`/api/admin/gift-lists?${params.toString()}`, { cache: 'no-store' });
+    const data = await parseJsonSafe(res);
+    if (!res.ok) throw new Error(data?.error || 'Erro ao carregar listas de clientes');
+    setClientLists(Array.isArray(data?.giftLists) ? data.giftLists : []);
+  }
+
+  async function loadClientGifts(list: ClientGiftList) {
+    const res = await fetch(`/api/admin/gift-lists/${list.id}/gifts`, { cache: 'no-store' });
+    const data = await parseJsonSafe(res);
+    if (!res.ok) throw new Error(data?.error || 'Erro ao carregar presentes do cliente');
+
+    const gifts = Array.isArray(data?.gifts) ? data.gifts : [];
+    setSelectedClientList(list);
+    setClientGifts(gifts);
+    setSelectedClientGiftIds(gifts.map((gift: ClientGiftItem) => gift.id));
+    setImportTargetSlug(selectedCategory?.slug || selectedSlug || categories[0]?.slug || '');
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -119,6 +164,10 @@ export default function AdminGiftModelsPage() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    loadClientLists().catch((error) => alert(error.message));
   }, []);
 
   async function handleCreateCategory() {
@@ -391,6 +440,43 @@ export default function AdminGiftModelsPage() {
     }
   }
 
+  async function handleImportClientGifts() {
+    if (!selectedClientList) return;
+    if (!importTargetSlug) {
+      alert('Escolha a categoria de destino.');
+      return;
+    }
+    if (!selectedClientGiftIds.length) {
+      alert('Selecione pelo menos um presente.');
+      return;
+    }
+
+    setImportingClientGifts(true);
+    try {
+      const res = await fetch(`/api/admin/gift-lists/${selectedClientList.id}/copy-gifts-to-model`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          categorySlug: importTargetSlug,
+          giftIds: selectedClientGiftIds,
+        }),
+      });
+      const data = await parseJsonSafe(res);
+      if (!res.ok) throw new Error(data?.error || 'Erro ao importar presentes do cliente');
+
+      alert(`${data?.importedCount || selectedClientGiftIds.length} presente(s) importado(s).`);
+      await loadCategories(importTargetSlug);
+      await loadCategory(importTargetSlug);
+      setSelectedClientList(null);
+      setClientGifts([]);
+      setSelectedClientGiftIds([]);
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao importar presentes');
+    } finally {
+      setImportingClientGifts(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card className="border-[#e7d8cb]">
@@ -413,6 +499,150 @@ export default function AdminGiftModelsPage() {
             </div>
             <div className="flex items-end">
               <Button onClick={handleCreateCategory} disabled={saving}>Criar categoria</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-[#e7d8cb]">
+        <CardHeader>
+          <CardTitle>Importar presentes de uma lista de cliente</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Busque uma lista real, veja os presentes e escolha quais itens entram nos modelos prontos.
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <Input
+              placeholder="Buscar cliente, lista, slug ou e-mail"
+              value={clientListQuery}
+              onChange={(e) => setClientListQuery(e.target.value)}
+              className="max-w-md"
+            />
+            <Button variant="outline" onClick={() => loadClientLists().catch((error) => alert(error.message))}>
+              Buscar listas
+            </Button>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+            <div className="max-h-[480px] overflow-auto rounded-lg border">
+              <table className="w-full text-sm">
+                <thead className="bg-[#faf3ee]">
+                  <tr>
+                    <th className="p-2 text-left">Lista</th>
+                    <th className="p-2 text-left">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientLists.map((list) => (
+                    <tr key={list.id} className="border-t">
+                      <td className="p-2">
+                        <p className="font-medium">{list.title}</p>
+                        <p className="text-xs text-gray-500">/{list.slug}</p>
+                        <p className="text-xs text-gray-500">{list.user.name || 'Sem nome'} - {list.user.email}</p>
+                        <p className="text-xs text-gray-500">{list._count.gifts} presentes</p>
+                      </td>
+                      <td className="p-2">
+                        <Button size="sm" variant="outline" onClick={() => loadClientGifts(list).catch((error) => alert(error.message))}>
+                          Ver presentes
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                  {!clientLists.length ? (
+                    <tr>
+                      <td className="p-3 text-sm text-gray-500" colSpan={2}>
+                        Nenhuma lista encontrada.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="rounded-xl border bg-[#fffaf6] p-3">
+              {selectedClientList ? (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-[#8E3D2C]">{selectedClientList.title}</p>
+                      <p className="text-xs text-gray-500">/{selectedClientList.slug}</p>
+                    </div>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/site/${selectedClientList.slug}/presentes`} target="_blank" rel="noreferrer">Abrir página</a>
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_260px]">
+                    <div className="max-h-[420px] overflow-auto rounded-lg border bg-white">
+                      {clientGifts.map((gift) => {
+                        const checked = selectedClientGiftIds.includes(gift.id);
+                        return (
+                          <label key={gift.id} className="flex cursor-pointer items-center gap-3 border-b p-3 last:border-b-0">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-[#8E3D2C]"
+                              checked={checked}
+                              onChange={(event) => {
+                                setSelectedClientGiftIds((current) =>
+                                  event.target.checked ? [...current, gift.id] : current.filter((id) => id !== gift.id)
+                                );
+                              }}
+                            />
+                            {gift.imageUrl ? (
+                              <img src={gift.imageUrl} alt="" className="h-14 w-14 rounded-md object-cover" />
+                            ) : (
+                              <span className="h-14 w-14 rounded-md bg-[#f3e6dc]" />
+                            )}
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-medium">{gift.name}</span>
+                              <span className="block text-xs text-gray-500">
+                                R$ {Number(gift.basePrice || 0).toFixed(2)} - qtd. {gift.totalQuantity}
+                              </span>
+                              {gift.description ? <span className="block truncate text-xs text-gray-500">{gift.description}</span> : null}
+                            </span>
+                          </label>
+                        );
+                      })}
+                      {!clientGifts.length ? (
+                        <p className="p-3 text-sm text-gray-500">Essa lista não tem presentes.</p>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-3 rounded-lg border bg-white p-3">
+                      <div>
+                        <Label>Categoria de destino</Label>
+                        <select
+                          className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={importTargetSlug}
+                          onChange={(e) => setImportTargetSlug(e.target.value)}
+                        >
+                          <option value="">Escolha uma categoria</option>
+                          {categories.map((category) => (
+                            <option key={category.slug} value={category.slug}>{category.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <Button className="w-full" onClick={handleImportClientGifts} disabled={importingClientGifts || !selectedClientGiftIds.length}>
+                        {importingClientGifts ? 'Importando...' : 'Adicionar selecionados'}
+                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => setSelectedClientGiftIds(clientGifts.map((gift) => gift.id))}>
+                          Selecionar todos
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => setSelectedClientGiftIds([])}>
+                          Limpar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-[420px] items-center justify-center rounded-lg border border-dashed bg-white text-sm text-gray-500">
+                  Escolha uma lista ao lado para visualizar os presentes antes de importar.
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
