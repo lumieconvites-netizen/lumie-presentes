@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type UIEvent } from 'react';
+import { useEffect, useState, type UIEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,7 +47,7 @@ type ClientGiftList = {
   _count: { gifts: number; orders: number; messages: number };
 };
 
-const CLIENT_LIST_PAGE_SIZE = 30;
+const ADMIN_TABLE_PAGE_SIZE = 10;
 
 export default function AdminTemplatesPage() {
   const router = useRouter();
@@ -56,6 +56,9 @@ export default function AdminTemplatesPage() {
 
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [templates, setTemplates] = useState<AdminTemplate[]>([]);
+  const [templatesTotal, setTemplatesTotal] = useState(0);
+  const [templatesHasMore, setTemplatesHasMore] = useState(false);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -69,18 +72,6 @@ export default function AdminTemplatesPage() {
   const [copyForm, setCopyForm] = useState({ name: '', category: initialCategory === 'all' ? '' : initialCategory });
   const [copyingClientList, setCopyingClientList] = useState(false);
 
-  const filteredTemplates = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    return templates.filter((template) => {
-      if (!term) return true;
-      return (
-        template.name.toLowerCase().includes(term) ||
-        template.slug.toLowerCase().includes(term) ||
-        template.category.toLowerCase().includes(term)
-      );
-    });
-  }, [q, templates]);
-
   async function loadCategories() {
     const res = await fetch('/api/admin/template-categories', { cache: 'no-store' });
     const json = await res.json();
@@ -88,13 +79,27 @@ export default function AdminTemplatesPage() {
     setCategories(json.categories || []);
   }
 
-  async function loadTemplates(category?: string) {
+  async function loadTemplates(category?: string, options: { reset?: boolean } = {}) {
+    if (templatesLoading) return;
+    setTemplatesLoading(true);
     const categorySlug = category || selectedCategory;
-    const query = categorySlug !== 'all' ? `?category=${encodeURIComponent(categorySlug)}` : '';
-    const res = await fetch(`/api/admin/templates${query}`, { cache: 'no-store' });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || 'Erro ao carregar templates');
-    setTemplates(json.templates || []);
+    const params = new URLSearchParams({
+      take: String(ADMIN_TABLE_PAGE_SIZE),
+      skip: String(options.reset ? 0 : templates.length),
+    });
+    if (categorySlug !== 'all') params.set('category', categorySlug);
+    if (q.trim()) params.set('q', q.trim());
+    try {
+      const res = await fetch(`/api/admin/templates?${params.toString()}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Erro ao carregar templates');
+      const nextTemplates = Array.isArray(json.templates) ? json.templates : [];
+      setTemplates((current) => (options.reset ? nextTemplates : [...current, ...nextTemplates]));
+      setTemplatesTotal(json.total || nextTemplates.length);
+      setTemplatesHasMore(Boolean(json.hasMore));
+    } finally {
+      setTemplatesLoading(false);
+    }
   }
 
   async function loadClientLists(options: { reset?: boolean } = {}) {
@@ -103,7 +108,7 @@ export default function AdminTemplatesPage() {
     const skip = options.reset ? 0 : clientLists.length;
     const params = new URLSearchParams();
     if (clientListQuery.trim()) params.set('q', clientListQuery.trim());
-    params.set('take', String(CLIENT_LIST_PAGE_SIZE));
+    params.set('take', String(ADMIN_TABLE_PAGE_SIZE));
     params.set('skip', String(skip));
     try {
       const res = await fetch(`/api/admin/gift-lists?${params.toString()}`, { cache: 'no-store' });
@@ -123,6 +128,14 @@ export default function AdminTemplatesPage() {
     const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 80;
     if (nearBottom && clientListsHasMore && !clientListsLoading) {
       loadClientLists().catch((error) => alert(error.message));
+    }
+  }
+
+  function handleTemplatesScroll(event: UIEvent<HTMLDivElement>) {
+    const target = event.currentTarget;
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 80;
+    if (nearBottom && templatesHasMore && !templatesLoading) {
+      loadTemplates(undefined, { reset: false }).catch((error) => alert(error.message));
     }
   }
 
@@ -147,7 +160,7 @@ export default function AdminTemplatesPage() {
     const nextCategory = json.slug || 'all';
     await loadCategories();
     setSelectedCategory(nextCategory);
-    await loadTemplates(nextCategory);
+    await loadTemplates(nextCategory, { reset: true });
   }
 
   async function deleteCategory(slug: string) {
@@ -158,7 +171,7 @@ export default function AdminTemplatesPage() {
 
     await loadCategories();
     setSelectedCategory('all');
-    await loadTemplates('all');
+    await loadTemplates('all', { reset: true });
   }
 
   async function patchTemplate(id: string, payload: any) {
@@ -171,7 +184,7 @@ export default function AdminTemplatesPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || 'Erro ao atualizar template');
-      await loadTemplates();
+      await loadTemplates(undefined, { reset: true });
       await loadCategories();
     } finally {
       setBusyId(null);
@@ -184,7 +197,7 @@ export default function AdminTemplatesPage() {
       const res = await fetch(`/api/admin/templates/${id}`, { method: 'DELETE' });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || 'Erro ao excluir template');
-      await loadTemplates();
+      await loadTemplates(undefined, { reset: true });
       await loadCategories();
     } finally {
       setBusyId(null);
@@ -197,7 +210,7 @@ export default function AdminTemplatesPage() {
       const res = await fetch(`/api/admin/templates/${id}/duplicate`, { method: 'POST' });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || 'Erro ao duplicar template');
-      await Promise.all([loadCategories(), loadTemplates()]);
+      await Promise.all([loadCategories(), loadTemplates(undefined, { reset: true })]);
       if (json?.template?.id) {
         router.push(`/admin/templates/editor/${json.template.id}`);
       }
@@ -241,7 +254,7 @@ export default function AdminTemplatesPage() {
 
       alert('Template criado com sucesso.');
       setSelectedClientList(null);
-      await Promise.all([loadCategories(), loadTemplates(copyForm.category)]);
+      await Promise.all([loadCategories(), loadTemplates(copyForm.category, { reset: true })]);
       setSelectedCategory(copyForm.category);
       if (json?.template?.id) router.push(`/admin/templates/editor/${json.template.id}`);
     } finally {
@@ -253,7 +266,7 @@ export default function AdminTemplatesPage() {
     let cancelled = false;
     (async () => {
       try {
-        await Promise.all([loadCategories(), loadTemplates(initialCategory)]);
+        await Promise.all([loadCategories(), loadTemplates(initialCategory, { reset: true })]);
       } catch (error: any) {
         if (!cancelled) alert(error?.message || 'Erro ao carregar templates');
       }
@@ -268,8 +281,8 @@ export default function AdminTemplatesPage() {
   }, []);
 
   useEffect(() => {
-    loadTemplates().catch((error) => alert(error.message));
-  }, [selectedCategory]);
+    loadTemplates(undefined, { reset: true }).catch((error) => alert(error.message));
+  }, [selectedCategory, q]);
 
   const selectedCategoryName =
     selectedCategory === 'all' ? 'Todos os tipos' : categories.find((c) => c.slug === selectedCategory)?.name || selectedCategory;
@@ -351,7 +364,7 @@ export default function AdminTemplatesPage() {
             </Button>
           </div>
 
-          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white" onScroll={handleTemplatesScroll}>
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
@@ -362,7 +375,7 @@ export default function AdminTemplatesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredTemplates.map((template) => (
+                {templates.map((template) => (
                   <tr key={template.id} className="border-t">
                     <td className="p-2">
                       <p className="font-medium">{template.name}</p>
@@ -408,16 +421,24 @@ export default function AdminTemplatesPage() {
                     </td>
                   </tr>
                 ))}
-                {filteredTemplates.length === 0 ? (
+                {!templates.length && !templatesLoading ? (
                   <tr>
                     <td className="p-3 text-sm text-gray-500" colSpan={4}>
                       Nenhum template encontrado para esse tipo de evento.
                     </td>
                   </tr>
                 ) : null}
+                {templatesLoading ? (
+                  <tr>
+                    <td className="p-3 text-sm text-gray-500" colSpan={4}>
+                      Carregando mais templates...
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
+          <p className="text-xs text-gray-500">Mostrando {templates.length} de {templatesTotal || templates.length}</p>
         </CardContent>
       </Card>
 

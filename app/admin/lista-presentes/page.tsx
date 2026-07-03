@@ -60,7 +60,7 @@ type ItemDraft = {
   totalQuantity: number;
 };
 
-const CLIENT_LIST_PAGE_SIZE = 30;
+const CLIENT_LIST_PAGE_SIZE = 10;
 
 export default function AdminGiftModelsPage() {
   const [categories, setCategories] = useState<GiftModelCategory[]>([]);

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode, type UIEvent } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,11 +56,10 @@ type ImpersonationState = {
 
 type PeriodFilter = 'total' | 'current_month' | 'last_month';
 type ManagedRole = 'CLIENT' | 'PARTNER' | 'AMBASSADOR' | 'EMPLOYEE';
-type UserApiResponse = { users: AdminUser[] };
+type UserApiResponse = { users: AdminUser[]; total: number; hasMore: boolean };
 
 const brl = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const RECENT_LIMIT = 10;
-const LISTS_STEP = 10;
+const ADMIN_TABLE_PAGE_SIZE = 10;
 const ROLE_SECTIONS: { role: ManagedRole; title: string; description: string }[] = [
   { role: 'CLIENT', title: 'Clientes', description: '10 mais recentes com controles.' },
   { role: 'PARTNER', title: 'Parceiros', description: '10 mais recentes com controles.' },
@@ -88,7 +87,22 @@ export default function AdminPage() {
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
   const [qUser, setQUser] = useState('');
   const [qList, setQList] = useState('');
-  const [visibleListCount, setVisibleListCount] = useState(LISTS_STEP);
+  const [listLimit, setListLimit] = useState(ADMIN_TABLE_PAGE_SIZE);
+  const [listTotal, setListTotal] = useState(0);
+  const [templateLimit, setTemplateLimit] = useState(ADMIN_TABLE_PAGE_SIZE);
+  const [templateTotal, setTemplateTotal] = useState(0);
+  const [roleLimits, setRoleLimits] = useState<Record<ManagedRole, number>>({
+    CLIENT: ADMIN_TABLE_PAGE_SIZE,
+    PARTNER: ADMIN_TABLE_PAGE_SIZE,
+    AMBASSADOR: ADMIN_TABLE_PAGE_SIZE,
+    EMPLOYEE: ADMIN_TABLE_PAGE_SIZE,
+  });
+  const [sectionTotals, setSectionTotals] = useState<Record<ManagedRole, number>>({
+    CLIENT: 0,
+    PARTNER: 0,
+    AMBASSADOR: 0,
+    EMPLOYEE: 0,
+  });
   const [sectionUsers, setSectionUsers] = useState<Record<ManagedRole, AdminUser[]>>({
     CLIENT: [],
     PARTNER: [],
@@ -102,8 +116,14 @@ export default function AdminPage() {
   const listQuery = useMemo(() => {
     const params = new URLSearchParams();
     if (debouncedListQuery) params.set('q', debouncedListQuery);
+    params.set('take', String(listLimit));
     return params.toString();
-  }, [debouncedListQuery]);
+  }, [debouncedListQuery, listLimit]);
+
+  const templateQuery = useMemo(() => {
+    const params = new URLSearchParams({ take: String(templateLimit) });
+    return params.toString();
+  }, [templateLimit]);
 
   async function getJson<T>(url: string): Promise<T | null> {
     try {
@@ -118,13 +138,19 @@ export default function AdminPage() {
     const [overviewResponse, listResponse, templateResponse, impersonationResponse] = await Promise.all([
       getJson<Overview & { error?: string }>(`/api/admin/overview?period=${period}`),
       getJson<{ giftLists: AdminGiftList[]; error?: string }>(`/api/admin/gift-lists?${listQuery}`),
-      getJson<{ templates: AdminTemplate[]; error?: string }>('/api/admin/templates'),
+      getJson<{ templates: AdminTemplate[]; total?: number; error?: string }>(`/api/admin/templates?${templateQuery}`),
       getJson<ImpersonationState>('/api/admin/impersonation'),
     ]);
 
     if (overviewResponse && !('error' in overviewResponse)) setOverview(overviewResponse);
-    if (listResponse && Array.isArray(listResponse.giftLists)) setLists(listResponse.giftLists);
-    if (templateResponse && Array.isArray(templateResponse.templates)) setTemplates(templateResponse.templates);
+    if (listResponse && Array.isArray(listResponse.giftLists)) {
+      setLists(listResponse.giftLists);
+      setListTotal(Number((listResponse as any).total || listResponse.giftLists.length));
+    }
+    if (templateResponse && Array.isArray(templateResponse.templates)) {
+      setTemplates(templateResponse.templates);
+      setTemplateTotal(Number(templateResponse.total || templateResponse.templates.length));
+    }
     if (impersonationResponse) setImpersonation(impersonationResponse);
   }
 
@@ -133,7 +159,7 @@ export default function AdminPage() {
       ROLE_SECTIONS.map(({ role }) => {
         const params = new URLSearchParams({
           role,
-          take: String(RECENT_LIMIT),
+          take: String(roleLimits[role]),
         });
         if (debouncedUserQuery) params.set('q', debouncedUserQuery);
         return getJson<UserApiResponse & { error?: string }>(`/api/admin/users?${params.toString()}`);
@@ -151,6 +177,7 @@ export default function AdminPage() {
       const role = ROLE_SECTIONS[index].role;
       if (response && !('error' in response) && Array.isArray(response.users)) {
         nextState[role] = response.users;
+        setSectionTotals((current) => ({ ...current, [role]: response.total || response.users.length }));
       }
     });
 
@@ -162,11 +189,20 @@ export default function AdminPage() {
   }, [period, listQuery]);
 
   useEffect(() => {
-    setVisibleListCount(LISTS_STEP);
+    setListLimit(ADMIN_TABLE_PAGE_SIZE);
   }, [debouncedListQuery]);
 
   useEffect(() => {
     loadSectionUsers().catch(() => null);
+  }, [debouncedUserQuery, JSON.stringify(roleLimits)]);
+
+  useEffect(() => {
+    setRoleLimits({
+      CLIENT: ADMIN_TABLE_PAGE_SIZE,
+      PARTNER: ADMIN_TABLE_PAGE_SIZE,
+      AMBASSADOR: ADMIN_TABLE_PAGE_SIZE,
+      EMPLOYEE: ADMIN_TABLE_PAGE_SIZE,
+    });
   }, [debouncedUserQuery]);
 
   async function patchUser(id: string, payload: unknown) {
@@ -283,7 +319,29 @@ export default function AdminPage() {
     await loadNonUserData();
   }
 
-  const visibleLists = useMemo(() => lists.slice(0, visibleListCount), [lists, visibleListCount]);
+  function handleListScroll(event: UIEvent<HTMLDivElement>) {
+    const target = event.currentTarget;
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 80;
+    if (nearBottom && lists.length < listTotal) {
+      setListLimit((current) => current + ADMIN_TABLE_PAGE_SIZE);
+    }
+  }
+
+  function handleTemplateScroll(event: UIEvent<HTMLDivElement>) {
+    const target = event.currentTarget;
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 80;
+    if (nearBottom && templates.length < templateTotal) {
+      setTemplateLimit((current) => current + ADMIN_TABLE_PAGE_SIZE);
+    }
+  }
+
+  function handleRoleScroll(role: ManagedRole) {
+    if (sectionUsers[role].length >= sectionTotals[role]) return;
+    setRoleLimits((current) => ({
+      ...current,
+      [role]: current[role] + ADMIN_TABLE_PAGE_SIZE,
+    }));
+  }
 
   return (
     <div className="space-y-6">
@@ -367,6 +425,8 @@ export default function AdminPage() {
               onPatchUser={patchUser}
               onToggleBlock={toggleBlockUser}
               onDeleteUser={deleteUser}
+              total={sectionTotals[section.role]}
+              onLoadMore={() => handleRoleScroll(section.role)}
             />
           ))}
         </CardContent>
@@ -382,7 +442,7 @@ export default function AdminPage() {
             value={qList}
             onChange={(event) => setQList(event.target.value)}
           />
-          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white" onScroll={handleListScroll}>
             <table className="w-full min-w-[760px] text-sm">
               <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
@@ -392,7 +452,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {visibleLists.map((list) => (
+                {lists.map((list) => (
                   <tr key={list.id} className="border-t">
                     <td className="p-2">
                       <p className="font-medium">{list.title}</p>
@@ -424,23 +484,18 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ))}
+                {lists.length < listTotal ? (
+                  <tr>
+                    <td className="p-3 text-sm text-gray-500" colSpan={3}>
+                      Carregando mais listas...
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-gray-500">Mostrando {visibleLists.length} de {lists.length}</p>
-            <div className="flex flex-wrap gap-2">
-              {visibleListCount > LISTS_STEP ? (
-                <Button variant="outline" size="sm" onClick={() => setVisibleListCount((current) => Math.max(LISTS_STEP, current - LISTS_STEP))}>
-                  Ver menos
-                </Button>
-              ) : null}
-              {visibleListCount < lists.length ? (
-                <Button variant="outline" size="sm" onClick={() => setVisibleListCount((current) => Math.min(lists.length, current + LISTS_STEP))}>
-                  Ver mais
-                </Button>
-              ) : null}
-            </div>
+            <p className="text-xs text-gray-500">Mostrando {lists.length} de {listTotal || lists.length}</p>
           </div>
         </CardContent>
       </Card>
@@ -450,7 +505,7 @@ export default function AdminPage() {
           <CardTitle>Templates (publicação imediata)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white" onScroll={handleTemplateScroll}>
             <table className="w-full min-w-[760px] text-sm">
               <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
@@ -501,9 +556,17 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ))}
+                {templates.length < templateTotal ? (
+                  <tr>
+                    <td className="p-3 text-sm text-gray-500" colSpan={3}>
+                      Carregando mais templates...
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
+          <p className="text-xs text-gray-500">Mostrando {templates.length} de {templateTotal || templates.length}</p>
         </CardContent>
       </Card>
     </div>
@@ -520,6 +583,8 @@ function RoleSection({
   onPatchUser,
   onToggleBlock,
   onDeleteUser,
+  total,
+  onLoadMore,
 }: {
   role: ManagedRole;
   title: string;
@@ -530,6 +595,8 @@ function RoleSection({
   onPatchUser: (id: string, payload: unknown) => Promise<void>;
   onToggleBlock: (user: AdminUser) => Promise<void>;
   onDeleteUser: (user: AdminUser) => Promise<void>;
+  total: number;
+  onLoadMore: () => void;
 }) {
   const metricLabel =
     role === 'CLIENT'
@@ -554,7 +621,14 @@ function RoleSection({
         </div>
       </div>
 
-      <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
+      <div
+        className="max-h-[520px] overflow-auto rounded-lg border bg-white"
+        onScroll={(event) => {
+          const target = event.currentTarget;
+          const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 80;
+          if (nearBottom) onLoadMore();
+        }}
+      >
         <table className="w-full min-w-[920px] text-sm">
           <thead className="sticky top-0 z-10 bg-[#faf3ee]">
             <tr>
@@ -618,6 +692,13 @@ function RoleSection({
               <tr>
                 <td className="p-3 text-sm text-gray-500" colSpan={3}>
                   Nenhum registro encontrado.
+                </td>
+              </tr>
+            ) : null}
+            {users.length < total ? (
+              <tr>
+                <td className="p-3 text-sm text-gray-500" colSpan={3}>
+                  Carregando mais registros...
                 </td>
               </tr>
             ) : null}

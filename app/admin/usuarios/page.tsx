@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type UIEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,8 +36,8 @@ const ROLE_OPTIONS: { value: RoleFilter; label: string }[] = [
   { value: 'AMBASSADOR', label: 'Embaixadores' },
   { value: 'EMPLOYEE', label: 'Funcionários' },
 ];
-const INITIAL_LIMIT = 50;
-const LOAD_MORE_STEP = 50;
+const INITIAL_LIMIT = 10;
+const LOAD_MORE_STEP = 10;
 
 function useDebouncedValue<T>(value: T, delayMs: number) {
   const [debounced, setDebounced] = useState(value);
@@ -220,6 +220,14 @@ export default function AdminUsersPage() {
     await patchUser(user.id, payload);
   }
 
+  function handleUsersScroll(event: UIEvent<HTMLDivElement>) {
+    const target = event.currentTarget;
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 80;
+    if (nearBottom && users.length < total && !loading) {
+      setLimit((current) => current + LOAD_MORE_STEP);
+    }
+  }
+
   const metricLabel =
     role === 'CLIENT'
       ? 'Origem'
@@ -261,7 +269,7 @@ export default function AdminUsersPage() {
           onChange={(event) => setQ(event.target.value)}
         />
 
-        <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
+        <div className="max-h-[520px] overflow-auto rounded-lg border bg-white" onScroll={handleUsersScroll}>
           <table className="w-full min-w-[980px] text-sm">
             <thead className="sticky top-0 z-10 bg-[#faf3ee]">
               <tr>
@@ -345,17 +353,19 @@ export default function AdminUsersPage() {
                   </td>
                 </tr>
               ) : null}
+              {loading ? (
+                <tr>
+                  <td className="p-3 text-sm text-gray-500" colSpan={3}>
+                    Carregando mais usuários...
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-gray-500">Mostrando {users.length} de {total}</p>
-          {users.length < total ? (
-            <Button variant="outline" onClick={() => setLimit((current) => current + LOAD_MORE_STEP)}>
-              Ver mais
-            </Button>
-          ) : null}
         </div>
       </CardContent>
     </Card>

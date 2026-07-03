@@ -26,6 +26,9 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const category = normalizeCategorySlug(searchParams.get("category") || "");
+  const q = (searchParams.get("q") || "").trim().toLowerCase();
+  const take = Math.min(Math.max(Number(searchParams.get("take") || 100), 1), 100);
+  const skip = Math.max(Number(searchParams.get("skip") || 0), 0);
 
   const rawTemplates = await prisma.template.findMany({
     where: {
@@ -37,7 +40,22 @@ export async function GET(request: Request) {
   const templates = rawTemplates.filter(
     (template) => !isCategoryMetaTemplate(template) && !isGiftModelTemplate(template)
   );
-  return NextResponse.json({ templates });
+  const filteredTemplates = q
+    ? templates.filter((template) =>
+        template.name.toLowerCase().includes(q) ||
+        template.slug.toLowerCase().includes(q) ||
+        template.category.toLowerCase().includes(q)
+      )
+    : templates;
+  const page = filteredTemplates.slice(skip, skip + take);
+
+  return NextResponse.json({
+    templates: page,
+    total: filteredTemplates.length,
+    take,
+    skip,
+    hasMore: skip + page.length < filteredTemplates.length,
+  });
 }
 
 export async function POST(request: Request) {
