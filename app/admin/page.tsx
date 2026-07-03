@@ -48,6 +48,21 @@ type AdminGiftList = {
 };
 
 type AdminTemplate = { id: string; name: string; slug: string; category: string; isActive: boolean };
+type AdminGiftModelCategory = { id: string; name: string; slug: string; itemsCount: number };
+type AdminGiftItem = {
+  id: string;
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  basePrice: number | string;
+  totalQuantity: number;
+};
+type GiftCopyPanelState = {
+  list: AdminGiftList;
+  gifts: AdminGiftItem[];
+  selectedIds: string[];
+  categorySlug: string;
+};
 
 type ImpersonationState = {
   isImpersonating: boolean;
@@ -84,8 +99,11 @@ export default function AdminPage() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [lists, setLists] = useState<AdminGiftList[]>([]);
   const [templates, setTemplates] = useState<AdminTemplate[]>([]);
+  const [giftModelCategories, setGiftModelCategories] = useState<AdminGiftModelCategory[]>([]);
+  const [giftCopyPanel, setGiftCopyPanel] = useState<GiftCopyPanelState | null>(null);
   const [impersonation, setImpersonation] = useState<ImpersonationState | null>(null);
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
+  const [busyListId, setBusyListId] = useState<string | null>(null);
   const [qUser, setQUser] = useState('');
   const [qList, setQList] = useState('');
   const [visibleListCount, setVisibleListCount] = useState(LISTS_STEP);
@@ -115,16 +133,18 @@ export default function AdminPage() {
   }
 
   async function loadNonUserData() {
-    const [overviewResponse, listResponse, templateResponse, impersonationResponse] = await Promise.all([
+    const [overviewResponse, listResponse, templateResponse, giftModelsResponse, impersonationResponse] = await Promise.all([
       getJson<Overview & { error?: string }>(`/api/admin/overview?period=${period}`),
       getJson<{ giftLists: AdminGiftList[]; error?: string }>(`/api/admin/gift-lists?${listQuery}`),
       getJson<{ templates: AdminTemplate[]; error?: string }>('/api/admin/templates'),
+      getJson<{ categories: AdminGiftModelCategory[]; error?: string }>('/api/admin/gift-models'),
       getJson<ImpersonationState>('/api/admin/impersonation'),
     ]);
 
     if (overviewResponse && !('error' in overviewResponse)) setOverview(overviewResponse);
     if (listResponse && Array.isArray(listResponse.giftLists)) setLists(listResponse.giftLists);
     if (templateResponse && Array.isArray(templateResponse.templates)) setTemplates(templateResponse.templates);
+    if (giftModelsResponse && Array.isArray(giftModelsResponse.categories)) setGiftModelCategories(giftModelsResponse.categories);
     if (impersonationResponse) setImpersonation(impersonationResponse);
   }
 
@@ -222,6 +242,96 @@ export default function AdminPage() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Erro ao excluir lista');
     await loadNonUserData();
+  }
+
+  async function copyListAsTemplate(list: AdminGiftList) {
+    const defaultName = `${list.title} - modelo`;
+    const name = window.prompt('Nome do novo template:', defaultName);
+    if (name === null) return;
+
+    const normalizedName = name.trim();
+    if (!normalizedName) {
+      alert('Informe um nome para o template.');
+      return;
+    }
+
+    const category = window.prompt('Categoria do template:', 'modelos-clientes');
+    if (category === null) return;
+
+    setBusyListId(list.id);
+    try {
+      const response = await fetch(`/api/admin/gift-lists/${list.id}/copy-template`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: normalizedName,
+          category: category.trim() || 'modelos-clientes',
+          isActive: true,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Erro ao copiar site como template');
+      alert(`Template criado: ${data.template?.name || normalizedName}`);
+      await loadNonUserData();
+    } finally {
+      setBusyListId(null);
+    }
+  }
+
+  async function openGiftCopyPanel(list: AdminGiftList) {
+    setBusyListId(list.id);
+    try {
+      const response = await fetch(`/api/admin/gift-lists/${list.id}/gifts`, { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Erro ao carregar presentes');
+
+      const gifts = Array.isArray(data.gifts) ? data.gifts : [];
+      if (!gifts.length) {
+        alert('Essa lista ainda nao tem presentes para copiar.');
+        return;
+      }
+
+      const firstCategory = giftModelCategories[0]?.slug || '';
+      setGiftCopyPanel({
+        list,
+        gifts,
+        selectedIds: gifts.map((gift: AdminGiftItem) => gift.id),
+        categorySlug: firstCategory,
+      });
+    } finally {
+      setBusyListId(null);
+    }
+  }
+
+  async function copySelectedGiftsToModel() {
+    if (!giftCopyPanel) return;
+    if (!giftCopyPanel.categorySlug) {
+      alert('Escolha uma categoria de modelo.');
+      return;
+    }
+    if (!giftCopyPanel.selectedIds.length) {
+      alert('Selecione pelo menos um presente.');
+      return;
+    }
+
+    setBusyListId(giftCopyPanel.list.id);
+    try {
+      const response = await fetch(`/api/admin/gift-lists/${giftCopyPanel.list.id}/copy-gifts-to-model`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          categorySlug: giftCopyPanel.categorySlug,
+          giftIds: giftCopyPanel.selectedIds,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Erro ao copiar presentes');
+      alert(`${data.importedCount || giftCopyPanel.selectedIds.length} presentes adicionados ao modelo.`);
+      setGiftCopyPanel(null);
+      await loadNonUserData();
+    } finally {
+      setBusyListId(null);
+    }
   }
 
   async function patchTemplate(id: string, payload: unknown) {
@@ -410,6 +520,22 @@ export default function AdminPage() {
                         <a href={`/site/${list.slug}`} target="_blank" rel="noreferrer">
                           <Button size="sm" variant="outline">Abrir</Button>
                         </a>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busyListId === list.id}
+                          onClick={() => copyListAsTemplate(list).catch((error) => alert(error.message))}
+                        >
+                          Copiar site
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busyListId === list.id}
+                          onClick={() => openGiftCopyPanel(list).catch((error) => alert(error.message))}
+                        >
+                          Copiar presentes
+                        </Button>
                         {list._count.gifts === 0 && list._count.orders === 0 && list._count.messages === 0 ? (
                           <Button
                             size="sm"
@@ -427,6 +553,101 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+          {giftCopyPanel ? (
+            <div className="rounded-xl border border-[#ead9cd] bg-[#fffaf6] p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-medium text-[#8E3D2C]">Copiar presentes para modelos prontos</h3>
+                  <p className="text-sm text-gray-600">
+                    Lista: {giftCopyPanel.list.title} ({giftCopyPanel.gifts.length} presentes)
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setGiftCopyPanel(null)}>
+                  Fechar
+                </Button>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_240px]">
+                <div className="max-h-80 overflow-auto rounded-lg border bg-white">
+                  {giftCopyPanel.gifts.map((gift) => {
+                    const checked = giftCopyPanel.selectedIds.includes(gift.id);
+                    return (
+                      <label key={gift.id} className="flex cursor-pointer items-center gap-3 border-b p-3 last:border-b-0">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-[#8E3D2C]"
+                          checked={checked}
+                          onChange={(event) => {
+                            const nextSelected = event.target.checked
+                              ? [...giftCopyPanel.selectedIds, gift.id]
+                              : giftCopyPanel.selectedIds.filter((id) => id !== gift.id);
+                            setGiftCopyPanel({ ...giftCopyPanel, selectedIds: nextSelected });
+                          }}
+                        />
+                        {gift.imageUrl ? (
+                          <img src={gift.imageUrl} alt="" className="h-12 w-12 rounded-md object-cover" />
+                        ) : (
+                          <span className="h-12 w-12 rounded-md bg-[#f3e6dc]" />
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium">{gift.name}</span>
+                          <span className="block text-xs text-gray-500">
+                            {brl(Number(gift.basePrice || 0))} - qtd. {gift.totalQuantity}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                <div className="space-y-3 rounded-lg border bg-white p-3">
+                  <div>
+                    <p className="mb-1 text-xs text-gray-500">Categoria de destino</p>
+                    <Select
+                      value={giftCopyPanel.categorySlug}
+                      onValueChange={(value) => setGiftCopyPanel({ ...giftCopyPanel, categorySlug: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Escolher categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {giftModelCategories.map((category) => (
+                          <SelectItem key={category.id} value={category.slug}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    className="w-full"
+                    disabled={busyListId === giftCopyPanel.list.id || !giftCopyPanel.selectedIds.length}
+                    onClick={() => copySelectedGiftsToModel().catch((error) => alert(error.message))}
+                  >
+                    Adicionar selecionados
+                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setGiftCopyPanel({ ...giftCopyPanel, selectedIds: giftCopyPanel.gifts.map((gift) => gift.id) })}
+                    >
+                      Selecionar todos
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setGiftCopyPanel({ ...giftCopyPanel, selectedIds: [] })}
+                    >
+                      Limpar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-gray-500">Mostrando {visibleLists.length} de {lists.length}</p>
             <div className="flex flex-wrap gap-2">
