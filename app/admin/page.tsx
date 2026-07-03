@@ -382,9 +382,9 @@ export default function AdminPage() {
             value={qList}
             onChange={(event) => setQList(event.target.value)}
           />
-          <div className="overflow-auto rounded-lg border">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
             <table className="w-full min-w-[760px] text-sm">
-              <thead className="bg-[#faf3ee]">
+              <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
                   <th className="p-2 text-left">Lista</th>
                   <th className="p-2 text-left">Dono</th>
@@ -450,9 +450,9 @@ export default function AdminPage() {
           <CardTitle>Templates (publicação imediata)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="overflow-auto rounded-lg border">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
             <table className="w-full min-w-[760px] text-sm">
-              <thead className="bg-[#faf3ee]">
+              <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
                   <th className="p-2 text-left">Template</th>
                   <th className="p-2 text-left">Categoria</th>
@@ -554,9 +554,9 @@ function RoleSection({
         </div>
       </div>
 
-      <div className="overflow-auto">
+      <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
         <table className="w-full min-w-[920px] text-sm">
-          <thead className="bg-[#faf3ee]">
+          <thead className="sticky top-0 z-10 bg-[#faf3ee]">
             <tr>
               <th className="p-2 text-left">Usuário</th>
               <th className="p-2 text-left">{metricLabel}</th>

@@ -261,9 +261,9 @@ export default function AdminUsersPage() {
           onChange={(event) => setQ(event.target.value)}
         />
 
-        <div className="overflow-auto rounded-lg border">
+        <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
           <table className="w-full min-w-[980px] text-sm">
-            <thead className="bg-[#faf3ee]">
+            <thead className="sticky top-0 z-10 bg-[#faf3ee]">
               <tr>
                 <th className="p-2 text-left">Usuário</th>
                 <th className="p-2 text-left">{metricLabel}</th>

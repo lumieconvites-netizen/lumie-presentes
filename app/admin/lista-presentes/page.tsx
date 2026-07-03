@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useState, type UIEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,12 @@ type ClientGiftList = {
   id: string;
   title: string;
   slug: string;
-  user: { email: string; name: string | null };
+  user: {
+    email: string;
+    name: string | null;
+    referredByPartner?: { id: string; name: string | null; email: string } | null;
+    referredByAmbassador?: { id: string; name: string | null; email: string } | null;
+  };
   _count: { gifts: number; orders: number; messages: number };
 };
 
@@ -55,6 +60,8 @@ type ItemDraft = {
   totalQuantity: number;
 };
 
+const CLIENT_LIST_PAGE_SIZE = 30;
+
 export default function AdminGiftModelsPage() {
   const [categories, setCategories] = useState<GiftModelCategory[]>([]);
   const [selectedSlug, setSelectedSlug] = useState('');
@@ -66,6 +73,9 @@ export default function AdminGiftModelsPage() {
   const [uploadingCategoryThumbnail, setUploadingCategoryThumbnail] = useState(false);
   const [clientListQuery, setClientListQuery] = useState('');
   const [clientLists, setClientLists] = useState<ClientGiftList[]>([]);
+  const [clientListsTotal, setClientListsTotal] = useState(0);
+  const [clientListsHasMore, setClientListsHasMore] = useState(false);
+  const [clientListsLoading, setClientListsLoading] = useState(false);
   const [selectedClientList, setSelectedClientList] = useState<ClientGiftList | null>(null);
   const [clientGifts, setClientGifts] = useState<ClientGiftItem[]>([]);
   const [selectedClientGiftIds, setSelectedClientGiftIds] = useState<string[]>([]);
@@ -122,13 +132,33 @@ export default function AdminGiftModelsPage() {
     setSelectedSlug(slug);
   }
 
-  async function loadClientLists() {
+  async function loadClientLists(options: { reset?: boolean } = {}) {
+    if (clientListsLoading) return;
+    setClientListsLoading(true);
+    const skip = options.reset ? 0 : clientLists.length;
     const params = new URLSearchParams();
     if (clientListQuery.trim()) params.set('q', clientListQuery.trim());
-    const res = await fetch(`/api/admin/gift-lists?${params.toString()}`, { cache: 'no-store' });
-    const data = await parseJsonSafe(res);
-    if (!res.ok) throw new Error(data?.error || 'Erro ao carregar listas de clientes');
-    setClientLists(Array.isArray(data?.giftLists) ? data.giftLists : []);
+    params.set('take', String(CLIENT_LIST_PAGE_SIZE));
+    params.set('skip', String(skip));
+    try {
+      const res = await fetch(`/api/admin/gift-lists?${params.toString()}`, { cache: 'no-store' });
+      const data = await parseJsonSafe(res);
+      if (!res.ok) throw new Error(data?.error || 'Erro ao carregar listas de clientes');
+      const nextLists = Array.isArray(data?.giftLists) ? data.giftLists : [];
+      setClientLists((current) => (options.reset ? nextLists : [...current, ...nextLists]));
+      setClientListsTotal(data?.total || nextLists.length);
+      setClientListsHasMore(Boolean(data?.hasMore));
+    } finally {
+      setClientListsLoading(false);
+    }
+  }
+
+  function handleClientListScroll(event: UIEvent<HTMLDivElement>) {
+    const target = event.currentTarget;
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 80;
+    if (nearBottom && clientListsHasMore && !clientListsLoading) {
+      loadClientLists().catch((error) => alert(error.message));
+    }
   }
 
   async function loadClientGifts(list: ClientGiftList) {
@@ -167,7 +197,7 @@ export default function AdminGiftModelsPage() {
   }, []);
 
   useEffect(() => {
-    loadClientLists().catch((error) => alert(error.message));
+    loadClientLists({ reset: true }).catch((error) => alert(error.message));
   }, []);
 
   async function handleCreateCategory() {
@@ -520,15 +550,18 @@ export default function AdminGiftModelsPage() {
               onChange={(e) => setClientListQuery(e.target.value)}
               className="max-w-md"
             />
-            <Button variant="outline" onClick={() => loadClientLists().catch((error) => alert(error.message))}>
+            <Button variant="outline" onClick={() => loadClientLists({ reset: true }).catch((error) => alert(error.message))}>
               Buscar listas
             </Button>
+            <p className="self-center text-xs text-gray-500">
+              {clientLists.length} de {clientListsTotal || clientLists.length}
+            </p>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-            <div className="max-h-[480px] overflow-auto rounded-lg border">
+            <div className="max-h-[480px] overflow-auto rounded-lg border bg-white" onScroll={handleClientListScroll}>
               <table className="w-full text-sm">
-                <thead className="bg-[#faf3ee]">
+                <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                   <tr>
                     <th className="p-2 text-left">Lista</th>
                     <th className="p-2 text-left">Ação</th>
@@ -541,6 +574,12 @@ export default function AdminGiftModelsPage() {
                         <p className="font-medium">{list.title}</p>
                         <p className="text-xs text-gray-500">/{list.slug}</p>
                         <p className="text-xs text-gray-500">{list.user.name || 'Sem nome'} - {list.user.email}</p>
+                        {list.user.referredByPartner ? (
+                          <p className="text-xs text-[#8E3D2C]">Parceiro: {list.user.referredByPartner.name || list.user.referredByPartner.email}</p>
+                        ) : null}
+                        {list.user.referredByAmbassador ? (
+                          <p className="text-xs text-[#8E3D2C]">Embaixador: {list.user.referredByAmbassador.name || list.user.referredByAmbassador.email}</p>
+                        ) : null}
                         <p className="text-xs text-gray-500">{list._count.gifts} presentes</p>
                       </td>
                       <td className="p-2">
@@ -554,6 +593,13 @@ export default function AdminGiftModelsPage() {
                     <tr>
                       <td className="p-3 text-sm text-gray-500" colSpan={2}>
                         Nenhuma lista encontrada.
+                      </td>
+                    </tr>
+                  ) : null}
+                  {clientListsLoading ? (
+                    <tr>
+                      <td className="p-3 text-sm text-gray-500" colSpan={2}>
+                        Carregando mais listas...
                       </td>
                     </tr>
                   ) : null}
@@ -807,9 +853,9 @@ export default function AdminGiftModelsPage() {
               </div>
             </div>
 
-            <div className="overflow-auto rounded-lg border">
+            <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
               <table className="w-full text-sm">
-                <thead className="bg-[#faf3ee]">
+                <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                   <tr>
                     <th className="p-2 text-left">Presente</th>
                     <th className="p-2 text-left">Preço</th>

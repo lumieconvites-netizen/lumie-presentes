@@ -254,9 +254,9 @@ export default function AdminFinanceiroPage() {
             <CardTitle>Recebimento por parceiros</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-auto rounded-lg border">
+            <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
               <table className="w-full text-sm">
-                <thead className="bg-[#faf3ee]">
+                <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                   <tr>
                     <th className="text-left p-2">Parceiro</th>
                     <th className="text-left p-2">Pedidos</th>
@@ -292,9 +292,9 @@ export default function AdminFinanceiroPage() {
             <CardTitle>Recebimento por embaixadores</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-auto rounded-lg border">
+            <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
               <table className="w-full text-sm">
-                <thead className="bg-[#faf3ee]">
+                <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                   <tr>
                     <th className="text-left p-2">Embaixador</th>
                     <th className="text-left p-2">Pedidos</th>
@@ -331,9 +331,9 @@ export default function AdminFinanceiroPage() {
           <CardTitle>Últimos pagamentos (MÁX 200)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-auto rounded-lg border">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
             <table className="w-full text-sm">
-              <thead className="bg-[#faf3ee]">
+              <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
                   <th className="p-2 text-left">Data</th>
                   <th className="p-2 text-left">Método</th>
@@ -389,9 +389,9 @@ export default function AdminFinanceiroPage() {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="overflow-auto rounded-lg border">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
             <table className="w-full text-sm">
-              <thead className="bg-[#faf3ee]">
+              <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
                   <th className="p-2 text-left">Data</th>
                   <th className="p-2 text-left">Status</th>

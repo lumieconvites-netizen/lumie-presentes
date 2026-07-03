@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type UIEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,9 +38,16 @@ type ClientGiftList = {
   title: string;
   slug: string;
   isPublished: boolean;
-  user: { email: string; name: string | null };
+  user: {
+    email: string;
+    name: string | null;
+    referredByPartner?: { id: string; name: string | null; email: string } | null;
+    referredByAmbassador?: { id: string; name: string | null; email: string } | null;
+  };
   _count: { gifts: number; orders: number; messages: number };
 };
+
+const CLIENT_LIST_PAGE_SIZE = 30;
 
 export default function AdminTemplatesPage() {
   const router = useRouter();
@@ -55,6 +62,9 @@ export default function AdminTemplatesPage() {
   const [categoryForm, setCategoryForm] = useState({ name: '', slug: '' });
   const [clientListQuery, setClientListQuery] = useState('');
   const [clientLists, setClientLists] = useState<ClientGiftList[]>([]);
+  const [clientListsTotal, setClientListsTotal] = useState(0);
+  const [clientListsHasMore, setClientListsHasMore] = useState(false);
+  const [clientListsLoading, setClientListsLoading] = useState(false);
   const [selectedClientList, setSelectedClientList] = useState<ClientGiftList | null>(null);
   const [copyForm, setCopyForm] = useState({ name: '', category: initialCategory === 'all' ? '' : initialCategory });
   const [copyingClientList, setCopyingClientList] = useState(false);
@@ -87,13 +97,33 @@ export default function AdminTemplatesPage() {
     setTemplates(json.templates || []);
   }
 
-  async function loadClientLists() {
+  async function loadClientLists(options: { reset?: boolean } = {}) {
+    if (clientListsLoading) return;
+    setClientListsLoading(true);
+    const skip = options.reset ? 0 : clientLists.length;
     const params = new URLSearchParams();
     if (clientListQuery.trim()) params.set('q', clientListQuery.trim());
-    const res = await fetch(`/api/admin/gift-lists?${params.toString()}`, { cache: 'no-store' });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || 'Erro ao carregar listas de clientes');
-    setClientLists(json.giftLists || []);
+    params.set('take', String(CLIENT_LIST_PAGE_SIZE));
+    params.set('skip', String(skip));
+    try {
+      const res = await fetch(`/api/admin/gift-lists?${params.toString()}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Erro ao carregar listas de clientes');
+      const nextLists = Array.isArray(json.giftLists) ? json.giftLists : [];
+      setClientLists((current) => (options.reset ? nextLists : [...current, ...nextLists]));
+      setClientListsTotal(json.total || nextLists.length);
+      setClientListsHasMore(Boolean(json.hasMore));
+    } finally {
+      setClientListsLoading(false);
+    }
+  }
+
+  function handleClientListScroll(event: UIEvent<HTMLDivElement>) {
+    const target = event.currentTarget;
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 80;
+    if (nearBottom && clientListsHasMore && !clientListsLoading) {
+      loadClientLists().catch((error) => alert(error.message));
+    }
   }
 
   async function createCategory() {
@@ -121,7 +151,7 @@ export default function AdminTemplatesPage() {
   }
 
   async function deleteCategory(slug: string) {
-    if (!window.confirm('Excluir tipo de evento? Só é permitido se não tiver templates.')) return;
+    if (!window.confirm('Excluir tipo de evento? So e permitido se nao tiver templates.')) return;
     const res = await fetch(`/api/admin/template-categories/${slug}`, { method: 'DELETE' });
     const json = await res.json();
     if (!res.ok) throw new Error(json?.error || 'Erro ao excluir categoria');
@@ -234,7 +264,7 @@ export default function AdminTemplatesPage() {
   }, []);
 
   useEffect(() => {
-    loadClientLists().catch((error) => alert(error.message));
+    loadClientLists({ reset: true }).catch((error) => alert(error.message));
   }, []);
 
   useEffect(() => {
@@ -321,9 +351,9 @@ export default function AdminTemplatesPage() {
             </Button>
           </div>
 
-          <div className="overflow-auto rounded-lg border">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
             <table className="w-full text-sm">
-              <thead className="bg-[#faf3ee]">
+              <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
                   <th className="text-left p-2">Template</th>
                   <th className="text-left p-2">Categoria</th>
@@ -403,18 +433,21 @@ export default function AdminTemplatesPage() {
               onChange={(e) => setClientListQuery(e.target.value)}
               className="max-w-md"
             />
-            <Button variant="outline" onClick={() => loadClientLists().catch((error) => alert(error.message))}>
+            <Button variant="outline" onClick={() => loadClientLists({ reset: true }).catch((error) => alert(error.message))}>
               Buscar listas
             </Button>
+            <p className="self-center text-xs text-gray-500">
+              {clientLists.length} de {clientListsTotal || clientLists.length}
+            </p>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-            <div className="max-h-[520px] overflow-auto rounded-lg border">
+            <div className="max-h-[520px] overflow-auto rounded-lg border bg-white" onScroll={handleClientListScroll}>
               <table className="w-full text-sm">
-                <thead className="bg-[#faf3ee]">
+                <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                   <tr>
                     <th className="p-2 text-left">Lista</th>
-                    <th className="p-2 text-left">Ação</th>
+                    <th className="p-2 text-left">Acao</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -424,6 +457,12 @@ export default function AdminTemplatesPage() {
                         <p className="font-medium">{list.title}</p>
                         <p className="text-xs text-gray-500">/{list.slug}</p>
                         <p className="text-xs text-gray-500">{list.user.name || 'Sem nome'} - {list.user.email}</p>
+                        {list.user.referredByPartner ? (
+                          <p className="text-xs text-[#8E3D2C]">Parceiro: {list.user.referredByPartner.name || list.user.referredByPartner.email}</p>
+                        ) : null}
+                        {list.user.referredByAmbassador ? (
+                          <p className="text-xs text-[#8E3D2C]">Embaixador: {list.user.referredByAmbassador.name || list.user.referredByAmbassador.email}</p>
+                        ) : null}
                         <p className="text-xs text-gray-500">{list._count.gifts} presentes</p>
                       </td>
                       <td className="p-2">
@@ -437,6 +476,13 @@ export default function AdminTemplatesPage() {
                     <tr>
                       <td className="p-3 text-sm text-gray-500" colSpan={2}>
                         Nenhuma lista encontrada.
+                      </td>
+                    </tr>
+                  ) : null}
+                  {clientListsLoading ? (
+                    <tr>
+                      <td className="p-3 text-sm text-gray-500" colSpan={2}>
+                        Carregando mais listas...
                       </td>
                     </tr>
                   ) : null}

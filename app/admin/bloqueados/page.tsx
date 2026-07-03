@@ -66,9 +66,9 @@ export default function AdminBloqueadosPage() {
       </CardHeader>
       <CardContent className="space-y-3">
         <Input placeholder="Buscar por nome ou email" value={q} onChange={(e) => setQ(e.target.value)} />
-        <div className="overflow-auto rounded-lg border">
+        <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
           <table className="w-full text-sm">
-            <thead className="bg-[#faf3ee]">
+            <thead className="sticky top-0 z-10 bg-[#faf3ee]">
               <tr>
                 <th className="p-2 text-left">Usuário</th>
                 <th className="p-2 text-left">Papel</th>

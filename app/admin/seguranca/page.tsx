@@ -205,9 +205,9 @@ export default function AdminSecurityPage() {
             </Select>
           </div>
 
-          <div className="overflow-x-auto rounded-lg border border-[#ead8cc]">
+          <div className="max-h-[520px] overflow-auto rounded-lg border border-[#ead8cc] bg-white">
             <table className="min-w-[1100px] w-full text-sm">
-              <thead className="bg-[#fbf4ee] text-left text-xs uppercase text-[#8e3d2c]">
+              <thead className="sticky top-0 z-10 bg-[#fbf4ee] text-left text-xs uppercase text-[#8e3d2c]">
                 <tr>
                   <th className="px-3 py-3">Data</th>
                   <th className="px-3 py-3">Tipo</th>

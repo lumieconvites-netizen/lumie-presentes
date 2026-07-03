@@ -10,24 +10,31 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") ?? "").trim();
   const published = searchParams.get("published");
+  const take = Math.min(Math.max(Number(searchParams.get("take") || 30), 1), 100);
+  const skip = Math.max(Number(searchParams.get("skip") || 0), 0);
+
+  const where = {
+    ...(q
+      ? {
+          OR: [
+            { title: { contains: q, mode: "insensitive" as const } },
+            { slug: { contains: q, mode: "insensitive" as const } },
+            { user: { email: { contains: q, mode: "insensitive" as const } } },
+            { user: { name: { contains: q, mode: "insensitive" as const } } },
+          ],
+        }
+      : {}),
+    ...(published === "true" ? { isPublished: true } : {}),
+    ...(published === "false" ? { isPublished: false } : {}),
+  };
+
+  const total = await prisma.giftList.count({ where });
 
   const giftLists = await prisma.giftList.findMany({
-    where: {
-      ...(q
-        ? {
-            OR: [
-              { title: { contains: q, mode: "insensitive" } },
-              { slug: { contains: q, mode: "insensitive" } },
-              { user: { email: { contains: q, mode: "insensitive" } } },
-              { user: { name: { contains: q, mode: "insensitive" } } },
-            ],
-          }
-        : {}),
-      ...(published === "true" ? { isPublished: true } : {}),
-      ...(published === "false" ? { isPublished: false } : {}),
-    },
+    where,
     orderBy: { createdAt: "desc" },
-    take: 100,
+    skip,
+    take,
     select: {
       id: true,
       title: true,
@@ -40,6 +47,8 @@ export async function GET(request: Request) {
           id: true,
           name: true,
           email: true,
+          referredByPartner: { select: { id: true, name: true, email: true } },
+          referredByAmbassador: { select: { id: true, name: true, email: true } },
         },
       },
       _count: {
@@ -52,7 +61,7 @@ export async function GET(request: Request) {
     },
   });
 
-  return NextResponse.json({ giftLists });
+  return NextResponse.json({ giftLists, total, hasMore: skip + giftLists.length < total });
 }
 
 export async function POST(request: Request) {

@@ -160,9 +160,9 @@ export default function AdminRetencaoPage() {
           <CardTitle>Contas acompanhadas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-auto rounded-lg border">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
             <table className="w-full text-sm">
-              <thead className="bg-[#faf3ee]">
+              <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
                   <th className="p-2 text-left">Cliente</th>
                   <th className="p-2 text-left">Último evento</th>
@@ -196,7 +196,7 @@ export default function AdminRetencaoPage() {
                       <div className="mt-1 space-y-1">
                         {user.lists.slice(0, 3).map((list) => (
                           <p key={list.id} className="text-xs text-gray-500">
-                            {list.title} · {list.isPublished ? 'publicada' : 'rascunho'}
+                            {list.title} Â· {list.isPublished ? 'publicada' : 'rascunho'}
                           </p>
                         ))}
                       </div>
@@ -294,9 +294,9 @@ export default function AdminRetencaoPage() {
           <CardTitle>Últimas execuções</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-auto rounded-lg border">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
             <table className="w-full text-sm">
-              <thead className="bg-[#faf3ee]">
+              <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
                   <th className="p-2 text-left">Run ID</th>
                   <th className="p-2 text-left">Itens</th>
@@ -331,9 +331,9 @@ export default function AdminRetencaoPage() {
           <CardTitle>Eventos de auditoria</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-auto rounded-lg border">
+          <div className="max-h-[520px] overflow-auto rounded-lg border bg-white">
             <table className="w-full text-sm">
-              <thead className="bg-[#faf3ee]">
+              <thead className="sticky top-0 z-10 bg-[#faf3ee]">
                 <tr>
                   <th className="p-2 text-left">Quando</th>
                   <th className="p-2 text-left">Run ID</th>
