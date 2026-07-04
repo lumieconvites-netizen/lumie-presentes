@@ -216,6 +216,19 @@ export default function AdminUsersPage() {
     await patchUser(user.id, payload);
   }
 
+  async function convertClientToPartner(user: AdminUser) {
+    const ambassadorName = user.referredByAmbassador?.name || user.referredByAmbassador?.email;
+    const message = ambassadorName
+      ? `Transformar ${user.name || user.email} em parceiro vinculado ao embaixador ${ambassadorName}?`
+      : `Transformar ${user.name || user.email} em parceiro sem embaixador vinculado?`;
+    if (!window.confirm(message)) return;
+
+    await patchUser(user.id, {
+      role: 'PARTNER',
+      partnerAmbassadorId: user.referredByAmbassador?.id ?? null,
+    });
+  }
+
   async function updateReferrals(user: AdminUser, payload: { referredByPartnerId?: string | null; referredByAmbassadorId?: string | null }) {
     await patchUser(user.id, payload);
   }
@@ -331,6 +344,11 @@ export default function AdminUsersPage() {
                       {role === 'CLIENT' ? (
                         <Button size="sm" variant="outline" onClick={() => togglePlan(user).catch((error) => alert(error.message))}>
                           {user.plan === 'PREMIUM' ? 'Voltar ao gratuito' : 'Ativar premium'}
+                        </Button>
+                      ) : null}
+                      {role === 'CLIENT' ? (
+                        <Button size="sm" variant="outline" onClick={() => convertClientToPartner(user).catch((error) => alert(error.message))}>
+                          Tornar parceiro
                         </Button>
                       ) : null}
                       <Button size="sm" variant="outline" onClick={() => toggleBlockUser(user).catch((error) => alert(error.message))}>

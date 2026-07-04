@@ -14,6 +14,7 @@ const patchSchema = z.object({
   email: z.string().email().optional(),
   referredByPartnerId: z.string().optional().nullable(),
   referredByAmbassadorId: z.string().optional().nullable(),
+  partnerAmbassadorId: z.string().optional().nullable(),
 });
 
 function normalizeRelationId(value?: string | null) {
@@ -67,9 +68,14 @@ export async function PATCH(
 
     const isBlockedToggle = typeof data.isBlocked === "boolean";
     const shouldSetBlockedMeta = isBlockedToggle ? data.isBlocked : undefined;
-    const relationPatchRequested =
+    const clientRelationPatchRequested =
       typeof data.referredByPartnerId !== "undefined" ||
       typeof data.referredByAmbassadorId !== "undefined";
+    const partnerRelationPatchRequested = typeof data.partnerAmbassadorId !== "undefined";
+    const relationPatchRequested =
+      clientRelationPatchRequested ||
+      partnerRelationPatchRequested ||
+      typeof data.role === "string";
 
     let relationUpdateData: Record<string, unknown> = {};
 
@@ -81,6 +87,7 @@ export async function PATCH(
           role: true,
           referredByPartnerId: true,
           referredByAmbassadorId: true,
+          partnerAmbassadorId: true,
         },
       });
 
@@ -88,21 +95,40 @@ export async function PATCH(
         return NextResponse.json({ error: "Usuario nao encontrado." }, { status: 404 });
       }
 
-      if (targetUser.role !== "CLIENT") {
+      const nextRole = data.role ?? targetUser.role;
+
+      if (clientRelationPatchRequested && nextRole !== "CLIENT") {
         return NextResponse.json(
           { error: "Vinculos de parceiro/embaixador so podem ser alterados em clientes." },
           { status: 400 }
         );
       }
 
+      if (partnerRelationPatchRequested && nextRole !== "PARTNER") {
+        return NextResponse.json(
+          { error: "Vinculo de embaixador do parceiro so pode ser alterado em parceiros." },
+          { status: 400 }
+        );
+      }
+
       const nextPartnerId =
-        typeof data.referredByPartnerId !== "undefined"
-          ? normalizeRelationId(data.referredByPartnerId)
-          : targetUser.referredByPartnerId;
+        nextRole === "CLIENT"
+          ? typeof data.referredByPartnerId !== "undefined"
+            ? normalizeRelationId(data.referredByPartnerId)
+            : targetUser.referredByPartnerId
+          : null;
       const nextAmbassadorId =
-        typeof data.referredByAmbassadorId !== "undefined"
-          ? normalizeRelationId(data.referredByAmbassadorId)
-          : targetUser.referredByAmbassadorId;
+        nextRole === "CLIENT"
+          ? typeof data.referredByAmbassadorId !== "undefined"
+            ? normalizeRelationId(data.referredByAmbassadorId)
+            : targetUser.referredByAmbassadorId
+          : null;
+      const nextPartnerAmbassadorId =
+        nextRole === "PARTNER"
+          ? typeof data.partnerAmbassadorId !== "undefined"
+            ? normalizeRelationId(data.partnerAmbassadorId)
+            : targetUser.partnerAmbassadorId ?? targetUser.referredByAmbassadorId
+          : null;
 
       if (nextPartnerId) {
         if (nextPartnerId === params.id) {
@@ -130,11 +156,29 @@ export async function PATCH(
         }
       }
 
+      if (nextPartnerAmbassadorId) {
+        if (nextPartnerAmbassadorId === params.id) {
+          return NextResponse.json({ error: "O parceiro nao pode ser embaixador dele mesmo." }, { status: 400 });
+        }
+        const ambassador = await prisma.user.findUnique({
+          where: { id: nextPartnerAmbassadorId },
+          select: { id: true, role: true },
+        });
+        if (!ambassador || ambassador.role !== "AMBASSADOR") {
+          return NextResponse.json({ error: "Embaixador selecionado invalido." }, { status: 400 });
+        }
+      }
+
       relationUpdateData = {
         referredByPartnerId: nextPartnerId,
         referredByAmbassadorId: nextAmbassadorId,
-        acquisitionSource: resolveAcquisitionSource(nextPartnerId, nextAmbassadorId),
-        appliedReferralCode: null,
+        partnerAmbassadorId: nextPartnerAmbassadorId,
+        ...(nextRole === "CLIENT"
+          ? {
+              acquisitionSource: resolveAcquisitionSource(nextPartnerId, nextAmbassadorId),
+              appliedReferralCode: null,
+            }
+          : {}),
       };
     }
 
